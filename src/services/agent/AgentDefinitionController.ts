@@ -4,6 +4,9 @@ import {
   AgentDefinition,
   AgentDefinitionSearchParams,
   AgentDefinitionStatusParams,
+  AgentToolBinding,
+  BindToolRequest,
+  UpdateToolPriorityRequest,
 } from '@/services/entity/Agent';
 
 /**
@@ -85,5 +88,55 @@ export const copyAgentDefinitionInfo = async (
 ): Promise<ResponseStructure<AgentDefinition>> => {
   return request(`/api/agent/definition/${id}/copy`, {
     method: 'POST',
+  });
+};
+
+/**
+ * @description 查询 Agent 绑定的工具列表
+ */
+export const getAgentBoundTools = async (
+  agentId: string,
+): Promise<ResponseStructure<AgentToolBinding[]>> => {
+  return request(`/api/agent/definition/${agentId}/tools`, {
+    method: 'GET',
+  });
+};
+
+/**
+ * @description 绑定工具到 Agent
+ */
+export const bindToolToAgent = async (
+  agentId: string,
+  params: BindToolRequest,
+): Promise<ResponseStructure<AgentToolBinding>> => {
+  return request(`/api/agent/definition/${agentId}/tools`, {
+    method: 'POST',
+    data: params,
+  });
+};
+
+/**
+ * @description 从 Agent 解绑工具
+ */
+export const unbindToolFromAgent = async (
+  agentId: string,
+  toolId: string,
+): Promise<ResponseStructure<void>> => {
+  return request(`/api/agent/definition/${agentId}/tools/${toolId}`, {
+    method: 'DELETE',
+  });
+};
+
+/**
+ * @description 调整 Agent 工具优先级
+ */
+export const updateToolPriority = async (
+  agentId: string,
+  toolId: string,
+  params: UpdateToolPriorityRequest,
+): Promise<ResponseStructure<AgentToolBinding>> => {
+  return request(`/api/agent/definition/${agentId}/tools/${toolId}/priority`, {
+    method: 'PUT',
+    data: params,
   });
 };

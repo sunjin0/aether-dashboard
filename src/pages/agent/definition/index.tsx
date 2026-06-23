@@ -1,9 +1,10 @@
 import React, {useRef, useState} from 'react';
 import {PlusOutlined} from '@ant-design/icons';
 import {ActionType, PageContainer, ProTable} from '@ant-design/pro-components';
-import {Button, message, Popconfirm} from 'antd';
+import {Button, message, Popconfirm, Modal} from 'antd';
 import {FormattedMessage, history, useAccess} from '@@/exports';
 import AgentDefinitionForm from '@/pages/agent/definition/AgentDefinitionForm';
+import AgentToolBinding from '@/pages/agent/definition/AgentToolBinding';
 import {
   copyAgentDefinitionInfo,
   deleteAgentDefinitionInfo,
@@ -31,6 +32,10 @@ const AgentDefinitionPage: React.FC = () => {
   const permissionMap = useAccess();
   const path = history.location.pathname;
   const write = permissionMap[path];
+
+  // 工具绑定相关状态
+  const [toolBindingVisible, setToolBindingVisible] = useState(false);
+  const [currentAgentId, setCurrentAgentId] = useState<string>('');
 
   const handleDelete = async (record: AgentDefinition) => {
     if (!record.id) {
@@ -165,7 +170,7 @@ const AgentDefinitionPage: React.FC = () => {
     {
       title: '操作',
       valueType: 'option',
-      width: 300,
+      width: 350,
       key: 'option',
       fixed: 'right',
       render: (_: any, record: AgentDefinition) =>
@@ -179,6 +184,16 @@ const AgentDefinitionPage: React.FC = () => {
             }}
           >
             编辑
+          </Button>,
+          <Button
+            type="link"
+            key="binding"
+            onClick={() => {
+              setCurrentAgentId(record.id || '');
+              setToolBindingVisible(true);
+            }}
+          >
+            绑定工具
           </Button>,
           <Popconfirm
             key="copy"
@@ -243,6 +258,23 @@ const AgentDefinitionPage: React.FC = () => {
           ref.current?.reload();
         }}
       />
+
+      <Modal
+        title="工具绑定管理"
+        open={toolBindingVisible}
+        onCancel={() => {
+          setToolBindingVisible(false);
+          setCurrentAgentId('');
+        }}
+        footer={null}
+        width={900}
+      >
+        <AgentToolBinding
+          agentId={currentAgentId}
+          open={toolBindingVisible}
+          setOpen={setToolBindingVisible}
+        />
+      </Modal>
     </PageContainer>
   );
 };

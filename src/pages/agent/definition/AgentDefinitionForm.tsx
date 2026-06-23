@@ -4,6 +4,7 @@ import {
   ProFormSelect,
   ProFormText,
   ProFormTextArea,
+  ProFormDependency,
 } from '@ant-design/pro-components';
 import {Form} from 'antd';
 import {
@@ -12,6 +13,7 @@ import {
   updateAgentDefinitionInfo,
 } from '@/services/agent/AgentDefinitionController';
 import {getModelProviderList} from '@/services/agent/ModelProviderController';
+import {getAgentToolList} from '@/services/agent/ToolController';
 
 const statusOptions = [
   {label: '草稿', value: 0},
@@ -86,6 +88,39 @@ const AgentDefinitionForm = (props: {
       />
       <ProFormDigit name="maxToolRounds" label="最大工具轮次" min={0} fieldProps={{precision: 0}} />
       <ProFormSelect name="accessType" label="访问类型" options={accessTypeOptions} />
+      
+      <ProFormDependency name={["id"]}>
+        {(values) => {
+          // 只有在编辑模式下才显示工具绑定选项
+          if (!values.id) {
+            return null;
+          }
+          
+          return (
+            <ProFormSelect
+              name="toolIds"
+              label="绑定工具"
+              mode="multiple"
+              showSearch
+              request={async () => {
+                const {data} = await getAgentToolList({
+                  current: 1,
+                  pageSize: 1000,
+                  status: 1,
+                });
+
+                return (data || [])
+                  .filter((item) => item.id)
+                  .map((item) => ({
+                    label: `${item.name || item.id} (${item.code})`,
+                    value: item.id as string,
+                  }));
+              }}
+              placeholder="选择要绑定的工具（可多选）"
+            />
+          );
+        }}
+      </ProFormDependency>
     </DrawerForm>
   );
 };

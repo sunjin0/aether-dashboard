@@ -248,3 +248,33 @@ export interface AgentToolSearchParams extends AgentTool {
   current?: number;
   pageSize?: number;
 }
+
+/**
+ * @description Agent 工具绑定信息
+ */
+export interface AgentToolBinding {
+  id?: string;
+  toolId?: string;
+  toolName?: string;
+  toolCode?: string;
+  priority?: number;
+  status?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * @description 绑定工具请求参数
+ */
+export interface BindToolRequest {
+  toolId: string;
+  priority?: number;
+  status?: number;
+}
+
+/**
+ * @description 调整工具优先级请求参数
+ */
+export interface UpdateToolPriorityRequest {
+  priority: number;
+}

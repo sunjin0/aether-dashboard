@@ -1,15 +1,19 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import {Typography} from 'antd';
-import {AgentMessage} from '@/services/entity/Agent';
+import { Typography } from 'antd';
+import { AgentMessage } from '@/services/entity/Agent';
 import './index.less';
 
-const {Text} = Typography;
+const { Text } = Typography;
+
+export type AgentMessageBubbleStatus = 'streaming' | 'error' | 'stopped';
 
 export interface AgentMessageBubbleProps {
   message: AgentMessage;
   align?: 'left' | 'right';
   compact?: boolean;
+  status?: AgentMessageBubbleStatus;
+  errorMessage?: string;
 }
 
 const roleLabelMap: Record<string, string> = {
@@ -40,10 +44,22 @@ const getMessageMeta = (message: AgentMessage) => {
   ].filter(Boolean);
 };
 
-const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({message, align, compact}) => {
+const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
+  message,
+  align,
+  compact,
+  status,
+  errorMessage,
+}) => {
   const role = getRole(message.role);
   const placement = getAlign(message, align);
   const metas = getMessageMeta(message);
+  const statusText =
+    status === 'error'
+      ? errorMessage || '生成中断'
+      : status === 'stopped'
+        ? '已停止生成'
+        : undefined;
   const className = [
     'agent-message-bubble',
     `agent-message-bubble-${placement}`,
@@ -56,10 +72,24 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({message, align, 
   return (
     <div className={className}>
       <div className="agent-message-bubble-card">
-        <div className="agent-message-bubble-role">{roleLabelMap[role] || roleLabelMap.unknown}</div>
-        <div className="agent-message-bubble-content">
-          <ReactMarkdown>{message.content || ''}</ReactMarkdown>
+        <div className="agent-message-bubble-role">
+          {roleLabelMap[role] || roleLabelMap.unknown}
         </div>
+        <div className="agent-message-bubble-content">
+          {message.content ? (
+            <ReactMarkdown>{message.content}</ReactMarkdown>
+          ) : status === 'streaming' ? (
+            <Text className="agent-message-bubble-placeholder" type="secondary">
+              生成中...
+            </Text>
+          ) : null}
+          {status === 'streaming' ? <span className="agent-message-bubble-cursor" /> : null}
+        </div>
+        {statusText ? (
+          <Text className={`agent-message-bubble-status agent-message-bubble-status-${status}`}>
+            {statusText}
+          </Text>
+        ) : null}
         {metas.length ? (
           <Text className="agent-message-bubble-meta" type="secondary">
             {metas.join(' / ')}

@@ -1,18 +1,29 @@
 .agent-chat-page {
   display: flex;
   gap: 16px;
-  min-height: calc(100vh - 190px);
+  height: calc(100vh - 190px);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .agent-chat-sidebar {
   width: 320px;
+  height: 100%;
   flex: 0 0 320px;
   overflow: hidden;
   border-radius: 16px;
 }
 
+.agent-chat-sidebar .ant-card-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
 .agent-chat-sidebar-header {
   display: flex;
+  flex: 0 0 auto;
   flex-direction: column;
   gap: 12px;
   padding: 16px;
@@ -20,8 +31,21 @@
   background: #fff;
 }
 
+.agent-chat-session-spin {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.agent-chat-session-spin .ant-spin-container {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .agent-chat-session-list {
-  max-height: calc(100vh - 330px);
+  height: 100%;
+  min-height: 0;
   overflow-y: auto;
 
   .ant-list-item {
@@ -37,10 +61,17 @@
   .agent-chat-session-active {
     background: #e6f4ff;
   }
+
+  .agent-chat-session-disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
 }
 
 .agent-chat-panel {
-  flex: 1;
+  height: 100%;
+  min-width: 0;
+  flex: 1 1 0;
   overflow: hidden;
   border-radius: 18px;
 }
@@ -49,11 +80,13 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  min-height: calc(100vh - 190px);
+  min-height: 0;
+  overflow: hidden;
 }
 
 .agent-chat-panel-header {
   display: flex;
+  flex: 0 0 auto;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
@@ -69,17 +102,23 @@
 }
 
 .agent-chat-message-spin {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
+  overflow: hidden;
 }
 
 .agent-chat-message-spin .ant-spin-container {
+  display: flex;
+  flex-direction: column;
   height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .agent-chat-message-list {
   height: 100%;
-  min-height: 460px;
+  min-height: 0;
+  flex: 1 1 auto;
   padding: 20px;
   overflow-y: auto;
   background:
@@ -89,6 +128,7 @@
 
 .agent-chat-input-bar {
   display: flex;
+  flex: 0 0 auto;
   gap: 12px;
   align-items: flex-end;
   padding: 16px 20px;
@@ -108,19 +148,18 @@
 @media (max-width: 900px) {
   .agent-chat-page {
     flex-direction: column;
+    height: calc(100vh - 160px);
   }
 
   .agent-chat-sidebar {
     width: 100%;
-    flex-basis: auto;
+    height: auto;
+    flex: 0 0 260px;
   }
 
-  .agent-chat-session-list {
-    max-height: 260px;
-  }
-
-  .agent-chat-panel .ant-card-body {
-    min-height: 640px;
+  .agent-chat-panel {
+    min-height: 0;
+    flex: 1 1 0;
   }
 
   .agent-chat-panel-header {

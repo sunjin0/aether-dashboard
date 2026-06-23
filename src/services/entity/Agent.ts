@@ -75,6 +75,48 @@ export interface AgentChatRequest {
 }
 
 /**
+ * @description Agent 流式消息事件
+ */
+export interface AgentStreamMessageData {
+  chunk?: string;
+  conversationId?: string;
+  messageId?: string | null;
+}
+
+/**
+ * @description Agent 流式工具调用事件
+ */
+export interface AgentStreamToolCallData {
+  conversationId?: string;
+  toolName?: string;
+  toolCallId?: string;
+  arguments?: Record<string, unknown>;
+}
+
+/**
+ * @description Agent 流式错误事件
+ */
+export interface AgentStreamErrorData {
+  code?: number;
+  message?: string;
+}
+
+/**
+ * @description Agent 流式完成事件
+ */
+export interface AgentStreamDoneData {
+  conversationId?: string;
+  messageId?: string;
+  totalTokens?: number;
+}
+
+export type AgentStreamEvent =
+  | { event: 'message'; data: AgentStreamMessageData }
+  | { event: 'tool_call'; data: AgentStreamToolCallData }
+  | { event: 'error'; data: AgentStreamErrorData }
+  | { event: 'done'; data: AgentStreamDoneData };
+
+/**
  * @description Agent 会话
  */
 export interface AgentConversation {

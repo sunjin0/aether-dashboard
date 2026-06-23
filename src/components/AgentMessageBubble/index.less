@@ -56,6 +56,8 @@
     color: rgba(15, 23, 42, 0.88);
     font-size: 14px;
     line-height: 1.7;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 
     > :first-child {
       margin-top: 0;
@@ -151,11 +153,52 @@
     }
   }
 
+  &-placeholder {
+    font-size: 14px;
+  }
+
+  &-cursor {
+    display: inline-block;
+    width: 6px;
+    height: 16px;
+    margin-left: 2px;
+    vertical-align: -2px;
+    border-radius: 4px;
+    background: #1677ff;
+    animation: agent-message-cursor 1s ease-in-out infinite;
+  }
+
+  &-status {
+    display: block;
+    margin-top: 10px;
+    font-size: 12px;
+    line-height: 1.5;
+
+    &-error {
+      color: #ff4d4f;
+    }
+
+    &-stopped {
+      color: rgba(15, 23, 42, 0.52);
+    }
+  }
+
   &-meta {
     display: block;
     margin-top: 10px;
     font-size: 12px;
     line-height: 1.5;
+  }
+}
+
+@keyframes agent-message-cursor {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+
+  50% {
+    opacity: 1;
   }
 }
 

@@ -113,7 +113,7 @@ const AgentConversationPage: React.FC = () => {
     },
     {
       title: 'Agent ID',
-      dataIndex: 'agentId',
+      dataIndex: 'agentDefinitionId',
       valueType: 'text',
       ellipsis: true,
     },
@@ -192,18 +192,18 @@ const AgentConversationPage: React.FC = () => {
               column={1}
               dataSource={conversation}
               columns={[
-                {title: 'ID', dataIndex: 'id'},
-                {title: '标题', dataIndex: 'title'},
-                {title: 'Agent ID', dataIndex: 'agentId'},
-                {title: '状态', dataIndex: 'status', valueEnum: statusValueEnum},
-                {title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime'},
-                {title: '更新时间', dataIndex: 'updatedAt', valueType: 'dateTime'},
+                { title: 'ID', dataIndex: 'id' },
+                { title: '标题', dataIndex: 'title' },
+                { title: 'Agent ID', dataIndex: 'agentDefinitionId' },
+                { title: '状态', dataIndex: 'status', valueEnum: statusValueEnum },
+                { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime' },
+                { title: '更新时间', dataIndex: 'updatedAt', valueType: 'dateTime' },
               ]}
             />
           ) : (
             <Empty description="暂无会话详情" />
           )}
-          <Card title="消息列表" style={{marginTop: 16}}>
+          <Card title="消息列表" style={{ marginTop: 16 }}>
             {!messages.length ? (
               <Empty description="暂无消息" />
             ) : (

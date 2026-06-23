@@ -1,35 +1,57 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {PageContainer} from '@ant-design/pro-components';
-import {Button, Card, Empty, Input, List, message, Select, Spin, Typography} from 'antd';
-import {getAgentDefinitionList} from '@/services/agent/AgentDefinitionController';
-import {sendAgentChat} from '@/services/agent/ChatController';
+import React, { useEffect, useRef, useState } from 'react';
+import { PageContainer } from '@ant-design/pro-components';
+import { Button, Card, Empty, Input, List, message, Select, Spin, Typography } from 'antd';
+import { getAgentDefinitionList } from '@/services/agent/AgentDefinitionController';
+import { streamAgentChat } from '@/services/agent/ChatController';
 import {
   getAgentConversationList,
   getAgentConversationMessages,
 } from '@/services/agent/ConversationController';
-import {AgentConversation, AgentDefinition, AgentMessage} from '@/services/entity/Agent';
+import { AgentConversation, AgentDefinition, AgentMessage } from '@/services/entity/Agent';
 import AgentMessageBubble from '@/components/AgentMessageBubble';
 import './index.less';
 
-const {Text} = Typography;
+const { Text } = Typography;
+const TYPEWRITER_INTERVAL = 24;
+const TYPEWRITER_STEP = 1;
+
+type ChatStreamStatus = 'streaming' | 'error' | 'stopped';
+
+type ChatMessage = AgentMessage & {
+  clientId?: string;
+  streamStatus?: ChatStreamStatus;
+  errorMsg?: string;
+};
+
+const createClientId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random()}`;
 
 const ChatDebugPage: React.FC = () => {
   const [agents, setAgents] = useState<AgentDefinition[]>([]);
   const [agentId, setAgentId] = useState<string>();
   const [conversationId, setConversationId] = useState<string>();
   const [conversations, setConversations] = useState<AgentConversation[]>([]);
-  const [messages, setMessages] = useState<AgentMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loadingAgents, setLoadingAgents] = useState(false);
   const [loadingConversations, setLoadingConversations] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
   const messageEndRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController>();
+  const streamingAssistantIdRef = useRef<string>();
+  const stoppedByUserRef = useRef(false);
+  const typewriterQueueRef = useRef('');
+  const typewriterTimerRef = useRef<number>();
+  const typewriterDrainCallbackRef = useRef<() => void>();
 
   const loadAgents = async () => {
     setLoadingAgents(true);
     try {
-      const {code, data, message: msg} = await getAgentDefinitionList({
+      const {
+        code,
+        data,
+        message: msg,
+      } = await getAgentDefinitionList({
         current: 1,
         pageSize: 1000,
         status: 1,
@@ -47,7 +69,11 @@ const ChatDebugPage: React.FC = () => {
   const loadConversations = async () => {
     setLoadingConversations(true);
     try {
-      const {code, data, message: msg} = await getAgentConversationList({
+      const {
+        code,
+        data,
+        message: msg,
+      } = await getAgentConversationList({
         current: 1,
         pageSize: 20,
       });
@@ -64,7 +90,11 @@ const ChatDebugPage: React.FC = () => {
   const loadMessages = async (id: string) => {
     setLoadingMessages(true);
     try {
-      const {code, data, message: msg} = await getAgentConversationMessages(id, {
+      const {
+        code,
+        data,
+        message: msg,
+      } = await getAgentConversationMessages(id, {
         current: 1,
         pageSize: 20,
       });
@@ -84,16 +114,106 @@ const ChatDebugPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    messageEndRef.current?.scrollIntoView({behavior: 'smooth'});
+    messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const updateAssistantMessage = (
+    clientId: string,
+    updater: (messageItem: ChatMessage) => ChatMessage,
+  ) => {
+    setMessages((current) =>
+      current.map((item) => (item.clientId === clientId ? updater(item) : item)),
+    );
+  };
+
+  const clearTypewriterTimer = () => {
+    if (typewriterTimerRef.current !== undefined) {
+      window.clearInterval(typewriterTimerRef.current);
+      typewriterTimerRef.current = undefined;
+    }
+  };
+
+  const runTypewriterDrainCallback = () => {
+    const callback = typewriterDrainCallbackRef.current;
+    typewriterDrainCallbackRef.current = undefined;
+    callback?.();
+  };
+
+  const resetTypewriter = () => {
+    clearTypewriterTimer();
+    typewriterQueueRef.current = '';
+    typewriterDrainCallbackRef.current = undefined;
+  };
+
+  const startTypewriterTimer = (assistantClientId: string) => {
+    if (typewriterTimerRef.current !== undefined) {
+      return;
+    }
+
+    typewriterTimerRef.current = window.setInterval(() => {
+      const nextText = typewriterQueueRef.current.slice(0, TYPEWRITER_STEP);
+      if (!nextText) {
+        clearTypewriterTimer();
+        runTypewriterDrainCallback();
+        return;
+      }
+
+      typewriterQueueRef.current = typewriterQueueRef.current.slice(nextText.length);
+      updateAssistantMessage(assistantClientId, (item) => ({
+        ...item,
+        content: `${item.content || ''}${nextText}`,
+      }));
+
+      if (!typewriterQueueRef.current) {
+        clearTypewriterTimer();
+        runTypewriterDrainCallback();
+      }
+    }, TYPEWRITER_INTERVAL);
+  };
+
+  const appendTypewriterText = (assistantClientId: string, text: string) => {
+    typewriterQueueRef.current += text;
+    startTypewriterTimer(assistantClientId);
+  };
+
+  const flushTypewriterQueue = (assistantClientId: string) => {
+    const remainingText = typewriterQueueRef.current;
+    resetTypewriter();
+    if (!remainingText) {
+      return;
+    }
+    updateAssistantMessage(assistantClientId, (item) => ({
+      ...item,
+      content: `${item.content || ''}${remainingText}`,
+    }));
+  };
+
+  const waitForTypewriterDrain = () => {
+    if (!typewriterQueueRef.current && typewriterTimerRef.current === undefined) {
+      return Promise.resolve();
+    }
+    return new Promise<void>((resolve) => {
+      typewriterDrainCallbackRef.current = resolve;
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+      resetTypewriter();
+    };
+  }, []);
+
   const handleNewConversation = () => {
+    if (sending) {
+      return;
+    }
     setConversationId(undefined);
     setMessages([]);
   };
 
   const handleSelectConversation = async (conversation: AgentConversation) => {
-    if (!conversation.id) {
+    if (sending || !conversation.id) {
       return;
     }
 
@@ -104,9 +224,45 @@ const ChatDebugPage: React.FC = () => {
     await loadMessages(conversation.id);
   };
 
+  const markAssistantStopped = (assistantClientId?: string) => {
+    if (!assistantClientId) {
+      return;
+    }
+    updateAssistantMessage(assistantClientId, (item) => ({
+      ...item,
+      streamStatus: 'stopped',
+    }));
+  };
+
+  const markAssistantError = (assistantClientId: string, errorMsg: string) => {
+    updateAssistantMessage(assistantClientId, (item) => ({
+      ...item,
+      streamStatus: 'error',
+      errorMsg,
+    }));
+  };
+
+  const handleStop = () => {
+    if (!abortControllerRef.current) {
+      return;
+    }
+    stoppedByUserRef.current = true;
+    abortControllerRef.current.abort();
+    resetTypewriter();
+    markAssistantStopped(streamingAssistantIdRef.current);
+  };
+
   const handleSend = async () => {
+    if (sending) {
+      return;
+    }
+
     const content = input.trim();
-    if (!agentId) {
+    const conversationAgentId = conversationId
+      ? conversations.find((item) => item.id === conversationId)?.agentId
+      : undefined;
+    const sendAgentId = conversationAgentId || agentId;
+    if (!sendAgentId) {
       message.error('请选择 Agent');
       return;
     }
@@ -115,34 +271,100 @@ const ChatDebugPage: React.FC = () => {
       return;
     }
 
-    const userMessage: AgentMessage = {
+    const userMessage: ChatMessage = {
+      clientId: createClientId('user'),
       role: 'user',
       content,
     };
+    const assistantClientId = createClientId('assistant');
+    const assistantMessage: ChatMessage = {
+      clientId: assistantClientId,
+      role: 'assistant',
+      content: '',
+      streamStatus: 'streaming',
+    };
+    const controller = new AbortController();
+    let shouldReloadConversations = false;
+    let terminalEventReceived = false;
+    let typewriterDrainPromise: Promise<void> | undefined;
 
+    resetTypewriter();
+    abortControllerRef.current = controller;
+    streamingAssistantIdRef.current = assistantClientId;
+    stoppedByUserRef.current = false;
     setSending(true);
-    setMessages((current) => [...current, userMessage]);
+    setInput('');
+    setMessages((current) => [...current, userMessage, assistantMessage]);
+
     try {
       const payload = conversationId
-        ? {agentId, conversationId, message: content}
-        : {agentId, message: content};
-      const {code, data, message: msg} = await sendAgentChat(payload);
-      if (code === 200) {
-        setMessages((current) => [...current, data]);
-        setInput('');
-        if (!conversationId && data?.conversationId) {
-          setConversationId(data.conversationId);
-          await loadConversations();
-        }
-      } else {
-        setMessages((current) => current.filter((item) => item !== userMessage));
-        message.error(msg || '发送失败');
+        ? { agentId: sendAgentId, conversationId, message: content }
+        : { agentId: sendAgentId, message: content };
+      await streamAgentChat(payload, {
+        signal: controller.signal,
+        onMessage: (chunk, data) => {
+          if (data.conversationId) {
+            setConversationId(data.conversationId);
+            if (!conversationId) {
+              shouldReloadConversations = true;
+            }
+          }
+          if (!chunk) {
+            return;
+          }
+          appendTypewriterText(assistantClientId, chunk);
+        },
+        onError: (data) => {
+          terminalEventReceived = true;
+          flushTypewriterQueue(assistantClientId);
+          const errorMsg = data.message || '生成失败';
+          markAssistantError(assistantClientId, errorMsg);
+          message.error(errorMsg);
+        },
+        onDone: (data) => {
+          terminalEventReceived = true;
+          if (data.conversationId) {
+            setConversationId(data.conversationId);
+            if (!conversationId) {
+              shouldReloadConversations = true;
+            }
+          }
+          typewriterDrainPromise = waitForTypewriterDrain().then(() => {
+            updateAssistantMessage(assistantClientId, (item) => ({
+              ...item,
+              id: data.messageId || item.id,
+              conversationId: data.conversationId || item.conversationId,
+              totalTokens: data.totalTokens ?? item.totalTokens,
+              streamStatus: undefined,
+            }));
+          });
+        },
+      });
+
+      if (typewriterDrainPromise) {
+        await typewriterDrainPromise;
+      }
+      if (!terminalEventReceived && !stoppedByUserRef.current) {
+        flushTypewriterQueue(assistantClientId);
+        markAssistantError(assistantClientId, '连接已断开');
+      }
+      if (shouldReloadConversations) {
+        await loadConversations();
       }
     } catch (error) {
-      setMessages((current) => current.filter((item) => item !== userMessage));
-      message.error('发送失败');
+      if (stoppedByUserRef.current || controller.signal.aborted) {
+        markAssistantStopped(assistantClientId);
+        return;
+      }
+      const errorMsg = error instanceof Error ? error.message : '发送失败';
+      flushTypewriterQueue(assistantClientId);
+      markAssistantError(assistantClientId, errorMsg);
+      message.error(errorMsg || '发送失败');
     } finally {
       setSending(false);
+      abortControllerRef.current = undefined;
+      streamingAssistantIdRef.current = undefined;
+      stoppedByUserRef.current = false;
     }
   };
 
@@ -150,18 +372,20 @@ const ChatDebugPage: React.FC = () => {
     return item.title || item.createdAt || item.id || '未命名会话';
   };
 
-  const currentAgent = agents.find((item) => item.id === agentId);
   const currentConversation = conversations.find((item) => item.id === conversationId);
+  const activeAgentId = currentConversation?.agentId || agentId;
+  const currentAgent = agents.find((item) => item.id === activeAgentId);
 
   return (
     <PageContainer>
       <div className="agent-chat-page">
-        <Card className="agent-chat-sidebar" bodyStyle={{padding: 0}}>
+        <Card className="agent-chat-sidebar" bodyStyle={{ padding: 0 }}>
           <div className="agent-chat-sidebar-header">
             <Select
               placeholder="请选择启用 Agent"
               loading={loadingAgents}
-              value={agentId}
+              value={activeAgentId}
+              disabled={sending}
               showSearch={true}
               allowClear={true}
               optionFilterProp="label"
@@ -172,20 +396,25 @@ const ChatDebugPage: React.FC = () => {
               }}
               options={agents
                 .filter((item) => item.id)
-                .map((item) => ({label: item.name || item.code || item.id, value: item.id}))}
+                .map((item) => ({ label: item.name || item.code || item.id, value: item.id }))}
             />
-            <Button type="primary" block={true} onClick={handleNewConversation}>
+            <Button type="primary" block={true} disabled={sending} onClick={handleNewConversation}>
               新建会话
             </Button>
           </div>
-          <Spin spinning={loadingConversations}>
+          <Spin spinning={loadingConversations} wrapperClassName="agent-chat-session-spin">
             <List
               className="agent-chat-session-list"
               dataSource={conversations}
-              locale={{emptyText: '暂无会话'}}
+              locale={{ emptyText: '暂无会话' }}
               renderItem={(item) => (
                 <List.Item
-                  className={item.id === conversationId ? 'agent-chat-session-active' : undefined}
+                  className={[
+                    item.id === conversationId ? 'agent-chat-session-active' : undefined,
+                    sending ? 'agent-chat-session-disabled' : undefined,
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                   onClick={() => handleSelectConversation(item)}
                 >
                   <List.Item.Meta
@@ -202,10 +431,12 @@ const ChatDebugPage: React.FC = () => {
           </Spin>
         </Card>
 
-        <Card className="agent-chat-panel" bodyStyle={{padding: 0}}>
+        <Card className="agent-chat-panel" bodyStyle={{ padding: 0 }}>
           <div className="agent-chat-panel-header">
             <div>
-              <Text strong={true}>{currentAgent?.name || currentAgent?.code || '未选择 Agent'}</Text>
+              <Text strong={true}>
+                {currentAgent?.name || currentAgent?.code || '未选择 Agent'}
+              </Text>
               <div className="agent-chat-panel-subtitle">
                 {currentConversation ? renderConversationTitle(currentConversation) : '新会话'}
               </div>
@@ -220,7 +451,12 @@ const ChatDebugPage: React.FC = () => {
               ) : (
                 <>
                   {messages.map((item, index) => (
-                    <AgentMessageBubble key={item.id || `${item.role}-${index}`} message={item} />
+                    <AgentMessageBubble
+                      key={item.id || item.clientId || `${item.role}-${index}`}
+                      message={item}
+                      status={item.streamStatus}
+                      errorMessage={item.errorMsg}
+                    />
                   ))}
                   <div ref={messageEndRef} />
                 </>
@@ -232,18 +468,24 @@ const ChatDebugPage: React.FC = () => {
             <Input.TextArea
               value={input}
               disabled={sending}
-              autoSize={{minRows: 2, maxRows: 6}}
+              autoSize={{ minRows: 2, maxRows: 6 }}
               placeholder="支持 Markdown，Shift+Enter 换行"
               onChange={(event) => setInput(event.target.value)}
               onPressEnter={(event) => {
                 if (!event.shiftKey) {
                   event.preventDefault();
-                  handleSend();
+                  if (!sending) {
+                    handleSend();
+                  }
                 }
               }}
             />
-            <Button type="primary" loading={sending} disabled={sending} onClick={handleSend}>
-              发送
+            <Button
+              type={sending ? 'default' : 'primary'}
+              danger={sending}
+              onClick={sending ? handleStop : handleSend}
+            >
+              {sending ? '停止生成' : '发送'}
             </Button>
           </div>
         </Card>

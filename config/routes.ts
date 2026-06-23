@@ -59,20 +59,61 @@ export default [
     ],
   },
   {
+    path: '/agent',
+    name: 'Agent 平台',
+    icon: 'robot',
+    routes: [
+      {
+        path: '/agent/model-provider',
+        name: '模型供应商',
+        component: './agent/model-provider',
+      },
+      {
+        path: '/agent/definition',
+        name: 'Agent 定义',
+        component: './agent/definition',
+      },
+      {
+        path: '/agent/tool',
+        name: '工具管理',
+        component: './agent/tool',
+      },
+      {
+        path: '/agent/conversation',
+        name: '会话管理',
+        component: './agent/conversation',
+      },
+      {
+        path: '/agent/chat',
+        name: 'Chat 调试',
+        component: './agent/chat',
+      },
+      {
+        path: '/agent/run',
+        name: '运行记录',
+        component: './agent/run',
+      },
+      {
+        path: '/agent/tool-call-log',
+        name: '工具调用日志',
+        component: './agent/tool-call-log',
+      },
+    ],
+  },
+  {
+    path: '/user',
+    name: 'user',
+    routes: [
+      {
+        path: '/user/member',
+        name: 'Member',
+        component: './user/member',
+      },
+    ],
+  },
+  {
     path: '*',
     layout: false,
     component: './404',
   },
-    {
-      path: '/user',
-      name: 'user',
-        routes: [
-            {
-              path: '/user/member',
-              name: 'Member',
-              component: './user/member',
-            },
-        ]
-    },
-
-]
+];

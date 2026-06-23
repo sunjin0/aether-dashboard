@@ -1,0 +1,208 @@
+/**
+ * @description 模型供应商
+ */
+export interface ModelProvider {
+  id?: string;
+  name?: string;
+  type?: string;
+  apiBaseUrl?: string;
+  apiKey?: string;
+  defaultModel?: string;
+  status?: number;
+  sort?: number;
+  remark?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * @description 模型供应商查询参数
+ */
+export interface ModelProviderSearchParams extends ModelProvider {
+  current?: number;
+  pageSize?: number;
+}
+
+/**
+ * @description 模型供应商启用/禁用参数
+ */
+export interface ModelProviderStatusParams {
+  status: number;
+}
+
+/**
+ * @description Agent 定义
+ */
+export interface AgentDefinition {
+  id?: string;
+  name?: string;
+  code?: string;
+  description?: string;
+  systemPrompt?: string;
+  modelProviderId?: string;
+  model?: string;
+  temperature?: number;
+  maxTokens?: number;
+  status?: number;
+  maxToolRounds?: number;
+  accessType?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * @description Agent 定义查询参数
+ */
+export interface AgentDefinitionSearchParams extends AgentDefinition {
+  current?: number;
+  pageSize?: number;
+}
+
+/**
+ * @description Agent 定义启用/禁用参数
+ */
+export interface AgentDefinitionStatusParams {
+  status: number;
+}
+
+/**
+ * @description Agent 聊天请求
+ */
+export interface AgentChatRequest {
+  agentId: string;
+  conversationId?: string;
+  message: string;
+}
+
+/**
+ * @description Agent 会话
+ */
+export interface AgentConversation {
+  id?: string;
+  agentId?: string;
+  title?: string;
+  status?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * @description Agent 会话查询参数
+ */
+export interface AgentConversationSearchParams extends AgentConversation {
+  current?: number;
+  pageSize?: number;
+}
+
+/**
+ * @description Agent 消息
+ */
+export interface AgentMessage {
+  id?: string;
+  conversationId?: string;
+  role?: string;
+  content?: string;
+  model?: string;
+  promptTokens?: number;
+  completionTokens?: number;
+  totalTokens?: number;
+  latencyMs?: number;
+  createdAt?: string;
+}
+
+/**
+ * @description Agent 消息查询参数
+ */
+export interface AgentMessageSearchParams {
+  current?: number;
+  pageSize?: number;
+}
+
+/**
+ * @description Agent 运行记录
+ */
+export interface AgentRun {
+  id?: string;
+  agentDefinitionId?: string;
+  userId?: string;
+  conversationId?: string;
+  messageId?: string;
+  inputContent?: string;
+  outputContent?: string;
+  model?: string;
+  modelProviderId?: string;
+  promptTokens?: number;
+  completionTokens?: number;
+  totalTokens?: number;
+  latencyMs?: number;
+  status?: number;
+  errorMsg?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * @description Agent 运行记录查询参数
+ */
+export interface AgentRunSearchParams extends AgentRun {
+  current?: number;
+  pageSize?: number;
+}
+
+/**
+ * @description Agent 工具调用日志
+ */
+export interface AgentToolCallLog {
+  id?: string;
+  runId?: string;
+  toolId?: string;
+  agentDefinitionId?: string;
+  requestUrl?: string;
+  requestMethod?: string;
+  requestHeaders?: string;
+  requestBody?: string;
+  responseStatus?: number;
+  responseBody?: string;
+  latencyMs?: number;
+  status?: number;
+  errorMsg?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * @description Agent 工具调用日志查询参数
+ */
+export interface AgentToolCallLogSearchParams extends AgentToolCallLog {
+  current?: number;
+  pageSize?: number;
+}
+
+/**
+ * @description Agent 工具
+ */
+export interface AgentTool {
+  id?: string;
+  name?: string;
+  code?: string;
+  description?: string;
+  type?: string;
+  httpMethod?: string;
+  httpUrl?: string;
+  httpHeaders?: string;
+  httpBodyTemplate?: string;
+  responseExtractRule?: string;
+  timeoutMs?: number;
+  cacheTtlSeconds?: number;
+  status?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * @description Agent 工具查询参数
+ */
+export interface AgentToolSearchParams extends AgentTool {
+  current?: number;
+  pageSize?: number;
+}

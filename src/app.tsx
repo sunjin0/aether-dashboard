@@ -1,5 +1,12 @@
 import {AvatarDropdown, AvatarName, Footer, SelectLang} from '@/components';
-import {DashboardOutlined, LinkOutlined, MessageOutlined, SettingOutlined, UserOutlined} from '@ant-design/icons';
+import {
+  DashboardOutlined,
+  LinkOutlined,
+  MessageOutlined,
+  OpenAIOutlined,
+  SettingOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
 import type {Settings as LayoutSettings} from '@ant-design/pro-components';
 import {SettingDrawer} from '@ant-design/pro-components';
 import {RunTimeLayoutConfig} from '@umijs/max';
@@ -16,6 +23,7 @@ const iconMap: Record<string, React.ReactNode> = {
   'UserOutlined': <UserOutlined/>,
   'DashboardOutlined': <DashboardOutlined/>,
   'MessageOutlined': <MessageOutlined/>,
+  'OpenAIOutlined': <OpenAIOutlined/>,
 };
 
 /**

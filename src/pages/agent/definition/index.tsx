@@ -1,0 +1,250 @@
+import React, {useRef, useState} from 'react';
+import {PlusOutlined} from '@ant-design/icons';
+import {ActionType, PageContainer, ProTable} from '@ant-design/pro-components';
+import {Button, message, Popconfirm} from 'antd';
+import {FormattedMessage, history, useAccess} from '@@/exports';
+import AgentDefinitionForm from '@/pages/agent/definition/AgentDefinitionForm';
+import {
+  copyAgentDefinitionInfo,
+  deleteAgentDefinitionInfo,
+  getAgentDefinitionList,
+  updateAgentDefinitionStatus,
+} from '@/services/agent/AgentDefinitionController';
+import {AgentDefinition, AgentDefinitionSearchParams} from '@/services/entity/Agent';
+import { getModelProviderList } from '@/services/agent/ModelProviderController';
+
+const statusValueEnum = {
+  0: {text: '草稿', status: 'Default'},
+  1: {text: '启用', status: 'Success'},
+  2: {text: '禁用', status: 'Error'},
+};
+
+const accessTypeValueEnum = {
+  private: {text: 'private'},
+  public: {text: 'public'},
+};
+
+const AgentDefinitionPage: React.FC = () => {
+  const [open, setOpen] = useState(false);
+  const [id, setId] = useState<string | undefined>(undefined);
+  const ref = useRef<ActionType>();
+  const permissionMap = useAccess();
+  const path = history.location.pathname;
+  const write = permissionMap[path];
+
+  const handleDelete = async (record: AgentDefinition) => {
+    if (!record.id) {
+      message.error('缺少 Agent ID');
+      return;
+    }
+
+    const {code, message: msg} = await deleteAgentDefinitionInfo(record.id);
+    if (code === 200) {
+      message.success(msg || '删除成功');
+      ref.current?.reload();
+    } else {
+      message.error(msg || '删除失败');
+    }
+  };
+
+  const handleCopy = async (record: AgentDefinition) => {
+    if (!record.id) {
+      message.error('缺少 Agent ID');
+      return;
+    }
+
+    const {code, message: msg} = await copyAgentDefinitionInfo(record.id);
+    if (code === 200) {
+      message.success(msg || '复制成功');
+      ref.current?.reload();
+    } else {
+      message.error(msg || '复制失败');
+    }
+  };
+
+  const handleStatusChange = async (record: AgentDefinition) => {
+    if (!record.id) {
+      message.error('缺少 Agent ID');
+      return;
+    }
+
+    const nextStatus = record.status === 1 ? 2 : 1;
+    const {code, message: msg} = await updateAgentDefinitionStatus(record.id, {
+      status: nextStatus,
+    });
+    if (code === 200) {
+      message.success(msg || '操作成功');
+      ref.current?.reload();
+    } else {
+      message.error(msg || '操作失败');
+    }
+  };
+
+  const columns: any[] = [
+    {
+      title: 'Agent 名称',
+      dataIndex: 'name',
+      valueType: 'text',
+      ellipsis: true,
+    },
+    {
+      title: 'Agent 编码',
+      dataIndex: 'code',
+      valueType: 'text',
+      ellipsis: true,
+    },
+    {
+      title: '模型供应商',
+      dataIndex: 'modelProviderId',
+      valueType: 'select',
+      request: async () => {
+        const { data } = await getModelProviderList({
+          current: 1,
+          pageSize: 1000,
+          status: 1,
+        });
+
+        return (data || [])
+          .filter((item) => item.id)
+          .map((item) => ({
+            label: item.name || item.id,
+            value: item.id as string,
+          }));
+      },
+      ellipsis: true,
+    },
+    {
+      title: '模型名称',
+      dataIndex: 'model',
+      valueType: 'text',
+      ellipsis: true,
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      valueType: 'select',
+      valueEnum: statusValueEnum,
+    },
+    {
+      title: '温度参数',
+      dataIndex: 'temperature',
+      valueType: 'digit',
+      hideInSearch: true,
+    },
+    {
+      title: '最大 token',
+      dataIndex: 'maxTokens',
+      valueType: 'digit',
+      hideInSearch: true,
+    },
+    {
+      title: '最大工具轮次',
+      dataIndex: 'maxToolRounds',
+      valueType: 'digit',
+      hideInSearch: true,
+    },
+    {
+      title: '访问类型',
+      dataIndex: 'accessType',
+      valueType: 'select',
+      valueEnum: accessTypeValueEnum,
+    },
+    // {
+    //   title: '描述',
+    //   dataIndex: 'description',
+    //   valueType: 'text',
+    //   ellipsis: true,
+    //   hideInSearch: true,
+    // },
+    {
+      title: '创建时间',
+      dataIndex: 'createdAt',
+      valueType: 'dateTime',
+      hideInSearch: true,
+    },
+    {
+      title: '操作',
+      valueType: 'option',
+      width: 300,
+      key: 'option',
+      fixed: 'right',
+      render: (_: any, record: AgentDefinition) =>
+        write && [
+          <Button
+            type="link"
+            key="edit"
+            onClick={() => {
+              setId(record.id);
+              setOpen(true);
+            }}
+          >
+            编辑
+          </Button>,
+          <Popconfirm
+            key="copy"
+            title="确认复制该 Agent？"
+            onConfirm={() => handleCopy(record)}
+          >
+            <Button type="link" key="copy-button">
+              复制
+            </Button>
+          </Popconfirm>,
+          <Popconfirm
+            key="status"
+            title={`确认${record.status === 1 ? '禁用' : '启用'}该 Agent？`}
+            onConfirm={() => handleStatusChange(record)}
+          >
+            <Button type="link" key="status-button">
+              {record.status === 1 ? '禁用' : '启用'}
+            </Button>
+          </Popconfirm>,
+          <Popconfirm
+            key="delete"
+            title="确认删除该 Agent？"
+            onConfirm={() => handleDelete(record)}
+          >
+            <Button type="link" key="delete-button">
+              删除
+            </Button>
+          </Popconfirm>,
+        ],
+    },
+  ];
+
+  return (
+    <PageContainer>
+      <ProTable
+        actionRef={ref}
+        rowKey="id"
+        request={async (params: AgentDefinitionSearchParams) => getAgentDefinitionList(params)}
+        toolBarRender={() =>
+          write && [
+            <Button
+              key="button"
+              icon={<PlusOutlined />}
+              type="primary"
+              onClick={() => {
+                setId(undefined);
+                setOpen(true);
+              }}
+            >
+              <FormattedMessage id="pages.common.new" />
+            </Button>,
+          ]
+        }
+        columns={columns}
+      />
+      <AgentDefinitionForm
+        id={id}
+        open={open}
+        setOpen={setOpen}
+        onSuccess={() => {
+          setId(undefined);
+          ref.current?.reload();
+        }}
+      />
+    </PageContainer>
+  );
+};
+
+export default AgentDefinitionPage;

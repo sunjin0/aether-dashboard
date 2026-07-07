@@ -1,19 +1,25 @@
 import { getLocale } from '@@/exports';
 import { request } from '@umijs/max';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { ResponseStructure } from '@/services/entity/Common';
 import {
   AgentChatRequest,
   AgentMessage,
   AgentStreamDoneData,
   AgentStreamErrorData,
-  AgentStreamEvent,
   AgentStreamMessageData,
   AgentStreamToolCallData,
 } from '@/services/entity/Agent';
 
+export interface AgentStreamReasoningData {
+  chunk?: string;
+  conversationId?: string;
+}
+
 export interface StreamAgentChatOptions {
   signal?: AbortSignal;
   onMessage?: (chunk: string, data: AgentStreamMessageData) => void;
+  onReasoning?: (chunk: string, data: AgentStreamReasoningData) => void;
   onToolCall?: (data: AgentStreamToolCallData) => void;
   onDone?: (data: AgentStreamDoneData) => void;
   onError?: (data: AgentStreamErrorData) => void;
@@ -44,109 +50,61 @@ export const streamAgentChat = async (
   if (params.conversationId) {
     query.set('conversationId', params.conversationId);
   }
+  if (params.thinking !== undefined) {
+    query.set('thinking', String(params.thinking));
+  }
+  if (params.reasoningEffort) {
+    query.set('reasoningEffort', params.reasoningEffort);
+  }
 
-  const headers: Record<string, string> = {
-    Accept: 'text/event-stream',
-    'Accept-Language': getLocale(),
-  };
   const token = localStorage.getItem('token');
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
 
-  const response = await fetch(`/api/agent/chat/stream?${query.toString()}`, {
+  await fetchEventSource(`/api/agent/chat/stream?${query.toString()}`, {
     method: 'GET',
-    headers,
+    headers: {
+      'Accept-Language': getLocale(),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     signal: options.signal,
-  });
 
-  if (response.status === 401) {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
-    window.location.href = '/login';
-    throw new Error('登录已过期，请重新登录');
-  }
+    onopen(response) {
+      if (response.status !== 200) {
+        options.onError?.({ message: response.statusText });
+        return Promise.reject(new Error(response.statusText));
+      }
+      return Promise.resolve();
+    },
 
-  if (!response.ok || !response.body) {
-    throw new Error(`SSE request failed: ${response.status}`);
-  }
+    onmessage(event) {
+      const eventType = event.event || 'message';
+      let data: any;
 
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder('utf-8');
-  let buffer = '';
-
-  const dispatchEvent = (rawEvent: string) => {
-    const parsed = parseSseEvent(rawEvent);
-    if (!parsed) {
-      return false;
-    }
-
-    if (parsed.event === 'message') {
-      options.onMessage?.(parsed.data.chunk || '', parsed.data);
-      return false;
-    }
-    if (parsed.event === 'tool_call') {
-      options.onToolCall?.(parsed.data);
-      return false;
-    }
-    if (parsed.event === 'error') {
-      options.onError?.(parsed.data);
-      return true;
-    }
-    if (parsed.event === 'done') {
-      options.onDone?.(parsed.data);
-      return true;
-    }
-    return false;
-  };
-
-  try {
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) {
-        buffer += decoder.decode();
-        break;
+      try {
+        data = JSON.parse(event.data);
+      } catch {
+        return;
       }
 
-      buffer += decoder.decode(value, { stream: true });
-      const events = buffer.split(/\r?\n\r?\n/);
-      buffer = events.pop() || '';
+      console.log('[SSE]', eventType, data);
 
-      for (const rawEvent of events) {
-        if (dispatchEvent(rawEvent)) {
-          return;
-        }
+      if (eventType === 'message') {
+        options.onMessage?.(data.chunk || '', data);
+      } else if (eventType === 'reasoning') {
+        options.onReasoning?.(data.chunk || '', data);
+      } else if (eventType === 'tool_call') {
+        options.onToolCall?.(data);
+      } else if (eventType === 'done') {
+        options.onDone?.(data);
+      } else if (eventType === 'error') {
+        options.onError?.(data);
       }
-    }
+    },
 
-    if (buffer.trim() && dispatchEvent(buffer)) {
-      return;
-    }
-  } finally {
-    reader.releaseLock();
-  }
-};
+    onerror(err) {
+      options.onError?.({ message: err.message || '连接错误' });
+      throw err; // 抛出错误停止重连
+    },
 
-const parseSseEvent = (raw: string): AgentStreamEvent | null => {
-  const lines = raw.split(/\r?\n/);
-  let event = 'message';
-  const dataLines: string[] = [];
-
-  lines.forEach((line) => {
-    if (line.startsWith('event:')) {
-      event = line.slice('event:'.length).trim();
-    }
-    if (line.startsWith('data:')) {
-      dataLines.push(line.slice('data:'.length).trim());
-    }
+    openWhenHidden: true,
   });
-
-  if (!dataLines.length) {
-    return null;
-  }
-
-  return {
-    event,
-    data: JSON.parse(dataLines.join('\n')),
-  } as AgentStreamEvent;
 };

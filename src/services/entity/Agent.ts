@@ -72,6 +72,8 @@ export interface AgentChatRequest {
   agentId: string;
   conversationId?: string;
   message: string;
+  thinking?: boolean;
+  reasoningEffort?: 'low' | 'medium' | 'high';
 }
 
 /**
@@ -107,6 +109,12 @@ export interface AgentStreamErrorData {
 export interface AgentStreamDoneData {
   conversationId?: string;
   messageId?: string;
+  content?: string;
+  reasoningContent?: string;
+  reasoningTokens?: number;
+  model?: string;
+  promptTokens?: number;
+  completionTokens?: number;
   totalTokens?: number;
 }
 
@@ -121,7 +129,7 @@ export type AgentStreamEvent =
  */
 export interface AgentConversation {
   id?: string;
-  agentId?: string;
+  agentDefinitionId?: string;
   title?: string;
   status?: number;
   createdAt?: string;
@@ -144,6 +152,8 @@ export interface AgentMessage {
   conversationId?: string;
   role?: string;
   content?: string;
+  reasoningContent?: string;
+  reasoningTokens?: number;
   model?: string;
   promptTokens?: number;
   completionTokens?: number;
@@ -189,6 +199,8 @@ export interface AgentRun {
 export interface AgentRunSearchParams extends AgentRun {
   current?: number;
   pageSize?: number;
+  startTime?: number;
+  endTime?: number;
 }
 
 /**
@@ -277,4 +289,29 @@ export interface BindToolRequest {
  */
 export interface UpdateToolPriorityRequest {
   priority: number;
+}
+
+/**
+ * @description Agent 运行统计
+ */
+export interface AgentRunStatistics {
+  agentDefinitionId?: string;
+  totalCalls?: number;
+  successCalls?: number;
+  failedCalls?: number;
+  timeoutCalls?: number;
+  totalPromptTokens?: number;
+  totalCompletionTokens?: number;
+  totalTokens?: number;
+  avgLatencyMs?: number;
+  errorRate?: number;
+}
+
+/**
+ * @description Agent 运行统计查询参数
+ */
+export interface AgentRunStatisticsParams {
+  agentId?: string;
+  startTime?: number;
+  endTime?: number;
 }

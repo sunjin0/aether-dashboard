@@ -1,8 +1,8 @@
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {ActionType, PageContainer, ProDescriptions, ProTable} from '@ant-design/pro-components';
-import {Alert, Button, Card, Drawer, Empty, message, Spin, Tag, Typography} from 'antd';
-import {getAgentRunInfo, getAgentRunList} from '@/services/agent/RunController';
-import {AgentRun, AgentRunSearchParams} from '@/services/entity/Agent';
+import {Alert, Button, Card, DatePicker, Drawer, Empty, message, Spin, Statistic, Tag, Typography} from 'antd';
+import {getAgentRunInfo, getAgentRunList, getAgentRunStatistics} from '@/services/agent/RunController';
+import {AgentRun, AgentRunSearchParams, AgentRunStatistics} from '@/services/entity/Agent';
 import './index.less';
 
 const {Text} = Typography;
@@ -38,11 +38,39 @@ const renderTextBlock = (content?: string, error?: boolean) => {
   );
 };
 
+const {RangePicker} = DatePicker;
+
 const AgentRunPage: React.FC = () => {
   const ref = useRef<ActionType>();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [run, setRun] = useState<AgentRun>();
   const [detailLoading, setDetailLoading] = useState(false);
+  const [statistics, setStatistics] = useState<AgentRunStatistics>();
+  const [statisticsLoading, setStatisticsLoading] = useState(false);
+  const [dateRange, setDateRange] = useState<[any, any] | null>(null);
+
+  const loadStatistics = async () => {
+    setStatisticsLoading(true);
+    try {
+      const params: any = {};
+      if (dateRange) {
+        params.startTime = dateRange[0]?.valueOf();
+        params.endTime = dateRange[1]?.valueOf();
+      }
+      const {code, data, message: msg} = await getAgentRunStatistics(params);
+      if (code === 200) {
+        setStatistics(data);
+      } else {
+        message.error(msg || '加载统计信息失败');
+      }
+    } finally {
+      setStatisticsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadStatistics();
+  }, [dateRange]);
 
   const openDetail = async (record: AgentRun) => {
     if (!record.id) {
@@ -111,6 +139,16 @@ const AgentRunPage: React.FC = () => {
       hideInSearch: true,
     },
     {
+      title: '时间范围',
+      dataIndex: 'dateRange',
+      valueType: 'dateRange',
+      hideInTable: true,
+      renderFormItem: () => <RangePicker />,
+      fieldProps: {
+        style: {width: '100%'},
+      },
+    },
+    {
       title: '创建时间',
       dataIndex: 'createdAt',
       valueType: 'dateTime',
@@ -136,12 +174,37 @@ const AgentRunPage: React.FC = () => {
         className="agent-run-page-note"
         type="info"
         showIcon={true}
-        message="运行记录为只读审计数据；统计接口当前为 V0.6 占位，页面仅展示调用明细。"
+        message="运行记录为只读审计数据；统计接口已接入真实数据。"
       />
+      <Card title="运行统计" style={{marginBottom: 16}}>
+        <Spin spinning={statisticsLoading}>
+          {statistics ? (
+            <div style={{display: 'flex', flexWrap: 'wrap', gap: 16}}>
+              <Statistic title="总调用次数" value={statistics.totalCalls || 0} />
+              <Statistic title="成功次数" value={statistics.successCalls || 0} valueStyle={{color: '#3f8600'}} />
+              <Statistic title="失败次数" value={statistics.failedCalls || 0} valueStyle={{color: '#cf1322'}} />
+              <Statistic title="超时次数" value={statistics.timeoutCalls || 0} valueStyle={{color: '#d4b106'}} />
+              <Statistic title="总 Token" value={statistics.totalTokens || 0} />
+              <Statistic title="平均耗时(ms)" value={statistics.avgLatencyMs || 0} />
+              <Statistic title="错误率" value={statistics.errorRate ? `${(statistics.errorRate * 100).toFixed(2)}%` : '0%'} />
+            </div>
+          ) : (
+            <Empty description="暂无统计数据" />
+          )}
+        </Spin>
+      </Card>
       <ProTable
         actionRef={ref}
         rowKey="id"
-        request={async (params: AgentRunSearchParams) => getAgentRunList(params)}
+        request={async (params: AgentRunSearchParams) => {
+          const {dateRange, ...rest} = params as any;
+          const queryParams: AgentRunSearchParams = {...rest};
+          if (dateRange) {
+            queryParams.startTime = dateRange[0]?.valueOf();
+            queryParams.endTime = dateRange[1]?.valueOf();
+          }
+          return getAgentRunList(queryParams);
+        }}
         columns={columns}
       />
       <Drawer

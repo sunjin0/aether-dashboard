@@ -1,6 +1,26 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { PageContainer } from '@ant-design/pro-components';
-import { Button, Card, Empty, Input, List, message, Select, Spin, Typography } from 'antd';
+import {
+  Button,
+  Checkbox,
+  Empty,
+  Input,
+  List,
+  message,
+  Select,
+  Spin,
+  Tag,
+  Tooltip,
+  Typography,
+} from 'antd';
+import {
+  ArrowDownOutlined,
+  ClearOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  PlusOutlined,
+  SearchOutlined,
+} from '@ant-design/icons';
 import { getAgentDefinitionList } from '@/services/agent/AgentDefinitionController';
 import { streamAgentChat } from '@/services/agent/ChatController';
 import {
@@ -12,8 +32,8 @@ import AgentMessageBubble from '@/components/AgentMessageBubble';
 import './index.less';
 
 const { Text } = Typography;
-const TYPEWRITER_INTERVAL = 24;
-const TYPEWRITER_STEP = 1;
+const TYPEWRITER_INTERVAL = 16;
+const TYPEWRITER_STEP = 2;
 
 type ChatStreamStatus = 'streaming' | 'error' | 'stopped';
 
@@ -21,9 +41,17 @@ type ChatMessage = AgentMessage & {
   clientId?: string;
   streamStatus?: ChatStreamStatus;
   errorMsg?: string;
+  reasoningStream?: string;
 };
 
 const createClientId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random()}`;
+
+const quickStartQuestions = [
+  '帮我写一个Hello World',
+  '解释一下机器学习',
+  '推荐一些学习资源',
+  '如何提高代码质量',
+];
 
 const ChatDebugPage: React.FC = () => {
   const [agents, setAgents] = useState<AgentDefinition[]>([]);
@@ -36,7 +64,13 @@ const ChatDebugPage: React.FC = () => {
   const [loadingConversations, setLoadingConversations] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
+  const [thinking, setThinking] = useState(false);
+  const [reasoningEffort, setReasoningEffort] = useState<'low' | 'medium' | 'high'>('medium');
   const messageEndRef = useRef<HTMLDivElement>(null);
+  const messageListRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController>();
   const streamingAssistantIdRef = useRef<string>();
   const stoppedByUserRef = useRef(false);
@@ -75,7 +109,7 @@ const ChatDebugPage: React.FC = () => {
         message: msg,
       } = await getAgentConversationList({
         current: 1,
-        pageSize: 20,
+        pageSize: 50,
       });
       if (code === 200) {
         setConversations(data || []);
@@ -96,7 +130,7 @@ const ChatDebugPage: React.FC = () => {
         message: msg,
       } = await getAgentConversationMessages(id, {
         current: 1,
-        pageSize: 20,
+        pageSize: 100,
       });
       if (code === 200) {
         setMessages(data || []);
@@ -114,7 +148,9 @@ const ChatDebugPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (!showScrollBottom) {
+      messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages]);
 
   const updateAssistantMessage = (
@@ -218,8 +254,8 @@ const ChatDebugPage: React.FC = () => {
     }
 
     setConversationId(conversation.id);
-    if (conversation.agentId) {
-      setAgentId(conversation.agentId);
+    if (conversation.agentDefinitionId) {
+      setAgentId(conversation.agentDefinitionId);
     }
     await loadMessages(conversation.id);
   };
@@ -252,14 +288,14 @@ const ChatDebugPage: React.FC = () => {
     markAssistantStopped(streamingAssistantIdRef.current);
   };
 
-  const handleSend = async () => {
+  const handleSend = async (text?: string) => {
     if (sending) {
       return;
     }
 
-    const content = input.trim();
+    const content = (text || input).trim();
     const conversationAgentId = conversationId
-      ? conversations.find((item) => item.id === conversationId)?.agentId
+      ? conversations.find((item) => item.id === conversationId)?.agentDefinitionId
       : undefined;
     const sendAgentId = conversationAgentId || agentId;
     if (!sendAgentId) {
@@ -297,9 +333,13 @@ const ChatDebugPage: React.FC = () => {
     setMessages((current) => [...current, userMessage, assistantMessage]);
 
     try {
-      const payload = conversationId
+      const payload: any = conversationId
         ? { agentId: sendAgentId, conversationId, message: content }
         : { agentId: sendAgentId, message: content };
+      if (thinking) {
+        payload.thinking = true;
+        payload.reasoningEffort = reasoningEffort;
+      }
       await streamAgentChat(payload, {
         signal: controller.signal,
         onMessage: (chunk, data) => {
@@ -313,6 +353,21 @@ const ChatDebugPage: React.FC = () => {
             return;
           }
           appendTypewriterText(assistantClientId, chunk);
+        },
+        onReasoning: (chunk, data) => {
+          if (data.conversationId) {
+            setConversationId(data.conversationId);
+            if (!conversationId) {
+              shouldReloadConversations = true;
+            }
+          }
+          if (!chunk) {
+            return;
+          }
+          updateAssistantMessage(assistantClientId, (item) => ({
+            ...item,
+            reasoningStream: (item.reasoningStream || '') + chunk,
+          }));
         },
         onError: (data) => {
           terminalEventReceived = true;
@@ -334,6 +389,13 @@ const ChatDebugPage: React.FC = () => {
               ...item,
               id: data.messageId || item.id,
               conversationId: data.conversationId || item.conversationId,
+              content: data.content || item.content,
+              reasoningContent: data.reasoningContent || item.reasoningContent || item.reasoningStream,
+              reasoningStream: undefined,
+              reasoningTokens: data.reasoningTokens ?? item.reasoningTokens,
+              model: data.model || item.model,
+              promptTokens: data.promptTokens ?? item.promptTokens,
+              completionTokens: data.completionTokens ?? item.completionTokens,
               totalTokens: data.totalTokens ?? item.totalTokens,
               streamStatus: undefined,
             }));
@@ -368,127 +430,325 @@ const ChatDebugPage: React.FC = () => {
     }
   };
 
+  const handleScrollBottom = () => {
+    messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setShowScrollBottom(false);
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+    setShowScrollBottom(!isNearBottom);
+  };
+
   const renderConversationTitle = (item: AgentConversation) => {
     return item.title || item.createdAt || item.id || '未命名会话';
   };
 
+  const renderTimeGroup = (date: string) => {
+    const now = new Date();
+    const target = new Date(date);
+    const diffDays = Math.floor((now.getTime() - target.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return '今天';
+    if (diffDays === 1) return '昨天';
+    if (diffDays < 7) return '最近7天';
+    if (diffDays < 30) return '最近30天';
+    return '更早';
+  };
+
+  const groupedConversations = useMemo(() => {
+    const filtered = searchText
+      ? conversations.filter(
+          (item) =>
+            item.title?.toLowerCase().includes(searchText.toLowerCase()) ||
+            item.id?.toLowerCase().includes(searchText.toLowerCase()),
+        )
+      : conversations;
+
+    const groups: Record<string, AgentConversation[]> = {};
+    filtered.forEach((item) => {
+      const date = item.updatedAt || item.createdAt || '';
+      const group = renderTimeGroup(date);
+      if (!groups[group]) {
+        groups[group] = [];
+      }
+      groups[group].push(item);
+    });
+
+    return groups;
+  }, [conversations, searchText]);
+
   const currentConversation = conversations.find((item) => item.id === conversationId);
-  const activeAgentId = currentConversation?.agentId || agentId;
+  const activeAgentId = currentConversation?.agentDefinitionId || agentId;
   const currentAgent = agents.find((item) => item.id === activeAgentId);
 
   return (
-    <PageContainer>
+    <PageContainer
+      header={{
+        title: 'AI 对话',
+        breadcrumb: undefined,
+      }}
+    >
       <div className="agent-chat-page">
-        <Card className="agent-chat-sidebar" bodyStyle={{ padding: 0 }}>
-          <div className="agent-chat-sidebar-header">
-            <Select
-              placeholder="请选择启用 Agent"
-              loading={loadingAgents}
-              value={activeAgentId}
-              disabled={sending}
-              showSearch={true}
-              allowClear={true}
-              optionFilterProp="label"
-              onChange={(value) => {
-                setAgentId(value);
-                setConversationId(undefined);
-                setMessages([]);
-              }}
-              options={agents
-                .filter((item) => item.id)
-                .map((item) => ({ label: item.name || item.code || item.id, value: item.id }))}
-            />
-            <Button type="primary" block={true} disabled={sending} onClick={handleNewConversation}>
-              新建会话
-            </Button>
-          </div>
-          <Spin spinning={loadingConversations} wrapperClassName="agent-chat-session-spin">
-            <List
-              className="agent-chat-session-list"
-              dataSource={conversations}
-              locale={{ emptyText: '暂无会话' }}
-              renderItem={(item) => (
-                <List.Item
-                  className={[
-                    item.id === conversationId ? 'agent-chat-session-active' : undefined,
-                    sending ? 'agent-chat-session-disabled' : undefined,
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  onClick={() => handleSelectConversation(item)}
-                >
-                  <List.Item.Meta
-                    title={
-                      <Text strong={item.id === conversationId} ellipsis={true}>
-                        {renderConversationTitle(item)}
-                      </Text>
-                    }
-                    description={item.updatedAt || item.createdAt}
+        {/* 侧边栏 */}
+        <div className={`agent-chat-sidebar ${sidebarCollapsed ? 'agent-chat-sidebar-collapsed' : ''}`}>
+          {!sidebarCollapsed && (
+            <>
+              <div className="agent-chat-sidebar-header">
+                <Select
+                  placeholder="选择 Agent"
+                  loading={loadingAgents}
+                  value={activeAgentId}
+                  disabled={sending}
+                  showSearch={true}
+                  allowClear={true}
+                  optionFilterProp="label"
+                  style={{ flex: 1 }}
+                  onChange={(value) => {
+                    setAgentId(value);
+                    setConversationId(undefined);
+                    setMessages([]);
+                  }}
+                  options={agents
+                    .filter((item) => item.id)
+                    .map((item) => ({
+                      label: item.name || item.code || item.id,
+                      value: item.id,
+                    }))}
+                />
+                <Tooltip title="新建会话">
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    disabled={sending}
+                    onClick={handleNewConversation}
                   />
-                </List.Item>
-              )}
-            />
-          </Spin>
-        </Card>
+                </Tooltip>
+              </div>
 
-        <Card className="agent-chat-panel" bodyStyle={{ padding: 0 }}>
+              <div className="agent-chat-sidebar-search">
+                <Input
+                  placeholder="搜索会话..."
+                  prefix={<SearchOutlined />}
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  allowClear
+                />
+              </div>
+
+              <Spin spinning={loadingConversations}>
+                <div className="agent-chat-session-list">
+                  {Object.entries(groupedConversations).map(([group, items]) => (
+                    <div key={group}>
+                      <div className="agent-chat-session-group">{group}</div>
+                      <List
+                        dataSource={items}
+                        renderItem={(item) => (
+                          <List.Item
+                            className={item.id === conversationId ? 'agent-chat-session-active' : undefined}
+                            onClick={() => handleSelectConversation(item)}
+                          >
+                            <List.Item.Meta
+                              title={
+                                <Tooltip title={renderConversationTitle(item)}>
+                                  <Text
+                                    strong={item.id === conversationId}
+                                    ellipsis={true}
+                                    style={{ display: 'block' }}
+                                  >
+                                    {renderConversationTitle(item)}
+                                  </Text>
+                                </Tooltip>
+                              }
+                            />
+                          </List.Item>
+                        )}
+                      />
+                    </div>
+                  ))}
+                  {Object.keys(groupedConversations).length === 0 && (
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description={searchText ? '没有找到匹配的会话' : '暂无会话'}
+                      style={{ padding: '40px 0' }}
+                    />
+                  )}
+                </div>
+              </Spin>
+            </>
+          )}
+        </div>
+
+        {/* 主面板 */}
+        <div className="agent-chat-panel">
+          {/* 顶部 */}
           <div className="agent-chat-panel-header">
-            <div>
-              <Text strong={true}>
-                {currentAgent?.name || currentAgent?.code || '未选择 Agent'}
-              </Text>
+            <div className="agent-chat-panel-info">
+              <div className="agent-chat-panel-title">
+                <Tooltip title={sidebarCollapsed ? '展开侧边栏' : '收起侧边栏'}>
+                  <Button
+                    type="text"
+                    icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                    onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  />
+                </Tooltip>
+                <Text strong={true} style={{ fontSize: 16 }}>
+                  {currentAgent?.name || currentAgent?.code || '未选择 Agent'}
+                </Text>
+                {currentAgent?.model && (
+                  <Tag color="blue" style={{ marginLeft: 8 }}>
+                    {currentAgent.model}
+                  </Tag>
+                )}
+              </div>
               <div className="agent-chat-panel-subtitle">
                 {currentConversation ? renderConversationTitle(currentConversation) : '新会话'}
               </div>
             </div>
-            {conversationId ? <Text type="secondary">会话：{conversationId}</Text> : null}
-          </div>
-
-          <Spin spinning={loadingMessages} wrapperClassName="agent-chat-message-spin">
-            <div className="agent-chat-message-list">
-              {!messages.length ? (
-                <Empty description="请选择会话或发送新消息" />
-              ) : (
-                <>
-                  {messages.map((item, index) => (
-                    <AgentMessageBubble
-                      key={item.id || item.clientId || `${item.role}-${index}`}
-                      message={item}
-                      status={item.streamStatus}
-                      errorMessage={item.errorMsg}
-                    />
-                  ))}
-                  <div ref={messageEndRef} />
-                </>
+            <div className="agent-chat-panel-actions">
+              {sending && (
+                <Button
+                  type="primary"
+                  danger
+                  icon={<ClearOutlined />}
+                  onClick={handleStop}
+                >
+                  停止生成
+                </Button>
               )}
             </div>
-          </Spin>
-
-          <div className="agent-chat-input-bar">
-            <Input.TextArea
-              value={input}
-              disabled={sending}
-              autoSize={{ minRows: 2, maxRows: 6 }}
-              placeholder="支持 Markdown，Shift+Enter 换行"
-              onChange={(event) => setInput(event.target.value)}
-              onPressEnter={(event) => {
-                if (!event.shiftKey) {
-                  event.preventDefault();
-                  if (!sending) {
-                    handleSend();
-                  }
-                }
-              }}
-            />
-            <Button
-              type={sending ? 'default' : 'primary'}
-              danger={sending}
-              onClick={sending ? handleStop : handleSend}
-            >
-              {sending ? '停止生成' : '发送'}
-            </Button>
           </div>
-        </Card>
+
+          {/* 消息列表 */}
+          <div className="agent-chat-message-container">
+            <div
+              className="agent-chat-message-scroll"
+              ref={messageListRef}
+              onScroll={handleScroll}
+            >
+              <Spin spinning={loadingMessages}>
+                <div className="agent-chat-message-list">
+                  {!messages.length ? (
+                    <div className="agent-chat-empty-container">
+                      <Empty
+                        image="https://gw.alipayobjects.com/zos/antfincdn/ZHrcdLPrvN/empty.svg"
+                        description={
+                          <span style={{ fontSize: 15, color: 'rgba(0, 0, 0, 0.45)' }}>
+                            {currentAgent ? `与 ${currentAgent.name} 开始对话` : '选择一个 Agent 开始对话'}
+                          </span>
+                        }
+                      >
+                        {currentAgent && (
+                          <div className="agent-chat-quick-start">
+                            {quickStartQuestions.map((q) => (
+                              <Tag key={q} onClick={() => handleSend(q)}>
+                                {q}
+                              </Tag>
+                            ))}
+                          </div>
+                        )}
+                      </Empty>
+                    </div>
+                  ) : (
+                    <>
+                      {messages.map((item, index) => (
+                        <AgentMessageBubble
+                          key={item.id || item.clientId || `${item.role}-${index}`}
+                          message={item}
+                          status={item.streamStatus}
+                          errorMessage={item.errorMsg}
+                        />
+                      ))}
+                      <div ref={messageEndRef} />
+                    </>
+                  )}
+                </div>
+              </Spin>
+            </div>
+
+            {showScrollBottom && (
+              <div className="agent-chat-scroll-bottom">
+                <Button
+                  icon={<ArrowDownOutlined />}
+                  onClick={handleScrollBottom}
+                >
+                  回到底部
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* 底部输入 */}
+          <div className="agent-chat-input-bar">
+            <div className="agent-chat-thinking-bar">
+              <Checkbox
+                checked={thinking}
+                onChange={(e) => setThinking(e.target.checked)}
+              >
+                <span className="agent-chat-thinking-label">深度思考</span>
+              </Checkbox>
+              {thinking && (
+                <Select
+                  size="small"
+                  value={reasoningEffort}
+                  onChange={setReasoningEffort}
+                  style={{ width: 80 }}
+                  options={[
+                    { label: '轻度', value: 'low' },
+                    { label: '中度', value: 'medium' },
+                    { label: '深度', value: 'high' },
+                  ]}
+                />
+              )}
+              {thinking && sending && (
+                <Tag color="processing" style={{ marginLeft: 8 }}>
+                  思考中...
+                </Tag>
+              )}
+            </div>
+            <div className="agent-chat-input-wrapper">
+              <div className="agent-chat-input-box">
+                <Input.TextArea
+                  value={input}
+                  disabled={sending}
+                  autoSize={{ minRows: 1, maxRows: 3 }}
+                  placeholder="输入消息，支持 Markdown 格式..."
+                  onChange={(event) => setInput(event.target.value)}
+                  onPressEnter={(event) => {
+                    if (!event.shiftKey) {
+                      event.preventDefault();
+                      if (!sending) {
+                        handleSend();
+                      }
+                    }
+                  }}
+                />
+              </div>
+              <Button
+                className="agent-chat-send-btn"
+                type="primary"
+                disabled={sending || !input.trim()}
+                onClick={() => handleSend()}
+              >
+                发送
+              </Button>
+            </div>
+            <div className="agent-chat-input-hint">
+              <span>
+                <kbd>Enter</kbd> 发送
+              </span>
+              <span>
+                <kbd>Shift</kbd> + <kbd>Enter</kbd> 换行
+              </span>
+              {currentAgent?.model && (
+                <span style={{ marginLeft: 'auto' }}>
+                  模型: {currentAgent.model}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </PageContainer>
   );

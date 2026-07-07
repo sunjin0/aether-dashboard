@@ -1,27 +1,44 @@
-.agent-message-bubble {
+@bubble-prefix: agent-message-bubble;
+
+.@{bubble-prefix} {
   display: flex;
   width: 100%;
-  margin: 10px 0;
+  margin: 16px 0;
+  animation: bubble-fade-in 0.3s ease;
 
   &-left {
     justify-content: flex-start;
+
+    .@{bubble-prefix}-card {
+      max-width: min(760px, 80%);
+    }
   }
 
   &-right {
     justify-content: flex-end;
+
+    .@{bubble-prefix}-card {
+      max-width: min(680px, 72%);
+      border-color: rgba(22, 119, 255, 0.16);
+      background: linear-gradient(135deg, #e6f4ff 0%, #f0f7ff 100%);
+    }
   }
 
   &-compact {
-    margin: 6px 0;
+    margin: 8px 0;
   }
 
   &-card {
-    max-width: min(760px, 82%);
-    padding: 14px 16px;
+    padding: 16px 18px;
     border: 1px solid rgba(15, 23, 42, 0.08);
     border-radius: 16px;
     background: #fff;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+    transition: box-shadow 0.2s ease;
+
+    &:hover {
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    }
   }
 
   &-compact &-card {
@@ -31,25 +48,32 @@
     box-shadow: none;
   }
 
-  &-right &-card {
-    border-color: rgba(22, 119, 255, 0.16);
-    background: linear-gradient(135deg, #e6f4ff 0%, #f0f7ff 100%);
-  }
-
   &-role-system &-card,
   &-role-tool &-card,
   &-role-unknown &-card {
     background: #f8fafc;
+    border-color: rgba(15, 23, 42, 0.06);
+  }
+
+  &-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
   }
 
   &-role {
-    margin-bottom: 8px;
     color: rgba(15, 23, 42, 0.55);
     font-size: 12px;
     font-weight: 600;
     line-height: 1;
     text-transform: uppercase;
     letter-spacing: 0.04em;
+  }
+
+  &-time {
+    color: rgba(15, 23, 42, 0.35);
+    font-size: 11px;
   }
 
   &-content {
@@ -77,7 +101,7 @@
     h4,
     h5,
     h6 {
-      margin: 14px 0 8px;
+      margin: 16px 0 8px;
       color: rgba(15, 23, 42, 0.95);
       font-weight: 700;
       line-height: 1.35;
@@ -88,7 +112,7 @@
     }
 
     h2 {
-      font-size: 19px;
+      font-size: 18px;
     }
 
     h3 {
@@ -116,7 +140,7 @@
 
     blockquote {
       margin: 10px 0;
-      padding: 8px 12px;
+      padding: 10px 14px;
       border-left: 3px solid #91caff;
       border-radius: 8px;
       background: rgba(22, 119, 255, 0.06);
@@ -124,19 +148,20 @@
     }
 
     code {
-      padding: 2px 5px;
-      border-radius: 5px;
-      background: rgba(15, 23, 42, 0.08);
-      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(15, 23, 42, 0.06);
+      font-family: 'SF Mono', 'Fira Code', 'Fira Mono', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
       font-size: 12px;
     }
 
     pre {
-      margin: 10px 0;
-      padding: 12px 14px;
+      position: relative;
+      margin: 12px 0;
+      padding: 14px 16px;
       overflow-x: auto;
       border-radius: 12px;
-      background: #111827;
+      background: #1a1a2e;
       color: #e5e7eb;
 
       code {
@@ -150,7 +175,64 @@
 
     a {
       color: #1677ff;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
     }
+
+    table {
+      width: 100%;
+      margin: 12px 0;
+      border-collapse: collapse;
+
+      th,
+      td {
+        padding: 8px 12px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        text-align: left;
+      }
+
+      th {
+        background: rgba(0, 0, 0, 0.02);
+        font-weight: 600;
+      }
+    }
+
+    img {
+      max-width: 100%;
+      border-radius: 8px;
+    }
+
+    hr {
+      margin: 16px 0;
+      border: none;
+      border-top: 1px solid rgba(0, 0, 0, 0.06);
+    }
+  }
+
+  &-copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 12px;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.8);
+    }
+  }
+
+  pre:hover &-copy-btn {
+    opacity: 1;
   }
 
   &-placeholder {
@@ -176,6 +258,9 @@
 
     &-error {
       color: #ff4d4f;
+      padding: 8px 12px;
+      background: rgba(255, 77, 79, 0.06);
+      border-radius: 8px;
     }
 
     &-stopped {
@@ -183,11 +268,99 @@
     }
   }
 
-  &-meta {
+  &-warning {
     display: block;
-    margin-top: 10px;
-    font-size: 12px;
-    line-height: 1.5;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: #fffbe6;
+    border: 1px solid #ffe58f;
+  }
+
+  &-main-content {
+    color: rgba(15, 23, 42, 0.88);
+    font-size: 14px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  &-main-chunk {
+    display: inline;
+  }
+
+  &-main-chunk-new {
+    animation: main-chunk-fade-in 0.3s ease-in forwards;
+    opacity: 0;
+  }
+
+  &-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(0, 0, 0, 0.04);
+
+    &-item {
+      color: rgba(15, 23, 42, 0.4);
+      font-size: 11px;
+      line-height: 1;
+    }
+  }
+
+  &-reasoning {
+    margin-bottom: 12px;
+
+    .ant-collapse {
+      background: rgba(22, 119, 255, 0.04);
+      border-color: rgba(22, 119, 255, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .ant-collapse-header {
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(22, 119, 255, 0.8);
+    }
+
+    .ant-collapse-content {
+      border-top: 1px solid rgba(22, 119, 255, 0.1);
+    }
+
+    .ant-collapse-content-box {
+      padding: 12px 16px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: rgba(0, 0, 0, 0.65);
+    }
+  }
+
+  &-reasoning-content {
+    max-height: 300px;
+    overflow-y: auto;
+    word-break: break-all;
+    white-space: pre-wrap;
+  }
+
+  &-reasoning-chunk {
+    display: inline;
+  }
+
+  &-reasoning-chunk-new {
+    animation: reasoning-char-fade-in 0.3s ease-in forwards;
+    opacity: 0;
+  }
+}
+
+@keyframes bubble-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -202,8 +375,57 @@
   }
 }
 
+@keyframes reasoning-char-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes main-chunk-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(1px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// 流式消息渐入效果
+.@{bubble-prefix}-streaming {
+  .@{bubble-prefix}-card {
+    border-color: rgba(22, 119, 255, 0.2);
+    box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+  }
+}
+
+// 错误消息样式
+.@{bubble-prefix}-error {
+  .@{bubble-prefix}-card {
+    border-color: rgba(255, 77, 79, 0.2);
+  }
+}
+
 @media (max-width: 768px) {
-  .agent-message-bubble-card {
-    max-width: 94%;
+  .@{bubble-prefix} {
+    &-left .@{bubble-prefix}-card,
+    &-right .@{bubble-prefix}-card {
+      max-width: 92%;
+    }
+
+    &-card {
+      padding: 12px 14px;
+      border-radius: 12px;
+    }
+
+    &-meta {
+      gap: 6px;
+    }
   }
 }

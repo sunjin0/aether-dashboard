@@ -2,6 +2,7 @@ import DrawerForm from '@/components/DrawerForm';
 import {
   ProFormDigit,
   ProFormSelect,
+  ProFormSwitch,
   ProFormText,
   ProFormTextArea,
   ProFormDependency,
@@ -88,6 +89,27 @@ const AgentDefinitionForm = (props: {
       />
       <ProFormDigit name="maxToolRounds" label="最大工具轮次" min={0} fieldProps={{precision: 0}} />
       <ProFormSelect name="accessType" label="访问类型" options={accessTypeOptions} />
+      
+      <ProFormSwitch name="defaultThinking" label="默认启用深度思考" />
+      <ProFormDependency name={["defaultThinking"]}>
+        {(values) => {
+          if (!values.defaultThinking) {
+            return null;
+          }
+          return (
+            <ProFormSelect
+              name="defaultReasoningEffort"
+              label="默认推理力度"
+              options={[
+                {label: '轻度', value: 'low'},
+                {label: '中度', value: 'medium'},
+                {label: '深度', value: 'high'},
+              ]}
+              placeholder="选择默认推理力度"
+            />
+          );
+        }}
+      </ProFormDependency>
       
       <ProFormDependency name={["id"]}>
         {(values) => {

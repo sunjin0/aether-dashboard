@@ -113,6 +113,7 @@ export const errorConfig: RequestConfig = {
         data.errorCode = data.code
         data.showType = ErrorShowType.NOTIFICATION
       }
+      message.success({content: data.message, key: data.message})
       return response;
     },
   ],

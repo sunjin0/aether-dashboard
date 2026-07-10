@@ -1,7 +1,6 @@
 import React, { useCallback, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Collapse, message, Tooltip, Typography } from 'antd';
-import { CopyOutlined } from '@ant-design/icons';
 import { AgentMessage } from '@/services/entity/Agent';
 import './index.less';
 
@@ -10,7 +9,7 @@ const { Text } = Typography;
 export type AgentMessageBubbleStatus = 'streaming' | 'error' | 'stopped';
 
 export interface AgentMessageBubbleProps {
-  message: AgentMessage & { reasoningStream?: string };
+  agentMessage: AgentMessage & { reasoningStream?: string };
   align?: 'left' | 'right';
   compact?: boolean;
   status?: AgentMessageBubbleStatus;
@@ -98,19 +97,17 @@ const getMessageMeta = (message: AgentMessage) => {
 };
 
 const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
-  message,
+  agentMessage,
   align,
   compact,
   status,
   errorMessage,
 }) => {
-  const role = getRole(message.role);
-  const placement = getAlign(message, align);
-  const metas = getMessageMeta(message);
+  const role = getRole(agentMessage.role);
+  const placement = getAlign(agentMessage, align);
+  const metas = getMessageMeta(agentMessage);
   const reasoningContainerRef = useRef<HTMLDivElement>(null);
   const contentContainerRef = useRef<HTMLDivElement>(null);
-  const prevReasoningLenRef = useRef(0);
-  const prevContentLenRef = useRef(0);
 
   const statusText =
     status === 'error'
@@ -139,51 +136,23 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
     }
   }, []);
 
-  const currentReasoning = message.reasoningContent || message.reasoningStream || '';
-  const currentContent = message.content || '';
+  const currentReasoning = agentMessage.reasoningContent || agentMessage.reasoningStream || '';
+  const currentContent = agentMessage.content || '';
 
   useEffect(() => {
-    if (reasoningContainerRef.current && currentReasoning.length > prevReasoningLenRef.current) {
+    if (reasoningContainerRef.current) {
       reasoningContainerRef.current.scrollTop = reasoningContainerRef.current.scrollHeight;
     }
-    prevReasoningLenRef.current = currentReasoning.length;
   }, [currentReasoning]);
 
   useEffect(() => {
-    if (contentContainerRef.current && currentContent.length > prevContentLenRef.current) {
+    if (contentContainerRef.current) {
       contentContainerRef.current.scrollTop = contentContainerRef.current.scrollHeight;
     }
-    prevContentLenRef.current = currentContent.length;
   }, [currentContent]);
 
-  const renderChunkedContent = (content: string, containerRef: React.RefObject<HTMLDivElement>, prevLenRef: React.MutableRefObject<number>, classNamePrefix: string) => {
-    if (!content) return null;
-
-    const chunks: { text: string; isNew: boolean }[] = [];
-    let start = 0;
-    const chunkSize = 30;
-
-    while (start < content.length) {
-      const end = Math.min(start + chunkSize, content.length);
-      chunks.push({
-        text: content.slice(start, end),
-        isNew: end > prevLenRef.current,
-      });
-      start = end;
-    }
-
-    return chunks.map((chunk, index) => (
-      <span
-        key={index}
-        className={chunk.isNew ? `${classNamePrefix}-chunk ${classNamePrefix}-chunk-new` : `${classNamePrefix}-chunk`}
-      >
-        {chunk.text}
-      </span>
-    ));
-  };
-
   const renderContent = () => {
-    if (!message.content && !message.reasoningContent && !message.reasoningStream) {
+    if (!agentMessage.content && !agentMessage.reasoningContent && !agentMessage.reasoningStream) {
       if (status === 'streaming') {
         return (
           <Text className="agent-message-bubble-placeholder" type="secondary">
@@ -196,7 +165,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
 
     return (
       <>
-        {(message.reasoningContent || message.reasoningStream) && (
+        {(agentMessage.reasoningContent || agentMessage.reasoningStream) && (
           <div className="agent-message-bubble-reasoning">
             <Collapse
               size="small"
@@ -207,7 +176,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
                   label: '💭 推理过程',
                   children: (
                     <div ref={reasoningContainerRef} className="agent-message-bubble-reasoning-content">
-                      {renderChunkedContent(currentReasoning, reasoningContainerRef, prevReasoningLenRef, 'agent-message-bubble-reasoning')}
+                      <ReactMarkdown>{currentReasoning}</ReactMarkdown>
                     </div>
                   ),
                 },
@@ -216,11 +185,11 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
           </div>
         )}
 
-        {message.content ? (
+        {agentMessage.content ? (
           <div ref={contentContainerRef} className="agent-message-bubble-main-content">
-            {renderChunkedContent(currentContent, contentContainerRef, prevContentLenRef, 'agent-message-bubble-main')}
+            <ReactMarkdown>{currentContent}</ReactMarkdown>
           </div>
-        ) : message.reasoningContent || message.reasoningStream ? (
+        ) : agentMessage.reasoningContent || agentMessage.reasoningStream ? (
           <Text className="agent-message-bubble-warning" type="warning">
             ⚠️ 模型仅返回推理过程，未返回最终答案
           </Text>
@@ -237,10 +206,10 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
             <span style={{ marginRight: 6 }}>{roleAvatarMap[role]}</span>
             {roleLabelMap[role]}
           </div>
-          {message.createdAt && (
-            <Tooltip title={message.createdAt}>
+          {agentMessage.createdAt && (
+            <Tooltip title={agentMessage.createdAt}>
               <span className="agent-message-bubble-time">
-                {formatTime(message.createdAt)}
+                {formatTime(agentMessage.createdAt)}
               </span>
             </Tooltip>
           )}

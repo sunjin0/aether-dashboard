@@ -44,27 +44,17 @@ export const streamAgentChat = async (
   params: AgentChatRequest,
   options: StreamAgentChatOptions = {},
 ) => {
-  const query = new URLSearchParams();
-  query.set('agentId', params.agentId);
-  query.set('message', params.message);
-  if (params.conversationId) {
-    query.set('conversationId', params.conversationId);
-  }
-  if (params.thinking !== undefined) {
-    query.set('thinking', String(params.thinking));
-  }
-  if (params.reasoningEffort) {
-    query.set('reasoningEffort', params.reasoningEffort);
-  }
 
   const token = localStorage.getItem('token');
 
-  await fetchEventSource(`/api/agent/chat/stream?${query.toString()}`, {
-    method: 'GET',
+  await fetchEventSource(`/api/agent/chat/stream`, {
+    method: 'Post',
     headers: {
       'Accept-Language': getLocale(),
+      'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
+    body: JSON.stringify(params),
     signal: options.signal,
 
     onopen(response) {
@@ -84,8 +74,6 @@ export const streamAgentChat = async (
       } catch {
         return;
       }
-
-      console.log('[SSE]', eventType, data);
 
       if (eventType === 'message') {
         options.onMessage?.(data.chunk || '', data);

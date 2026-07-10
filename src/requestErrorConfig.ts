@@ -104,11 +104,11 @@ export const errorConfig: RequestConfig = {
 
   // 响应拦截器
   responseInterceptors: [
-    (response: ResponseStructure<any>) => {
+    (response) => {
       // 拦截响应数据，进行个性化处理
-      const {data} = response;
+      const {data} = response as { data: ResponseStructure<any> };
       data.success = data.code === 200
-      if (data?.success === false) {
+      if (!data?.success) {
         data.errorMessage = data.message
         data.errorCode = data.code
         data.showType = ErrorShowType.NOTIFICATION

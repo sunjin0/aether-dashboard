@@ -6,7 +6,7 @@ describe('AgentMessageBubble', () => {
   it('renders markdown content and message metadata', () => {
     render(
       <AgentMessageBubble
-        message={{
+        agentMessage={{
           role: 'assistant',
           content: '## Title\n\n- first item\n\n```ts\nconst ok = true;\n```',
           model: 'gpt-test',

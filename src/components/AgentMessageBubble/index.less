@@ -284,15 +284,6 @@
     word-break: break-word;
   }
 
-  &-main-chunk {
-    display: inline;
-  }
-
-  &-main-chunk-new {
-    animation: main-chunk-fade-in 0.3s ease-in forwards;
-    opacity: 0;
-  }
-
   &-meta {
     display: flex;
     flex-wrap: wrap;
@@ -339,18 +330,55 @@
   &-reasoning-content {
     max-height: 300px;
     overflow-y: auto;
-    word-break: break-all;
-    white-space: pre-wrap;
+    word-break: break-word;
+
+    p {
+      margin: 0 0 8px;
+    }
+
+    code {
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.06);
+      font-family: 'SF Mono', 'Fira Code', 'Fira Mono', Menlo, Consolas, monospace;
+      font-size: 12px;
+    }
+
+    pre {
+      margin: 8px 0;
+      padding: 10px 12px;
+      overflow-x: auto;
+      border-radius: 8px;
+      background: #1a1a2e;
+      color: #e5e7eb;
+
+      code {
+        padding: 0;
+        background: transparent;
+        color: inherit;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+    }
+
+    ul, ol {
+      margin: 0 0 8px 20px;
+      padding: 0;
+    }
+
+    ul {
+      list-style-type: disc;
+    }
+
+    ol {
+      list-style-type: decimal;
+    }
+
+    li {
+      margin: 2px 0;
+    }
   }
 
-  &-reasoning-chunk {
-    display: inline;
-  }
-
-  &-reasoning-chunk-new {
-    animation: reasoning-char-fade-in 0.3s ease-in forwards;
-    opacity: 0;
-  }
 }
 
 @keyframes bubble-fade-in {
@@ -372,28 +400,6 @@
 
   50% {
     opacity: 1;
-  }
-}
-
-@keyframes reasoning-char-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(2px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes main-chunk-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(1px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
 

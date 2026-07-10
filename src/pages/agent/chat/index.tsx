@@ -33,7 +33,8 @@ import './index.less';
 
 const { Text } = Typography;
 const TYPEWRITER_INTERVAL = 16;
-const TYPEWRITER_STEP = 2;
+const TYPEWRITER_BASE_STEP = 2;
+const TYPEWRITER_MAX_STEP = 50;
 
 type ChatStreamStatus = 'streaming' | 'error' | 'stopped';
 
@@ -187,13 +188,15 @@ const ChatDebugPage: React.FC = () => {
     }
 
     typewriterTimerRef.current = window.setInterval(() => {
-      const nextText = typewriterQueueRef.current.slice(0, TYPEWRITER_STEP);
-      if (!nextText) {
+      const queueLen = typewriterQueueRef.current.length;
+      if (!queueLen) {
         clearTypewriterTimer();
         runTypewriterDrainCallback();
         return;
       }
 
+      const step = Math.min(TYPEWRITER_BASE_STEP + Math.floor(queueLen / 20), TYPEWRITER_MAX_STEP);
+      const nextText = typewriterQueueRef.current.slice(0, step);
       typewriterQueueRef.current = typewriterQueueRef.current.slice(nextText.length);
       updateAssistantMessage(assistantClientId, (item) => ({
         ...item,
@@ -655,7 +658,7 @@ const ChatDebugPage: React.FC = () => {
                       {messages.map((item, index) => (
                         <AgentMessageBubble
                           key={item.id || item.clientId || `${item.role}-${index}`}
-                          message={item}
+                          agentMessage={item}
                           status={item.streamStatus}
                           errorMessage={item.errorMsg}
                         />

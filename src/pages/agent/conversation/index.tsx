@@ -211,7 +211,7 @@ const AgentConversationPage: React.FC = () => {
                 {messages.map((item, index) => (
                   <AgentMessageBubble
                     key={item.id || `${item.role}-${index}`}
-                    message={item}
+                    agentMessage={item}
                     compact={true}
                   />
                 ))}

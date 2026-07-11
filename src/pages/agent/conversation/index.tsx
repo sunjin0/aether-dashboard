@@ -1,6 +1,6 @@
 import React, {useRef, useState} from 'react';
 import {ActionType, PageContainer, ProDescriptions, ProTable} from '@ant-design/pro-components';
-import {Button, Card, Drawer, Empty, message, Popconfirm, Spin} from 'antd';
+import {Button, Card, Col, Descriptions, Drawer, Empty, message, Popconfirm, Row, Spin, Statistic, Tag} from 'antd';
 import {history, useAccess} from '@@/exports';
 import {
   closeAgentConversation,
@@ -8,9 +8,17 @@ import {
   getAgentConversationInfo,
   getAgentConversationList,
   getAgentConversationMessages,
+  getConversationLifecycle,
+  getConversationStatistics,
 } from '@/services/agent/ConversationController';
 import {getOptionList} from '@/services/sys/DictController';
-import {AgentConversation, AgentConversationSearchParams, AgentMessage} from '@/services/entity/Agent';
+import {
+  AgentConversation,
+  AgentConversationSearchParams,
+  AgentMessage,
+  ConversationLifecycle,
+  MessageStatistics,
+} from '@/services/entity/Agent';
 import AgentMessageBubble from '@/components/AgentMessageBubble';
 
 // ProDescriptions 不支持 request，保留用于详情展示
@@ -29,14 +37,18 @@ const AgentConversationPage: React.FC = () => {
   const [currentId, setCurrentId] = useState<string>();
   const [conversation, setConversation] = useState<AgentConversation>();
   const [messages, setMessages] = useState<AgentMessage[]>([]);
+  const [lifecycle, setLifecycle] = useState<ConversationLifecycle>();
+  const [statistics, setStatistics] = useState<MessageStatistics>();
   const [detailLoading, setDetailLoading] = useState(false);
 
   const loadDetail = async (id: string) => {
     setDetailLoading(true);
     try {
-      const [detailResult, messageResult] = await Promise.all([
+      const [detailResult, messageResult, lifecycleResult, statisticsResult] = await Promise.all([
         getAgentConversationInfo(id),
         getAgentConversationMessages(id, {current: 1, pageSize: 20}),
+        getConversationLifecycle(id),
+        getConversationStatistics(id),
       ]);
 
       if (detailResult.code === 200) {
@@ -51,6 +63,18 @@ const AgentConversationPage: React.FC = () => {
       } else {
         setMessages([]);
         message.error(messageResult.message || '加载消息列表失败');
+      }
+
+      if (lifecycleResult.code === 200) {
+        setLifecycle(lifecycleResult.data);
+      } else {
+        setLifecycle(undefined);
+      }
+
+      if (statisticsResult.code === 200) {
+        setStatistics(statisticsResult.data);
+      } else {
+        setStatistics(undefined);
       }
     } finally {
       setDetailLoading(false);
@@ -83,6 +107,42 @@ const AgentConversationPage: React.FC = () => {
     } else {
       message.error(msg || '关闭失败');
     }
+  };
+
+  const formatDuration = (ms: number): string => {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    if (minutes > 0) {
+      return `${minutes} 分钟 ${seconds} 秒`;
+    }
+    return `${seconds} 秒`;
+  };
+
+  const formatTimestamp = (timestamp: number): string => {
+    return new Date(timestamp).toLocaleString('zh-CN');
+  };
+
+  const formatTokens = (tokens: number): string => {
+    if (tokens >= 1000000) {
+      return `${(tokens / 1000000).toFixed(1)}M`;
+    }
+    if (tokens >= 1000) {
+      return `${(tokens / 1000).toFixed(1)}K`;
+    }
+    return tokens.toString();
+  };
+
+  const formatLatency = (ms: number): string => {
+    if (ms >= 1000) {
+      return `${(ms / 1000).toFixed(1)} 秒`;
+    }
+    return `${ms} 毫秒`;
+  };
+
+  const lifecycleStatusMap: Record<number, { text: string; color: string }> = {
+    0: {text: '进行中', color: 'processing'},
+    1: {text: '已关闭', color: 'default'},
+    2: {text: '已归档', color: 'warning'},
   };
 
   const handleDeleteConversation = async (record: AgentConversation) => {
@@ -205,6 +265,67 @@ const AgentConversationPage: React.FC = () => {
           ) : (
             <Empty description="暂无会话详情" />
           )}
+
+          {lifecycle && (
+            <Card title="会话生命周期" style={{ marginTop: 16 }}>
+              <Descriptions column={2}>
+                <Descriptions.Item label="创建时间">
+                  {formatTimestamp(lifecycle.createdAt)}
+                </Descriptions.Item>
+                <Descriptions.Item label="最后活跃">
+                  {formatTimestamp(lifecycle.lastActiveAt)}
+                </Descriptions.Item>
+                <Descriptions.Item label="状态">
+                  <Tag color={lifecycleStatusMap[lifecycle.status]?.color}>
+                    {lifecycleStatusMap[lifecycle.status]?.text}
+                  </Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="持续时间">
+                  {formatDuration(lifecycle.durationMs)}
+                </Descriptions.Item>
+                <Descriptions.Item label="用户消息">
+                  {lifecycle.totalUserMessages} 条
+                </Descriptions.Item>
+                <Descriptions.Item label="助手消息">
+                  {lifecycle.totalAssistantMessages} 条
+                </Descriptions.Item>
+              </Descriptions>
+            </Card>
+          )}
+
+          {statistics && (
+            <Card title="消息统计" style={{ marginTop: 16 }}>
+              <Row gutter={[24, 16]}>
+                <Col span={6}>
+                  <Statistic title="总消息数" value={statistics.totalMessages} suffix="条" />
+                </Col>
+                <Col span={6}>
+                  <Statistic title="用户消息" value={statistics.userMessages} suffix="条" />
+                </Col>
+                <Col span={6}>
+                  <Statistic title="助手消息" value={statistics.assistantMessages} suffix="条" />
+                </Col>
+                <Col span={6}>
+                  <Statistic title="工具调用" value={statistics.toolMessages} suffix="条" />
+                </Col>
+              </Row>
+              <Row gutter={[24, 16]} style={{ marginTop: 16 }}>
+                <Col span={6}>
+                  <Statistic title="输入 Token" value={formatTokens(statistics.totalPromptTokens)} />
+                </Col>
+                <Col span={6}>
+                  <Statistic title="输出 Token" value={formatTokens(statistics.totalCompletionTokens)} />
+                </Col>
+                <Col span={6}>
+                  <Statistic title="总 Token" value={formatTokens(statistics.totalTokens)} />
+                </Col>
+                <Col span={6}>
+                  <Statistic title="平均延迟" value={formatLatency(statistics.avgLatencyMs)} />
+                </Col>
+              </Row>
+            </Card>
+          )}
+
           <Card title="消息列表" style={{ marginTop: 16 }}>
             {!messages.length ? (
               <Empty description="暂无消息" />

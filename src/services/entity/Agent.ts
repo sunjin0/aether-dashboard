@@ -316,3 +316,33 @@ export interface AgentRunStatisticsParams {
   startTime?: number;
   endTime?: number;
 }
+
+/**
+ * @description 会话生命周期信息
+ */
+export interface ConversationLifecycle {
+  conversationId: string;
+  createdAt: number;
+  lastActiveAt: number;
+  closedAt: number | null;
+  status: 0 | 1 | 2;
+  messageCount: number;
+  totalUserMessages: number;
+  totalAssistantMessages: number;
+  durationMs: number;
+}
+
+/**
+ * @description 会话消息统计
+ */
+export interface MessageStatistics {
+  conversationId: string;
+  totalMessages: number;
+  userMessages: number;
+  assistantMessages: number;
+  toolMessages: number;
+  totalPromptTokens: number;
+  totalCompletionTokens: number;
+  totalTokens: number;
+  avgLatencyMs: number;
+}

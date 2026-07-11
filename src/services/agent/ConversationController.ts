@@ -5,6 +5,8 @@ import {
   AgentConversationSearchParams,
   AgentMessage,
   AgentMessageSearchParams,
+  ConversationLifecycle,
+  MessageStatistics,
 } from '@/services/entity/Agent';
 
 /**
@@ -62,5 +64,27 @@ export const deleteAgentConversation = async (
 ): Promise<ResponseStructure<AgentConversation>> => {
   return request(`/api/agent/conversation/${id}`, {
     method: 'DELETE',
+  });
+};
+
+/**
+ * @description 获取会话生命周期信息
+ */
+export const getConversationLifecycle = async (
+  id: string,
+): Promise<ResponseStructure<ConversationLifecycle>> => {
+  return request(`/api/agent/conversation/${id}/lifecycle`, {
+    method: 'GET',
+  });
+};
+
+/**
+ * @description 获取会话消息统计
+ */
+export const getConversationStatistics = async (
+  id: string,
+): Promise<ResponseStructure<MessageStatistics>> => {
+  return request(`/api/agent/conversation/${id}/statistics`, {
+    method: 'GET',
   });
 };

@@ -27,7 +27,9 @@ import {
   getAgentConversationList,
   getAgentConversationMessages,
 } from '@/services/agent/ConversationController';
+import { getOptionList } from '@/services/sys/DictController';
 import { AgentConversation, AgentDefinition, AgentMessage } from '@/services/entity/Agent';
+import { Option } from '@/services/entity/Common';
 import AgentMessageBubble from '@/components/AgentMessageBubble';
 import './index.less';
 
@@ -70,6 +72,7 @@ const ChatDebugPage: React.FC = () => {
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const [thinking, setThinking] = useState(false);
   const [reasoningEffort, setReasoningEffort] = useState<'low' | 'medium' | 'high'>('medium');
+  const [reasoningEffortOptions, setReasoningEffortOptions] = useState<Option[]>([]);
   const messageEndRef = useRef<HTMLDivElement>(null);
   const messageListRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController>();
@@ -146,6 +149,7 @@ const ChatDebugPage: React.FC = () => {
   useEffect(() => {
     loadAgents();
     loadConversations();
+    getOptionList('Agent_Reasoning_Effort').then(setReasoningEffortOptions);
   }, []);
 
   useEffect(() => {
@@ -697,11 +701,7 @@ const ChatDebugPage: React.FC = () => {
                   value={reasoningEffort}
                   onChange={setReasoningEffort}
                   style={{ width: 80 }}
-                  options={[
-                    { label: '轻度', value: 'low' },
-                    { label: '中度', value: 'medium' },
-                    { label: '深度', value: 'high' },
-                  ]}
+                  options={reasoningEffortOptions}
                 />
               )}
               {thinking && sending && (

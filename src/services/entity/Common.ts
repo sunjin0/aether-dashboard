@@ -26,7 +26,7 @@ export interface ResponseStructure<T> {
 export interface Option{
   id?: number;
   label: string;
-  value: string;
+  value: string | number;
   children?: Option[];
   disabled?: boolean;
   isLeaf?: boolean;

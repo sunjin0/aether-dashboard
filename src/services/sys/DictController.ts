@@ -66,12 +66,16 @@ export const getSelectList = async (): Promise<Option[]> => {
  * @description 字典
  * @since 2025-07-17
  */
-export const getOptionList = async (parentCode: string): Promise<Option[]> => {
+export const getOptionList = async (parentCode: string, useValue: boolean = true): Promise<Option[]> => {
   let {data} = await request(`/api/sys/dict/options`, {
     method: 'GET',
     params: {
-      parentCode
+      parentCode,
+      useValue
     }
   });
-  return data
+  return (data || []).map((item: Option) => ({
+    ...item,
+    value: /^\d+$/.test(String(item.value)) ? Number(item.value) : item.value,
+  }));
 }

@@ -2,18 +2,13 @@ import React, {useEffect, useRef, useState} from 'react';
 import {ActionType, PageContainer, ProDescriptions, ProTable} from '@ant-design/pro-components';
 import {Alert, Button, Card, DatePicker, Drawer, Empty, message, Spin, Statistic, Tag, Typography} from 'antd';
 import {getAgentRunInfo, getAgentRunList, getAgentRunStatistics} from '@/services/agent/RunController';
+import {getOptionList} from '@/services/sys/DictController';
 import {AgentRun, AgentRunSearchParams, AgentRunStatistics} from '@/services/entity/Agent';
 import JsonDisplay from '@/components/JsonDisplay';
 import MarkdownText from '@/components/MarkdownText';
 import './index.less';
 
 const {Text} = Typography;
-
-const statusValueEnum = {
-  0: {text: '成功', status: 'Success'},
-  1: {text: '失败', status: 'Error'},
-  2: {text: '超时', status: 'Warning'},
-};
 
 const renderStatusTag = (status?: number) => {
   if (status === 0) {
@@ -113,7 +108,7 @@ const AgentRunPage: React.FC = () => {
       title: '状态',
       dataIndex: 'status',
       valueType: 'select',
-      valueEnum: statusValueEnum,
+      request: async () => getOptionList('Agent_Run_Status'),
       render: (_: any, record: AgentRun) => renderStatusTag(record.status),
     },
     {
@@ -166,17 +161,32 @@ const AgentRunPage: React.FC = () => {
         showIcon={true}
         message="运行记录为只读审计数据；统计接口已接入真实数据。"
       />
-      <Card title="运行统计" style={{marginBottom: 16}}>
+      <Card title="运行统计" style={{ marginBottom: 16 }}>
         <Spin spinning={statisticsLoading}>
           {statistics ? (
-            <div style={{display: 'flex', flexWrap: 'wrap', gap: 16}}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
               <Statistic title="总调用次数" value={statistics.totalCalls || 0} />
-              <Statistic title="成功次数" value={statistics.successCalls || 0} valueStyle={{color: '#3f8600'}} />
-              <Statistic title="失败次数" value={statistics.failedCalls || 0} valueStyle={{color: '#cf1322'}} />
-              <Statistic title="超时次数" value={statistics.timeoutCalls || 0} valueStyle={{color: '#d4b106'}} />
+              <Statistic
+                title="成功次数"
+                value={statistics.successCalls || 0}
+                valueStyle={{ color: '#3f8600' }}
+              />
+              <Statistic
+                title="失败次数"
+                value={statistics.failedCalls || 0}
+                valueStyle={{ color: '#cf1322' }}
+              />
+              <Statistic
+                title="超时次数"
+                value={statistics.timeoutCalls || 0}
+                valueStyle={{ color: '#d4b106' }}
+              />
               <Statistic title="总 Token" value={statistics.totalTokens || 0} />
               <Statistic title="平均耗时(ms)" value={statistics.avgLatencyMs || 0} />
-              <Statistic title="错误率" value={statistics.errorRate ? `${(statistics.errorRate * 100).toFixed(2)}%` : '0%'} />
+              <Statistic
+                title="错误率"
+                value={statistics.errorRate ? `${(statistics.errorRate * 100).toFixed(2)}%` : '0%'}
+              />
             </div>
           ) : (
             <Empty description="暂无统计数据" />
@@ -187,8 +197,8 @@ const AgentRunPage: React.FC = () => {
         actionRef={ref}
         rowKey="id"
         request={async (params: AgentRunSearchParams) => {
-          const {dateRange, ...rest} = params as any;
-          const queryParams: AgentRunSearchParams = {...rest};
+          const { dateRange, ...rest } = params as any;
+          const queryParams: AgentRunSearchParams = { ...rest };
           if (dateRange) {
             queryParams.startTime = dateRange[0]?.valueOf();
             queryParams.endTime = dateRange[1]?.valueOf();
@@ -211,41 +221,56 @@ const AgentRunPage: React.FC = () => {
                 column={1}
                 dataSource={run}
                 columns={[
-                  {title: 'ID', dataIndex: 'id'},
-                  {title: 'Agent 定义 ID', dataIndex: 'agentDefinitionId'},
-                  {title: '用户 ID', dataIndex: 'userId'},
-                  {title: '会话 ID', dataIndex: 'conversationId'},
-                  {title: '输出消息 ID', dataIndex: 'messageId'},
-                  {title: '模型供应商 ID', dataIndex: 'modelProviderId'},
-                  {title: '模型', dataIndex: 'model'},
+                  { title: 'ID', dataIndex: 'id' },
+                  { title: 'Agent 定义 ID', dataIndex: 'agentDefinitionId' },
+                  { title: '用户 ID', dataIndex: 'userId' },
+                  { title: '会话 ID', dataIndex: 'conversationId' },
+                  { title: '输出消息 ID', dataIndex: 'messageId' },
+                  { title: '模型供应商 ID', dataIndex: 'modelProviderId' },
+                  { title: '模型', dataIndex: 'model' },
                   {
                     title: '状态',
                     dataIndex: 'status',
                     render: (_: any, record: AgentRun) => renderStatusTag(record.status),
                   },
-                  {title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime'},
-                  {title: '更新时间', dataIndex: 'updatedAt', valueType: 'dateTime'},
+                  { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime' },
+                  { title: '更新时间', dataIndex: 'updatedAt', valueType: 'dateTime' },
                 ]}
               />
-              <Card title="Token 与耗时" size="small" style={{marginTop: 16}}>
+              <Card title="Token 与耗时" size="small" style={{ marginTop: 16 }}>
                 <ProDescriptions
                   column={2}
                   dataSource={run}
                   columns={[
-                    {title: '输入 Token', dataIndex: 'promptTokens'},
-                    {title: '输出 Token', dataIndex: 'completionTokens'},
-                    {title: '总 Token', dataIndex: 'totalTokens'},
-                    {title: '总耗时(ms)', dataIndex: 'latencyMs'},
+                    { title: '输入 Token', dataIndex: 'promptTokens' },
+                    { title: '输出 Token', dataIndex: 'completionTokens' },
+                    { title: '总 Token', dataIndex: 'totalTokens' },
+                    { title: '总耗时(ms)', dataIndex: 'latencyMs' },
                   ]}
                 />
               </Card>
-              <Card title="输入内容摘要" size="small" style={{marginTop: 16}} className="agent-run-card">
-                <JsonDisplay content={run.inputContent} />
+              <Card
+                title="输入内容摘要"
+                size="small"
+                style={{ marginTop: 16 }}
+                className="agent-run-card"
+              >
+                <MarkdownText content={run.inputContent} />
               </Card>
-              <Card title="输出内容摘要" size="small" style={{marginTop: 16}} className="agent-run-card">
-                <JsonDisplay content={run.outputContent} />
+              <Card
+                title="输出内容摘要"
+                size="small"
+                style={{ marginTop: 16 }}
+                className="agent-run-card"
+              >
+                <MarkdownText content={run.outputContent} />
               </Card>
-              <Card title="错误信息" size="small" style={{marginTop: 16}} className="agent-run-card">
+              <Card
+                title="错误信息"
+                size="small"
+                style={{ marginTop: 16 }}
+                className="agent-run-card"
+              >
                 {run.errorMsg ? (
                   <MarkdownText content={run.errorMsg} error={true} />
                 ) : (

@@ -9,9 +9,11 @@ import {
   getAgentConversationList,
   getAgentConversationMessages,
 } from '@/services/agent/ConversationController';
+import {getOptionList} from '@/services/sys/DictController';
 import {AgentConversation, AgentConversationSearchParams, AgentMessage} from '@/services/entity/Agent';
 import AgentMessageBubble from '@/components/AgentMessageBubble';
 
+// ProDescriptions 不支持 request，保留用于详情展示
 const statusValueEnum = {
   0: {text: '进行中', status: 'Processing'},
   1: {text: '关闭', status: 'Default'},
@@ -121,7 +123,7 @@ const AgentConversationPage: React.FC = () => {
       title: '状态',
       dataIndex: 'status',
       valueType: 'select',
-      valueEnum: statusValueEnum,
+      request: async () => getOptionList('Agent_Conversation_Status'),
     },
     {
       title: '创建时间',

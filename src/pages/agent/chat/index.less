@@ -52,6 +52,7 @@
 
   .@{chat-prefix}-session-list {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding-bottom: 8px;
 
@@ -63,6 +64,21 @@
       background: rgba(0, 0, 0, 0.1);
       border-radius: 3px;
     }
+  }
+
+  // Spin 组件需要 flex 布局以允许子元素滚动
+  .ant-spin-nested-loading {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ant-spin-container {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
   }
 
   .@{chat-prefix}-session-group {

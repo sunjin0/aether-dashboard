@@ -5,27 +5,13 @@ import {
   getAgentToolCallLogInfo,
   getAgentToolCallLogList,
 } from '@/services/agent/ToolCallLogController';
+import {getOptionList} from '@/services/sys/DictController';
 import {AgentToolCallLog, AgentToolCallLogSearchParams} from '@/services/entity/Agent';
 import JsonDisplay from '@/components/JsonDisplay';
 import MarkdownText from '@/components/MarkdownText';
 import './index.less';
 
 const {Text} = Typography;
-
-const methodValueEnum = {
-  GET: {text: 'GET'},
-  POST: {text: 'POST'},
-  PUT: {text: 'PUT'},
-  DELETE: {text: 'DELETE'},
-  PATCH: {text: 'PATCH'},
-};
-
-const statusValueEnum = {
-  0: {text: '成功', status: 'Success'},
-  1: {text: '失败', status: 'Error'},
-  2: {text: '超时', status: 'Warning'},
-  3: {text: '安全拦截', status: 'Processing'},
-};
 
 const renderStatusTag = (status?: number) => {
   if (status === 0) {
@@ -120,7 +106,7 @@ const AgentToolCallLogPage: React.FC = () => {
       title: '请求方法',
       dataIndex: 'requestMethod',
       valueType: 'select',
-      valueEnum: methodValueEnum,
+      request: async () => getOptionList('Agent_Http_Method'),
       width: 110,
     },
     {
@@ -134,7 +120,7 @@ const AgentToolCallLogPage: React.FC = () => {
       title: '执行状态',
       dataIndex: 'status',
       valueType: 'select',
-      valueEnum: statusValueEnum,
+      request: async () => getOptionList('Agent_ToolCall_Status'),
       render: (_: any, record: AgentToolCallLog) => renderStatusTag(record.status),
       width: 120,
     },

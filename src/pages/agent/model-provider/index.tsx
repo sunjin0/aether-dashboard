@@ -9,17 +9,8 @@ import {
   getModelProviderList,
   updateModelProviderStatus,
 } from '@/services/agent/ModelProviderController';
+import {getOptionList} from '@/services/sys/DictController';
 import {ModelProvider, ModelProviderSearchParams} from '@/services/entity/Agent';
-
-const typeValueEnum = {
-  openai: {text: 'OpenAI'},
-  local: {text: 'Local'},
-};
-
-const statusValueEnum = {
-  0: {text: '禁用', status: 'Default'},
-  1: {text: '启用', status: 'Success'},
-};
 
 const ModelProviderPage: React.FC = () => {
   const [open, setOpen] = useState(false);
@@ -66,14 +57,15 @@ const ModelProviderPage: React.FC = () => {
     {
       title: '供应商名称',
       dataIndex: 'name',
-      valueType: 'text',
+      valueType: 'select',
+      request: async () => getOptionList('Model_Provider_Name'),
       ellipsis: true,
     },
     {
       title: '类型',
       dataIndex: 'type',
       valueType: 'select',
-      valueEnum: typeValueEnum,
+      request: async () => getOptionList('Model_Provider_Type'),
     },
     {
       title: 'API 基础地址',
@@ -91,7 +83,7 @@ const ModelProviderPage: React.FC = () => {
       title: '状态',
       dataIndex: 'status',
       valueType: 'select',
-      valueEnum: statusValueEnum,
+      request: async () => getOptionList('Agent_Status'),
     },
     {
       title: '排序',

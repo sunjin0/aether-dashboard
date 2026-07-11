@@ -1,5 +1,5 @@
 import {request} from '@umijs/max';
-import {ResponseStructure} from '@/services/entity/Common';
+import { Option, ResponseStructure } from '@/services/entity/Common';
 import {
   AgentDefinition,
   AgentDefinitionSearchParams,
@@ -139,4 +139,14 @@ export const updateToolPriority = async (
     method: 'PUT',
     data: params,
   });
+};
+/**
+ * @description 获取模型供应商列表
+ */
+export const getModelProviderList = async (
+): Promise<Option[]> => {
+  let { data } = await request<ResponseStructure<Option[]>>('/api/agent/definition//model/providers', {
+    method: 'GET',
+  });
+  return data;
 };

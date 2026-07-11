@@ -10,20 +10,10 @@ import {
   deleteAgentDefinitionInfo,
   getAgentDefinitionList,
   updateAgentDefinitionStatus,
+  getModelProviderList,
 } from '@/services/agent/AgentDefinitionController';
+import {getOptionList} from '@/services/sys/DictController';
 import {AgentDefinition, AgentDefinitionSearchParams} from '@/services/entity/Agent';
-import { getModelProviderList } from '@/services/agent/ModelProviderController';
-
-const statusValueEnum = {
-  0: {text: '草稿', status: 'Default'},
-  1: {text: '启用', status: 'Success'},
-  2: {text: '禁用', status: 'Error'},
-};
-
-const accessTypeValueEnum = {
-  private: {text: 'private'},
-  public: {text: 'public'},
-};
 
 const AgentDefinitionPage: React.FC = () => {
   const [open, setOpen] = useState(false);
@@ -102,20 +92,7 @@ const AgentDefinitionPage: React.FC = () => {
       title: '模型供应商',
       dataIndex: 'modelProviderId',
       valueType: 'select',
-      request: async () => {
-        const { data } = await getModelProviderList({
-          current: 1,
-          pageSize: 1000,
-          status: 1,
-        });
-
-        return (data || [])
-          .filter((item) => item.id)
-          .map((item) => ({
-            label: item.name || item.id,
-            value: item.id as string,
-          }));
-      },
+      request: async () => getModelProviderList(),
       ellipsis: true,
     },
     {
@@ -128,7 +105,7 @@ const AgentDefinitionPage: React.FC = () => {
       title: '状态',
       dataIndex: 'status',
       valueType: 'select',
-      valueEnum: statusValueEnum,
+      request: async () => getOptionList('Agent_Definition_Status'),
     },
     {
       title: '温度参数',
@@ -143,7 +120,7 @@ const AgentDefinitionPage: React.FC = () => {
       hideInSearch: true,
     },
     {
-      title: '最大工具轮次',
+      title: '最大轮次',
       dataIndex: 'maxToolRounds',
       valueType: 'digit',
       hideInSearch: true,
@@ -152,7 +129,7 @@ const AgentDefinitionPage: React.FC = () => {
       title: '访问类型',
       dataIndex: 'accessType',
       valueType: 'select',
-      valueEnum: accessTypeValueEnum,
+      request: async () => getOptionList('Agent_Access_Type'),
     },
     // {
     //   title: '描述',
@@ -170,7 +147,7 @@ const AgentDefinitionPage: React.FC = () => {
     {
       title: '操作',
       valueType: 'option',
-      width: 350,
+      width: 400,
       key: 'option',
       fixed: 'right',
       render: (_: any, record: AgentDefinition) =>
@@ -231,6 +208,7 @@ const AgentDefinitionPage: React.FC = () => {
       <ProTable
         actionRef={ref}
         rowKey="id"
+        scroll={{x: 1400}}
         request={async (params: AgentDefinitionSearchParams) => getAgentDefinitionList(params)}
         toolBarRender={() =>
           write && [

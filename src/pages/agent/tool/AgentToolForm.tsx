@@ -12,19 +12,9 @@ import {
   getAgentToolInfo,
   updateAgentToolInfo,
 } from '@/services/agent/ToolController';
+import {getOptionList} from '@/services/sys/DictController';
+import {Option} from '@/services/entity/Common';
 import {useState, useEffect} from 'react';
-
-const typeOptions = [{label: 'HTTP', value: 'http'}];
-
-const httpMethodOptions = [
-  {label: 'GET', value: 'GET'},
-  {label: 'POST', value: 'POST'},
-];
-
-const statusOptions = [
-  {label: '禁用', value: 0},
-  {label: '启用', value: 1},
-];
 
 const headerOptions = [
   {
@@ -48,20 +38,6 @@ const headerOptions = [
     label: '自定义',
     options: [{label: 'X-Custom-Header', value: 'X-Custom-Header'}],
   },
-];
-
-const contentTypeOptions = [
-  {label: 'application/json', value: 'application/json'},
-  {label: 'application/x-www-form-urlencoded', value: 'application/x-www-form-urlencoded'},
-  {label: 'multipart/form-data', value: 'multipart/form-data'},
-  {label: 'text/plain', value: 'text/plain'},
-  {label: 'text/xml', value: 'text/xml'},
-];
-
-const responseTypeOptions = [
-  {label: 'JSONPath', value: 'jsonpath'},
-  {label: '正则', value: 'regex'},
-  {label: '空（完整响应）', value: 'empty'},
 ];
 
 const jsonpathExamples = [
@@ -109,6 +85,13 @@ const AgentToolForm = (props: {
   const [bodyMode, setBodyMode] = useState<'kv' | 'json'>('kv');
   const [jsonInput, setJsonInput] = useState('{\n  \n}');
   const [responseType, setResponseType] = useState<string>('empty');
+  const [contentTypeOptions, setContentTypeOptions] = useState<Option[]>([]);
+  const [responseTypeOptions, setResponseTypeOptions] = useState<Option[]>([]);
+
+  useEffect(() => {
+    getOptionList('Agent_Content_Type').then(setContentTypeOptions);
+    getOptionList('Agent_Response_Type').then(setResponseTypeOptions);
+  }, []);
 
   useEffect(() => {
     if (id && open) {
@@ -277,11 +260,16 @@ const AgentToolForm = (props: {
       <ProFormSelect
         name="type"
         label="工具类型"
-        options={typeOptions}
+        request={async () => getOptionList('Agent_Tool_Type')}
         rules={[{required: true}]}
         initialValue="http"
       />
-      <ProFormSelect name="httpMethod" label="HTTP 方法" options={httpMethodOptions} rules={[{required: true}]} />
+      <ProFormSelect
+        name="httpMethod"
+        label="HTTP 方法"
+        request={async () => getOptionList('Agent_Http_Method')}
+        rules={[{required: true}]}
+      />
       <ProFormText
         name="httpUrl"
         label="HTTP URL"
@@ -499,7 +487,7 @@ const AgentToolForm = (props: {
       <ProFormSelect
         name="status"
         label="状态"
-        options={statusOptions}
+        request={async () => getOptionList('Agent_Status')}
         rules={[{required: true}]}
         initialValue={1}
       />

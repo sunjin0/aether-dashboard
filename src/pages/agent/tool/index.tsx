@@ -10,21 +10,8 @@ import {
   getAgentToolList,
   updateAgentToolInfo,
 } from '@/services/agent/ToolController';
+import {getOptionList} from '@/services/sys/DictController';
 import {AgentTool, AgentToolSearchParams} from '@/services/entity/Agent';
-
-const typeValueEnum = {
-  http: {text: 'HTTP'},
-};
-
-const httpMethodValueEnum = {
-  GET: {text: 'GET'},
-  POST: {text: 'POST'},
-};
-
-const statusValueEnum = {
-  0: {text: '禁用', status: 'Default'},
-  1: {text: '启用', status: 'Success'},
-};
 
 const AgentToolPage: React.FC = () => {
   const [open, setOpen] = useState(false);
@@ -91,13 +78,13 @@ const AgentToolPage: React.FC = () => {
       title: '工具类型',
       dataIndex: 'type',
       valueType: 'select',
-      valueEnum: typeValueEnum,
+      request: async () => getOptionList('Agent_Tool_Type'),
     },
     {
       title: 'HTTP 方法',
       dataIndex: 'httpMethod',
       valueType: 'select',
-      valueEnum: httpMethodValueEnum,
+      request: async () => getOptionList('Agent_Http_Method'),
     },
     {
       title: 'HTTP URL',
@@ -116,7 +103,7 @@ const AgentToolPage: React.FC = () => {
       title: '状态',
       dataIndex: 'status',
       valueType: 'select',
-      valueEnum: statusValueEnum,
+      request: async () => getOptionList('Agent_Status'),
     },
     {
       title: '创建时间',

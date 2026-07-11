@@ -3,6 +3,8 @@ import {ActionType, PageContainer, ProDescriptions, ProTable} from '@ant-design/
 import {Alert, Button, Card, DatePicker, Drawer, Empty, message, Spin, Statistic, Tag, Typography} from 'antd';
 import {getAgentRunInfo, getAgentRunList, getAgentRunStatistics} from '@/services/agent/RunController';
 import {AgentRun, AgentRunSearchParams, AgentRunStatistics} from '@/services/entity/Agent';
+import JsonDisplay from '@/components/JsonDisplay';
+import MarkdownText from '@/components/MarkdownText';
 import './index.less';
 
 const {Text} = Typography;
@@ -24,18 +26,6 @@ const renderStatusTag = (status?: number) => {
     return <Tag color="warning">超时</Tag>;
   }
   return <Tag>未知</Tag>;
-};
-
-const renderTextBlock = (content?: string, error?: boolean) => {
-  if (!content) {
-    return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无内容" />;
-  }
-
-  return (
-    <div className={`agent-run-text-block${error ? ' agent-run-error-block' : ''}`}>
-      {content}
-    </div>
-  );
 };
 
 const {RangePicker} = DatePicker;
@@ -249,15 +239,15 @@ const AgentRunPage: React.FC = () => {
                   ]}
                 />
               </Card>
-              <Card title="输入内容摘要" size="small" style={{marginTop: 16}}>
-                {renderTextBlock(run.inputContent)}
+              <Card title="输入内容摘要" size="small" style={{marginTop: 16}} className="agent-run-card">
+                <JsonDisplay content={run.inputContent} />
               </Card>
-              <Card title="输出内容摘要" size="small" style={{marginTop: 16}}>
-                {renderTextBlock(run.outputContent)}
+              <Card title="输出内容摘要" size="small" style={{marginTop: 16}} className="agent-run-card">
+                <JsonDisplay content={run.outputContent} />
               </Card>
-              <Card title="错误信息" size="small" style={{marginTop: 16}}>
+              <Card title="错误信息" size="small" style={{marginTop: 16}} className="agent-run-card">
                 {run.errorMsg ? (
-                  renderTextBlock(run.errorMsg, true)
+                  <MarkdownText content={run.errorMsg} error={true} />
                 ) : (
                   <Text type="secondary">暂无错误信息</Text>
                 )}

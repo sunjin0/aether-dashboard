@@ -1,0 +1,144 @@
+.markdown-text-block {
+  color: rgba(15, 23, 42, 0.88);
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: pre-wrap;
+
+  > :first-child {
+    margin-top: 0;
+  }
+
+  > :last-child {
+    margin-bottom: 0;
+  }
+
+  p {
+    margin: 0 0 10px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 16px 0 8px;
+    color: rgba(15, 23, 42, 0.95);
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  h1 {
+    font-size: 22px;
+  }
+
+  h2 {
+    font-size: 18px;
+  }
+
+  h3 {
+    font-size: 16px;
+  }
+
+  ul,
+  ol {
+    margin: 0 0 10px 20px;
+    padding: 0;
+    list-style-position: outside;
+  }
+
+  ul {
+    list-style-type: disc;
+  }
+
+  ol {
+    list-style-type: decimal;
+  }
+
+  li {
+    margin: 4px 0;
+  }
+
+  blockquote {
+    margin: 10px 0;
+    padding: 10px 14px;
+    border-left: 3px solid #91caff;
+    border-radius: 8px;
+    background: rgba(22, 119, 255, 0.06);
+    color: rgba(15, 23, 42, 0.72);
+  }
+
+  code {
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(15, 23, 42, 0.06);
+    font-family: 'SF Mono', 'Fira Code', 'Fira Mono', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+    font-size: 12px;
+  }
+
+  pre {
+    position: relative;
+    margin: 12px 0;
+    padding: 14px 16px;
+    overflow-x: auto;
+    border-radius: 12px;
+    background: #1a1a2e;
+    color: #e5e7eb;
+
+    code {
+      padding: 0;
+      background: transparent;
+      color: inherit;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+  }
+
+  a {
+    color: #1677ff;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  table {
+    width: 100%;
+    margin: 12px 0;
+    border-collapse: collapse;
+
+    th,
+    td {
+      padding: 8px 12px;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      text-align: left;
+    }
+
+    th {
+      background: rgba(0, 0, 0, 0.02);
+      font-weight: 600;
+    }
+  }
+
+  img {
+    max-width: 100%;
+    border-radius: 8px;
+  }
+
+  hr {
+    margin: 16px 0;
+    border: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+  }
+}
+
+.markdown-text-error {
+  color: #ff4d4f;
+  background: rgba(255, 77, 79, 0.06);
+  border: 1px solid rgba(255, 77, 79, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+}

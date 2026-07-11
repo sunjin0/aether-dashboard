@@ -6,6 +6,8 @@ import {
   getAgentToolCallLogList,
 } from '@/services/agent/ToolCallLogController';
 import {AgentToolCallLog, AgentToolCallLogSearchParams} from '@/services/entity/Agent';
+import JsonDisplay from '@/components/JsonDisplay';
+import MarkdownText from '@/components/MarkdownText';
 import './index.less';
 
 const {Text} = Typography;
@@ -39,18 +41,6 @@ const renderStatusTag = (status?: number) => {
     return <Tag color="purple">安全拦截</Tag>;
   }
   return <Tag>未知</Tag>;
-};
-
-const renderTextBlock = (content?: string, error?: boolean) => {
-  if (!content) {
-    return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无内容" />;
-  }
-
-  return (
-    <div className={`agent-tool-call-log-text-block${error ? ' agent-tool-call-log-error-block' : ''}`}>
-      {content}
-    </div>
-  );
 };
 
 const AgentToolCallLogPage: React.FC = () => {
@@ -228,18 +218,18 @@ const AgentToolCallLogPage: React.FC = () => {
                   {title: '更新时间', dataIndex: 'updatedAt', valueType: 'dateTime'},
                 ]}
               />
-              <Card title="请求头" size="small" style={{marginTop: 16}}>
-                {renderTextBlock(toolCallLog.requestHeaders)}
+              <Card title="请求头" size="small" style={{marginTop: 16}} className="agent-tool-call-log-card">
+                <JsonDisplay content={toolCallLog.requestHeaders} />
               </Card>
-              <Card title="请求体" size="small" style={{marginTop: 16}}>
-                {renderTextBlock(toolCallLog.requestBody)}
+              <Card title="请求体" size="small" style={{marginTop: 16}} className="agent-tool-call-log-card">
+                <JsonDisplay content={toolCallLog.requestBody} />
               </Card>
-              <Card title="响应体" size="small" style={{marginTop: 16}}>
-                {renderTextBlock(toolCallLog.responseBody)}
+              <Card title="响应体" size="small" style={{marginTop: 16}} className="agent-tool-call-log-card">
+                <JsonDisplay content={toolCallLog.responseBody} />
               </Card>
-              <Card title="错误信息" size="small" style={{marginTop: 16}}>
+              <Card title="错误信息" size="small" style={{marginTop: 16}} className="agent-tool-call-log-card">
                 {toolCallLog.errorMsg ? (
-                  renderTextBlock(toolCallLog.errorMsg, true)
+                  <MarkdownText content={toolCallLog.errorMsg} error={true} />
                 ) : (
                   <Text type="secondary">暂无错误信息</Text>
                 )}

@@ -6,12 +6,8 @@ const Footer: React.FC = () => {
     <DefaultFooter
       style={{
         background: 'none',
-        position: 'fixed',
-        bottom:0,
-        left:0,
-        right:0,
       }}
-     copyright={`2022-${new Date().getFullYear()} Cloud Chat`}
+      copyright={`2022-${new Date().getFullYear()} Aether`}
     />
   );
 };

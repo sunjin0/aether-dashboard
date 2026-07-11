@@ -73,6 +73,7 @@ export interface AgentChatRequest {
   conversationId?: string;
   message: string;
   thinking?: boolean;
+  temporary?: boolean;
   reasoningEffort?: 'low' | 'medium' | 'high';
 }
 

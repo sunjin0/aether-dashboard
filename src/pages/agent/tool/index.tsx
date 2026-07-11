@@ -157,6 +157,7 @@ const AgentToolPage: React.FC = () => {
       <ProTable
         actionRef={ref}
         rowKey="id"
+        scroll={{x: 1600}}
         request={async (params: AgentToolSearchParams) => getAgentToolList(params)}
         toolBarRender={() =>
           write && [

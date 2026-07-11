@@ -110,6 +110,7 @@ const PromptGenerateModal: React.FC<PromptGenerateModalProps> = ({
         {
           agentId: selectedAgentId,
           message: fullMessage,
+          temporary: true,
         },
         {
           signal: abortControllerRef.current.signal,

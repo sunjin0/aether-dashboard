@@ -112,6 +112,7 @@ const ChatDebugPage: React.FC = () => {
         data,
         message: msg,
       } = await getAgentConversationList({
+        status: 0,
         current: 1,
         pageSize: 50,
       });

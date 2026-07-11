@@ -112,6 +112,7 @@ ${prompt}`
         {
           agentId: selectedAgentId,
           message: fullMessage,
+          temporary: true,
         },
         {
           signal: abortControllerRef.current.signal,

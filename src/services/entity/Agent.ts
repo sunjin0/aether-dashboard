@@ -117,6 +117,7 @@ export interface AgentStreamDoneData {
   promptTokens?: number;
   completionTokens?: number;
   totalTokens?: number;
+  latencyMs?: number;
 }
 
 export type AgentStreamEvent =
@@ -155,12 +156,15 @@ export interface AgentMessage {
   content?: string;
   reasoningContent?: string;
   reasoningTokens?: number;
+  toolCalls?: string;
+  runId?: string;
   model?: string;
   promptTokens?: number;
   completionTokens?: number;
   totalTokens?: number;
   latencyMs?: number;
-  createdAt?: string;
+  toolCallLogs?: AgentToolCallLog[];
+  createdAt?: number;
 }
 
 /**
@@ -169,6 +173,7 @@ export interface AgentMessage {
 export interface AgentMessageSearchParams {
   current?: number;
   pageSize?: number;
+  includeToolCalls?: boolean;
 }
 
 /**
@@ -210,7 +215,10 @@ export interface AgentRunSearchParams extends AgentRun {
 export interface AgentToolCallLog {
   id?: string;
   runId?: string;
+  toolCallId?: string;
   toolId?: string;
+  toolName?: string;
+  arguments?: string;
   agentDefinitionId?: string;
   requestUrl?: string;
   requestMethod?: string;
@@ -219,10 +227,10 @@ export interface AgentToolCallLog {
   responseStatus?: number;
   responseBody?: string;
   latencyMs?: number;
-  status?: number;
+  status?: 0 | 1 | 2 | 3;
   errorMsg?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt?: number;
+  updatedAt?: number;
 }
 
 /**

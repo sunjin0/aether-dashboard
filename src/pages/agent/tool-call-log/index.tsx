@@ -45,7 +45,7 @@ const AgentToolCallLogPage: React.FC = () => {
 
     return {
       ...restParams,
-      status: Number(status),
+      status: Number(status) as 0 | 1 | 2 | 3,
     };
   };
 

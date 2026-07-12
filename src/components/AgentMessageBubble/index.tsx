@@ -2,6 +2,7 @@ import React, { useCallback, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Collapse, message, Tooltip, Typography } from 'antd';
 import { AgentMessage } from '@/services/entity/Agent';
+import ToolCallCard from '@/components/ToolCallCard';
 import './index.less';
 
 const { Text } = Typography;
@@ -41,10 +42,10 @@ const getAlign = (message: AgentMessage, align?: 'left' | 'right') => {
   return message.role === 'user' ? 'right' : 'left';
 };
 
-const formatTime = (timeStr?: string) => {
-  if (!timeStr) return '';
+const formatTime = (time?: string | number) => {
+  if (!time) return '';
   try {
-    const date = new Date(timeStr);
+    const date = new Date(typeof time === 'number' ? time : time);
     const now = new Date();
     const isToday = date.toDateString() === now.toDateString();
 
@@ -67,7 +68,7 @@ const formatTime = (timeStr?: string) => {
       minute: '2-digit',
     });
   } catch {
-    return timeStr;
+    return String(time);
   }
 };
 
@@ -152,7 +153,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
   }, [currentContent]);
 
   const renderContent = () => {
-    if (!agentMessage.content && !agentMessage.reasoningContent && !agentMessage.reasoningStream) {
+    if (!agentMessage.content && !agentMessage.reasoningContent && !agentMessage.reasoningStream && !(agentMessage.toolCallLogs && agentMessage.toolCallLogs.length > 0)) {
       if (status === 'streaming') {
         return (
           <Text className="agent-message-bubble-placeholder" type="secondary">
@@ -194,6 +195,14 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
             ⚠️ 模型仅返回推理过程，未返回最终答案
           </Text>
         ) : null}
+
+        {agentMessage.toolCallLogs && agentMessage.toolCallLogs.length > 0 && (
+          <div className="agent-message-bubble-tool-calls">
+            {agentMessage.toolCallLogs.map((log) => (
+              <ToolCallCard key={log.id} log={log} compact />
+            ))}
+          </div>
+        )}
       </>
     );
   };

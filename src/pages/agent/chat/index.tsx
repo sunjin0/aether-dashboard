@@ -136,6 +136,7 @@ const ChatDebugPage: React.FC = () => {
       } = await getAgentConversationMessages(id, {
         current: 1,
         pageSize: 100,
+        includeToolCalls: true,
       });
       if (code === 200) {
         setMessages(data || []);
@@ -386,17 +387,18 @@ const ChatDebugPage: React.FC = () => {
         },
         onDone: (data) => {
           terminalEventReceived = true;
-          if (data.conversationId) {
-            setConversationId(data.conversationId);
+          const doneConversationId = data.conversationId;
+          if (doneConversationId) {
+            setConversationId(doneConversationId);
             if (!conversationId) {
               shouldReloadConversations = true;
             }
           }
-          typewriterDrainPromise = waitForTypewriterDrain().then(() => {
+          typewriterDrainPromise = waitForTypewriterDrain().then(async () => {
             updateAssistantMessage(assistantClientId, (item) => ({
               ...item,
               id: data.messageId || item.id,
-              conversationId: data.conversationId || item.conversationId,
+              conversationId: doneConversationId || item.conversationId,
               content: data.content || item.content,
               reasoningContent: data.reasoningContent || item.reasoningContent || item.reasoningStream,
               reasoningStream: undefined,
@@ -405,8 +407,23 @@ const ChatDebugPage: React.FC = () => {
               promptTokens: data.promptTokens ?? item.promptTokens,
               completionTokens: data.completionTokens ?? item.completionTokens,
               totalTokens: data.totalTokens ?? item.totalTokens,
+              latencyMs: data.latencyMs ?? item.latencyMs,
               streamStatus: undefined,
             }));
+            if (doneConversationId && data.messageId) {
+              try {
+                const result = await getAgentConversationMessages(doneConversationId, {
+                  current: 1,
+                  pageSize: 100,
+                  includeToolCalls: true,
+                });
+                if (result.code === 200 && result.data) {
+                  setMessages(result.data);
+                }
+              } catch {
+                // ignore
+              }
+            }
           });
         },
       });

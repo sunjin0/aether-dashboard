@@ -1,0 +1,372 @@
+@iq-prefix: iq-card;
+
+.@{iq-prefix} {
+  padding: 24px;
+  border: 1px solid rgba(22, 119, 255, 0.12);
+  border-radius: 16px;
+  background: #fff;
+  margin: 12px 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(22, 119, 255, 0.04);
+
+  // ─── Header ────────────────────────────────────────────────────────
+  &-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  &-type-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(22, 119, 255, 0.08);
+    color: #1677ff;
+    letter-spacing: 0.5px;
+
+    &-group {
+      background: rgba(22, 119, 255, 0.08);
+    }
+  }
+
+  &-required-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    background: rgba(255, 77, 79, 0.06);
+    color: #ff4d4f;
+    line-height: 1;
+  }
+
+  // ─── Progress bar ──────────────────────────────────────────────────
+  &-progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  &-progress-bar {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+  }
+
+  &-progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #1677ff, #4096ff);
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  &-progress-text {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.45);
+    font-variant-numeric: tabular-nums;
+    min-width: 32px;
+    text-align: right;
+  }
+
+  // ─── Tabs ──────────────────────────────────────────────────────────
+  &-tabs {
+    margin-top: 4px;
+
+    .ant-tabs-nav {
+      margin-bottom: 12px;
+
+      &::before {
+        border-bottom-color: rgba(0, 0, 0, 0.04);
+      }
+    }
+
+    .ant-tabs-tab {
+      padding: 8px 0;
+      margin-right: 20px;
+      transition: all 0.2s;
+
+      &:hover {
+        color: #1677ff;
+      }
+
+      &-active {
+        font-weight: 600;
+      }
+    }
+  }
+
+  &-tab-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &-tab-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(0, 0, 0, 0.04);
+    color: rgba(0, 0, 0, 0.45);
+    transition: all 0.25s;
+
+    &-done {
+      background: #52c41a;
+      color: #fff;
+      font-size: 10px;
+    }
+  }
+
+  &-tab-content {
+    padding: 4px 0 8px;
+  }
+
+  // ─── Question ──────────────────────────────────────────────────────
+  &-question {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: rgba(15, 23, 42, 0.88);
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  &-question-index {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    background: rgba(22, 119, 255, 0.08);
+    color: #1677ff;
+  }
+
+  // ─── Choice options ────────────────────────────────────────────────
+  &-choice-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &-choice-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(0, 0, 0, 0.06);
+    background: #fafbfc;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+
+    &:hover {
+      border-color: rgba(22, 119, 255, 0.3);
+      background: #f5f9ff;
+    }
+
+    &-active {
+      border-color: #1677ff;
+      background: rgba(22, 119, 255, 0.04);
+      box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+    }
+
+    .ant-radio-wrapper,
+    .ant-checkbox-wrapper {
+      margin: 0;
+      flex: 1;
+
+      &::after {
+        display: none;
+      }
+    }
+
+    .ant-radio,
+    .ant-checkbox {
+      top: 0;
+    }
+
+    .ant-radio-inner,
+    .ant-checkbox-inner {
+      border-color: rgba(0, 0, 0, 0.2);
+    }
+
+    .ant-radio-checked .ant-radio-inner,
+    .ant-checkbox-checked .ant-checkbox-inner {
+      background-color: #1677ff;
+      border-color: #1677ff;
+    }
+
+    .ant-radio-wrapper-checked::after,
+    .ant-checkbox-wrapper-checked::after {
+      display: none;
+    }
+  }
+
+  &-choice-check {
+    color: #1677ff;
+    font-size: 14px;
+    margin-left: auto;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    .@{iq-prefix}-choice-item-active & {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  // ─── Confirm buttons ───────────────────────────────────────────────
+  &-confirm {
+    display: flex;
+    gap: 12px;
+  }
+
+  &-confirm-btn {
+    flex: 1;
+    height: 44px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+  }
+
+  // ─── Submit button ─────────────────────────────────────────────────
+  &-submit-btn {
+    margin-top: 16px;
+    height: 42px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    width: 100%;
+    transition: all 0.25s;
+
+    &:not(:disabled):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(22, 119, 255, 0.3);
+    }
+
+    &:disabled {
+      background: rgba(0, 0, 0, 0.02);
+      border-color: rgba(0, 0, 0, 0.08);
+      color: rgba(0, 0, 0, 0.3);
+      box-shadow: none;
+    }
+  }
+
+  // ─── Status ────────────────────────────────────────────────────────
+  &-status {
+    display: block;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.04);
+    font-size: 13px;
+
+    &-answered {
+      color: #52c41a;
+    }
+
+    &-cancelled {
+      color: #ff4d4f;
+    }
+
+    &-expired {
+      color: #faad14;
+    }
+  }
+
+  // ─── Answer summary ───────────────────────────────────────────────
+  &-answer-summary {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: rgba(82, 196, 26, 0.06);
+    border: 1px solid rgba(82, 196, 26, 0.12);
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  &-answer-text {
+    font-size: 14px !important;
+    color: rgba(0, 0, 0, 0.65) !important;
+  }
+
+  // ─── Disabled states ───────────────────────────────────────────────
+  &-answered,
+  &-cancelled,
+  &-expired {
+    opacity: 0.6;
+    border-color: rgba(0, 0, 0, 0.04);
+    background: #fafafa;
+
+    .@{iq-prefix}-choice-item {
+      cursor: not-allowed;
+      opacity: 0.7;
+
+      &:hover {
+        border-color: rgba(0, 0, 0, 0.06);
+        background: #fafbfc;
+        box-shadow: none;
+      }
+    }
+
+    .@{iq-prefix}-confirm-btn {
+      cursor: not-allowed;
+    }
+  }
+
+  &-submitting {
+    pointer-events: none;
+    opacity: 0.7;
+
+    .@{iq-prefix}-submit-btn {
+      background: rgba(22, 119, 255, 0.6);
+    }
+  }
+}
+
+// ─── Responsive ───────────────────────────────────────────────────────────
+@media (max-width: 640px) {
+  .@{iq-prefix} {
+    padding: 16px;
+    border-radius: 12px;
+
+    &-confirm {
+      flex-direction: column;
+    }
+
+    &-confirm-btn {
+      width: 100%;
+    }
+
+    &-tab-num {
+      width: 18px;
+      height: 18px;
+      font-size: 10px;
+    }
+  }
+}

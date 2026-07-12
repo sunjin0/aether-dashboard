@@ -1,0 +1,528 @@
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { Button, Checkbox, Radio, Tabs, Typography } from 'antd';
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  CheckOutlined,
+} from '@ant-design/icons';
+import {
+  AskUserAnswer,
+  ChoiceQuestionConfig,
+  ConfirmQuestionConfig,
+  GroupQuestionConfig,
+  QuestionAnswer,
+  QuestionConfig,
+  QuestionItemConfig,
+} from '@/services/entity/Agent';
+import './index.less';
+
+const { Text } = Typography;
+
+// ─── 工具函数 ─────────────────────────────────────────────────────────────
+
+function parseQuestionConfig(input: string | QuestionConfig): QuestionConfig {
+  if (typeof input === 'string') {
+    try {
+      return JSON.parse(input);
+    } catch {
+      return { type: 'confirm', question: input } as ConfirmQuestionConfig;
+    }
+  }
+  return input;
+}
+
+/** 从 group config 或 question item 上读取历史答案 */
+function getQuestionAnswer(
+  questionId: string,
+  question: QuestionItemConfig,
+  groupConfig?: GroupQuestionConfig,
+): QuestionAnswer | undefined {
+  // 优先读问题自身的 answer
+  if (question.answer) return question.answer;
+  // 兼容读 group 顶层 answer.answers
+  return groupConfig?.answer?.answers?.[questionId];
+}
+
+/** choice 答案展示文本 */
+function getChoiceAnswerText(answer: QuestionAnswer | undefined, config: ChoiceQuestionConfig): string {
+  if (!answer) return '';
+  // 优先读 selectedOptions（带 label）
+  if (answer.selectedOptions?.length) {
+    return answer.selectedOptions.map((o) => o.label).join('、');
+  }
+  // 回退到 selected + options 查找 label
+  const selected = answer.selected;
+  if (!selected) return '';
+  const values = Array.isArray(selected) ? selected : [selected];
+  return values
+    .map((val) => config.options.find((o) => o.value === val)?.label || val)
+    .join('、');
+}
+
+/** confirm 答案展示文本 */
+function getConfirmAnswerText(answer: QuestionAnswer | undefined): string {
+  if (!answer) return '';
+  if (answer.label) return answer.label;
+  return answer.confirmed ? '确认' : '取消';
+}
+
+/** 判断答案是否已填写 */
+function isAnswerFilled(answer: AskUserAnswer | undefined): boolean {
+  if (!answer) return false;
+  if ('selected' in answer) {
+    const s = answer.selected;
+    if (Array.isArray(s)) return s.length > 0;
+    return !!s;
+  }
+  if ('confirmed' in answer) return true;
+  return false;
+}
+
+/** QuestionAnswer → AskUserAnswer */
+function toAskUserAnswer(a: QuestionAnswer): AskUserAnswer | undefined {
+  if (a.selected !== undefined) return { selected: a.selected };
+  if (a.confirmed !== undefined) return { confirmed: a.confirmed };
+  return undefined;
+}
+
+// ─── 导出类型 ─────────────────────────────────────────────────────────────
+
+export type InteractiveQuestionCardStatus = 'pending' | 'answered' | 'cancelled' | 'expired' | 'submitting';
+
+export interface InteractiveQuestionCardProps {
+  questionConfig: QuestionConfig | string;
+  content?: string;
+  status?: InteractiveQuestionCardStatus;
+  answer?: Record<string, AskUserAnswer>;
+  onSubmit?: (answers: Record<string, AskUserAnswer>) => void;
+}
+
+// ─── 选项组件（交互态）─────────────────────────────────────────────────────
+
+interface SingleChoiceQuestionProps {
+  config: ChoiceQuestionConfig;
+  disabled: boolean;
+  value: string | string[];
+  onChange: (value: string | string[]) => void;
+}
+
+const SingleChoiceQuestion: React.FC<SingleChoiceQuestionProps> = ({ config, disabled, value, onChange }) => {
+  if (config.multiple) {
+    return (
+      <div className="iq-card-choices">
+        <div className="iq-card-choice-list">
+          {config.options.map((option) => {
+            const checked = (value as string[]).includes(option.value);
+            return (
+              <label
+                key={option.id}
+                className={`iq-card-choice-item ${checked ? 'iq-card-choice-item-active' : ''}`}
+              >
+                <Checkbox
+                  value={option.value}
+                  checked={checked}
+                  disabled={disabled}
+                  onChange={(e) => {
+                    const c = e.target.checked;
+                    const newVal = c
+                      ? [...(value as string[]), option.value]
+                      : (value as string[]).filter((v) => v !== option.value);
+                    onChange(newVal);
+                  }}
+                >
+                  {option.label}
+                </Checkbox>
+                {checked && <CheckOutlined className="iq-card-choice-check" />}
+              </label>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="iq-card-choices">
+      <div className="iq-card-choice-list">
+        {config.options.map((option) => {
+          const checked = value === option.value;
+          return (
+            <label
+              key={option.id}
+              className={`iq-card-choice-item ${checked ? 'iq-card-choice-item-active' : ''}`}
+            >
+              <Radio
+                value={option.value}
+                checked={checked}
+                disabled={disabled}
+                onChange={() => onChange(option.value)}
+              >
+                {option.label}
+              </Radio>
+              {checked && <CheckOutlined className="iq-card-choice-check" />}
+            </label>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+interface SingleConfirmQuestionProps {
+  config: ConfirmQuestionConfig;
+  disabled: boolean;
+  value: boolean | null;
+  onChange: (value: boolean) => void;
+}
+
+const SingleConfirmQuestion: React.FC<SingleConfirmQuestionProps> = ({ config, disabled, value, onChange }) => {
+  return (
+    <div className="iq-card-confirm">
+      <Button
+        type={value === true ? 'primary' : 'default'}
+        icon={<CheckCircleOutlined />}
+        onClick={() => onChange(true)}
+        disabled={disabled}
+        size="large"
+        className="iq-card-confirm-btn"
+      >
+        {config.confirmText || '确认'}
+      </Button>
+      <Button
+        danger={value === false}
+        type={value === false ? 'primary' : 'default'}
+        icon={<CloseCircleOutlined />}
+        onClick={() => onChange(false)}
+        disabled={disabled}
+        size="large"
+        className="iq-card-confirm-btn"
+      >
+        {config.cancelText || '取消'}
+      </Button>
+    </div>
+  );
+};
+
+// ─── 历史答案摘要（只读）──────────────────────────────────────────────────
+
+const AnswerSummary: React.FC<{
+  question: QuestionItemConfig;
+  groupConfig?: GroupQuestionConfig;
+}> = ({ question, groupConfig }) => {
+  const answer = getQuestionAnswer(question.id, question, groupConfig);
+  if (!answer) return null;
+
+  let text = '';
+  if (question.type === 'choice') {
+    text = getChoiceAnswerText(answer, question);
+  } else {
+    text = getConfirmAnswerText(answer);
+  }
+
+  if (!text) return null;
+
+  return (
+    <div className="iq-card-answer-summary">
+      <CheckOutlined style={{ color: '#52c41a', marginRight: 8, fontSize: 14 }} />
+      <Text type="secondary" className="iq-card-answer-text">{text}</Text>
+    </div>
+  );
+};
+
+// ─── 主组件 ────────────────────────────────────────────────────────────────
+
+const statusLabelMap: Record<string, { text: string; className: string }> = {
+  answered: { text: '已回答', className: 'iq-card-status-answered' },
+  cancelled: { text: '已取消', className: 'iq-card-status-cancelled' },
+  expired: { text: '已过期', className: 'iq-card-status-expired' },
+};
+
+const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
+  questionConfig,
+  content,
+  status = 'pending',
+  answer: externalAnswer,
+  onSubmit,
+}) => {
+  const config = useMemo(() => parseQuestionConfig(questionConfig), [questionConfig]);
+  const disabled = status !== 'pending';
+  const isGroup = config.type === 'group';
+  const groupConfig = isGroup ? (config as GroupQuestionConfig) : undefined;
+
+  // ─── 单问题模式 ───────────────────────────────────────────────────────
+  if (!isGroup) {
+    const qConfig = config as QuestionItemConfig;
+    const historyAnswer = getQuestionAnswer(qConfig.id, qConfig);
+    const hasHistory = !!historyAnswer && (status === 'answered' || status === 'cancelled' || status === 'expired');
+
+    const [internalAnswers, setInternalAnswers] = useState<Record<string, AskUserAnswer>>({});
+    const currentAnswers = externalAnswer || internalAnswers;
+    const currentAnswer = hasHistory ? toAskUserAnswer(historyAnswer!) : currentAnswers[qConfig.id];
+    const filled = isAnswerFilled(currentAnswer);
+
+    const className = [
+      'iq-card',
+      `iq-card-${qConfig.type}`,
+      disabled && status !== 'submitting' ? `iq-card-${status}` : undefined,
+      status === 'submitting' ? 'iq-card-submitting' : undefined,
+    ]
+      .filter(Boolean)
+      .join(' ');
+
+    const statusInfo = statusLabelMap[status];
+
+    const handleSingleSubmit = useCallback(() => {
+      if (!filled) return;
+      onSubmit?.(currentAnswers);
+    }, [onSubmit, currentAnswers, filled]);
+
+    const handleAnswerChange = useCallback((submittedAnswer: AskUserAnswer) => {
+      setInternalAnswers((prev) => ({ ...prev, [qConfig.id]: submittedAnswer }));
+    }, [qConfig.id]);
+
+    return (
+      <div className={className}>
+        <div className="iq-card-header">
+          <span className="iq-card-type-badge">
+            {qConfig.type === 'choice' ? '选择' : '确认'}
+          </span>
+          {!hasHistory && <span className="iq-card-required-tag">必填</span>}
+        </div>
+        <div className="iq-card-question">{qConfig.question}</div>
+
+        {hasHistory ? (
+          <AnswerSummary question={qConfig} groupConfig={groupConfig} />
+        ) : (
+          <>
+            {qConfig.type === 'choice' ? (
+              <SingleChoiceQuestion
+                config={qConfig}
+                disabled={disabled}
+                value={currentAnswer && 'selected' in currentAnswer
+                  ? currentAnswer.selected
+                  : (qConfig.multiple ? [] : '')}
+                onChange={(val) => handleAnswerChange({ selected: val })}
+              />
+            ) : (
+              <SingleConfirmQuestion
+                config={qConfig}
+                disabled={disabled}
+                value={currentAnswer && 'confirmed' in currentAnswer ? currentAnswer.confirmed : null}
+                onChange={(val) => handleAnswerChange({ confirmed: val })}
+              />
+            )}
+            <Button
+              type="primary"
+              onClick={handleSingleSubmit}
+              disabled={!filled}
+              className="iq-card-submit-btn"
+            >
+              提交
+            </Button>
+          </>
+        )}
+
+        {statusInfo && (
+          <Text className={`iq-card-status ${statusInfo.className}`}>
+            {statusInfo.text}
+          </Text>
+        )}
+      </div>
+    );
+  }
+
+  // ─── Group（Tabs）模式 ────────────────────────────────────────────────
+  const [internalAnswers, setInternalAnswers] = useState<Record<string, AskUserAnswer>>({});
+  const [activeTabKey, setActiveTabKey] = useState<string>(config.questions[0]?.id || '0');
+
+  // 构建每道题的答案：优先 history → external → internal
+  const resolvedAnswers = useMemo(() => {
+    const map: Record<string, { source: 'history' | 'interactive'; answer: AskUserAnswer }> = {};
+    for (const q of config.questions) {
+      const historyAnswer = getQuestionAnswer(q.id, q, groupConfig);
+      if (historyAnswer && (status === 'answered' || status === 'cancelled' || status === 'expired')) {
+        const ask = toAskUserAnswer(historyAnswer);
+        if (ask) {
+          map[q.id] = { source: 'history', answer: ask };
+          continue;
+        }
+      }
+      if (externalAnswer?.[q.id]) {
+        map[q.id] = { source: 'interactive', answer: externalAnswer[q.id] };
+        continue;
+      }
+      if (internalAnswers[q.id]) {
+        map[q.id] = { source: 'interactive', answer: internalAnswers[q.id] };
+      }
+    }
+    return map;
+  }, [config.questions, groupConfig, status, externalAnswer, internalAnswers]);
+
+  // 自动切换到第一个未回答的问题
+  useEffect(() => {
+    if (disabled) return;
+    const firstUnanswered = config.questions.find((q) => !resolvedAnswers[q.id]);
+    if (firstUnanswered) {
+      setActiveTabKey(firstUnanswered.id);
+    }
+  }, [disabled, config.questions, resolvedAnswers]);
+
+  const handleAnswerChange = useCallback((questionId: string, answer: AskUserAnswer) => {
+    setInternalAnswers((prev) => ({ ...prev, [questionId]: answer }));
+  }, []);
+
+  const handleTabChange = useCallback((key: string) => {
+    setActiveTabKey(key);
+  }, []);
+
+  const allFilled = useMemo(
+    () => config.questions.every((q) => {
+      const r = resolvedAnswers[q.id];
+      return r && isAnswerFilled(r.answer);
+    }),
+    [config.questions, resolvedAnswers],
+  );
+
+  const answeredCount = useMemo(
+    () => config.questions.filter((q) => !!resolvedAnswers[q.id]).length,
+    [config.questions, resolvedAnswers],
+  );
+
+  const handleSubmit = useCallback(() => {
+    if (!allFilled) return;
+    const result: Record<string, AskUserAnswer> = {};
+    for (const q of config.questions) {
+      const r = resolvedAnswers[q.id];
+      if (r) result[q.id] = r.answer;
+    }
+    onSubmit?.(result);
+  }, [onSubmit, config.questions, resolvedAnswers, allFilled]);
+
+  const className = [
+    'iq-card',
+    'iq-card-group',
+    disabled && status !== 'submitting' ? `iq-card-${status}` : undefined,
+    status === 'submitting' ? 'iq-card-submitting' : undefined,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const statusInfo = statusLabelMap[status];
+  const isAllHistory = status === 'answered' || status === 'cancelled' || status === 'expired';
+
+  const tabItems = config.questions.map((q, index) => {
+    const resolved = resolvedAnswers[q.id];
+    const filled = !!resolved;
+    const isHistory = resolved?.source === 'history';
+
+    const renderControl = () => {
+      // 历史已回答 → 只读摘要
+      if (isHistory) {
+        return <AnswerSummary question={q} groupConfig={groupConfig} />;
+      }
+
+      // 交互态
+      const askAnswer = resolved?.answer;
+      if (q.type === 'choice') {
+        const value = askAnswer && 'selected' in askAnswer
+          ? askAnswer.selected
+          : (q.multiple ? [] : '');
+        return (
+          <SingleChoiceQuestion
+            config={q}
+            disabled={disabled}
+            value={value}
+            onChange={(val) => handleAnswerChange(q.id, { selected: val })}
+          />
+        );
+      }
+      if (q.type === 'confirm') {
+        const value = askAnswer && 'confirmed' in askAnswer ? askAnswer.confirmed : null;
+        return (
+          <SingleConfirmQuestion
+            config={q}
+            disabled={disabled}
+            value={value}
+            onChange={(val) => handleAnswerChange(q.id, { confirmed: val })}
+          />
+        );
+      }
+      return null;
+    };
+
+    const tabLabel = q.question.length > 10
+      ? `${q.question.slice(0, 10)}...`
+      : q.question;
+
+    return {
+      key: q.id || `tab-${index}`,
+      label: (
+        <span className="iq-card-tab-label">
+          <span className={`iq-card-tab-num ${filled ? 'iq-card-tab-num-done' : ''}`}>
+            {filled ? <CheckOutlined /> : index + 1}
+          </span>
+          {tabLabel}
+        </span>
+      ),
+      children: (
+        <div className="iq-card-tab-content">
+          <div className="iq-card-question">
+            <span className="iq-card-question-index">Q{index + 1}</span>
+            {q.question}
+          </div>
+          {renderControl()}
+        </div>
+      ),
+    };
+  });
+
+  return (
+    <div className={className}>
+      <div className="iq-card-header">
+        <span className="iq-card-type-badge iq-card-type-badge-group">
+          多项提问
+        </span>
+        {!isAllHistory && <span className="iq-card-required-tag">必填</span>}
+      </div>
+
+      <div className="iq-card-progress">
+        <div className="iq-card-progress-bar">
+          <div
+            className="iq-card-progress-fill"
+            style={{ width: `${(answeredCount / config.questions.length) * 100}%` }}
+          />
+        </div>
+        <Text className="iq-card-progress-text">
+          {answeredCount}/{config.questions.length}
+        </Text>
+      </div>
+
+      <Tabs
+        activeKey={activeTabKey}
+        onChange={handleTabChange}
+        items={tabItems}
+        className="iq-card-tabs"
+      />
+
+      {!isAllHistory && (
+        <Button
+          type="primary"
+          onClick={handleSubmit}
+          disabled={!allFilled || disabled}
+          className="iq-card-submit-btn"
+          icon={allFilled ? <CheckOutlined /> : undefined}
+        >
+          {allFilled ? '确认提交' : `还需回答 ${config.questions.length - answeredCount} 个问题`}
+        </Button>
+      )}
+
+      {statusInfo && (
+        <Text className={`iq-card-status ${statusInfo.className}`}>
+          {statusInfo.text}
+        </Text>
+      )}
+    </div>
+  );
+};
+
+export default InteractiveQuestionCard;

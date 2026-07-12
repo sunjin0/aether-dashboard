@@ -22,13 +22,19 @@ import {
   SearchOutlined,
 } from '@ant-design/icons';
 import { getAgentDefinitionList } from '@/services/agent/AgentDefinitionController';
-import { streamAgentChat } from '@/services/agent/ChatController';
+import { streamAgentChat, streamReplyAgentChat } from '@/services/agent/ChatController';
 import {
   getAgentConversationList,
   getAgentConversationMessages,
 } from '@/services/agent/ConversationController';
 import { getOptionList } from '@/services/sys/DictController';
-import { AgentConversation, AgentDefinition, AgentMessage } from '@/services/entity/Agent';
+import {
+  AgentChatReplyRequest,
+  AgentConversation,
+  AgentDefinition,
+  AgentMessage,
+  AskUserAnswer,
+} from '@/services/entity/Agent';
 import { Option } from '@/services/entity/Common';
 import AgentMessageBubble from '@/components/AgentMessageBubble';
 import './index.less';
@@ -46,6 +52,8 @@ type ChatMessage = AgentMessage & {
   errorMsg?: string;
   reasoningStream?: string;
 };
+
+type ChatTurnState = 'idle' | 'streaming' | 'waiting_user' | 'submitting_answer' | 'error';
 
 const createClientId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random()}`;
 
@@ -73,6 +81,8 @@ const ChatDebugPage: React.FC = () => {
   const [thinking, setThinking] = useState(false);
   const [reasoningEffort, setReasoningEffort] = useState<'low' | 'medium' | 'high'>('medium');
   const [reasoningEffortOptions, setReasoningEffortOptions] = useState<Option[]>([]);
+  const [chatTurnState, setChatTurnState] = useState<ChatTurnState>('idle');
+  const [pendingQuestionMessage, setPendingQuestionMessage] = useState<ChatMessage | null>(null);
   const messageEndRef = useRef<HTMLDivElement>(null);
   const messageListRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController>();
@@ -295,6 +305,263 @@ const ChatDebugPage: React.FC = () => {
     abortControllerRef.current.abort();
     resetTypewriter();
     markAssistantStopped(streamingAssistantIdRef.current);
+    setChatTurnState('idle');
+    setPendingQuestionMessage(null);
+  };
+
+  const handleReplyQuestion = async (answers: Record<string, AskUserAnswer>) => {
+    if (chatTurnState !== 'waiting_user' || !pendingQuestionMessage) {
+      message.error('请等待上一个问题处理完成');
+      return;
+    }
+
+    const questionMessageId = pendingQuestionMessage.id;
+    const questionConversationId = pendingQuestionMessage.conversationId || conversationId;
+
+    if (!questionMessageId || !questionConversationId) {
+      message.error('提问消息信息不完整');
+      return;
+    }
+
+    setChatTurnState('submitting_answer');
+
+    // 乐观更新：标记已回答 + 写入答案到 questionConfig
+    setMessages((current) =>
+      current.map((item) => {
+        if (item.id !== questionMessageId) return item;
+
+        // 解析现有 questionConfig
+        let parsed: any = null;
+        try {
+          parsed = typeof item.questionConfig === 'string'
+            ? JSON.parse(item.questionConfig)
+            : item.questionConfig;
+        } catch {
+          // ignore
+        }
+
+        // 构建带 label 的答案
+        const answersWithLabels: Record<string, any> = {};
+        const questions = parsed?.questions || [];
+        for (const q of questions) {
+          const userAnswer = answers[q.id];
+          if (!userAnswer) continue;
+
+          if ('selected' in userAnswer) {
+            const values = Array.isArray(userAnswer.selected)
+              ? userAnswer.selected
+              : [userAnswer.selected];
+            const selectedOptions = values.map((val: string) => {
+              const opt = q.options?.find((o: any) => o.value === val);
+              return { id: opt?.id || val, label: opt?.label || val, value: val };
+            });
+            answersWithLabels[q.id] = {
+              selected: userAnswer.selected,
+              selectedOptions,
+              answeredAt: Date.now(),
+            };
+          } else if ('confirmed' in userAnswer) {
+            answersWithLabels[q.id] = {
+              confirmed: userAnswer.confirmed,
+              label: userAnswer.confirmed
+                ? (q.confirmText || '确认')
+                : (q.cancelText || '取消'),
+              answeredAt: Date.now(),
+            };
+          }
+        }
+
+        // 写回 questionConfig
+        if (parsed) {
+          parsed.answer = { answeredAt: Date.now(), answers: answersWithLabels };
+          if (parsed.questions) {
+            parsed.questions = parsed.questions.map((q: any) => ({
+              ...q,
+              answer: answersWithLabels[q.id],
+            }));
+          }
+        }
+
+        return {
+          ...item,
+          interactionStatus: 'answered',
+          questionConfig: parsed ? JSON.stringify(parsed) : item.questionConfig,
+        };
+      }),
+    );
+
+    // 创建 assistant 消息用于流式显示后续回复
+    const assistantClientId = createClientId('assistant');
+    const assistantMessage: ChatMessage = {
+      clientId: assistantClientId,
+      role: 'assistant',
+      content: '',
+      streamStatus: 'streaming',
+    };
+    setMessages((current) => [...current, assistantMessage]);
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    streamingAssistantIdRef.current = assistantClientId;
+    setSending(true);
+
+    let terminalEventReceived = false;
+    let questionReceived = false;
+    let typewriterDrainPromise: Promise<void> | undefined;
+
+    resetTypewriter();
+
+    try {
+      const replyPayload: AgentChatReplyRequest = {
+        conversationId: questionConversationId,
+        parentMessageId: questionMessageId,
+        answer: { answers },
+        interactive: true,
+      };
+
+      await streamReplyAgentChat(replyPayload, {
+        signal: controller.signal,
+        onMessage: (chunk, data) => {
+          if (data.conversationId) {
+            setConversationId(data.conversationId);
+          }
+          if (!chunk) {
+            return;
+          }
+          appendTypewriterText(assistantClientId, chunk);
+        },
+        onReasoning: (chunk, data) => {
+          if (data.conversationId) {
+            setConversationId(data.conversationId);
+          }
+          if (!chunk) {
+            return;
+          }
+          updateAssistantMessage(assistantClientId, (item) => ({
+            ...item,
+            reasoningStream: (item.reasoningStream || '') + chunk,
+          }));
+        },
+        onError: (data) => {
+          terminalEventReceived = true;
+          flushTypewriterQueue(assistantClientId);
+          const errorMsg = data.message || '回复失败';
+          markAssistantError(assistantClientId, errorMsg);
+          message.error(errorMsg);
+          setChatTurnState('error');
+        },
+        onQuestion: (data) => {
+          // question 事件：追加交互卡片，不清空当前流式 assistant
+          questionReceived = true;
+          flushTypewriterQueue(assistantClientId);
+
+          const interactionMessage: ChatMessage = {
+            clientId: createClientId('interaction'),
+            id: data.messageId,
+            conversationId: data.conversationId,
+            role: 'assistant',
+            messageType: 'interaction',
+            interactionType: data.interactionType as any || 'group',
+            interactionStatus: 'pending',
+            content: data.content,
+            questionConfig: data.questionConfig
+              ? JSON.stringify(data.questionConfig)
+              : undefined,
+          };
+
+          // 追加交互卡片（保留当前流式 assistant 消息）
+          setMessages((current) => [...current, interactionMessage]);
+
+          setPendingQuestionMessage(interactionMessage);
+          setChatTurnState('waiting_user');
+        },
+        onDone: (data) => {
+          terminalEventReceived = true;
+          const doneConversationId = data.conversationId;
+          if (doneConversationId) {
+            setConversationId(doneConversationId);
+          }
+          typewriterDrainPromise = waitForTypewriterDrain().then(async () => {
+            // 刷新历史消息以获取完整的 answer 消息
+            let reloaded = false;
+            if (doneConversationId && data.messageId) {
+              try {
+                const result = await getAgentConversationMessages(doneConversationId, {
+                  current: 1,
+                  pageSize: 100,
+                  includeToolCalls: true,
+                });
+                if (result.code === 200 && result.data) {
+                  setMessages(result.data);
+                  reloaded = true;
+                }
+              } catch {
+                // ignore
+              }
+            }
+
+            if (!reloaded) {
+              // 只结束当前流式 assistant，不用 question.messageId 覆盖
+              updateAssistantMessage(assistantClientId, (item) => ({
+                ...item,
+                id: data.messageId || item.id,
+                conversationId: doneConversationId || item.conversationId,
+                content: data.content || item.content,
+                reasoningContent: data.reasoningContent || item.reasoningContent || item.reasoningStream,
+                reasoningStream: undefined,
+                reasoningTokens: data.reasoningTokens ?? item.reasoningTokens,
+                model: data.model || item.model,
+                promptTokens: data.promptTokens ?? item.promptTokens,
+                completionTokens: data.completionTokens ?? item.completionTokens,
+                totalTokens: data.totalTokens ?? item.totalTokens,
+                latencyMs: data.latencyMs ?? item.latencyMs,
+                streamStatus: undefined,
+              }));
+            }
+
+            // 如果已收到 question，保持 waiting_user 状态（由 handleReplyQuestion 管理）
+            if (!questionReceived) {
+              if (data.waitingUser) {
+                setChatTurnState('waiting_user');
+              } else {
+                setPendingQuestionMessage(null);
+                setChatTurnState('idle');
+              }
+            }
+          });
+        },
+      });
+
+      if (typewriterDrainPromise) {
+        await typewriterDrainPromise;
+      }
+      if (!terminalEventReceived) {
+        flushTypewriterQueue(assistantClientId);
+        markAssistantError(assistantClientId, '连接已断开');
+      }
+    } catch (error: any) {
+      if (error?.response?.status === 409 || error?.status === 409) {
+        message.warning('提问已处理或已过期');
+        if (questionConversationId) {
+          await loadMessages(questionConversationId);
+        }
+        setPendingQuestionMessage(null);
+        setChatTurnState('idle');
+      } else if (controller.signal.aborted) {
+        markAssistantStopped(assistantClientId);
+        setChatTurnState('idle');
+      } else {
+        const errorMsg = error instanceof Error ? error.message : '回复失败';
+        flushTypewriterQueue(assistantClientId);
+        markAssistantError(assistantClientId, errorMsg);
+        message.error(errorMsg);
+        setChatTurnState('error');
+      }
+    } finally {
+      setSending(false);
+      abortControllerRef.current = undefined;
+      streamingAssistantIdRef.current = undefined;
+    }
   };
 
   const handleSend = async (text?: string) => {
@@ -331,6 +598,7 @@ const ChatDebugPage: React.FC = () => {
     const controller = new AbortController();
     let shouldReloadConversations = false;
     let terminalEventReceived = false;
+    let questionReceived = false;
     let typewriterDrainPromise: Promise<void> | undefined;
 
     resetTypewriter();
@@ -338,13 +606,14 @@ const ChatDebugPage: React.FC = () => {
     streamingAssistantIdRef.current = assistantClientId;
     stoppedByUserRef.current = false;
     setSending(true);
+    setChatTurnState('streaming');
     setInput('');
     setMessages((current) => [...current, userMessage, assistantMessage]);
 
     try {
       const payload: any = conversationId
-        ? { agentId: sendAgentId, conversationId, message: content }
-        : { agentId: sendAgentId, message: content };
+        ? { agentId: sendAgentId, conversationId, message: content, interactive: true }
+        : { agentId: sendAgentId, message: content, interactive: true };
       if (thinking) {
         payload.thinking = true;
         payload.reasoningEffort = reasoningEffort;
@@ -384,6 +653,32 @@ const ChatDebugPage: React.FC = () => {
           const errorMsg = data.message || '生成失败';
           markAssistantError(assistantClientId, errorMsg);
           message.error(errorMsg);
+          setChatTurnState('error');
+        },
+        onQuestion: (data) => {
+          // question 事件：追加交互卡片，不清空当前流式 assistant
+          questionReceived = true;
+          flushTypewriterQueue(assistantClientId);
+
+          const interactionMessage: ChatMessage = {
+            clientId: createClientId('interaction'),
+            id: data.messageId,
+            conversationId: data.conversationId,
+            role: 'assistant',
+            messageType: 'interaction',
+            interactionType: data.interactionType as any || 'group',
+            interactionStatus: 'pending',
+            content: data.content,
+            questionConfig: data.questionConfig
+              ? JSON.stringify(data.questionConfig)
+              : undefined,
+          };
+
+          // 追加交互卡片（保留当前流式 assistant 消息）
+          setMessages((current) => [...current, interactionMessage]);
+
+          setPendingQuestionMessage(interactionMessage);
+          setChatTurnState('waiting_user');
         },
         onDone: (data) => {
           terminalEventReceived = true;
@@ -424,6 +719,14 @@ const ChatDebugPage: React.FC = () => {
                 // ignore
               }
             }
+            if (!questionReceived) {
+              if (data.waitingUser) {
+                setChatTurnState('waiting_user');
+              } else {
+                setPendingQuestionMessage(null);
+                setChatTurnState('idle');
+              }
+            }
           });
         },
       });
@@ -441,12 +744,14 @@ const ChatDebugPage: React.FC = () => {
     } catch (error) {
       if (stoppedByUserRef.current || controller.signal.aborted) {
         markAssistantStopped(assistantClientId);
+        setChatTurnState('idle');
         return;
       }
       const errorMsg = error instanceof Error ? error.message : '发送失败';
       flushTypewriterQueue(assistantClientId);
       markAssistantError(assistantClientId, errorMsg);
       message.error(errorMsg || '发送失败');
+      setChatTurnState('error');
     } finally {
       setSending(false);
       abortControllerRef.current = undefined;
@@ -683,6 +988,11 @@ const ChatDebugPage: React.FC = () => {
                           agentMessage={item}
                           status={item.streamStatus}
                           errorMessage={item.errorMsg}
+                          onQuestionSubmit={
+                            item.messageType === 'interaction' && item.interactionStatus === 'pending'
+                              ? handleReplyQuestion
+                              : undefined
+                          }
                         />
                       ))}
                       <div ref={messageEndRef} />
@@ -732,7 +1042,7 @@ const ChatDebugPage: React.FC = () => {
               <div className="agent-chat-input-box">
                 <Input.TextArea
                   value={input}
-                  disabled={sending}
+                  disabled={sending || chatTurnState === 'waiting_user' || chatTurnState === 'submitting_answer'}
                   autoSize={{ minRows: 1, maxRows: 3 }}
                   placeholder="输入消息，支持 Markdown 格式..."
                   onChange={(event) => setInput(event.target.value)}
@@ -749,7 +1059,7 @@ const ChatDebugPage: React.FC = () => {
               <Button
                 className="agent-chat-send-btn"
                 type="primary"
-                disabled={sending || !input.trim()}
+                disabled={sending || !input.trim() || chatTurnState === 'waiting_user' || chatTurnState === 'submitting_answer'}
                 onClick={() => handleSend()}
               >
                 发送

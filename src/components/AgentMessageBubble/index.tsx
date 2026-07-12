@@ -1,8 +1,11 @@
 import React, { useCallback, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Collapse, message, Tooltip, Typography } from 'antd';
-import { AgentMessage } from '@/services/entity/Agent';
+import { AgentMessage, AskUserAnswer } from '@/services/entity/Agent';
 import ToolCallCard from '@/components/ToolCallCard';
+import InteractiveQuestionCard, {
+  InteractiveQuestionCardStatus,
+} from '@/components/InteractiveQuestionCard';
 import './index.less';
 
 const { Text } = Typography;
@@ -15,6 +18,7 @@ export interface AgentMessageBubbleProps {
   compact?: boolean;
   status?: AgentMessageBubbleStatus;
   errorMessage?: string;
+  onQuestionSubmit?: (answers: Record<string, AskUserAnswer>) => void;
 }
 
 const roleLabelMap: Record<string, string> = {
@@ -103,6 +107,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
   compact,
   status,
   errorMessage,
+  onQuestionSubmit,
 }) => {
   const role = getRole(agentMessage.role);
   const placement = getAlign(agentMessage, align);
@@ -152,7 +157,34 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
     }
   }, [currentContent]);
 
+  // messageType=answer 是后端内部消息，前端默认不渲染为独立聊天气泡
+  if (agentMessage.messageType === 'answer') {
+    return null;
+  }
+
   const renderContent = () => {
+    if (agentMessage.messageType === 'interaction' && agentMessage.questionConfig) {
+      const questionStatus: InteractiveQuestionCardStatus =
+        agentMessage.interactionStatus === 'answered'
+          ? 'answered'
+          : agentMessage.interactionStatus === 'cancelled'
+            ? 'cancelled'
+            : agentMessage.interactionStatus === 'expired'
+              ? 'expired'
+              : status === 'streaming'
+                ? 'submitting'
+                : 'pending';
+
+      return (
+        <InteractiveQuestionCard
+          questionConfig={agentMessage.questionConfig}
+          content={agentMessage.content}
+          status={questionStatus}
+          onSubmit={onQuestionSubmit}
+        />
+      );
+    }
+
     if (!agentMessage.content && !agentMessage.reasoningContent && !agentMessage.reasoningStream && !(agentMessage.toolCallLogs && agentMessage.toolCallLogs.length > 0)) {
       if (status === 'streaming') {
         return (

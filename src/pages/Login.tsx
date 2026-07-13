@@ -1,4 +1,5 @@
 import {
+  ArrowLeftOutlined,
   LockOutlined,
   MobileOutlined,
   UserOutlined,
@@ -9,59 +10,91 @@ import {
   ProFormCaptcha,
   ProFormText,
 } from '@ant-design/pro-components';
-import {message, theme} from 'antd';
-import {useState} from 'react';
-import {request, useIntl, history, useModel} from "@umijs/max";
-import {Header} from "antd/es/layout/layout";
-import {Footer, SelectLang} from "@/components";
+import {Button, message, theme} from 'antd';
+import React, {useState} from 'react';
+import {history, request, useIntl, useModel} from "@umijs/max";
+import {Footer} from "@/components";
 import {login, verify} from "@/services/sys/LoginController";
+import './Login.less';
 
 
 export default () => {
   const {token} = theme.useToken();
-  const [verity, setVerity] = useState<boolean>(false);
+  const [verified, setVerified] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [account, setAccount] = useState('');
   const {initialState, setInitialState} = useModel('@@initialState');
 
-  let intl = useIntl();
+  const intl = useIntl();
+  const isEmailStep = verified;
+  const formatMessage = (id: string) => intl.formatMessage({id});
+
+  const getRedirectPath = () => {
+    const redirect = new URLSearchParams(history.location.search).get('redirect');
+    return redirect && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/';
+  };
+
+  const handleFinish = async (values: Record<string, string>) => {
+    setSubmitting(true);
+    try {
+      if (isEmailStep) {
+        const {data, message: msg} = await login(values);
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        message.success(msg);
+        if (initialState?.fetchUserInfo) {
+          const currentUser = await initialState.fetchUserInfo();
+          setInitialState({...initialState, currentUser});
+        }
+        history.push(getRedirectPath());
+        return true;
+      }
+
+      const {data, message: msg} = await verify(values);
+      message.success(msg);
+      setAccount(values.account);
+      setVerified(data as boolean);
+      return true;
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <ProConfigProvider hashed={false} >
-      <section style={{backgroundImage: "https://gw.alipayobjects.com/zos/rmsportal/TVYTbAXWheQpRcWDaDMu.svg"}}>
-        <Header style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          backgroundColor: token.colorBgContainer,
-        }}> <SelectLang key="SelectLang"/></Header>
-
-        <LoginForm
-          logo="https://github.githubassets.com/favicons/favicon.png"
-          title="Github"
-          subTitle="全球最大的代码托管平台"
-          onFinish={async (values) => {
-            if (verity) {
-              // 登录
-              let {data, message: msg} = await login(values);
-              localStorage.setItem('token', data.token);
-              localStorage.setItem('refreshToken', data.refreshToken)
-              message.success(msg)
-             if (initialState&&initialState.fetchUserInfo) {
-               const currentUser = await initialState.fetchUserInfo();
-               setInitialState({
-                 ...initialState,
-                 currentUser: currentUser,
-               })
-             }
-              setTimeout(() => history.push('/'), 500)
-              return true
-            } else {
-              // 验证账号密码
-              let {data, message: msg} = await verify(values);
-              message.success(msg)
-              setVerity(data as boolean)
-            }
-
-          }}
-        >
-          {!verity && (
+      <section className="login-page" data-testid="login-page">
+        <aside className="login-brand" aria-label="Aether">
+          <div className="login-brand-symbol" data-testid="login-brand-symbol" aria-hidden="true">
+            <img src="/logo.svg" alt=""/>
+          </div>
+          <div className="login-brand-name">AETHER</div>
+          <p className="login-brand-eyebrow">{formatMessage('user.login.brand.eyebrow')}</p>
+          <h1>{formatMessage('user.login.brand.headline.before')} <span>{formatMessage('user.login.brand.headline')}</span></h1>
+          <p className="login-brand-copy">{formatMessage('user.login.brand.description')}</p>
+          <div className="login-network" aria-hidden="true"><span/><span/><span/></div>
+        </aside>
+        <main className="login-panel-wrap">
+          <div className="login-panel">
+            <LoginForm
+              submitter={{
+                searchConfig: {submitText: formatMessage(isEmailStep ? 'user.login.submit' : 'user.login.next')},
+                submitButtonProps: {size: 'large', loading: submitting, block: true},
+              }}
+              onFinish={handleFinish}
+            >
+              <div className="login-stage-label">
+                {formatMessage(isEmailStep ? 'user.login.email.eyebrow' : 'user.login.account.eyebrow')}
+              </div>
+              <div className="login-stage-header">
+                <div>
+                  <h2>{formatMessage(isEmailStep ? 'user.login.email.title' : 'user.login.account.title')}</h2>
+                  <p>{formatMessage(isEmailStep ? 'user.login.email.description' : 'user.login.account.description')}</p>
+                </div>
+                <div className="login-progress" aria-label={formatMessage(isEmailStep ? 'user.login.step.email' : 'user.login.step.account')}>
+                  <span className="is-active"/><span className={isEmailStep ? 'is-active' : ''}/>
+                </div>
+              </div>
+          {!isEmailStep && (
             <>
               <ProFormText
                 name="account"
@@ -117,7 +150,7 @@ export default () => {
                   {
                     required: true,
                     validator: (rule, value) => {
-                      if (value && value.length < 6 || value.length > 20) {
+                      if (!value || value.length < 6 || value.length > 20) {
                         return Promise.reject(new Error(intl.formatMessage({id: 'user.login.password.length'})))
                       } else {
                         return Promise.resolve();
@@ -128,14 +161,23 @@ export default () => {
               />
             </>
           )}
-          {verity && (
+          {isEmailStep && (
             <>
+              <Button
+                type="link"
+                icon={<ArrowLeftOutlined/>}
+                onClick={() => setVerified(false)}
+                className="login-back"
+              >
+                {formatMessage('user.login.back')}
+              </Button>
               <ProFormText
                 fieldProps={{
                   size: 'large',
                   prefix: <MobileOutlined className={'prefixIcon'}/>,
                 }}
                 name="email"
+                initialValue={account}
                 rules={[
                   {
                     required: true,
@@ -184,21 +226,13 @@ export default () => {
               />
             </>
           )}
-          <div
-            style={{
-              marginBlockEnd: 24,
-            }}
-          >
-            <a
-              style={{
-                float: 'right',
-              }}
-            >
-              忘记密码
-            </a>
+          <div className="login-tip">
+            {formatMessage(isEmailStep ? 'user.login.email.tip' : 'user.login.account.tip')}
           </div>
-        </LoginForm>
-        <Footer/>
+            </LoginForm>
+          </div>
+        </main>
+        <div className="login-footer"><Footer/></div>
       </section>
     </ProConfigProvider>
   );

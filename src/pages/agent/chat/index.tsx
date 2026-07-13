@@ -92,6 +92,24 @@ const ChatDebugPage: React.FC = () => {
   const typewriterTimerRef = useRef<number>();
   const typewriterDrainCallbackRef = useRef<() => void>();
 
+  const findPendingQuestionMessage = (messageList: ChatMessage[]) =>
+    messageList.find(
+      (item) => item.messageType === 'interaction' && item.interactionStatus === 'pending',
+    ) || null;
+
+  const resetConversationTurnState = () => {
+    setPendingQuestionMessage(null);
+    setChatTurnState('idle');
+  };
+
+  const setConversationMessages = (messageList: ChatMessage[]) => {
+    const pendingQuestion = findPendingQuestionMessage(messageList);
+
+    setMessages(messageList);
+    setPendingQuestionMessage(pendingQuestion);
+    setChatTurnState(pendingQuestion ? 'waiting_user' : 'idle');
+  };
+
   const loadAgents = async () => {
     setLoadingAgents(true);
     try {
@@ -149,7 +167,7 @@ const ChatDebugPage: React.FC = () => {
         includeToolCalls: true,
       });
       if (code === 200) {
-        setMessages(data || []);
+        setConversationMessages(data || []);
       } else {
         message.error(msg || '加载消息列表失败');
       }
@@ -265,6 +283,7 @@ const ChatDebugPage: React.FC = () => {
     }
     setConversationId(undefined);
     setMessages([]);
+    resetConversationTurnState();
   };
 
   const handleSelectConversation = async (conversation: AgentConversation) => {
@@ -276,6 +295,8 @@ const ChatDebugPage: React.FC = () => {
     if (conversation.agentDefinitionId) {
       setAgentId(conversation.agentDefinitionId);
     }
+    setMessages([]);
+    resetConversationTurnState();
     await loadMessages(conversation.id);
   };
 
@@ -492,7 +513,7 @@ const ChatDebugPage: React.FC = () => {
                   includeToolCalls: true,
                 });
                 if (result.code === 200 && result.data) {
-                  setMessages(result.data);
+                  setConversationMessages(result.data);
                   reloaded = true;
                 }
               } catch {
@@ -612,8 +633,8 @@ const ChatDebugPage: React.FC = () => {
 
     try {
       const payload: any = conversationId
-        ? { agentId: sendAgentId, conversationId, message: content, interactive: true }
-        : { agentId: sendAgentId, message: content, interactive: true };
+        ? { agentId: sendAgentId, conversationId, message: content}
+        : { agentId: sendAgentId, message: content};
       if (thinking) {
         payload.thinking = true;
         payload.reasoningEffort = reasoningEffort;
@@ -713,7 +734,7 @@ const ChatDebugPage: React.FC = () => {
                   includeToolCalls: true,
                 });
                 if (result.code === 200 && result.data) {
-                  setMessages(result.data);
+                  setConversationMessages(result.data);
                 }
               } catch {
                 // ignore
@@ -839,6 +860,7 @@ const ChatDebugPage: React.FC = () => {
                     setAgentId(value);
                     setConversationId(undefined);
                     setMessages([]);
+                    resetConversationTurnState();
                   }}
                   options={agents
                     .filter((item) => item.id)

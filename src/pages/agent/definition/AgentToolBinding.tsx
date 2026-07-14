@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
 import { ActionType, ProTable } from '@ant-design/pro-components';
 import { Button, message, Modal, Popconfirm, Space, Form, Select, InputNumber } from 'antd';
@@ -29,6 +29,12 @@ const AgentToolBinding: React.FC<AgentToolBindingProps> = ({ agentId, open, setO
   const [bindModalVisible, setBindModalVisible] = useState(false);
   const [toolOptions, setToolOptions] = useState<{ label: string; value: string }[]>([]);
   const [form] = Form.useForm();
+
+  useEffect(() => {
+    if (open && agentId) {
+      actionRef.current?.reload();
+    }
+  }, [agentId, open]);
 
   // 加载可用工具列表
   const loadToolOptions = async () => {
@@ -115,55 +121,10 @@ const AgentToolBinding: React.FC<AgentToolBindingProps> = ({ agentId, open, setO
       ellipsis: true,
     },
     {
-      title: intl.formatMessage({ id: 'pages.agent.tool.mcpServer' }),
-      dataIndex: 'mcpServerName',
-      valueType: 'text',
-      ellipsis: true,
-    },
-    {
-      title: intl.formatMessage({ id: 'pages.agent.tool.mcpToolName' }),
-      dataIndex: 'mcpToolName',
-      valueType: 'text',
-      ellipsis: true,
-    },
-    {
       title: intl.formatMessage({ id: 'pages.agent.tool.priority' }),
       dataIndex: 'priority',
       valueType: 'digit',
       width: 120,
-      render: (text: number, record: AgentToolBinding) => (
-        <Button
-          type="link"
-          size="small"
-          onClick={() => {
-            Modal.confirm({
-              title: '调整优先级',
-              content: (
-                <div style={{ marginTop: 16 }}>
-                  <span>新的优先级：</span>
-                  <input
-                    type="number"
-                    defaultValue={record.priority}
-                    style={{ width: 80, marginLeft: 8 }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        const value = parseInt((e.target as HTMLInputElement).value);
-                        if (record.toolId) {
-                          handlePriorityChange(record.toolId, value);
-                          Modal.destroyAll();
-                        }
-                      }
-                    }}
-                  />
-                </div>
-              ),
-              footer: null,
-            });
-          }}
-        >
-          {text}
-        </Button>
-      ),
     },
     {
       title: intl.formatMessage({ id: 'pages.common.status' }),

@@ -76,7 +76,7 @@ export const layout: RunTimeLayoutConfig = ({initialState, setInitialState}) => 
     waterMarkProps: {
       content: initialState?.currentUser?.username,
     },
-    footerRender: () => <Footer/>,
+    footerRender: () => <Footer fixed/>,
     menu: {
       locale: false,
       params: {
@@ -154,7 +154,9 @@ export const layout: RunTimeLayoutConfig = ({initialState, setInitialState}) => 
       // if (initialState?.loading) return <PageLoading />;
       return (
         <AliveScope>
-          <RouteTabs pathname={history.location.pathname}>{children}</RouteTabs>
+          <div style={{paddingBottom: 72}}>
+            <RouteTabs pathname={history.location.pathname}>{children}</RouteTabs>
+          </div>
           {isDev && (
             <SettingDrawer
               disableUrlParams

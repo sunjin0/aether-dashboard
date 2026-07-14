@@ -1,7 +1,7 @@
 const React = require('react');
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { history } from '@umijs/max';
-import RouteTabs, { setRouteMenus } from '.';
+import RouteTabs, { resetRouteMenus, setRouteMenus } from '.';
 
 jest.mock('@umijs/max', () => ({
   history: { push: jest.fn() },
@@ -41,7 +41,7 @@ describe('RouteTabs', () => {
   ];
 
   beforeEach(() => {
-    setRouteMenus([]);
+    resetRouteMenus();
     jest.clearAllMocks();
   });
 
@@ -65,6 +65,49 @@ describe('RouteTabs', () => {
     fireEvent.click(screen.getByRole('button', { name: '仪表盘' }));
 
     expect(history.push).toHaveBeenCalledWith('/dashboard');
+  });
+
+  it('waits for menus before rendering a route label', async () => {
+    render(
+      <RouteTabs pathname="/msg/sms">
+        <div>SMS</div>
+      </RouteTabs>,
+    );
+
+    expect(screen.queryByRole('button', { name: '/msg/sms' })).toBeNull();
+
+    setRouteMenus(menus);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: '短信管理（接口）' })).toBeTruthy();
+    });
+  });
+
+  it('renders the dashboard tab before menus load', () => {
+    render(
+      <RouteTabs pathname="/dashboard">
+        <div>Dashboard</div>
+      </RouteTabs>,
+    );
+
+    expect(screen.getByRole('button', { name: '仪表盘' })).toBeTruthy();
+  });
+
+  it('does not create a tab for the root route before its dashboard redirect', () => {
+    const { rerender } = render(
+      <RouteTabs pathname="/">
+        <div>Redirecting</div>
+      </RouteTabs>,
+    );
+
+    rerender(
+      <RouteTabs pathname="/dashboard">
+        <div>Dashboard</div>
+      </RouteTabs>,
+    );
+
+    expect(screen.queryByRole('button', { name: '/' })).toBeNull();
+    expect(screen.getAllByRole('button', { name: '仪表盘' })).toHaveLength(1);
   });
 
   it('navigates to the previous tab when closing the active tab', () => {

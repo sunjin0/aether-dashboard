@@ -1,11 +1,28 @@
 import { DefaultFooter } from '@ant-design/pro-components';
 import React from 'react';
+import './index.less';
 
-const Footer: React.FC = () => {
+type FooterProps = {
+  fixed?: boolean;
+};
+
+const Footer: React.FC<FooterProps> = ({ fixed = false }) => {
   return (
     <DefaultFooter
+      className={fixed ? 'fixed-footer' : undefined}
       style={{
         background: 'none',
+        ...(fixed
+          ? {
+              position: 'fixed',
+              right: 0,
+              bottom: 0,
+              left: 0,
+              zIndex: 10,
+              height: 56,
+              padding: '16px 0',
+            }
+          : {}),
       }}
       copyright={`2022-${new Date().getFullYear()} Aether`}
     />

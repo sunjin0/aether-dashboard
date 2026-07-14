@@ -14,6 +14,7 @@ const isProduction = process.env.NODE_ENV === 'production';
  * @doc https://umijs.org/docs/api/config#publicpath
  */
 const PUBLIC_PATH: string = '/';
+const publicUrl = (path: string) => `${PUBLIC_PATH.replace(/\/?$/, '/')}${path}`;
 
 export default defineConfig({
   /**
@@ -136,7 +137,7 @@ export default defineConfig({
    */
   headScripts: [
     // 解决首次加载时白屏的问题
-    { src: join(PUBLIC_PATH, 'scripts/loading.js'), async: true },
+    { src: publicUrl('scripts/loading.js'), async: true },
   ],
   //================ pro 插件配置 =================
   presets: ['umi-presets-pro'],

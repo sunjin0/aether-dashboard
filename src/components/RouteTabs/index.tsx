@@ -23,10 +23,18 @@ type RouteTabsProps = {
 };
 
 let routeMenus: MenuItem[] = [];
+let routeMenusLoaded = false;
 const menuListeners = new Set<() => void>();
 
 export const setRouteMenus = (menus: MenuItem[]) => {
   routeMenus = menus;
+  routeMenusLoaded = true;
+  menuListeners.forEach((listener) => listener());
+};
+
+export const resetRouteMenus = () => {
+  routeMenus = [];
+  routeMenusLoaded = false;
   menuListeners.forEach((listener) => listener());
 };
 
@@ -45,61 +53,68 @@ const findMenuName = (menus: MenuItem[], pathname: string): string | undefined =
 
 const getTab = (pathname: string, menus: MenuItem[]): RouteTab => ({
   key: pathname,
-  label: findMenuName(menus, pathname) || pathname,
+  label: pathname === '/dashboard' ? '仪表盘' : findMenuName(menus, pathname) || pathname,
   closable: pathname !== '/dashboard',
 });
 
 const RouteTabs = ({ pathname, children }: RouteTabsProps) => {
+  const routePath = pathname === '/' ? '/dashboard' : pathname;
   const [menus, setMenus] = useState(routeMenus);
-  const [tabs, setTabs] = useState<RouteTab[]>(() => [getTab(pathname, routeMenus)]);
+  const [menusLoaded, setMenusLoaded] = useState(routeMenusLoaded);
+  const [tabs, setTabs] = useState<RouteTab[]>(() => [getTab(routePath, routeMenus)]);
 
   useEffect(() => {
-    const updateMenus = () => setMenus(routeMenus);
+    const updateMenus = () => {
+      setMenus(routeMenus);
+      setMenusLoaded(routeMenusLoaded);
+    };
     menuListeners.add(updateMenus);
     return () => menuListeners.delete(updateMenus);
   }, []);
 
   useEffect(() => {
     setTabs((previousTabs) =>
-      previousTabs.some((tab) => tab.key === pathname)
+      previousTabs.some((tab) => tab.key === routePath)
         ? previousTabs
-        : [...previousTabs, getTab(pathname, menus)],
+        : [...previousTabs, getTab(routePath, menus)],
     );
-  }, [menus, pathname]);
+  }, [menus, routePath]);
 
   const closeTab = (targetKey: string) => {
     const targetIndex = tabs.findIndex((tab) => tab.key === targetKey);
     const nextTabs = tabs.filter((tab) => tab.key !== targetKey);
     setTabs(nextTabs);
 
-    if (targetKey === pathname && nextTabs.length > 0) {
+    if (targetKey === routePath && nextTabs.length > 0) {
       history.push(nextTabs[Math.max(0, targetIndex - 1)].key);
     }
   };
 
   const items: TabsProps['items'] = tabs.map((tab) => ({
     key: tab.key,
-    label: findMenuName(menus, tab.key) || tab.label,
+    label: tab.key === '/dashboard' ? '仪表盘' : findMenuName(menus, tab.key) || tab.label,
     closable: tab.closable,
   }));
 
   return (
     <>
       <div className="route-tabs">
-        <Tabs
-          activeKey={pathname}
-          hideAdd
-          items={items}
-          type="editable-card"
-          onChange={(key) => history.push(key)}
-          onEdit={(targetKey, action) => {
-            if (action === 'remove') {
-              closeTab(targetKey as string);
-            }
-          }}
-        />
+        {(menusLoaded || routePath === '/dashboard') && (
+          <Tabs
+            activeKey={routePath}
+            hideAdd
+            items={items}
+            type="editable-card"
+            onChange={(key) => history.push(key)}
+            onEdit={(targetKey, action) => {
+              if (action === 'remove') {
+                closeTab(targetKey as string);
+              }
+            }}
+          />
+        )}
       </div>
-      <KeepAlive autoFreeze={false} cacheKey={pathname} name={pathname}>
+      <KeepAlive autoFreeze={false} cacheKey={routePath} name={routePath}>
         {children}
       </KeepAlive>
     </>

@@ -39,7 +39,7 @@ const Admin: React.FC = () => {
       title: intl.formatMessage({id: 'pages.common.gender'}),
       dataIndex: 'sex',
       valueType: 'select',
-      request: async () => getOptionList("Gender_Type"),
+      request: async () => getOptionList("Gender_Type",false),
       key: 'sex',
     },
     {
@@ -54,7 +54,7 @@ const Admin: React.FC = () => {
       title: intl.formatMessage({id: 'pages.common.type'}),
       dataIndex: 'type',
       valueType: 'select',
-      request: async () =>getOptionList("System_Role"),
+      request: async () =>getOptionList("System_Role",false),
       key: 'type',
     },
     {

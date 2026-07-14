@@ -8,7 +8,7 @@ import {
   ProFormTextArea,
   ProFormDependency,
 } from '@ant-design/pro-components';
-import {Form} from 'antd';
+import { Form } from 'antd';
 import {
   addAgentDefinitionInfo,
   getAgentDefinitionInfo,
@@ -16,8 +16,8 @@ import {
   getModelProviderList,
 } from '@/services/agent/AgentDefinitionController';
 import { getModelProviderInfo } from '@/services/agent/ModelProviderController';
-import {getAgentToolList} from '@/services/agent/ToolController';
-import {getOptionList} from '@/services/sys/DictController';
+import { getAgentToolList } from '@/services/agent/ToolController';
+import { getOptionList } from '@/services/sys/DictController';
 
 const AgentDefinitionForm = (props: {
   id?: string;
@@ -25,7 +25,7 @@ const AgentDefinitionForm = (props: {
   setOpen?: (open: boolean) => void;
   onSuccess: () => void;
 }) => {
-  const {id, open, setOpen, onSuccess} = props;
+  const { id, open, setOpen, onSuccess } = props;
   const [form] = Form.useForm();
 
   return (
@@ -133,7 +133,7 @@ const AgentDefinitionForm = (props: {
                 return (data || [])
                   .filter((item) => item.id)
                   .map((item) => ({
-                    label: `${item.name || item.id} (${item.code})`,
+                    label: `${item.name || item.id} (${item.code}) / ${item.mcpToolName || '-'}`,
                     value: item.id as string,
                   }));
               }}

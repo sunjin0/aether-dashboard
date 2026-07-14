@@ -10,7 +10,7 @@ import {
 import type {Settings as LayoutSettings} from '@ant-design/pro-components';
 import {SettingDrawer} from '@ant-design/pro-components';
 import {RunTimeLayoutConfig} from '@umijs/max';
-import {history, Link, request as request2} from '@umijs/max';
+import {history, Link} from '@umijs/max';
 import React from 'react';
 import defaultSettings from '../config/defaultSettings';
 import {errorConfig} from './requestErrorConfig';
@@ -81,20 +81,29 @@ export const layout: RunTimeLayoutConfig = ({initialState, setInitialState}) => 
         id: initialState?.currentUser?.id
       },
       request: async () => {
-        const {data} = await getRoutes();
-        data.forEach((item: any) => {
-          item.icon = iconMap[item.icon]
-        })
-        // path为空key，value是{write：boolean,read:boolean}
-        let routes = new Array<object>();
-        data.forEach((item: any) => {
-          if (item.children) {
-            item.children.forEach((child: any) => {
-              routes[child.path] = {write: child.access.includes('Write')}
-            })
-          }
-        })
-        return data
+        if (!initialState?.currentUser) {
+          return [];
+        }
+
+        try {
+          const {data} = await getRoutes();
+          const menuData = Array.isArray(data) ? data : [];
+          menuData.forEach((item: any) => {
+            item.icon = iconMap[item.icon]
+          })
+          // path为空key，value是{write：boolean,read:boolean}
+          let routes = new Array<object>();
+          menuData.forEach((item: any) => {
+            if (item.children) {
+              item.children.forEach((child: any) => {
+                routes[child.path] = {write: child.access?.includes('Write')}
+              })
+            }
+          })
+          return menuData
+        } catch {
+          return [];
+        }
       },
       defaultOpenAll: false,
 

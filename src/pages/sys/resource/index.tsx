@@ -1,7 +1,7 @@
 import React, {useRef, useState} from "react";
 
 import {ActionType, PageContainer, ProTable} from "@ant-design/pro-components";
-import {request, useIntl} from "@umijs/max";
+import {useIntl} from "@umijs/max";
 import {Button, message, Popconfirm} from "antd";
 import ResourceForm from "@/pages/sys/resource/ResourceForm";
 import {FormattedMessage} from "@@/plugin-locale";
@@ -41,7 +41,13 @@ const Resource: React.FC = () => {
       title: intl.formatMessage({id: 'pages.common.type'}),
       dataIndex: 'type',
       valueType: 'select',
-      request: async () => getOptionList("Resource_Type"),
+      request: async () => {
+        try {
+          return await getOptionList("Resource_Type",false);
+        } catch {
+          return [];
+        }
+      },
       key: 'type',
     },
     {
@@ -98,7 +104,15 @@ const Resource: React.FC = () => {
     <PageContainer>
       <ProTable
         actionRef={ref}
-        request={async (params:ResourceSearchParams) => getResourceList(params)}
+        rowKey="id"
+        request={async (params:ResourceSearchParams) => {
+          try {
+            return await getResourceList(params);
+          } catch {
+            message.error(intl.formatMessage({id: 'pages.common.load.failed', defaultMessage: '加载失败'}));
+            return {data: [], total: 0, success: false};
+          }
+        }}
         toolBarRender={() =>write&& [
           <Button
             key="button"

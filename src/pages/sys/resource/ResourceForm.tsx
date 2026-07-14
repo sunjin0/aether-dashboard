@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import DrawerForm from "@/components/DrawerForm";
-import {request, useIntl} from "@umijs/max";
+import {useIntl} from "@umijs/max";
 import {Form, message} from "antd";
 import {ProFormRadio,ProFormSelect, ProFormText, ProFormTextArea} from "@ant-design/pro-components";
 import {ProFormDependency} from "@ant-design/pro-form";
@@ -11,7 +11,6 @@ import {
   updateResourceInfo
 } from "@/services/sys/ResourceController";
 import {ResourceSearchParams} from "@/services/entity/Sys";
-import {getOptionList} from "@/services/sys/DictController";
 
 const ResourceForm = (props: {
   id: any;
@@ -28,11 +27,20 @@ const ResourceForm = (props: {
       readonly={readOnly}
       id={id}
       request={async (params:ResourceSearchParams) => {
-        const res = await getResourceInfo(params);
-        if (res.data.type !== 'Resource_Type_Route') {
-          setReadOnly(true)
+        try {
+          const res = await getResourceInfo(params);
+          if (res.data?.type !== 'Resource_Type_Route') {
+            setReadOnly(true)
+          }
+          return res;
+        } catch {
+          message.error(intl.formatMessage({id: 'pages.common.load.failed', defaultMessage: '加载失败'}));
+          return {
+            data: {},
+            success: false,
+            code: 500,
+          };
         }
-        return res;
       }}
       open={open}
       setOpen={(open) => {
@@ -67,7 +75,13 @@ const ResourceForm = (props: {
         rules={[
           {required: true}
         ]}
-        request={async () => getResourceOptions()}
+        request={async () => {
+          try {
+            return await getResourceOptions();
+          } catch {
+            return [];
+          }
+        }}
       />
       <ProFormText
         name="name"

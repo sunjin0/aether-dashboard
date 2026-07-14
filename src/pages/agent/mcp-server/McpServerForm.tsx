@@ -1,10 +1,5 @@
 import DrawerForm from '@/components/DrawerForm';
-import {
-  addAgentToolInfo,
-  getAgentToolInfo,
-  updateAgentToolInfo,
-} from '@/services/agent/ToolController';
-import { getMcpServerList } from '@/services/agent/McpServerController';
+import { addMcpServer, getMcpServer, updateMcpServer } from '@/services/agent/McpServerController';
 import { getOptionList } from '@/services/sys/DictController';
 import {
   ProFormDigit,
@@ -14,18 +9,17 @@ import {
 } from '@ant-design/pro-components';
 import { Form } from 'antd';
 import { useIntl } from '@umijs/max';
-import JsonDisplay from '@/components/JsonDisplay';
 
-const AgentToolForm = (props: {
+const McpServerForm = (props: {
   id?: string;
-  open?: boolean;
-  setOpen?: (open: boolean) => void;
+  open: boolean;
+  setOpen: (open: boolean) => void;
   onSuccess: () => void;
 }) => {
   const { id, open, setOpen, onSuccess } = props;
   const intl = useIntl();
   const [form] = Form.useForm();
-  const schema = Form.useWatch('mcpInputSchema', form);
+  const authType = Form.useWatch('authType', form);
   const format = (key: string, values?: Record<string, string>) =>
     intl.formatMessage({ id: key }, values);
   const validateJson = async (_: unknown, value?: string) => {
@@ -36,7 +30,9 @@ const AgentToolForm = (props: {
     } catch {
       return Promise.reject(
         new Error(
-          format('pages.agent.tool.invalidJson', { label: format('pages.agent.tool.inputSchema') }),
+          format('pages.agent.tool.invalidJson', {
+            label: format('pages.agent.mcpServer.requestHeaders'),
+          }),
         ),
       );
     }
@@ -47,12 +43,12 @@ const AgentToolForm = (props: {
       id={id || ''}
       open={open}
       setOpen={setOpen}
-      request={getAgentToolInfo}
+      request={getMcpServer}
       form={form}
       onSuccess={async (values) => {
         const payload = { ...values, status: Number(values.status) };
-        if (id) await updateAgentToolInfo(payload);
-        else await addAgentToolInfo(payload);
+        if (id) await updateMcpServer(id, payload);
+        else await addMcpServer(payload);
         onSuccess();
         return true;
       }}
@@ -60,41 +56,46 @@ const AgentToolForm = (props: {
       <ProFormText name="id" hidden />
       <ProFormText
         name="name"
-        label={format('pages.agent.tool.name')}
+        label={format('pages.agent.mcpServer.name')}
         rules={[{ required: true }]}
       />
       <ProFormText
         name="code"
-        label={format('pages.agent.tool.code')}
+        label={format('pages.agent.mcpServer.code')}
         rules={[{ required: true }]}
       />
-      <ProFormTextArea name="description" label={format('pages.common.description')} />
       <ProFormSelect
-        name="mcpServerId"
-        label={format('pages.agent.tool.mcpServer')}
+        name="transport"
+        label={format('pages.agent.mcpServer.transport')}
+        request={() => getOptionList('Agent_Mcp_Transport')}
         rules={[{ required: true }]}
-        request={async () => {
-          const { code, data } = await getMcpServerList({ current: 1, pageSize: 1000, status: 1 });
-          return code === 200
-            ? (data || []).map((item) => ({ label: `${item.name} (${item.code})`, value: item.id }))
-            : [];
-        }}
       />
       <ProFormText
-        name="mcpToolName"
-        label={format('pages.agent.tool.mcpToolName')}
+        name="baseUrl"
+        label={format('pages.agent.mcpServer.baseUrl')}
         rules={[{ required: true }]}
       />
       <ProFormTextArea
-        name="mcpInputSchema"
-        label={format('pages.agent.tool.inputSchema')}
+        name="requestHeaders"
+        label={format('pages.agent.mcpServer.requestHeaders')}
         initialValue="{}"
-        fieldProps={{ rows: 8 }}
+        fieldProps={{ rows: 5 }}
         rules={[{ validator: validateJson }]}
       />
-      <Form.Item label={format('pages.agent.tool.schemaPreview')}>
-        <JsonDisplay content={schema} />
-      </Form.Item>
+      <ProFormSelect
+        name="authType"
+        label={format('pages.agent.mcpServer.authType')}
+        request={() => getOptionList('Agent_Mcp_Auth_Type')}
+        initialValue="none"
+        rules={[{ required: true }]}
+      />
+      {authType !== 'none' && (
+        <ProFormText.Password
+          name="authToken"
+          label={format('pages.agent.mcpServer.authToken')}
+          fieldProps={{ autoComplete: 'new-password' }}
+        />
+      )}
       <ProFormDigit
         name="timeoutMs"
         label={format('pages.agent.tool.timeout')}
@@ -114,4 +115,4 @@ const AgentToolForm = (props: {
   );
 };
 
-export default AgentToolForm;
+export default McpServerForm;

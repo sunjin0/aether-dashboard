@@ -64,7 +64,9 @@ export const getSelectList = async (): Promise<Option[]> => {
 }
 /**
  * @description 字典
- * @since 2025-07-17
+ * @param parentCode 父级代码
+ * @param useValue 是否使用值
+ * @since 2025-07-21
  */
 export const getOptionList = async (parentCode: string, useValue: boolean = true): Promise<Option[]> => {
   let {data} = await request(`/api/sys/dict/options`, {

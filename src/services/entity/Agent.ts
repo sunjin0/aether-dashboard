@@ -166,9 +166,7 @@ export type QuestionConfig = GroupQuestionConfig | QuestionItemConfig;
 /**
  * @description 用户回答
  */
-export type AskUserAnswer =
-  | { selected: string | string[] }
-  | { confirmed: boolean };
+export type AskUserAnswer = { selected: string | string[] } | { confirmed: boolean };
 
 /**
  * @description 单个问题数据（SSE question 事件中的 questions 数组项）
@@ -396,15 +394,14 @@ export interface AgentTool {
   name?: string;
   code?: string;
   description?: string;
-  type?: string;
-  httpMethod?: string;
-  httpUrl?: string;
-  httpHeaders?: string;
-  httpBodyTemplate?: string;
-  responseExtractRule?: string;
+  mcpServerId?: string;
+  mcpServerName?: string;
+  mcpBaseUrl?: string;
+  mcpToolName?: string;
+  mcpInputSchema?: string;
   timeoutMs?: number;
-  cacheTtlSeconds?: number;
   status?: number;
+  remark?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -417,6 +414,49 @@ export interface AgentToolSearchParams extends AgentTool {
   pageSize?: number;
 }
 
+/** MCP 服务 */
+export interface McpServer {
+  id?: string;
+  name?: string;
+  code?: string;
+  transport?: 'http' | 'sse' | 'streamable_http';
+  baseUrl?: string;
+  requestHeaders?: string;
+  authType?: 'none' | 'bearer' | 'api_key';
+  authToken?: string;
+  timeoutMs?: number;
+  status?: number;
+  remark?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface McpServerSearchParams extends McpServer {
+  current?: number;
+  pageSize?: number;
+}
+
+/** MCP 服务暴露的工具 */
+export interface McpTool {
+  name: string;
+  description?: string;
+  inputSchema?: Record<string, unknown> | string;
+  outputSchema?: Record<string, unknown> | string;
+}
+
+/** 工具测试请求 */
+/** 工具测试结果 */
+export interface AgentToolTestResult {
+  success?: boolean;
+  content?: unknown;
+  rawResponse?: unknown;
+  latencyMs?: number;
+  errorMsg?: string;
+  requestUrl?: string;
+  requestMethod?: string;
+  [key: string]: unknown;
+}
+
 /**
  * @description Agent 工具绑定信息
  */
@@ -425,6 +465,9 @@ export interface AgentToolBinding {
   toolId?: string;
   toolName?: string;
   toolCode?: string;
+  mcpServerName?: string;
+  mcpToolName?: string;
+  mcpBaseUrl?: string;
   priority?: number;
   status?: number;
   createdAt?: string;

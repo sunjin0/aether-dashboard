@@ -74,8 +74,13 @@ export default [
         component: './agent/definition',
       },
       {
+        path: '/agent/mcp-server',
+        name: 'MCP 服务管理',
+        component: './agent/mcp-server',
+      },
+      {
         path: '/agent/tool',
-        name: '工具管理',
+        name: 'MCP 工具管理',
         component: './agent/tool',
       },
       {

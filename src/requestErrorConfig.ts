@@ -16,6 +16,9 @@ export const errorConfig: RequestConfig = {
   errorConfig: {
     // 错误抛出
     errorThrower: (res) => {
+      if (!res || typeof res !== 'object') {
+        return;
+      }
       const {success, data, errorCode, errorMessage, showType} =
         res as unknown as ResponseStructure<any>;
       if (!success) {
@@ -69,7 +72,7 @@ export const errorConfig: RequestConfig = {
         // Axios 的错误
         // 请求成功发出且服务器也响应了状态码，但状态代码超出了 2xx 的范围
         notification.open({
-          description: error.response.data.message,
+          description: error.response.data?.message || error.message,
           message: error.response.status,
           type: 'error',
         });
@@ -107,13 +110,18 @@ export const errorConfig: RequestConfig = {
     (response) => {
       // 拦截响应数据，进行个性化处理
       const {data} = response as { data: ResponseStructure<any> };
+      if (!data || typeof data !== 'object') {
+        return response;
+      }
       data.success = data.code === 200
       if (!data?.success) {
         data.errorMessage = data.message
         data.errorCode = data.code
         data.showType = ErrorShowType.NOTIFICATION
       }
-      message.success({content: data.message, key: data.message})
+      if (data.message) {
+        message.success({content: data.message, key: data.message})
+      }
       return response;
     },
   ],

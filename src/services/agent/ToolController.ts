@@ -1,6 +1,6 @@
-import {request} from '@umijs/max';
-import {ResponseStructure} from '@/services/entity/Common';
-import {AgentTool, AgentToolSearchParams} from '@/services/entity/Agent';
+import { request } from '@umijs/max';
+import { ResponseStructure } from '@/services/entity/Common';
+import { AgentTool, AgentToolSearchParams, AgentToolTestResult } from '@/services/entity/Agent';
 
 /**
  * @description 获取 Agent 工具列表
@@ -44,6 +44,19 @@ export const updateAgentToolInfo = async (
   return request(`/api/agent/tool/${params.id}`, {
     method: 'PUT',
     data: params,
+  });
+};
+
+/**
+ * @description 测试 MCP 工具调用
+ */
+export const testAgentTool = async (
+  id: string,
+  args: Record<string, unknown>,
+): Promise<ResponseStructure<AgentToolTestResult>> => {
+  return request(`/api/agent/tool/${id}/test`, {
+    method: 'POST',
+    data: args,
   });
 };
 

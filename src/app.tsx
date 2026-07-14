@@ -12,7 +12,9 @@ import {SettingDrawer} from '@ant-design/pro-components';
 import {RunTimeLayoutConfig} from '@umijs/max';
 import {history, Link} from '@umijs/max';
 import React from 'react';
+import {AliveScope} from 'react-activation';
 import defaultSettings from '../config/defaultSettings';
+import RouteTabs, {setRouteMenus} from './components/RouteTabs';
 import {errorConfig} from './requestErrorConfig';
 import {getRoutes, info} from "@/services/sys/LoginController";
 
@@ -88,6 +90,7 @@ export const layout: RunTimeLayoutConfig = ({initialState, setInitialState}) => 
         try {
           const {data} = await getRoutes();
           const menuData = Array.isArray(data) ? data : [];
+          setRouteMenus(menuData);
           menuData.forEach((item: any) => {
             item.icon = iconMap[item.icon]
           })
@@ -150,8 +153,8 @@ export const layout: RunTimeLayoutConfig = ({initialState, setInitialState}) => 
     childrenRender: (children) => {
       // if (initialState?.loading) return <PageLoading />;
       return (
-        <>
-          {children}
+        <AliveScope>
+          <RouteTabs pathname={history.location.pathname}>{children}</RouteTabs>
           {isDev && (
             <SettingDrawer
               disableUrlParams
@@ -166,7 +169,7 @@ export const layout: RunTimeLayoutConfig = ({initialState, setInitialState}) => 
               }}
             />
           )}
-        </>
+        </AliveScope>
       );
     },
     ...initialState?.settings,

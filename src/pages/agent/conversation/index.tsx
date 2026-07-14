@@ -181,6 +181,7 @@ const AgentConversationPage: React.FC = () => {
     },
     {
       title: '状态',
+      key: 'agent-conversation-status',
       dataIndex: 'status',
       valueType: 'select',
       request: async () => getOptionList('Agent_Conversation_Status'),

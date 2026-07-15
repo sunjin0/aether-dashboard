@@ -429,6 +429,20 @@ export interface AgentToolStatistics {
   successRate?: number;
 }
 
+/** 工具页面左侧筛选项 */
+export interface AgentToolFacetItem {
+  value: string | number;
+  label: string;
+  count: number;
+}
+
+/** 工具分类、集成状态和来源的聚合数据 */
+export interface AgentToolFacets {
+  categories: AgentToolFacetItem[];
+  statuses: AgentToolFacetItem[];
+  sources: AgentToolFacetItem[];
+}
+
 /**
  * @description Agent tool statistics query params
  */

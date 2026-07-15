@@ -1,27 +1,28 @@
-import DrawerForm from '@/components/DrawerForm';
+import DrawerForm from '@/components/DrawerForm'
 import {
   addAgentToolInfo,
   getAgentToolInfo,
   updateAgentToolInfo,
-} from '@/services/agent/ToolController';
-import { getMcpServerList } from '@/services/agent/McpServerController';
-import { getOptionList } from '@/services/sys/DictController';
+} from '@/services/agent/ToolController'
+import { getMcpServerList } from '@/services/agent/McpServerController'
+import { getOptionList } from '@/services/sys/DictController'
 import {
   ProFormDigit,
   ProFormSelect,
   ProFormText,
   ProFormTextArea,
-} from '@ant-design/pro-components';
-import { Form } from 'antd';
-import { useIntl } from '@umijs/max';
-import JsonDisplay from '@/components/JsonDisplay';
+} from '@ant-design/pro-components'
+import { Form, Segmented } from 'antd'
+import { useIntl } from '@umijs/max'
+import JsonDisplay from '@/components/JsonDisplay'
+import React, { useState } from 'react'
 
 const toolTypeOptions = [
   { label: '信息库', value: 'knowledge' },
   { label: '运维', value: 'ops' },
   { label: '开发', value: 'dev' },
   { label: '通用', value: 'general' },
-];
+]
 
 const AgentToolForm = (props: {
   id?: string;
@@ -29,25 +30,34 @@ const AgentToolForm = (props: {
   setOpen?: (open: boolean) => void;
   onSuccess: () => void;
 }) => {
-  const { id, open, setOpen, onSuccess } = props;
-  const intl = useIntl();
-  const [form] = Form.useForm();
-  const schema = Form.useWatch('mcpInputSchema', form);
+  const { id, open, setOpen, onSuccess } = props
+  const intl = useIntl()
+  const [form] = Form.useForm()
+  const schema = Form.useWatch('mcpInputSchema', {form, preserve: true})
+  const [schemaMode, setSchemaMode] = useState<'edit' | 'preview'>('edit')
   const format = (key: string, values?: Record<string, string>) =>
-    intl.formatMessage({ id: key }, values);
+    intl.formatMessage({ id: key }, values)
   const validateJson = async (_: unknown, value?: string) => {
-    if (!value?.trim()) return Promise.resolve();
+    if (!value?.trim()) return Promise.resolve()
     try {
-      JSON.parse(value);
-      return Promise.resolve();
+      JSON.parse(value)
+      return Promise.resolve()
     } catch {
       return Promise.reject(
         new Error(
           format('pages.agent.tool.invalidJson', { label: format('pages.agent.tool.inputSchema') }),
         ),
-      );
+      )
     }
-  };
+  }
+  const formatSchema = (value?: string) => {
+    if (!value?.trim()) return
+    try {
+      form.setFieldValue('mcpInputSchema', JSON.stringify(JSON.parse(value), null, 2))
+    } catch {
+      // Keep invalid JSON unchanged so the form validator can show the error.
+    }
+  }
 
   return (
     <DrawerForm
@@ -79,7 +89,7 @@ const AgentToolForm = (props: {
       <ProFormSelect
         name="toolType"
         label="业务类型"
-        options={toolTypeOptions}
+        request={async () => getOptionList('Agent_Tool_Business_Type')}
         placeholder="请选择业务类型"
       />
       <ProFormSelect
@@ -98,16 +108,28 @@ const AgentToolForm = (props: {
         label={format('pages.agent.tool.mcpToolName')}
         rules={[{ required: true }]}
       />
-      <ProFormTextArea
-        name="mcpInputSchema"
-        label={format('pages.agent.tool.inputSchema')}
-        initialValue="{}"
-        fieldProps={{ rows: 8 }}
-        rules={[{ validator: validateJson }]}
-      />
-      <Form.Item label={format('pages.agent.tool.schemaPreview')}>
-        <JsonDisplay content={schema} />
+      <Form.Item label={format('pages.agent.tool.inputSchema')}>
+        <Segmented
+          options={[
+            { label: '编辑', value: 'edit' },
+            { label: format('pages.agent.tool.schemaPreview'), value: 'preview' },
+          ]}
+          value={schemaMode}
+          onChange={(value) => setSchemaMode(value as 'edit' | 'preview')}
+        />
       </Form.Item>
+      {schemaMode === 'edit' ? (
+        <ProFormTextArea
+          name="mcpInputSchema"
+          initialValue="{}"
+          fieldProps={{ rows: 8, onBlur: (event) => formatSchema(event.target.value) }}
+          rules={[{ validator: validateJson }]}
+        />
+      ) : (
+        <Form.Item>
+          <JsonDisplay content={schema} />
+        </Form.Item>
+      )}
       <ProFormDigit
         name="timeoutMs"
         label={format('pages.agent.tool.timeout')}
@@ -125,6 +147,6 @@ const AgentToolForm = (props: {
       <ProFormTextArea name="remark" label={format('pages.common.remark')} />
     </DrawerForm>
   );
-};
+}
 
-export default AgentToolForm;
+export default AgentToolForm

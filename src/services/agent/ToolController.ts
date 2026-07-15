@@ -2,6 +2,7 @@ import { request } from '@umijs/max';
 import { ResponseStructure } from '@/services/entity/Common';
 import {
   AgentTool,
+  AgentToolFacets,
   AgentToolSearchParams,
   AgentToolStatistics,
   AgentToolStatisticsParams,
@@ -29,6 +30,13 @@ export const getAgentToolStatistics = async (
   return request('/api/agent/tool/statistics', {
     method: 'GET',
     params,
+  });
+};
+
+/** 获取工具中心左侧筛选聚合数据 */
+export const getAgentToolFacets = async (): Promise<ResponseStructure<AgentToolFacets>> => {
+  return request('/api/agent/tool/facets', {
+    method: 'GET',
   });
 };
 

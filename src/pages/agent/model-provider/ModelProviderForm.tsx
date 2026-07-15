@@ -1,19 +1,19 @@
-import DrawerForm from '@/components/DrawerForm';
+import DrawerForm from '@/components/DrawerForm'
 import {
   ProFormDigit,
   ProFormSelect,
   ProFormText,
   ProFormTextArea,
-} from '@ant-design/pro-components';
-import {Form} from 'antd';
-import {useEffect, useState} from 'react';
+} from '@ant-design/pro-components'
+import {Form} from 'antd'
+import {useEffect, useState} from 'react'
 import {
   addModelProviderInfo,
   getModelProviderInfo,
   updateModelProviderInfo,
-} from '@/services/agent/ModelProviderController';
-import {Option} from '@/services/entity/Common';
-import {getOptionList} from '@/services/sys/DictController';
+} from '@/services/agent/ModelProviderController'
+import {Option} from '@/services/entity/Common'
+import {getOptionList} from '@/services/sys/DictController'
 
 const ModelProviderForm = (props: {
   id?: string;
@@ -21,22 +21,22 @@ const ModelProviderForm = (props: {
   setOpen?: (open: boolean) => void;
   onSuccess: () => void;
 }) => {
-  const {id, open, setOpen, onSuccess} = props;
-  const [form] = Form.useForm();
-  const supplierName = Form.useWatch('name', form);
-  const [modelOptions, setModelOptions] = useState<Option[]>([]);
-  const [modelLoading, setModelLoading] = useState(false);
+  const {id, open, setOpen, onSuccess} = props
+  const [form] = Form.useForm()
+  const supplierName = Form.useWatch('name', form)
+  const [modelOptions, setModelOptions] = useState<Option[]>([])
+  const [modelLoading, setModelLoading] = useState(false)
 
   useEffect(() => {
     if (supplierName) {
-      setModelLoading(true);
+      setModelLoading(true)
       getOptionList(`Model_Provider_Name_${supplierName}`)
         .then(setModelOptions)
-        .finally(() => setModelLoading(false));
+        .finally(() => setModelLoading(false))
     } else {
-      setModelOptions([]);
+      setModelOptions([])
     }
-  }, [supplierName]);
+  }, [supplierName])
 
   return (
     <DrawerForm
@@ -44,23 +44,23 @@ const ModelProviderForm = (props: {
       open={open}
       setOpen={setOpen}
       request={async (params) => {
-        const res = await getModelProviderInfo(params);
+        const res = await getModelProviderInfo(params)
         return {
           ...res,
           data: {
             ...res.data,
             apiKey: undefined,
           },
-        };
+        }
       }}
       onSuccess={async (values) => {
         if (id) {
-          await updateModelProviderInfo(values);
+          await updateModelProviderInfo(values)
         } else {
-          await addModelProviderInfo(values);
+          await addModelProviderInfo(values)
         }
-        onSuccess();
-        return true;
+        onSuccess()
+        return true
       }}
       form={form}
     >
@@ -72,7 +72,7 @@ const ModelProviderForm = (props: {
         rules={[{required: true}]}
         fieldProps={{
           onChange: () => {
-            form.setFieldsValue({defaultModel: undefined});
+            form.setFieldsValue({defaultModel: undefined})
           },
         }}
       />
@@ -115,7 +115,7 @@ const ModelProviderForm = (props: {
       <ProFormDigit name="sort" label="排序" min={0} fieldProps={{precision: 0}} />
       <ProFormTextArea name="remark" label="备注" />
     </DrawerForm>
-  );
-};
+  )
+}
 
-export default ModelProviderForm;
+export default ModelProviderForm

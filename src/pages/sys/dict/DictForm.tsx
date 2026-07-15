@@ -43,7 +43,6 @@ const DictForm = (props: {
       />
       <ProFormText
         name="code"
-        disabled={id}
         label={intl.formatMessage({id: 'pages.common.code'})}
         rules={[{required: true}]}
       />

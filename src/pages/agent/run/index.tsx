@@ -1,82 +1,91 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {ActionType, PageContainer, ProDescriptions, ProTable} from '@ant-design/pro-components';
-import {Alert, Button, Card, DatePicker, Drawer, Empty, message, Spin, Statistic, Tag, Typography} from 'antd';
-import {getAgentRunInfo, getAgentRunList, getAgentRunStatistics} from '@/services/agent/RunController';
-import {getOptionList} from '@/services/sys/DictController';
-import {AgentRun, AgentRunSearchParams, AgentRunStatistics} from '@/services/entity/Agent';
-import JsonDisplay from '@/components/JsonDisplay';
-import MarkdownText from '@/components/MarkdownText';
-import './index.less';
+import React, {useEffect, useRef, useState} from 'react'
+import {ActionType, PageContainer, ProDescriptions, ProTable} from '@ant-design/pro-components'
+import {Alert, Button, Card, DatePicker, Drawer, Empty, message, Spin, Statistic, Tag, Typography} from 'antd'
+import {getAgentRunInfo, getAgentRunList, getAgentRunStatistics} from '@/services/agent/RunController'
+import {getOptionList} from '@/services/sys/DictController'
+import {AgentRun, AgentRunSearchParams, AgentRunStatistics} from '@/services/entity/Agent'
+import JsonDisplay from '@/components/JsonDisplay'
+import MarkdownText from '@/components/MarkdownText'
+import './index.less'
+import {
+  ApiOutlined,
+  CheckCircleFilled,
+  ClockCircleOutlined,
+  CloseCircleFilled,
+  DatabaseOutlined,
+  FieldTimeOutlined,
+  WarningOutlined,
+} from '@ant-design/icons';
 
-const {Text} = Typography;
+const {Text} = Typography
 
 const renderStatusTag = (status?: number) => {
   if (status === 0) {
-    return <Tag color="success">成功</Tag>;
+    return <Tag color="success">成功</Tag>
   }
   if (status === 1) {
-    return <Tag color="error">失败</Tag>;
+    return <Tag color="error">失败</Tag>
   }
   if (status === 2) {
-    return <Tag color="warning">超时</Tag>;
+    return <Tag color="warning">超时</Tag>
   }
-  return <Tag>未知</Tag>;
-};
+  return <Tag>未知</Tag>
+}
 
-const {RangePicker} = DatePicker;
+const {RangePicker} = DatePicker
 
 const AgentRunPage: React.FC = () => {
-  const ref = useRef<ActionType>();
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [run, setRun] = useState<AgentRun>();
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [statistics, setStatistics] = useState<AgentRunStatistics>();
-  const [statisticsLoading, setStatisticsLoading] = useState(false);
-  const [dateRange, setDateRange] = useState<[any, any] | null>(null);
+  const ref = useRef<ActionType>()
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [run, setRun] = useState<AgentRun>()
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [statistics, setStatistics] = useState<AgentRunStatistics>()
+  const [statisticsLoading, setStatisticsLoading] = useState(false)
+  const [dateRange, setDateRange] = useState<[any, any] | null>(null)
 
   const loadStatistics = async () => {
-    setStatisticsLoading(true);
+    setStatisticsLoading(true)
     try {
-      const params: any = {};
+      const params: any = {}
       if (dateRange) {
-        params.startTime = dateRange[0]?.valueOf();
-        params.endTime = dateRange[1]?.valueOf();
+        params.startTime = dateRange[0]?.valueOf()
+        params.endTime = dateRange[1]?.valueOf()
       }
-      const {code, data, message: msg} = await getAgentRunStatistics(params);
+      const {code, data, message: msg} = await getAgentRunStatistics(params)
       if (code === 200) {
-        setStatistics(data);
+        setStatistics(data)
       } else {
-        message.error(msg || '加载统计信息失败');
+        message.error(msg || '加载统计信息失败')
       }
     } finally {
-      setStatisticsLoading(false);
+      setStatisticsLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    loadStatistics();
-  }, [dateRange]);
+    loadStatistics()
+  }, [dateRange])
 
   const openDetail = async (record: AgentRun) => {
     if (!record.id) {
-      message.error('缺少运行记录 ID');
-      return;
+      message.error('缺少运行记录 ID')
+      return
     }
 
-    setDrawerOpen(true);
-    setDetailLoading(true);
+    setDrawerOpen(true)
+    setDetailLoading(true)
     try {
-      const {code, data, message: msg} = await getAgentRunInfo(record.id);
+      const {code, data, message: msg} = await getAgentRunInfo(record.id)
       if (code === 200) {
-        setRun(data);
+        setRun(data)
       } else {
-        setRun(undefined);
-        message.error(msg || '加载运行记录详情失败');
+        setRun(undefined)
+        message.error(msg || '加载运行记录详情失败')
       }
     } finally {
-      setDetailLoading(false);
+      setDetailLoading(false)
     }
-  };
+  }
 
   const columns: any[] = [
     {
@@ -106,7 +115,7 @@ const AgentRunPage: React.FC = () => {
     },
     {
       title: '状态',
-      key: 'runStatus',
+      key: 'status',
       dataIndex: 'status',
       valueType: 'select',
       request: async () => getOptionList('Agent_Run_Status'),
@@ -131,7 +140,7 @@ const AgentRunPage: React.FC = () => {
       hideInTable: true,
       renderFormItem: () => <RangePicker />,
       fieldProps: {
-        style: {width: '100%'},
+        style: { width: '100%' },
       },
     },
     {
@@ -155,62 +164,47 @@ const AgentRunPage: React.FC = () => {
   ];
 
   return (
-    <PageContainer>
-      <Alert
-        className="agent-run-page-note"
-        type="info"
-        showIcon={true}
-        message="运行记录为只读审计数据；统计接口已接入真实数据。"
-      />
-      <Card title="运行统计" style={{ marginBottom: 16 }}>
+    <PageContainer className="agent-run-page">
+      <Card className="agent-run-statistics" title="运行统计" style={{ marginBottom: 16 }}>
         <Spin spinning={statisticsLoading}>
           {statistics ? (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-              <Statistic title="总调用次数" value={statistics.totalCalls || 0} />
-              <Statistic
-                title="成功次数"
-                value={statistics.successCalls || 0}
-                valueStyle={{ color: '#3f8600' }}
-              />
-              <Statistic
-                title="失败次数"
-                value={statistics.failedCalls || 0}
-                valueStyle={{ color: '#cf1322' }}
-              />
-              <Statistic
-                title="超时次数"
-                value={statistics.timeoutCalls || 0}
-                valueStyle={{ color: '#d4b106' }}
-              />
-              <Statistic title="总 Token" value={statistics.totalTokens || 0} />
-              <Statistic title="平均耗时(ms)" value={statistics.avgLatencyMs || 0} />
-              <Statistic
-                title="错误率"
-                value={statistics.errorRate ? `${(statistics.errorRate * 100).toFixed(2)}%` : '0%'}
-              />
-            </div>
-          ) : (
+            <div className="agent-run-statistics-grid">
+              <div className="agent-run-stat-card"><i className="run-stat-icon run-stat-blue"><ApiOutlined /></i><Statistic title="总调用次数" value={statistics.totalCalls || 0} /></div>
+              <div className="agent-run-stat-card"><i className="run-stat-icon run-stat-green"><CheckCircleFilled /></i><Statistic title="成功次数" value={statistics.successCalls || 0} /></div>
+              <div className="agent-run-stat-card"><i className="run-stat-icon run-stat-red"><CloseCircleFilled /></i><Statistic title="失败次数" value={statistics.failedCalls || 0} /></div>
+              <div className="agent-run-stat-card"><i className="run-stat-icon run-stat-orange"><ClockCircleOutlined /></i><Statistic title="超时次数" value={statistics.timeoutCalls || 0} /></div>
+              <div className="agent-run-stat-card"><i className="run-stat-icon run-stat-purple"><DatabaseOutlined /></i><Statistic title="总 Token" value={statistics.totalTokens || 0} /></div>
+              <div className="agent-run-stat-card"><i className="run-stat-icon run-stat-cyan"><FieldTimeOutlined /></i><Statistic title="平均耗时(ms)" value={statistics.avgLatencyMs || 0} /></div>
+              <div className="agent-run-stat-card"><i className="run-stat-icon run-stat-red"><WarningOutlined /></i><Statistic title="错误率" value={statistics.errorRate ? `${(statistics.errorRate * 100).toFixed(2)}%` : '0%'} /></div>
+            </div>          ) : (
             <Empty description="暂无统计数据" />
           )}
         </Spin>
       </Card>
       <ProTable
+        className="agent-run-table"
         actionRef={ref}
         rowKey="id"
+        search={{
+          labelWidth: 120,
+          span: 6,
+        }}
         request={async (params: AgentRunSearchParams) => {
-          const { dateRange, ...rest } = params as any;
-          const queryParams: AgentRunSearchParams = { ...rest };
+          const { dateRange, ...rest } = params as any
+          const queryParams: AgentRunSearchParams = { ...rest }
           if (dateRange) {
-            queryParams.startTime = dateRange[0]?.valueOf();
-            queryParams.endTime = dateRange[1]?.valueOf();
+            // 设置为毫秒级时间戳
+            queryParams.startTime = new Date(dateRange[0]).getTime()
+            queryParams.endTime = new Date(dateRange[1]).getTime()
           }
-          return getAgentRunList(queryParams);
+          return getAgentRunList(queryParams)
         }}
         columns={columns}
       />
       <Drawer
         title="运行记录详情"
         width={760}
+        className="agent-run-detail-drawer"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         destroyOnClose={true}
@@ -285,7 +279,7 @@ const AgentRunPage: React.FC = () => {
         </Spin>
       </Drawer>
     </PageContainer>
-  );
-};
+  )
+}
 
-export default AgentRunPage;
+export default AgentRunPage

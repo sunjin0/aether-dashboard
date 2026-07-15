@@ -837,7 +837,7 @@ const ChatDebugPage: React.FC = () => {
   return (
     <PageContainer
       header={{
-        title: 'AI 对话',
+        title: '会话',
         breadcrumb: undefined,
       }}
     >

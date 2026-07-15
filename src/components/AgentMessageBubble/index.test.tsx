@@ -21,7 +21,8 @@ describe('AgentMessageBubble', () => {
     expect(screen.getByRole('heading', {name: 'Title'})).toBeTruthy();
     expect(screen.getByText('first item')).toBeTruthy();
     expect(screen.getByText(/const ok = true/)).toBeTruthy();
-    expect(screen.getByText('AI')).toBeTruthy();
+    expect(screen.getByText('助手')).toBeTruthy();
+    expect(screen.queryByText('🤖')).toBeNull();
     expect(screen.getByText(/模型: gpt-test/)).toBeTruthy();
     expect(screen.getByText(/耗时: 42ms/)).toBeTruthy();
   });

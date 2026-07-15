@@ -2,6 +2,7 @@ import React, { useCallback, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Collapse, message, Tooltip, Typography } from 'antd';
+import { CustomerServiceOutlined, SettingOutlined, ToolOutlined, UserOutlined } from '@ant-design/icons';
 import { AgentMessage, AskUserAnswer } from '@/services/entity/Agent';
 import ToolCallCard from '@/components/ToolCallCard';
 import InteractiveQuestionCard, {
@@ -23,19 +24,19 @@ export interface AgentMessageBubbleProps {
 }
 
 const roleLabelMap: Record<string, string> = {
-  user: '你',
-  assistant: 'AI',
+  user: '用户',
+  assistant: '助手',
   system: '系统',
   tool: '工具',
   unknown: '未知',
 };
 
-const roleAvatarMap: Record<string, string> = {
-  user: '👤',
-  assistant: '🤖',
-  system: '⚙️',
-  tool: '🔧',
-  unknown: '❓',
+const roleIconMap: Record<string, React.ReactNode> = {
+  user: <UserOutlined />,
+  assistant: <CustomerServiceOutlined />,
+  system: <SettingOutlined />,
+  tool: <ToolOutlined />,
+  unknown: <UserOutlined />,
 };
 
 const getRole = (role?: string) => role || 'unknown';
@@ -245,7 +246,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
       <div className="agent-message-bubble-card">
         <div className="agent-message-bubble-header">
           <div className="agent-message-bubble-role">
-            <span style={{ marginRight: 6 }}>{roleAvatarMap[role]}</span>
+            <span style={{ marginRight: 6 }}>{roleIconMap[role]}</span>
             {roleLabelMap[role]}
           </div>
           {agentMessage.createdAt && (

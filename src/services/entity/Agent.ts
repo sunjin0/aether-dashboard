@@ -148,9 +148,14 @@ export type QuestionItemConfig = ChoiceQuestionConfig | ConfirmQuestionConfig;
  */
 export interface GroupQuestionConfig {
   type: 'group';
-  layout: 'tabs';
+  layout: 'tabs' | 'confirm';
   question: string;
   questions: QuestionItemConfig[];
+  approvalType?: string;
+  toolName?: string;
+  arguments?: Record<string, unknown>;
+  riskLevel?: 'low' | 'medium' | 'high' | string;
+  riskReason?: string;
   /** 历史回显时的组级回答 */
   answer?: {
     answeredAt?: number;

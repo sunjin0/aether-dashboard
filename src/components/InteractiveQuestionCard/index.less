@@ -254,6 +254,79 @@
     }
   }
 
+  &-confirm-layout {
+    border-color: rgba(250, 173, 20, 0.28);
+
+    &-header {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 16px;
+      color: #d48806;
+
+      .ant-typography {
+        display: block;
+        color: rgba(15, 23, 42, 0.88);
+      }
+    }
+
+    &-question {
+      margin-top: 2px;
+      color: rgba(15, 23, 42, 0.55);
+      font-size: 12px;
+    }
+
+    &-description {
+      margin-bottom: 16px;
+      color: rgba(15, 23, 42, 0.8);
+    }
+
+    &-details {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #fafafa;
+
+      > div {
+        display: flex;
+        gap: 12px;
+        align-items: baseline;
+
+        .ant-typography:first-child {
+          flex: 0 0 64px;
+        }
+      }
+    }
+
+    &-arguments {
+      margin-bottom: 16px;
+
+      pre {
+        max-height: 240px;
+        margin: 8px 0 0;
+        padding: 12px;
+        overflow: auto;
+        border-radius: 8px;
+        background: #1f2937;
+        color: #e5e7eb;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+    }
+  }
+
+  &-risk {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+
+    &-low { background: #f6ffed; color: #389e0d; }
+    &-medium { background: #fffbe6; color: #d48806; }
+    &-high { background: #fff2f0; color: #cf1322; }
+  }
+
   // ─── Submit button ─────────────────────────────────────────────────
   &-submit-btn {
     margin-top: 16px;

@@ -192,6 +192,10 @@
   .ant-input-affix-wrapper {
     min-height: 48px;
     border-radius: 10px;
+
+    .ant-input {
+      background: transparent;
+    }
   }
 
   .ant-input-affix-wrapper-focused,
@@ -200,12 +204,26 @@
     box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.11);
   }
 
+  .ant-input-status-error,
+  .ant-input-affix-wrapper-status-error {
+    background: rgba(3, 10, 26, 0.5) !important;
+  }
+
   .ant-input::placeholder {
     color: rgba(218, 231, 255, 0.42);
   }
 
   .prefixIcon {
     color: rgba(114, 233, 255, 0.72);
+  }
+
+  .ant-input-clear-icon,
+  .ant-input-password-icon {
+    color: rgba(218, 231, 255, 0.78) !important;
+
+    &:hover {
+      color: #8eeeff !important;
+    }
   }
 
   .ant-btn-primary {

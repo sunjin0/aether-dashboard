@@ -16,6 +16,13 @@ import { Form } from 'antd';
 import { useIntl } from '@umijs/max';
 import JsonDisplay from '@/components/JsonDisplay';
 
+const toolTypeOptions = [
+  { label: '信息库', value: 'knowledge' },
+  { label: '运维', value: 'ops' },
+  { label: '开发', value: 'dev' },
+  { label: '通用', value: 'general' },
+];
+
 const AgentToolForm = (props: {
   id?: string;
   open?: boolean;
@@ -69,6 +76,12 @@ const AgentToolForm = (props: {
         rules={[{ required: true }]}
       />
       <ProFormTextArea name="description" label={format('pages.common.description')} />
+      <ProFormSelect
+        name="toolType"
+        label="业务类型"
+        options={toolTypeOptions}
+        placeholder="请选择业务类型"
+      />
       <ProFormSelect
         name="mcpServerId"
         label={format('pages.agent.tool.mcpServer')}

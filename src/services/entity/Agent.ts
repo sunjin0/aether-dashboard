@@ -394,6 +394,7 @@ export interface AgentTool {
   name?: string;
   code?: string;
   description?: string;
+  toolType?: string;
   mcpServerId?: string;
   mcpServerName?: string;
   mcpBaseUrl?: string;
@@ -401,6 +402,8 @@ export interface AgentTool {
   mcpInputSchema?: string;
   timeoutMs?: number;
   status?: number;
+  callCount?: number;
+  successRate?: number;
   remark?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -412,6 +415,26 @@ export interface AgentTool {
 export interface AgentToolSearchParams extends AgentTool {
   current?: number;
   pageSize?: number;
+}
+
+/**
+ * @description Agent tool statistics
+ */
+export interface AgentToolStatistics {
+  totalCount?: number;
+  enabledCount?: number;
+  disabledCount?: number;
+  callCount?: number;
+  successCount?: number;
+  successRate?: number;
+}
+
+/**
+ * @description Agent tool statistics query params
+ */
+export interface AgentToolStatisticsParams {
+  toolType?: string;
+  mcpServerId?: string;
 }
 
 /** MCP 服务 */

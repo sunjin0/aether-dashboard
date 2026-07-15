@@ -12,6 +12,7 @@ import {
 } from '@ant-design/pro-components';
 import {Button, message, theme} from 'antd';
 import React, {useState} from 'react';
+import {flushSync} from 'react-dom';
 import {history, request, useIntl, useModel} from "@umijs/max";
 import {Footer} from "@/components";
 import {login, verify} from "@/services/sys/LoginController";
@@ -31,7 +32,7 @@ export default () => {
 
   const getRedirectPath = () => {
     const redirect = new URLSearchParams(history.location.search).get('redirect');
-    return redirect && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/';
+    return redirect && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/dashboard';
   };
 
   const handleFinish = async (values: Record<string, string>) => {
@@ -44,7 +45,9 @@ export default () => {
         message.success(msg);
         if (initialState?.fetchUserInfo) {
           const currentUser = await initialState.fetchUserInfo();
-          setInitialState({...initialState, currentUser});
+          flushSync(() => {
+            setInitialState({...initialState, currentUser});
+          });
         }
         history.push(getRedirectPath());
         return true;

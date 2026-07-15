@@ -1,6 +1,12 @@
 import { request } from '@umijs/max';
 import { ResponseStructure } from '@/services/entity/Common';
-import { AgentTool, AgentToolSearchParams, AgentToolTestResult } from '@/services/entity/Agent';
+import {
+  AgentTool,
+  AgentToolSearchParams,
+  AgentToolStatistics,
+  AgentToolStatisticsParams,
+  AgentToolTestResult,
+} from '@/services/entity/Agent';
 
 /**
  * @description 获取 Agent 工具列表
@@ -11,6 +17,18 @@ export const getAgentToolList = async (
   return request('/api/agent/tool/list', {
     method: 'POST',
     data: params,
+  });
+};
+
+/**
+ * @description 获取 Agent 工具统计
+ */
+export const getAgentToolStatistics = async (
+  params: AgentToolStatisticsParams,
+): Promise<ResponseStructure<AgentToolStatistics>> => {
+  return request('/api/agent/tool/statistics', {
+    method: 'GET',
+    params,
   });
 };
 

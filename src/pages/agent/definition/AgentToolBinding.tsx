@@ -128,6 +128,7 @@ const AgentToolBinding: React.FC<AgentToolBindingProps> = ({ agentId, open, setO
     },
     {
       title: intl.formatMessage({ id: 'pages.common.status' }),
+      key: 'toolStatus',
       dataIndex: 'status',
       valueType: 'select',
       valueEnum: statusValueEnum,

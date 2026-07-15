@@ -258,7 +258,7 @@ const AgentConversationPage: React.FC = () => {
                 { title: 'ID', dataIndex: 'id' },
                 { title: '标题', dataIndex: 'title' },
                 { title: 'Agent ID', dataIndex: 'agentDefinitionId' },
-                { title: '状态', dataIndex: 'status', valueEnum: statusValueEnum },
+                { title: '状态', key: 'con-status', dataIndex: 'status', valueEnum: statusValueEnum },
                 { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime' },
                 { title: '更新时间', dataIndex: 'updatedAt', valueType: 'dateTime' },
               ]}

@@ -140,6 +140,7 @@ const McpServerPage: React.FC = () => {
     },
     {
       title: format('pages.common.status'),
+      key: 'McpServerStatus',
       dataIndex: 'status',
       valueType: 'select',
       request: () => getOptionList('Agent_Status'),

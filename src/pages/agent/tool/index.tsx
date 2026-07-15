@@ -112,12 +112,12 @@ const AgentToolPage: React.FC = () => {
       valueType: 'text',
       ellipsis: true,
     },
-    {
-      title: intl.formatMessage({ id: 'pages.agent.tool.code' }),
-      dataIndex: 'code',
-      valueType: 'text',
-      ellipsis: true,
-    },
+    // {
+    //   title: intl.formatMessage({ id: 'pages.agent.tool.code' }),
+    //   dataIndex: 'code',
+    //   valueType: 'text',
+    //   ellipsis: true,
+    // },
     {
       title: '业务类型',
       dataIndex: 'toolType',
@@ -148,21 +148,22 @@ const AgentToolPage: React.FC = () => {
     //   hideInSearch: true,
     //   ellipsis: true,
     // },
-    {
-      title: intl.formatMessage({ id: 'pages.agent.tool.mcpToolName' }),
-      dataIndex: 'mcpToolName',
-      valueType: 'text',
-      ellipsis: true,
-    },
-    {
-      title: intl.formatMessage({ id: 'pages.agent.tool.mcpEndpoint' }),
-      dataIndex: 'mcpBaseUrl',
-      valueType: 'text',
-      ellipsis: true,
-      hideInSearch: true,
-    },
+    // {
+    //   title: intl.formatMessage({ id: 'pages.agent.tool.mcpToolName' }),
+    //   dataIndex: 'mcpToolName',
+    //   valueType: 'text',
+    //   ellipsis: true,
+    // },
+    // {
+    //   title: intl.formatMessage({ id: 'pages.agent.tool.mcpEndpoint' }),
+    //   dataIndex: 'mcpBaseUrl',
+    //   valueType: 'text',
+    //   ellipsis: true,
+    //   hideInSearch: true,
+    // },
     {
       title: intl.formatMessage({ id: 'pages.common.status' }),
+      key: 'toolStatus',
       dataIndex: 'status',
       valueType: 'select',
       request: async () => getOptionList('Agent_Status'),
@@ -282,7 +283,7 @@ const AgentToolPage: React.FC = () => {
       <ProTable
         actionRef={ref}
         rowKey="id"
-        scroll={{ x: 1800 }}
+        scroll={{ x: 1200 }}
         request={async (params: AgentToolSearchParams) => {
           const [listResult] = await Promise.all([getAgentToolList(params), loadStatistics(params)]);
           return listResult;

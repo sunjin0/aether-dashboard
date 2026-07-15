@@ -81,6 +81,7 @@ const ModelProviderPage: React.FC = () => {
     },
     {
       title: '状态',
+      key: 'modelProviderStatus',
       dataIndex: 'status',
       valueType: 'select',
       request: async () => getOptionList('Agent_Status'),

@@ -118,6 +118,7 @@ const AgentToolCallLogPage: React.FC = () => {
     },
     {
       title: '执行状态',
+      key: 'toolCallStatus',
       dataIndex: 'status',
       valueType: 'select',
       request: async () => getOptionList('Agent_ToolCall_Status'),
@@ -154,12 +155,6 @@ const AgentToolCallLogPage: React.FC = () => {
 
   return (
     <PageContainer>
-      <Alert
-        className="agent-tool-call-log-page-note"
-        type="info"
-        showIcon={true}
-        message="工具调用日志依赖 V0.5 工具调用闭环，当前环境可能暂无真实数据。"
-      />
       <ProTable
         rowKey="id"
         request={async (params: AgentToolCallLogSearchParams) => {

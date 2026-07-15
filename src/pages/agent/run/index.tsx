@@ -106,6 +106,7 @@ const AgentRunPage: React.FC = () => {
     },
     {
       title: '状态',
+      key: 'runStatus',
       dataIndex: 'status',
       valueType: 'select',
       request: async () => getOptionList('Agent_Run_Status'),

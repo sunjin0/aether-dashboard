@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Collapse, message, Tooltip, Typography } from 'antd';
 import { AgentMessage, AskUserAnswer } from '@/services/entity/Agent';
 import ToolCallCard from '@/components/ToolCallCard';
@@ -209,7 +210,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
                   label: '💭 推理过程',
                   children: (
                     <div ref={reasoningContainerRef} className="agent-message-bubble-reasoning-content">
-                      <ReactMarkdown>{currentReasoning}</ReactMarkdown>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{currentReasoning}</ReactMarkdown>
                     </div>
                   ),
                 },
@@ -220,7 +221,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
 
         {agentMessage.content ? (
           <div ref={contentContainerRef} className="agent-message-bubble-main-content">
-            <ReactMarkdown>{currentContent}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{currentContent}</ReactMarkdown>
           </div>
         ) : agentMessage.reasoningContent || agentMessage.reasoningStream ? (
           <Text className="agent-message-bubble-warning" type="warning">

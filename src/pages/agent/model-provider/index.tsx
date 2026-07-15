@@ -1,57 +1,57 @@
-import React, {useRef, useState} from 'react';
-import {PlusOutlined} from '@ant-design/icons';
-import {ActionType, PageContainer, ProTable} from '@ant-design/pro-components';
-import {Button, message, Popconfirm} from 'antd';
-import {FormattedMessage, history, useAccess} from '@@/exports';
-import ModelProviderForm from '@/pages/agent/model-provider/ModelProviderForm';
+import React, {useRef, useState} from 'react'
+import {PlusOutlined} from '@ant-design/icons'
+import {ActionType, PageContainer, ProTable} from '@ant-design/pro-components'
+import {Button, message, Popconfirm} from 'antd'
+import {FormattedMessage, history, useAccess} from '@@/exports'
+import ModelProviderForm from '@/pages/agent/model-provider/ModelProviderForm'
 import {
   deleteModelProviderInfo,
   getModelProviderList,
   updateModelProviderStatus,
-} from '@/services/agent/ModelProviderController';
-import {getOptionList} from '@/services/sys/DictController';
-import {ModelProvider, ModelProviderSearchParams} from '@/services/entity/Agent';
+} from '@/services/agent/ModelProviderController'
+import {getOptionList} from '@/services/sys/DictController'
+import {ModelProvider, ModelProviderSearchParams} from '@/services/entity/Agent'
 
 const ModelProviderPage: React.FC = () => {
-  const [open, setOpen] = useState(false);
-  const [id, setId] = useState<string | undefined>(undefined);
-  const ref = useRef<ActionType>();
-  const permissionMap = useAccess();
-  const path = history.location.pathname;
-  const write = permissionMap[path];
+  const [open, setOpen] = useState(false)
+  const [id, setId] = useState<string | undefined>(undefined)
+  const ref = useRef<ActionType>()
+  const permissionMap = useAccess()
+  const path = history.location.pathname
+  const write = permissionMap[path]
 
   const handleDelete = async (record: ModelProvider) => {
     if (!record.id) {
-      message.error('缺少模型供应商 ID');
-      return;
+      message.error('缺少模型供应商 ID')
+      return
     }
 
-    const {code, message: msg} = await deleteModelProviderInfo(record.id);
+    const {code, message: msg} = await deleteModelProviderInfo(record.id)
     if (code === 200) {
-      message.success(msg || '删除成功');
-      ref.current?.reload();
+      message.success(msg || '删除成功')
+      ref.current?.reload()
     } else {
-      message.error(msg || '删除失败');
+      message.error(msg || '删除失败')
     }
-  };
+  }
 
   const handleStatusChange = async (record: ModelProvider) => {
     if (!record.id) {
-      message.error('缺少模型供应商 ID');
-      return;
+      message.error('缺少模型供应商 ID')
+      return
     }
 
-    const nextStatus = record.status === 1 ? 0 : 1;
+    const nextStatus = record.status === 1 ? 0 : 1
     const {code, message: msg} = await updateModelProviderStatus(record.id, {
       status: nextStatus,
-    });
+    })
     if (code === 200) {
-      message.success(msg || '操作成功');
-      ref.current?.reload();
+      message.success(msg || '操作成功')
+      ref.current?.reload()
     } else {
-      message.error(msg || '操作失败');
+      message.error(msg || '操作失败')
     }
-  };
+  }
 
   const columns: any[] = [
     {
@@ -116,8 +116,8 @@ const ModelProviderPage: React.FC = () => {
             type="link"
             key="edit"
             onClick={() => {
-              setId(record.id);
-              setOpen(true);
+              setId(record.id)
+              setOpen(true)
             }}
           >
             编辑
@@ -142,7 +142,7 @@ const ModelProviderPage: React.FC = () => {
           </Popconfirm>,
         ],
     },
-  ];
+  ]
 
   return (
     <PageContainer>
@@ -152,6 +152,10 @@ const ModelProviderPage: React.FC = () => {
         request={async (params: ModelProviderSearchParams) =>
           getModelProviderList(params as ModelProviderSearchParams)
         }
+        search={{
+          labelWidth: 120,
+          span: 6,
+        }}
         toolBarRender={() =>
           write && [
             <Button
@@ -180,6 +184,6 @@ const ModelProviderPage: React.FC = () => {
       />
     </PageContainer>
   );
-};
+}
 
-export default ModelProviderPage;
+export default ModelProviderPage

@@ -162,11 +162,15 @@ const AgentToolCallLogPage: React.FC = () => {
             return await getAgentToolCallLogList(normalizeSearchParams(params));
           } catch {
             message.error('加载工具调用日志列表失败');
-            return {data: [], total: 0, success: false};
+            return { data: [], total: 0, success: false };
           }
         }}
+        search={{
+          labelWidth: 120,
+          span: 6,
+        }}
         columns={columns}
-        scroll={{x: 1200}}
+        scroll={{ x: 1200 }}
       />
       <Drawer
         title="工具调用日志详情"
@@ -182,33 +186,53 @@ const AgentToolCallLogPage: React.FC = () => {
                 column={1}
                 dataSource={toolCallLog}
                 columns={[
-                  {title: 'ID', dataIndex: 'id'},
-                  {title: '运行记录 ID', dataIndex: 'runId'},
-                  {title: '工具 ID', dataIndex: 'toolId'},
-                  {title: 'Agent 定义 ID', dataIndex: 'agentDefinitionId'},
-                  {title: '请求方法', dataIndex: 'requestMethod'},
-                  {title: '请求 URL', dataIndex: 'requestUrl'},
-                  {title: 'HTTP 状态码', dataIndex: 'responseStatus'},
+                  { title: 'ID', dataIndex: 'id' },
+                  { title: '运行记录 ID', dataIndex: 'runId' },
+                  { title: '工具 ID', dataIndex: 'toolId' },
+                  { title: 'Agent 定义 ID', dataIndex: 'agentDefinitionId' },
+                  { title: '请求方法', dataIndex: 'requestMethod' },
+                  { title: '请求 URL', dataIndex: 'requestUrl' },
+                  { title: 'HTTP 状态码', dataIndex: 'responseStatus' },
                   {
                     title: '执行状态',
                     dataIndex: 'status',
                     render: (_: any, record: AgentToolCallLog) => renderStatusTag(record.status),
                   },
-                  {title: '耗时(ms)', dataIndex: 'latencyMs'},
-                  {title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime'},
-                  {title: '更新时间', dataIndex: 'updatedAt', valueType: 'dateTime'},
+                  { title: '耗时(ms)', dataIndex: 'latencyMs' },
+                  { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime' },
+                  { title: '更新时间', dataIndex: 'updatedAt', valueType: 'dateTime' },
                 ]}
               />
-              <Card title="请求头" size="small" style={{marginTop: 16}} className="agent-tool-call-log-card">
+              <Card
+                title="请求头"
+                size="small"
+                style={{ marginTop: 16 }}
+                className="agent-tool-call-log-card"
+              >
                 <JsonDisplay content={toolCallLog.requestHeaders} />
               </Card>
-              <Card title="请求体" size="small" style={{marginTop: 16}} className="agent-tool-call-log-card">
+              <Card
+                title="请求体"
+                size="small"
+                style={{ marginTop: 16 }}
+                className="agent-tool-call-log-card"
+              >
                 <JsonDisplay content={toolCallLog.requestBody} />
               </Card>
-              <Card title="响应体" size="small" style={{marginTop: 16}} className="agent-tool-call-log-card">
+              <Card
+                title="响应体"
+                size="small"
+                style={{ marginTop: 16 }}
+                className="agent-tool-call-log-card"
+              >
                 <JsonDisplay content={toolCallLog.responseBody} />
               </Card>
-              <Card title="错误信息" size="small" style={{marginTop: 16}} className="agent-tool-call-log-card">
+              <Card
+                title="错误信息"
+                size="small"
+                style={{ marginTop: 16 }}
+                className="agent-tool-call-log-card"
+              >
                 {toolCallLog.errorMsg ? (
                   <MarkdownText content={toolCallLog.errorMsg} error={true} />
                 ) : (

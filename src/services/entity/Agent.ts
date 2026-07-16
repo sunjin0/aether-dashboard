@@ -65,6 +65,59 @@ export interface AgentDefinitionStatusParams {
   status: number;
 }
 
+/** Agent 专属知识库 */
+export interface KnowledgeBase {
+  id?: string;
+  scope?: 'PLATFORM' | 'AGENT';
+  embeddingProviderId?: string;
+  name?: string;
+  description?: string;
+  indexStatus?: 0 | 1 | 2;
+  status?: 0 | 1;
+  createdAt?: number;
+  updatedAt?: number;
+}
+
+export interface KnowledgeBaseSearchParams extends KnowledgeBase {
+  current?: number;
+  pageSize?: number;
+}
+
+/** 知识库纯文本或 Markdown 文档 */
+export interface Document {
+  id?: string;
+  knowledgeBaseId?: string;
+  title?: string;
+  content?: string;
+  sourceUrl?: string;
+  chunkCount?: number;
+  status?: 0 | 1 | 2;
+  createdAt?: number;
+  updatedAt?: number;
+}
+
+export interface DocumentSearchParams extends Document {
+  current?: number;
+  pageSize?: number;
+}
+
+/** Agent 与知识库的 RAG 使用关系 */
+export interface KnowledgeBaseBinding {
+  id?: string;
+  agentDefinitionId?: string;
+  knowledgeBaseId?: string;
+  knowledgeBaseName?: string;
+  scope?: 'PLATFORM' | 'AGENT';
+  status?: 0 | 1;
+  createdAt?: number;
+  updatedAt?: number;
+}
+
+export interface KnowledgeBaseBindingSearchParams extends KnowledgeBaseBinding {
+  current?: number;
+  pageSize?: number;
+}
+
 /**
  * @description Agent 聊天请求
  */

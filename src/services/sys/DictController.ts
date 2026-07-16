@@ -22,6 +22,19 @@ export const getDictInfo = async (params: DictSearchParams): Promise<ResponseStr
     params:{id:params},
   });
 }
+
+/**
+ * @description 根据父Code和Value获取字典
+ * @since 2025-07-17
+ * @param params 查询参数
+ */
+export const getDictByParentCodeAndValue = async (params: DictSearchParams): Promise<ResponseStructure<Dict[]>> => {
+  return request('/api/sys/code/value', {
+    method: 'POST',
+    data: params,
+  });
+};
+
 /**
  * @description 添加字典
  * @since 2025-07-17

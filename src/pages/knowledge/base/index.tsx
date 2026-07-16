@@ -1,4 +1,3 @@
-import DocumentDrawer from '@/pages/agent/knowledge-base/DocumentDrawer';
 import KnowledgeBaseForm from '@/pages/agent/knowledge-base/KnowledgeBaseForm';
 import { deleteKnowledgeBase, getKnowledgeBaseList } from '@/services/knowledge/KnowledgeBaseController';
 import { KnowledgeBase, KnowledgeBaseSearchParams } from '@/services/entity/Agent';
@@ -13,7 +12,6 @@ const KnowledgeBasePage: React.FC = () => {
   const ref = useRef<ActionType>();
   const [open, setOpen] = useState(false);
   const [id, setId] = useState<string>();
-  const [documentKnowledgeBase, setDocumentKnowledgeBase] = useState<KnowledgeBase>();
   const permissions = useAccess();
   const write = permissions[history.location.pathname];
 
@@ -45,7 +43,13 @@ const KnowledgeBasePage: React.FC = () => {
     {
       title: '操作', valueType: 'option', key: 'option', fixed: 'right', width: 250,
       render: (_: unknown, record: KnowledgeBase) => write && [
-        <Button key="documents" type="link" onClick={() => setDocumentKnowledgeBase(record)}>文档管理</Button>,
+        <Button
+          key="documents"
+          type="link"
+          onClick={() => history.push(`/knowledge/document?knowledgeBaseId=${record.id}&knowledgeBaseName=${encodeURIComponent(record.name || '')}`)}
+        >
+          文档管理
+        </Button>,
         <Button key="edit" type="link" onClick={() => { setId(record.id); setOpen(true); }}>编辑</Button>,
         <Popconfirm
           key="delete"
@@ -90,11 +94,6 @@ const KnowledgeBasePage: React.FC = () => {
         open={open}
         setOpen={setOpen}
         onSuccess={() => { setId(undefined); ref.current?.reload(); }}
-      />
-      <DocumentDrawer
-        knowledgeBase={documentKnowledgeBase}
-        write={Boolean(write)}
-        onClose={() => setDocumentKnowledgeBase(undefined)}
       />
     </PageContainer>
   );

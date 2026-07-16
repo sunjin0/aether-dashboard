@@ -6,13 +6,11 @@ import {
   ProFormTextArea,
 } from '@ant-design/pro-components'
 import {Form} from 'antd'
-import {useEffect, useState} from 'react'
 import {
   addModelProviderInfo,
   getModelProviderInfo,
   updateModelProviderInfo,
 } from '@/services/agent/ModelProviderController'
-import {Option} from '@/services/entity/Common'
 import {getOptionList} from '@/services/sys/DictController'
 
 const ModelProviderForm = (props: {
@@ -23,20 +21,6 @@ const ModelProviderForm = (props: {
 }) => {
   const {id, open, setOpen, onSuccess} = props
   const [form] = Form.useForm()
-  const supplierName = Form.useWatch('name', form)
-  const [modelOptions, setModelOptions] = useState<Option[]>([])
-  const [modelLoading, setModelLoading] = useState(false)
-
-  useEffect(() => {
-    if (supplierName) {
-      setModelLoading(true)
-      getOptionList(`Model_Provider_Name_${supplierName}`)
-        .then(setModelOptions)
-        .finally(() => setModelLoading(false))
-    } else {
-      setModelOptions([])
-    }
-  }, [supplierName])
 
   return (
     <DrawerForm
@@ -65,17 +49,10 @@ const ModelProviderForm = (props: {
       form={form}
     >
       <ProFormText name="id" hidden={true} />
-      <ProFormSelect
+      <ProFormText
         name="name"
         label="供应商名称"
-        request={async () => getOptionList('Model_Provider_Name')}
-        rules={[{required: true}]}
-        fieldProps={{
-          onChange: () => {
-            form.setFieldsValue({defaultModel: undefined})
-          },
-        }}
-      />
+        rules={[{required: true}]}/>
       <ProFormSelect
         name="type"
         label="供应商类型"
@@ -95,17 +72,10 @@ const ModelProviderForm = (props: {
         fieldProps={{autoComplete: 'new-password'}}
         extra={id ? '留空表示不修改原 API Key' : undefined}
       />
-      <ProFormSelect
+      <ProFormText
         name="defaultModel"
         label="默认模型"
-        options={modelOptions}
-        rules={[{required: true}]}
-        fieldProps={{
-          disabled: !supplierName,
-          loading: modelLoading,
-          placeholder: supplierName ? '请选择模型' : '请先选择供应商名称',
-        }}
-      />
+        rules={[{required: true}]}/>
       <ProFormSelect
         name="status"
         label="状态"

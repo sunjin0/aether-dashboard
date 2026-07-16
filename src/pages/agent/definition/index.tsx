@@ -5,6 +5,7 @@ import {Button, message, Popconfirm, Modal} from 'antd';
 import {FormattedMessage, history, useAccess} from '@@/exports';
 import AgentDefinitionForm from '@/pages/agent/definition/AgentDefinitionForm';
 import AgentToolBinding from '@/pages/agent/definition/AgentToolBinding';
+import AgentKnowledgeBaseBinding from '@/pages/agent/definition/AgentKnowledgeBaseBinding';
 import {
   copyAgentDefinitionInfo,
   deleteAgentDefinitionInfo,
@@ -26,6 +27,7 @@ const AgentDefinitionPage: React.FC = () => {
   // 工具绑定相关状态
   const [toolBindingVisible, setToolBindingVisible] = useState(false);
   const [currentAgentId, setCurrentAgentId] = useState<string>('');
+  const [knowledgeBaseBindingVisible, setKnowledgeBaseBindingVisible] = useState(false);
 
   const handleDelete = async (record: AgentDefinition) => {
     if (!record.id) {
@@ -173,6 +175,16 @@ const AgentDefinitionPage: React.FC = () => {
           >
             绑定工具
           </Button>,
+          <Button
+            type="link"
+            key="knowledge-base"
+            onClick={() => {
+              setCurrentAgentId(record.id || '');
+              setKnowledgeBaseBindingVisible(true);
+            }}
+          >
+            知识库
+          </Button>,
           <Popconfirm
             key="copy"
             title="确认复制该 Agent？"
@@ -252,6 +264,23 @@ const AgentDefinitionPage: React.FC = () => {
           agentId={currentAgentId}
           open={toolBindingVisible}
           setOpen={setToolBindingVisible}
+        />
+      </Modal>
+      <Modal
+        title="知识库绑定管理"
+        open={knowledgeBaseBindingVisible}
+        onCancel={() => {
+          setKnowledgeBaseBindingVisible(false);
+          setCurrentAgentId('');
+        }}
+        footer={null}
+        width={900}
+        destroyOnClose
+      >
+        <AgentKnowledgeBaseBinding
+          agentId={currentAgentId}
+          open={knowledgeBaseBindingVisible}
+          setOpen={setKnowledgeBaseBindingVisible}
         />
       </Modal>
     </PageContainer>

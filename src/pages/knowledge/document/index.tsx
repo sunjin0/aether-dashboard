@@ -1,24 +1,23 @@
 import DocumentForm from '@/pages/agent/knowledge-base/DocumentForm';
+import { getDocumentStatus } from '@/pages/agent/knowledge-base/status';
 import { deleteDocument, getDocumentList, reindexDocument } from '@/services/knowledge/DocumentController';
-import { Document, DocumentSearchParams, KnowledgeBase } from '@/services/entity/Agent';
+import { Document, DocumentSearchParams } from '@/services/entity/Agent';
 import { PlusOutlined } from '@ant-design/icons';
-import { ActionType, ProTable } from '@ant-design/pro-components';
-import { Button, Drawer, message, Popconfirm, Tag } from 'antd';
+import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components';
+import { history, useAccess, useLocation } from '@@/exports';
+import { Alert, Button, message, Popconfirm, Tag } from 'antd';
 import React, { useRef, useState } from 'react';
-import { getDocumentStatus } from './status';
+import { getKnowledgeBaseContext } from './query';
 
-interface DocumentDrawerProps {
-  knowledgeBase?: KnowledgeBase;
-  write: boolean;
-  onClose: () => void;
-}
-
-const DocumentDrawer: React.FC<DocumentDrawerProps> = ({ knowledgeBase, write, onClose }) => {
+const KnowledgeDocumentPage: React.FC = () => {
   const ref = useRef<ActionType>();
   const [formOpen, setFormOpen] = useState(false);
   const [documentId, setDocumentId] = useState<string>();
   const [reindexingId, setReindexingId] = useState<string>();
-  const knowledgeBaseId = knowledgeBase?.id || '';
+  const permissions = useAccess();
+  const location = useLocation();
+  const write = permissions[history.location.pathname];
+  const knowledgeBase = getKnowledgeBaseContext(location.search);
 
   const reindex = async (record: Document) => {
     if (!record.id) return;
@@ -38,9 +37,7 @@ const DocumentDrawer: React.FC<DocumentDrawerProps> = ({ knowledgeBase, write, o
     { title: '标题', dataIndex: 'title', ellipsis: true },
     { title: '分块数', dataIndex: 'chunkCount', valueType: 'digit', hideInSearch: true },
     {
-      title: '处理状态',
-      dataIndex: 'status',
-      valueType: 'select',
+      title: '处理状态', dataIndex: 'status', valueType: 'select',
       valueEnum: { 0: { text: '未处理' }, 1: { text: '处理中' }, 2: { text: '已完成' } },
       render: (_: unknown, record: Document) => {
         const item = getDocumentStatus(record.status);
@@ -73,39 +70,36 @@ const DocumentDrawer: React.FC<DocumentDrawerProps> = ({ knowledgeBase, write, o
   ];
 
   return (
-    <Drawer
-      title={`${knowledgeBase?.name || ''} - 文档管理`}
-      open={Boolean(knowledgeBase)}
-      onClose={onClose}
-      width="85%"
-      destroyOnClose
+    <PageContainer
+      title={knowledgeBase.id ? `${knowledgeBase.name || knowledgeBase.id} - 文档管理` : '知识库文档'}
+      extra={<Button onClick={() => history.push('/knowledge/base')}>返回知识库管理</Button>}
     >
-      <ProTable<Document>
-        actionRef={ref}
-        rowKey="id"
-        columns={columns}
-        request={(params: DocumentSearchParams) => getDocumentList({ ...params, knowledgeBaseId })}
-        toolBarRender={() =>
-          write
-            ? [
-                <Button key="new" icon={<PlusOutlined />} type="primary" onClick={() => { setDocumentId(undefined); setFormOpen(true); }}>
-                  新增文档
-                </Button>,
-              ]
-            : []
-        }
-      />
-      {knowledgeBaseId && (
+      {knowledgeBase.id ? (
+        <ProTable<Document>
+          actionRef={ref}
+          rowKey="id"
+          columns={columns}
+          request={(params: DocumentSearchParams) => getDocumentList({ ...params, knowledgeBaseId: knowledgeBase.id })}
+          toolBarRender={() => write ? [
+            <Button key="new" icon={<PlusOutlined />} type="primary" onClick={() => { setDocumentId(undefined); setFormOpen(true); }}>
+              新增文档
+            </Button>,
+          ] : []}
+        />
+      ) : (
+        <Alert showIcon type="warning" message="请从知识库管理页面选择一个知识库后进入文档管理。" />
+      )}
+      {knowledgeBase.id && (
         <DocumentForm
           id={documentId}
-          knowledgeBaseId={knowledgeBaseId}
+          knowledgeBaseId={knowledgeBase.id}
           open={formOpen}
           setOpen={setFormOpen}
           onSuccess={() => { setDocumentId(undefined); ref.current?.reload(); }}
         />
       )}
-    </Drawer>
+    </PageContainer>
   );
 };
 
-export default DocumentDrawer;
+export default KnowledgeDocumentPage;

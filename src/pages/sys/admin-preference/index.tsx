@@ -1,36 +1,43 @@
-import PreferenceForm from '@/pages/sys/admin-preference/PreferenceForm';
+import PreferenceForm from '@/pages/sys/admin-preference/PreferenceForm'
 import {
   AdminPreference,
   AdminPreferenceSearchParams,
   deleteAdminPreference,
   getAdminPreferenceList,
   updateAdminPreferenceStatus,
-} from '@/services/sys/AdminPreferenceController';
-import { PlusOutlined } from '@ant-design/icons';
-import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components';
-import { history, useAccess } from '@@/exports';
-import { Alert, Button, message, Popconfirm, Tag } from 'antd';
-import React, { useRef, useState } from 'react';
-import { getSwitchStatus } from '@/pages/agent/knowledge-base/status';
+} from '@/services/sys/AdminPreferenceController'
+import { PlusOutlined } from '@ant-design/icons'
+import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
+import { history, useAccess } from '@@/exports'
+import { Alert, Button, message, Popconfirm, Tag } from 'antd'
+import React, { useRef, useState } from 'react'
+import { getSwitchStatus } from '@/pages/agent/knowledge-base/status'
+import { getOptionList } from '@/services/sys/DictController'
 
 const PreferencePage: React.FC = () => {
-  const ref = useRef<ActionType>();
-  const [open, setOpen] = useState(false);
-  const [id, setId] = useState<string>();
-  const permissions = useAccess();
-  const write = permissions[history.location.pathname];
+  const ref = useRef<ActionType>()
+  const [open, setOpen] = useState(false)
+  const [id, setId] = useState<string>()
+  const permissions = useAccess()
+  const write = permissions[history.location.pathname]
 
   const updateStatus = async (record: AdminPreference) => {
-    if (!record.id) return;
-    const response = await updateAdminPreferenceStatus(record.id, { status: record.status === 1 ? 0 : 1 });
+    if (!record.id) return
+    const response = await updateAdminPreferenceStatus(record.id, { status: record.status === 1 ? 0 : 1 })
     if (response.code === 200) {
-      message.success(response.message || '操作成功');
-      ref.current?.reload();
-    } else message.error(response.message || '操作失败');
-  };
+      message.success(response.message || '操作成功')
+      ref.current?.reload()
+    } else message.error(response.message || '操作失败')
+  }
 
   const columns: any[] = [
-    { title: '分类', dataIndex: 'category', ellipsis: true },
+    {
+      title: '分类',
+      dataIndex: 'category',
+      valueType: 'select',
+      request: async () => getOptionList('Admin_Preference_Category'),
+      ellipsis: true,
+    },
     { title: '偏好内容', dataIndex: 'content', ellipsis: true },
     {
       title: '置信度',
@@ -47,8 +54,8 @@ const PreferencePage: React.FC = () => {
       valueType: 'select',
       valueEnum: { 0: { text: '禁用' }, 1: { text: '启用' } },
       render: (_: unknown, record: AdminPreference) => {
-        const item = getSwitchStatus(record.status);
-        return <Tag color={item.color}>{item.label}</Tag>;
+        const item = getSwitchStatus(record.status)
+        return <Tag color={item.color}>{item.label}</Tag>
       },
     },
     { title: '更新时间', dataIndex: 'updatedAt', valueType: 'dateTime', hideInSearch: true },
@@ -58,9 +65,16 @@ const PreferencePage: React.FC = () => {
       key: 'option',
       fixed: 'right',
       width: 220,
-      render: (_: unknown, record: UserPreference) =>
+      render: (_: unknown, record: AdminPreference) =>
         write && [
-          <Button key="edit" type="link" onClick={() => { setId(record.id); setOpen(true); }}>
+          <Button
+            key="edit"
+            type="link"
+            onClick={() => {
+              setId(record.id)
+              setOpen(true)
+            }}
+          >
             编辑
           </Button>,
           <Popconfirm
@@ -74,19 +88,21 @@ const PreferencePage: React.FC = () => {
             key="delete"
             title="确认删除该偏好？"
             onConfirm={async () => {
-              if (!record.id) return;
-              const response = await deleteAdminPreference(record.id);
+              if (!record.id) return
+              const response = await deleteAdminPreference(record.id)
               if (response.code === 200) {
-                message.success(response.message || '删除成功');
-                ref.current?.reload();
-              } else message.error(response.message || '删除失败');
+                message.success(response.message || '删除成功')
+                ref.current?.reload()
+              } else message.error(response.message || '删除失败')
             }}
           >
-            <Button type="link" danger>删除</Button>
+            <Button type="link" danger>
+              删除
+            </Button>
           </Popconfirm>,
         ],
     },
-  ];
+  ]
 
   return (
     <PageContainer>
@@ -103,7 +119,7 @@ const PreferencePage: React.FC = () => {
         request={(params: AdminPreferenceSearchParams) => getAdminPreferenceList(params)}
         toolBarRender={() =>
           write && [
-            <Button key="new" icon={<PlusOutlined />} type="primary" onClick={() => { setId(undefined); setOpen(true); }}>
+            <Button key="new" icon={<PlusOutlined />} type="primary" onClick={() => { setId(undefined); setOpen(true) }}>
               新增偏好
             </Button>,
           ]
@@ -113,10 +129,10 @@ const PreferencePage: React.FC = () => {
         id={id}
         open={open}
         setOpen={setOpen}
-        onSuccess={() => { setId(undefined); ref.current?.reload(); }}
+        onSuccess={() => { setId(undefined); ref.current?.reload() }}
       />
     </PageContainer>
-  );
-};
+  )
+}
 
-export default PreferencePage;
+export default PreferencePage

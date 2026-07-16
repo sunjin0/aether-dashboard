@@ -76,3 +76,9 @@ export const updateModelProviderStatus = async (
     data: params,
   });
 };
+
+/** 获取可用于 Embedding 的已启用模型供应商 */
+export const getEmbeddingProviderOptions = async () =>
+  request('/api/agent/model-provider/embedding-options', {
+    method: 'GET',
+  });

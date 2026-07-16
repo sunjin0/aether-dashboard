@@ -1,32 +1,34 @@
-import {AvatarDropdown, AvatarName, Footer, SelectLang} from '@/components';
+import {AvatarDropdown, AvatarName, Footer, SelectLang} from '@/components'
 import {
   DashboardOutlined,
+  DatabaseOutlined,
   LinkOutlined,
   MessageOutlined,
   OpenAIOutlined,
   SettingOutlined,
   UserOutlined,
-} from '@ant-design/icons';
-import type {Settings as LayoutSettings} from '@ant-design/pro-components';
-import {SettingDrawer} from '@ant-design/pro-components';
-import {RunTimeLayoutConfig} from '@umijs/max';
-import {history, Link} from '@umijs/max';
-import React from 'react';
-import {AliveScope} from 'react-activation';
-import defaultSettings from '../config/defaultSettings';
-import RouteTabs, {setRouteMenus} from './components/RouteTabs';
-import {errorConfig} from './requestErrorConfig';
-import {getRoutes, info} from "@/services/sys/LoginController";
+} from '@ant-design/icons'
+import type {Settings as LayoutSettings} from '@ant-design/pro-components'
+import {SettingDrawer} from '@ant-design/pro-components'
+import {RunTimeLayoutConfig} from '@umijs/max'
+import {history, Link} from '@umijs/max'
+import React from 'react'
+import {AliveScope} from 'react-activation'
+import defaultSettings from '../config/defaultSettings'
+import RouteTabs, {setRouteMenus} from './components/RouteTabs'
+import {errorConfig} from './requestErrorConfig'
+import {getRoutes, info} from '@/services/sys/LoginController'
 
-const isDev = process.env.NODE_ENV === 'development';
-const loginPath = '/login';
+const isDev = process.env.NODE_ENV === 'development'
+const loginPath = '/login'
 const iconMap: Record<string, React.ReactNode> = {
   'SettingOutlined': <SettingOutlined/>,
   'UserOutlined': <UserOutlined/>,
   'DashboardOutlined': <DashboardOutlined/>,
   'MessageOutlined': <MessageOutlined/>,
   'OpenAIOutlined': <OpenAIOutlined/>,
-};
+  'DatabaseOutlined': <DatabaseOutlined/>,
+}
 
 /**
  * @see  https://umijs.org/zh-CN/plugins/plugin-initial-state
@@ -39,27 +41,27 @@ export async function getInitialState(): Promise<{
 }> {
   const fetchUserInfo = async () => {
     try {
-      let {data} = await info();
+      const {data} = await info()
       return data
     } catch (error) {
-      history.push(loginPath);
+      history.push(loginPath)
     }
-    return undefined;
-  };
+    return undefined
+  }
   // 如果不是登录页面，执行
-  const {location} = history;
+  const {location} = history
   if (location.pathname !== loginPath) {
-    const currentUser = await fetchUserInfo();
+    const currentUser = await fetchUserInfo()
     return {
       fetchUserInfo,
       currentUser,
       settings: defaultSettings as Partial<LayoutSettings>,
-    };
+    }
   }
   return {
     fetchUserInfo,
     settings: defaultSettings as Partial<LayoutSettings>,
-  };
+  }
 }
 
 // ProLayout 支持的api https://procomponents.ant.design/components/layout
@@ -70,7 +72,7 @@ export const layout: RunTimeLayoutConfig = ({initialState, setInitialState}) => 
       src: initialState?.currentUser?.avatar,
       title: <AvatarName/>,
       render: (_, avatarChildren) => {
-        return <AvatarDropdown>{avatarChildren}</AvatarDropdown>;
+        return <AvatarDropdown>{avatarChildren}</AvatarDropdown>
       },
     },
     waterMarkProps: {
@@ -84,18 +86,18 @@ export const layout: RunTimeLayoutConfig = ({initialState, setInitialState}) => 
       },
       request: async () => {
         if (!initialState?.currentUser) {
-          return [];
+          return []
         }
 
         try {
-          const {data} = await getRoutes();
-          const menuData = Array.isArray(data) ? data : [];
-          setRouteMenus(menuData);
+          const {data} = await getRoutes()
+          const menuData = Array.isArray(data) ? data : []
+          setRouteMenus(menuData)
           menuData.forEach((item: any) => {
             item.icon = iconMap[item.icon]
           })
           // path为空key，value是{write：boolean,read:boolean}
-          let routes = new Array<object>();
+          const routes = new Array<object>()
           menuData.forEach((item: any) => {
             if (item.children) {
               item.children.forEach((child: any) => {
@@ -105,17 +107,17 @@ export const layout: RunTimeLayoutConfig = ({initialState, setInitialState}) => 
           })
           return menuData
         } catch {
-          return [];
+          return []
         }
       },
       defaultOpenAll: false,
 
     },
     onPageChange: () => {
-      const {location} = history;
+      const {location} = history
       // 如果没有登录，重定向到 login
       if (!initialState?.currentUser && location.pathname !== loginPath) {
-        history.push(loginPath);
+        history.push(loginPath)
       }
     },
     bgLayoutImgList: [
@@ -167,16 +169,16 @@ export const layout: RunTimeLayoutConfig = ({initialState, setInitialState}) => 
                   ...preInitialState,
                   settings,
                   routes: []
-                }));
+                }))
               }}
             />
           )}
         </AliveScope>
-      );
+      )
     },
     ...initialState?.settings,
-  };
-};
+  }
+}
 
 /**
  * @name request 配置，可以配置错误处理
@@ -185,4 +187,4 @@ export const layout: RunTimeLayoutConfig = ({initialState, setInitialState}) => 
  */
 export const request = {
   ...errorConfig,
-};
+}

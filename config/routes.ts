@@ -56,6 +56,11 @@ export default [
         name: '字典管理',
         component: './sys/dict',
       },
+      {
+        path: '/sys/admin/preference',
+        name: '偏好管理',
+        component: './sys/admin-preference',
+      },
     ],
   },
   {
@@ -102,6 +107,23 @@ export default [
         path: '/agent/tool-call-log',
         name: '工具调用日志',
         component: './agent/tool-call-log',
+      },
+    ],
+  },
+  {
+    path: '/knowledge',
+    name: '知识库管理',
+    icon: 'database',
+    routes: [
+      {
+        path: '/knowledge/base',
+        name: '知识库管理',
+        component: './knowledge/base',
+      },
+      {
+        path: '/knowledge/document',
+        name: '知识库文档',
+        component: './knowledge/document',
       },
     ],
   },

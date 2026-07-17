@@ -1,7 +1,7 @@
-import { PageContainer } from '@ant-design/pro-components';
-import { useModel } from '@umijs/max';
-import { Card, theme } from 'antd';
-import React from 'react';
+import { PageContainer } from '@ant-design/pro-components'
+import { useModel } from '@umijs/max'
+import { Card, theme } from 'antd'
+import React from 'react'
 
 /**
  * 每个单独的卡片，为了复用样式抽成了组件
@@ -14,9 +14,9 @@ const InfoCard: React.FC<{
   desc: string;
   href: string;
 }> = ({ title, href, index, desc }) => {
-  const { useToken } = theme;
+  const { useToken } = theme
 
-  const { token } = useToken();
+  const { token } = useToken()
 
   return (
     <div
@@ -80,12 +80,12 @@ const InfoCard: React.FC<{
         了解更多 {'>'}
       </a>
     </div>
-  );
-};
+  )
+}
 
 const Dashboard: React.FC = () => {
-  const { token } = theme.useToken();
-  const { initialState } = useModel('@@initialState');
+  const { token } = theme.useToken()
+  const { initialState } = useModel('@@initialState')
   return (
     <PageContainer>
       <Card
@@ -160,7 +160,7 @@ const Dashboard: React.FC = () => {
         </div>
       </Card>
     </PageContainer>
-  );
-};
+  )
+}
 
-export default Dashboard;
+export default Dashboard

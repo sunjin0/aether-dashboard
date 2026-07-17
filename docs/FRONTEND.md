@@ -1,8 +1,6 @@
 # Agent 平台前端开发文档（V0.2-V0.3）
 
-> 版本：V0.3 后端实现基线
-> 状态：前端开发参考
-> 范围：基于 V0.2 数据管理 CRUD 和 V0.3 非流式聊天闭环，指导前端页面、接口、字段、权限和交互开发
+> 版本：V0.3 后端实现基线状态：前端开发参考范围：基于 V0.2 数据管理 CRUD 和 V0.3 非流式聊天闭环，指导前端页面、接口、字段、权限和交互开发
 
 ---
 
@@ -65,9 +63,7 @@ Authorization: Bearer <token>
 {
   "code": 200,
   "message": "success",
-  "data": [
-    {}
-  ],
+  "data": [{}],
   "total": 100
 }
 ```
@@ -95,16 +91,16 @@ current=1&pageSize=20
 
 前端应按 `code` 做统一处理：
 
-| code | 含义 | 前端处理 |
-|------|------|----------|
-| 200 | 成功 | 展示数据或成功提示 |
-| 400 | 参数错误 | 表单校验提示 |
-| 401 | 未授权 | 跳转登录或刷新 Token |
-| 403 | 无权限 | 展示无权限提示 |
-| 404 | 资源不存在 | 展示空态或返回列表 |
-| 422 | 业务校验失败 | 展示后端 message |
-| 500 | 系统错误 | 展示错误提示 |
-| 503 | 服务不可用 | 展示模型/供应商不可用提示 |
+| code | 含义         | 前端处理                  |
+| ---- | ------------ | ------------------------- |
+| 200  | 成功         | 展示数据或成功提示        |
+| 400  | 参数错误     | 表单校验提示              |
+| 401  | 未授权       | 跳转登录或刷新 Token      |
+| 403  | 无权限       | 展示无权限提示            |
+| 404  | 资源不存在   | 展示空态或返回列表        |
+| 422  | 业务校验失败 | 展示后端 message          |
+| 500  | 系统错误     | 展示错误提示              |
+| 503  | 服务不可用   | 展示模型/供应商不可用提示 |
 
 ---
 
@@ -115,7 +111,7 @@ current=1&pageSize=20
 二级菜单：
 
 | 页面 | 路由建议 | 后端权限路径 | 说明 |
-|------|----------|--------------|------|
+| --- | --- | --- | --- |
 | 模型供应商 | `/agent/model-provider` | `/agent/model-provider` | 管理 OpenAI、本地模型等供应商配置 |
 | Agent 定义 | `/agent/definition` | `/agent/definition` | 管理 Agent 基础配置、模型和工具绑定 |
 | 工具管理 | `/agent/tool` | `/agent/tool` | 管理 HTTP 工具配置，真实执行 V0.5 实现 |
@@ -133,7 +129,7 @@ current=1&pageSize=20
 ### 4.1 字段
 
 | 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
+| --- | --- | --- | --- |
 | id | string | 否 | 后端生成 |
 | name | string | 是 | 供应商名称 |
 | type | string | 是 | `openai`、`local`，`azure`/`anthropic` 目前未实现客户端 |
@@ -148,15 +144,15 @@ current=1&pageSize=20
 
 注意：当前后端实际列表接口是 `POST /list`，不是 API 草案中的 GET。
 
-| 功能 | 方法 | 路径 | 请求 |
-|------|------|------|------|
-| 列表 | POST | `/api/agent/model-provider/list` | `ModelProviderVo` + 分页字段 |
-| 详情 | GET | `/api/agent/model-provider/{id}` | path id |
-| 新增 | POST | `/api/agent/model-provider` | `ModelProviderDto` |
-| 编辑 | PUT | `/api/agent/model-provider/{id}` | `ModelProviderDto` |
-| 删除 | DELETE | `/api/agent/model-provider/{id}` | path id |
-| 启用/禁用 | PUT | `/api/agent/model-provider/{id}/status` | `{ "status": 1 }` |
-| 测试连接 | POST | `/api/agent/model-provider/{id}/test` | 当前返回 `true` 占位 |
+| 功能      | 方法   | 路径                                    | 请求                         |
+| --------- | ------ | --------------------------------------- | ---------------------------- |
+| 列表      | POST   | `/api/agent/model-provider/list`        | `ModelProviderVo` + 分页字段 |
+| 详情      | GET    | `/api/agent/model-provider/{id}`        | path id                      |
+| 新增      | POST   | `/api/agent/model-provider`             | `ModelProviderDto`           |
+| 编辑      | PUT    | `/api/agent/model-provider/{id}`        | `ModelProviderDto`           |
+| 删除      | DELETE | `/api/agent/model-provider/{id}`        | path id                      |
+| 启用/禁用 | PUT    | `/api/agent/model-provider/{id}/status` | `{ "status": 1 }`            |
+| 测试连接  | POST   | `/api/agent/model-provider/{id}/test`   | 当前返回 `true` 占位         |
 
 ### 4.3 前端交互要求
 
@@ -171,33 +167,33 @@ current=1&pageSize=20
 
 ### 5.1 字段
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| id | string | 否 | 后端生成 |
-| name | string | 是 | Agent 名称 |
-| code | string | 是 | Agent 编码，未删除数据内唯一 |
-| description | string | 否 | 描述 |
-| systemPrompt | string | 否 | 系统提示词 |
-| modelProviderId | string | 是 | 选择模型供应商 |
-| model | string | 是 | 模型名称，如 `gpt-4o-mini` |
-| temperature | number | 否 | 温度参数，建议范围 0-2 |
-| maxTokens | number | 否 | 最大输出 token |
-| status | number | 是 | `0` 草稿，`1` 启用，`2` 禁用 |
-| maxToolRounds | number | 否 | V0.6 预留，默认 1 |
-| accessType | string | 否 | V1.0 预留，`private`/`public` |
-| toolIds | string[] | 否 | 新增/编辑时绑定工具 |
+| 字段            | 类型     | 必填 | 说明                          |
+| --------------- | -------- | ---- | ----------------------------- |
+| id              | string   | 否   | 后端生成                      |
+| name            | string   | 是   | Agent 名称                    |
+| code            | string   | 是   | Agent 编码，未删除数据内唯一  |
+| description     | string   | 否   | 描述                          |
+| systemPrompt    | string   | 否   | 系统提示词                    |
+| modelProviderId | string   | 是   | 选择模型供应商                |
+| model           | string   | 是   | 模型名称，如 `gpt-4o-mini`    |
+| temperature     | number   | 否   | 温度参数，建议范围 0-2        |
+| maxTokens       | number   | 否   | 最大输出 token                |
+| status          | number   | 是   | `0` 草稿，`1` 启用，`2` 禁用  |
+| maxToolRounds   | number   | 否   | V0.6 预留，默认 1             |
+| accessType      | string   | 否   | V1.0 预留，`private`/`public` |
+| toolIds         | string[] | 否   | 新增/编辑时绑定工具           |
 
 ### 5.2 接口
 
-| 功能 | 方法 | 路径 | 请求 |
-|------|------|------|------|
-| 列表 | POST | `/api/agent/definition/list` | `AgentDefinitionVo` + 分页字段 |
-| 详情 | GET | `/api/agent/definition/{id}` | path id |
-| 新增 | POST | `/api/agent/definition` | `AgentDefinitionDto` |
-| 编辑 | PUT | `/api/agent/definition/{id}` | `AgentDefinitionDto` |
-| 删除 | DELETE | `/api/agent/definition/{id}` | path id |
-| 启用/禁用 | PUT | `/api/agent/definition/{id}/status` | `{ "status": 1 }` |
-| 复制 | POST | `/api/agent/definition/{id}/copy` | path id |
+| 功能      | 方法   | 路径                                | 请求                           |
+| --------- | ------ | ----------------------------------- | ------------------------------ |
+| 列表      | POST   | `/api/agent/definition/list`        | `AgentDefinitionVo` + 分页字段 |
+| 详情      | GET    | `/api/agent/definition/{id}`        | path id                        |
+| 新增      | POST   | `/api/agent/definition`             | `AgentDefinitionDto`           |
+| 编辑      | PUT    | `/api/agent/definition/{id}`        | `AgentDefinitionDto`           |
+| 删除      | DELETE | `/api/agent/definition/{id}`        | path id                        |
+| 启用/禁用 | PUT    | `/api/agent/definition/{id}/status` | `{ "status": 1 }`              |
+| 复制      | POST   | `/api/agent/definition/{id}/copy`   | path id                        |
 
 ### 5.3 前端交互要求
 
@@ -212,36 +208,36 @@ current=1&pageSize=20
 
 ### 6.1 工具字段
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| name | string | 是 | 工具名称 |
-| code | string | 是 | 工具编码 |
-| description | string | 否 | 描述 |
-| type | string | 是 | 当前仅 `http` |
-| httpMethod | string | 否 | `GET` 或 `POST` |
-| httpUrl | string | 否 | HTTP 请求地址 |
-| httpHeaders | string | 否 | JSON 字符串模板 |
-| httpBodyTemplate | string | 否 | 请求体模板 |
-| responseExtractRule | string | 否 | 响应提取规则，V0.5 实现 |
-| timeoutMs | number | 否 | 超时时间 |
-| cacheTtlSeconds | number | 否 | V0.6 预留，默认 0 |
-| status | number | 是 | `0` 禁用，`1` 启用 |
+| 字段                | 类型   | 必填 | 说明                    |
+| ------------------- | ------ | ---- | ----------------------- |
+| name                | string | 是   | 工具名称                |
+| code                | string | 是   | 工具编码                |
+| description         | string | 否   | 描述                    |
+| type                | string | 是   | 当前仅 `http`           |
+| httpMethod          | string | 否   | `GET` 或 `POST`         |
+| httpUrl             | string | 否   | HTTP 请求地址           |
+| httpHeaders         | string | 否   | JSON 字符串模板         |
+| httpBodyTemplate    | string | 否   | 请求体模板              |
+| responseExtractRule | string | 否   | 响应提取规则，V0.5 实现 |
+| timeoutMs           | number | 否   | 超时时间                |
+| cacheTtlSeconds     | number | 否   | V0.6 预留，默认 0       |
+| status              | number | 是   | `0` 禁用，`1` 启用      |
 
 ### 6.2 工具接口
 
-| 功能 | 方法 | 路径 | 请求 |
-|------|------|------|------|
-| 列表 | POST | `/api/agent/tool/list` | `AgentToolVo` + 分页字段 |
-| 详情 | GET | `/api/agent/tool/{id}` | path id |
-| 新增 | POST | `/api/agent/tool` | `AgentToolDto` |
-| 编辑 | PUT | `/api/agent/tool/{id}` | `AgentToolDto` |
-| 删除 | DELETE | `/api/agent/tool/{id}` | path id |
-| 测试工具 | POST | `/api/agent/tool/{id}/test` | body 字符串，当前返回“工具测试待实现” |
+| 功能     | 方法   | 路径                        | 请求                                  |
+| -------- | ------ | --------------------------- | ------------------------------------- |
+| 列表     | POST   | `/api/agent/tool/list`      | `AgentToolVo` + 分页字段              |
+| 详情     | GET    | `/api/agent/tool/{id}`      | path id                               |
+| 新增     | POST   | `/api/agent/tool`           | `AgentToolDto`                        |
+| 编辑     | PUT    | `/api/agent/tool/{id}`      | `AgentToolDto`                        |
+| 删除     | DELETE | `/api/agent/tool/{id}`      | path id                               |
+| 测试工具 | POST   | `/api/agent/tool/{id}/test` | body 字符串，当前返回“工具测试待实现” |
 
 ### 6.3 工具绑定接口
 
 | 功能 | 方法 | 路径 | 请求 |
-|------|------|------|------|
+| --- | --- | --- | --- |
 | 查询绑定 | GET | `/api/agent/definition/{agentId}/tools` | path agentId |
 | 绑定工具 | POST | `/api/agent/definition/{agentId}/tools` | `{ "toolId": "...", "priority": 0, "status": 1 }` |
 | 解绑工具 | DELETE | `/api/agent/definition/{agentId}/tools/{toolId}` | path agentId/toolId |
@@ -327,21 +323,21 @@ GET /api/agent/conversation/{id}/messages?current=1&pageSize=20
 
 ### 8.1 状态枚举
 
-| status | 含义 |
-|--------|------|
-| 0 | 进行中 |
-| 1 | 关闭 |
-| 2 | 归档 |
+| status | 含义   |
+| ------ | ------ |
+| 0      | 进行中 |
+| 1      | 关闭   |
+| 2      | 归档   |
 
 ### 8.2 接口
 
-| 功能 | 方法 | 路径 | 请求 |
-|------|------|------|------|
-| 列表 | POST | `/api/agent/conversation/list` | `AgentConversationVo` + 分页字段 |
-| 详情 | GET | `/api/agent/conversation/{id}` | path id |
-| 消息 | GET | `/api/agent/conversation/{id}/messages` | query `current`, `pageSize` |
-| 关闭 | PUT | `/api/agent/conversation/{id}/close` | path id |
-| 删除 | DELETE | `/api/agent/conversation/{id}` | path id |
+| 功能 | 方法   | 路径                                    | 请求                             |
+| ---- | ------ | --------------------------------------- | -------------------------------- |
+| 列表 | POST   | `/api/agent/conversation/list`          | `AgentConversationVo` + 分页字段 |
+| 详情 | GET    | `/api/agent/conversation/{id}`          | path id                          |
+| 消息 | GET    | `/api/agent/conversation/{id}/messages` | query `current`, `pageSize`      |
+| 关闭 | PUT    | `/api/agent/conversation/{id}/close`    | path id                          |
+| 删除 | DELETE | `/api/agent/conversation/{id}`          | path id                          |
 
 ### 8.3 注意事项
 
@@ -355,28 +351,28 @@ GET /api/agent/conversation/{id}/messages?current=1&pageSize=20
 
 ### 9.1 运行记录
 
-| 功能 | 方法 | 路径 | 请求 |
-|------|------|------|------|
-| 列表 | POST | `/api/agent/run/list` | `AgentRunVo` + 分页字段 |
-| 详情 | GET | `/api/agent/run/{id}` | path id |
-| 统计 | GET | `/api/agent/run/statistics` | query `agentId`, `startTime`, `endTime` |
+| 功能 | 方法 | 路径                        | 请求                                    |
+| ---- | ---- | --------------------------- | --------------------------------------- |
+| 列表 | POST | `/api/agent/run/list`       | `AgentRunVo` + 分页字段                 |
+| 详情 | GET  | `/api/agent/run/{id}`       | path id                                 |
+| 统计 | GET  | `/api/agent/run/statistics` | query `agentId`, `startTime`, `endTime` |
 
 运行状态：
 
 | status | 含义 |
-|--------|------|
-| 0 | 成功 |
-| 1 | 失败 |
-| 2 | 超时 |
+| ------ | ---- |
+| 0      | 成功 |
+| 1      | 失败 |
+| 2      | 超时 |
 
 说明：统计接口当前为 V0.6 占位实现，返回零值。前端可以先做页面结构，但不要展示为真实统计。
 
 ### 9.2 工具调用日志
 
-| 功能 | 方法 | 路径 | 请求 |
-|------|------|------|------|
+| 功能 | 方法 | 路径                            | 请求                            |
+| ---- | ---- | ------------------------------- | ------------------------------- |
 | 列表 | POST | `/api/agent/tool-call-log/list` | `AgentToolCallLogVo` + 分页字段 |
-| 详情 | GET | `/api/agent/tool-call-log/{id}` | path id |
+| 详情 | GET  | `/api/agent/tool-call-log/{id}` | path id                         |
 
 工具调用日志在 V0.5 工具调用闭环实现后才会有真实数据。
 

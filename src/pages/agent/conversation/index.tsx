@@ -1,7 +1,20 @@
-import React, {useRef, useState} from 'react';
-import {ActionType, PageContainer, ProDescriptions, ProTable} from '@ant-design/pro-components';
-import {Button, Card, Col, Descriptions, Drawer, Empty, message, Popconfirm, Row, Spin, Statistic, Tag} from 'antd';
-import {history, useAccess} from '@@/exports';
+import React, { useRef, useState } from 'react'
+import { ActionType, PageContainer, ProDescriptions, ProTable } from '@ant-design/pro-components'
+import {
+  Button,
+  Card,
+  Col,
+  Descriptions,
+  Drawer,
+  Empty,
+  message,
+  Popconfirm,
+  Row,
+  Spin,
+  Statistic,
+  Tag,
+} from 'antd'
+import { history, useAccess } from '@@/exports'
 import {
   closeAgentConversation,
   deleteAgentConversation,
@@ -10,161 +23,161 @@ import {
   getAgentConversationMessages,
   getConversationLifecycle,
   getConversationStatistics,
-} from '@/services/agent/ConversationController';
-import {getOptionList} from '@/services/sys/DictController';
+} from '@/services/agent/ConversationController'
+import { getOptionList } from '@/services/sys/DictController'
 import {
   AgentConversation,
   AgentConversationSearchParams,
   AgentMessage,
   ConversationLifecycle,
   MessageStatistics,
-} from '@/services/entity/Agent';
-import AgentMessageBubble from '@/components/AgentMessageBubble';
+} from '@/services/entity/Agent'
+import AgentMessageBubble from '@/components/AgentMessageBubble'
 
 // ProDescriptions 不支持 request，保留用于详情展示
 const statusValueEnum = {
-  0: {text: '进行中', status: 'Processing'},
-  1: {text: '关闭', status: 'Default'},
-  2: {text: '归档', status: 'Warning'},
-};
+  0: { text: '进行中', status: 'Processing' },
+  1: { text: '关闭', status: 'Default' },
+  2: { text: '归档', status: 'Warning' },
+}
 
 const AgentConversationPage: React.FC = () => {
-  const ref = useRef<ActionType>();
-  const permissionMap = useAccess();
-  const path = history.location.pathname;
-  const write = permissionMap[path];
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [currentId, setCurrentId] = useState<string>();
-  const [conversation, setConversation] = useState<AgentConversation>();
-  const [messages, setMessages] = useState<AgentMessage[]>([]);
-  const [lifecycle, setLifecycle] = useState<ConversationLifecycle>();
-  const [statistics, setStatistics] = useState<MessageStatistics>();
-  const [detailLoading, setDetailLoading] = useState(false);
+  const ref = useRef<ActionType>()
+  const permissionMap = useAccess()
+  const path = history.location.pathname
+  const write = permissionMap[path]
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [currentId, setCurrentId] = useState<string>()
+  const [conversation, setConversation] = useState<AgentConversation>()
+  const [messages, setMessages] = useState<AgentMessage[]>([])
+  const [lifecycle, setLifecycle] = useState<ConversationLifecycle>()
+  const [statistics, setStatistics] = useState<MessageStatistics>()
+  const [detailLoading, setDetailLoading] = useState(false)
 
   const loadDetail = async (id: string) => {
-    setDetailLoading(true);
+    setDetailLoading(true)
     try {
       const [detailResult, messageResult, lifecycleResult, statisticsResult] = await Promise.all([
         getAgentConversationInfo(id),
-        getAgentConversationMessages(id, {current: 1, pageSize: 20}),
+        getAgentConversationMessages(id, { current: 1, pageSize: 20 }),
         getConversationLifecycle(id),
         getConversationStatistics(id),
-      ]);
+      ])
 
       if (detailResult.code === 200) {
-        setConversation(detailResult.data);
+        setConversation(detailResult.data)
       } else {
-        setConversation(undefined);
-        message.error(detailResult.message || '加载会话详情失败');
+        setConversation(undefined)
+        message.error(detailResult.message || '加载会话详情失败')
       }
 
       if (messageResult.code === 200) {
-        setMessages(messageResult.data || []);
+        setMessages(messageResult.data || [])
       } else {
-        setMessages([]);
-        message.error(messageResult.message || '加载消息列表失败');
+        setMessages([])
+        message.error(messageResult.message || '加载消息列表失败')
       }
 
       if (lifecycleResult.code === 200) {
-        setLifecycle(lifecycleResult.data);
+        setLifecycle(lifecycleResult.data)
       } else {
-        setLifecycle(undefined);
+        setLifecycle(undefined)
       }
 
       if (statisticsResult.code === 200) {
-        setStatistics(statisticsResult.data);
+        setStatistics(statisticsResult.data)
       } else {
-        setStatistics(undefined);
+        setStatistics(undefined)
       }
     } finally {
-      setDetailLoading(false);
+      setDetailLoading(false)
     }
-  };
+  }
 
   const openDetail = async (record: AgentConversation) => {
     if (!record.id) {
-      message.error('缺少会话 ID');
-      return;
+      message.error('缺少会话 ID')
+      return
     }
-    setCurrentId(record.id);
-    setDrawerOpen(true);
-    await loadDetail(record.id);
-  };
+    setCurrentId(record.id)
+    setDrawerOpen(true)
+    await loadDetail(record.id)
+  }
 
   const handleCloseConversation = async (record: AgentConversation) => {
     if (!record.id) {
-      message.error('缺少会话 ID');
-      return;
+      message.error('缺少会话 ID')
+      return
     }
 
-    const {code, message: msg} = await closeAgentConversation(record.id);
+    const { code, message: msg } = await closeAgentConversation(record.id)
     if (code === 200) {
-      message.success(msg || '关闭成功');
-      ref.current?.reload();
+      message.success(msg || '关闭成功')
+      ref.current?.reload()
       if (record.id === currentId) {
-        await loadDetail(record.id);
+        await loadDetail(record.id)
       }
     } else {
-      message.error(msg || '关闭失败');
+      message.error(msg || '关闭失败')
     }
-  };
+  }
 
   const formatDuration = (ms: number): string => {
-    const minutes = Math.floor(ms / 60000);
-    const seconds = Math.floor((ms % 60000) / 1000);
+    const minutes = Math.floor(ms / 60000)
+    const seconds = Math.floor((ms % 60000) / 1000)
     if (minutes > 0) {
-      return `${minutes} 分钟 ${seconds} 秒`;
+      return `${minutes} 分钟 ${seconds} 秒`
     }
-    return `${seconds} 秒`;
-  };
+    return `${seconds} 秒`
+  }
 
   const formatTimestamp = (timestamp: number): string => {
-    return new Date(timestamp).toLocaleString('zh-CN');
-  };
+    return new Date(timestamp).toLocaleString('zh-CN')
+  }
 
   const formatTokens = (tokens: number): string => {
     if (tokens >= 1000000) {
-      return `${(tokens / 1000000).toFixed(1)}M`;
+      return `${(tokens / 1000000).toFixed(1)}M`
     }
     if (tokens >= 1000) {
-      return `${(tokens / 1000).toFixed(1)}K`;
+      return `${(tokens / 1000).toFixed(1)}K`
     }
-    return tokens.toString();
-  };
+    return tokens.toString()
+  }
 
   const formatLatency = (ms: number): string => {
     if (ms >= 1000) {
-      return `${(ms / 1000).toFixed(1)} 秒`;
+      return `${(ms / 1000).toFixed(1)} 秒`
     }
-    return `${ms} 毫秒`;
-  };
+    return `${ms} 毫秒`
+  }
 
   const lifecycleStatusMap: Record<number, { text: string; color: string }> = {
-    0: {text: '进行中', color: 'processing'},
-    1: {text: '已关闭', color: 'default'},
-    2: {text: '已归档', color: 'warning'},
-  };
+    0: { text: '进行中', color: 'processing' },
+    1: { text: '已关闭', color: 'default' },
+    2: { text: '已归档', color: 'warning' },
+  }
 
   const handleDeleteConversation = async (record: AgentConversation) => {
     if (!record.id) {
-      message.error('缺少会话 ID');
-      return;
+      message.error('缺少会话 ID')
+      return
     }
 
-    const {code, message: msg} = await deleteAgentConversation(record.id);
+    const { code, message: msg } = await deleteAgentConversation(record.id)
     if (code === 200) {
-      message.success(msg || '删除成功');
-      ref.current?.reload();
+      message.success(msg || '删除成功')
+      ref.current?.reload()
       if (record.id === currentId) {
-        setDrawerOpen(false);
-        setCurrentId(undefined);
-        setConversation(undefined);
-        setMessages([]);
+        setDrawerOpen(false)
+        setCurrentId(undefined)
+        setConversation(undefined)
+        setMessages([])
       }
     } else {
-      message.error(msg || '删除失败');
+      message.error(msg || '删除失败')
     }
-  };
+  }
 
   const columns: any[] = [
     {
@@ -232,7 +245,7 @@ const AgentConversationPage: React.FC = () => {
         ) : null,
       ],
     },
-  ];
+  ]
 
   return (
     <PageContainer>
@@ -258,7 +271,12 @@ const AgentConversationPage: React.FC = () => {
                 { title: 'ID', dataIndex: 'id' },
                 { title: '标题', dataIndex: 'title' },
                 { title: 'Agent ID', dataIndex: 'agentDefinitionId' },
-                { title: '状态', key: 'con-status', dataIndex: 'status', valueEnum: statusValueEnum },
+                {
+                  title: '状态',
+                  key: 'con-status',
+                  dataIndex: 'status',
+                  valueEnum: statusValueEnum,
+                },
                 { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime' },
                 { title: '更新时间', dataIndex: 'updatedAt', valueType: 'dateTime' },
               ]}
@@ -312,10 +330,16 @@ const AgentConversationPage: React.FC = () => {
               </Row>
               <Row gutter={[24, 16]} style={{ marginTop: 16 }}>
                 <Col span={6}>
-                  <Statistic title="输入 Token" value={formatTokens(statistics.totalPromptTokens)} />
+                  <Statistic
+                    title="输入 Token"
+                    value={formatTokens(statistics.totalPromptTokens)}
+                  />
                 </Col>
                 <Col span={6}>
-                  <Statistic title="输出 Token" value={formatTokens(statistics.totalCompletionTokens)} />
+                  <Statistic
+                    title="输出 Token"
+                    value={formatTokens(statistics.totalCompletionTokens)}
+                  />
                 </Col>
                 <Col span={6}>
                   <Statistic title="总 Token" value={formatTokens(statistics.totalTokens)} />
@@ -345,7 +369,7 @@ const AgentConversationPage: React.FC = () => {
         </Spin>
       </Drawer>
     </PageContainer>
-  );
-};
+  )
+}
 
-export default AgentConversationPage;
+export default AgentConversationPage

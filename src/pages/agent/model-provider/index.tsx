@@ -1,16 +1,16 @@
-import React, {useRef, useState} from 'react'
-import {PlusOutlined} from '@ant-design/icons'
-import {ActionType, PageContainer, ProTable} from '@ant-design/pro-components'
-import {Button, message, Popconfirm} from 'antd'
-import {FormattedMessage, history, useAccess} from '@@/exports'
+import React, { useRef, useState } from 'react'
+import { PlusOutlined } from '@ant-design/icons'
+import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
+import { Button, message, Popconfirm } from 'antd'
+import { FormattedMessage, history, useAccess } from '@@/exports'
 import ModelProviderForm from '@/pages/agent/model-provider/ModelProviderForm'
 import {
   deleteModelProviderInfo,
   getModelProviderList,
   updateModelProviderStatus,
 } from '@/services/agent/ModelProviderController'
-import {getOptionList} from '@/services/sys/DictController'
-import {ModelProvider, ModelProviderSearchParams} from '@/services/entity/Agent'
+import { getOptionList } from '@/services/sys/DictController'
+import { ModelProvider, ModelProviderSearchParams } from '@/services/entity/Agent'
 
 const ModelProviderPage: React.FC = () => {
   const [open, setOpen] = useState(false)
@@ -26,7 +26,7 @@ const ModelProviderPage: React.FC = () => {
       return
     }
 
-    const {code, message: msg} = await deleteModelProviderInfo(record.id)
+    const { code, message: msg } = await deleteModelProviderInfo(record.id)
     if (code === 200) {
       message.success(msg || '删除成功')
       ref.current?.reload()
@@ -42,7 +42,7 @@ const ModelProviderPage: React.FC = () => {
     }
 
     const nextStatus = record.status === 1 ? 0 : 1
-    const {code, message: msg} = await updateModelProviderStatus(record.id, {
+    const { code, message: msg } = await updateModelProviderStatus(record.id, {
       status: nextStatus,
     })
     if (code === 200) {
@@ -163,8 +163,8 @@ const ModelProviderPage: React.FC = () => {
               icon={<PlusOutlined />}
               type="primary"
               onClick={() => {
-                setId(undefined);
-                setOpen(true);
+                setId(undefined)
+                setOpen(true)
               }}
             >
               <FormattedMessage id="pages.common.new" />
@@ -178,12 +178,12 @@ const ModelProviderPage: React.FC = () => {
         open={open}
         setOpen={setOpen}
         onSuccess={() => {
-          setId(undefined);
-          ref.current?.reload();
+          setId(undefined)
+          ref.current?.reload()
         }}
       />
     </PageContainer>
-  );
+  )
 }
 
 export default ModelProviderPage

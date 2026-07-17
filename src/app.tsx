@@ -1,4 +1,4 @@
-import {AvatarDropdown, AvatarName, Footer, SelectLang} from '@/components'
+import { AvatarDropdown, AvatarName, Footer, SelectLang } from '@/components'
 import {
   DashboardOutlined,
   DatabaseOutlined,
@@ -8,26 +8,26 @@ import {
   SettingOutlined,
   UserOutlined,
 } from '@ant-design/icons'
-import type {Settings as LayoutSettings} from '@ant-design/pro-components'
-import {SettingDrawer} from '@ant-design/pro-components'
-import {RunTimeLayoutConfig} from '@umijs/max'
-import {history, Link} from '@umijs/max'
+import type { Settings as LayoutSettings } from '@ant-design/pro-components'
+import { SettingDrawer } from '@ant-design/pro-components'
+import { RunTimeLayoutConfig } from '@umijs/max'
+import { history, Link } from '@umijs/max'
 import React from 'react'
-import {AliveScope} from 'react-activation'
+import { AliveScope } from 'react-activation'
 import defaultSettings from '../config/defaultSettings'
-import RouteTabs, {setRouteMenus} from './components/RouteTabs'
-import {errorConfig} from './requestErrorConfig'
-import {getRoutes, info} from '@/services/sys/LoginController'
+import RouteTabs, { setRouteMenus } from './components/RouteTabs'
+import { errorConfig } from './requestErrorConfig'
+import { getRoutes, info } from '@/services/sys/LoginController'
 
 const isDev = process.env.NODE_ENV === 'development'
 const loginPath = '/login'
 const iconMap: Record<string, React.ReactNode> = {
-  'SettingOutlined': <SettingOutlined/>,
-  'UserOutlined': <UserOutlined/>,
-  'DashboardOutlined': <DashboardOutlined/>,
-  'MessageOutlined': <MessageOutlined/>,
-  'OpenAIOutlined': <OpenAIOutlined/>,
-  'DatabaseOutlined': <DatabaseOutlined/>,
+  SettingOutlined: <SettingOutlined />,
+  UserOutlined: <UserOutlined />,
+  DashboardOutlined: <DashboardOutlined />,
+  MessageOutlined: <MessageOutlined />,
+  OpenAIOutlined: <OpenAIOutlined />,
+  DatabaseOutlined: <DatabaseOutlined />,
 }
 
 /**
@@ -41,7 +41,7 @@ export async function getInitialState(): Promise<{
 }> {
   const fetchUserInfo = async () => {
     try {
-      const {data} = await info()
+      const { data } = await info()
       return data
     } catch (error) {
       history.push(loginPath)
@@ -49,7 +49,7 @@ export async function getInitialState(): Promise<{
     return undefined
   }
   // 如果不是登录页面，执行
-  const {location} = history
+  const { location } = history
   if (location.pathname !== loginPath) {
     const currentUser = await fetchUserInfo()
     return {
@@ -65,12 +65,12 @@ export async function getInitialState(): Promise<{
 }
 
 // ProLayout 支持的api https://procomponents.ant.design/components/layout
-export const layout: RunTimeLayoutConfig = ({initialState, setInitialState}) => {
+export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) => {
   return {
-    actionsRender: () => [<SelectLang key="SelectLang"/>],
+    actionsRender: () => [<SelectLang key="SelectLang" />],
     avatarProps: {
       src: initialState?.currentUser?.avatar,
-      title: <AvatarName/>,
+      title: <AvatarName />,
       render: (_, avatarChildren) => {
         return <AvatarDropdown>{avatarChildren}</AvatarDropdown>
       },
@@ -78,11 +78,11 @@ export const layout: RunTimeLayoutConfig = ({initialState, setInitialState}) => 
     waterMarkProps: {
       content: initialState?.currentUser?.username,
     },
-    footerRender: () => <Footer fixed/>,
+    footerRender: () => <Footer fixed />,
     menu: {
       locale: false,
       params: {
-        id: initialState?.currentUser?.id
+        id: initialState?.currentUser?.id,
       },
       request: async () => {
         if (!initialState?.currentUser) {
@@ -90,7 +90,7 @@ export const layout: RunTimeLayoutConfig = ({initialState, setInitialState}) => 
         }
 
         try {
-          const {data} = await getRoutes()
+          const { data } = await getRoutes()
           const menuData = Array.isArray(data) ? data : []
           setRouteMenus(menuData)
           menuData.forEach((item: any) => {
@@ -101,7 +101,7 @@ export const layout: RunTimeLayoutConfig = ({initialState, setInitialState}) => 
           menuData.forEach((item: any) => {
             if (item.children) {
               item.children.forEach((child: any) => {
-                routes[child.path] = {write: child.access?.includes('Write')}
+                routes[child.path] = { write: child.access?.includes('Write') }
               })
             }
           })
@@ -111,10 +111,9 @@ export const layout: RunTimeLayoutConfig = ({initialState, setInitialState}) => 
         }
       },
       defaultOpenAll: false,
-
     },
     onPageChange: () => {
-      const {location} = history
+      const { location } = history
       // 如果没有登录，重定向到 login
       if (!initialState?.currentUser && location.pathname !== loginPath) {
         history.push(loginPath)
@@ -143,7 +142,7 @@ export const layout: RunTimeLayoutConfig = ({initialState, setInitialState}) => 
     links: isDev
       ? [
         <Link key="openapi" to="/umi/plugin/openapi" target="_blank">
-          <LinkOutlined/>
+          <LinkOutlined />
           <span>OpenAPI 文档</span>
         </Link>,
       ]
@@ -156,7 +155,7 @@ export const layout: RunTimeLayoutConfig = ({initialState, setInitialState}) => 
       // if (initialState?.loading) return <PageLoading />;
       return (
         <AliveScope>
-          <div style={{paddingBottom: 72}}>
+          <div style={{ paddingBottom: 72 }}>
             <RouteTabs pathname={history.location.pathname}>{children}</RouteTabs>
           </div>
           {isDev && (
@@ -168,7 +167,7 @@ export const layout: RunTimeLayoutConfig = ({initialState, setInitialState}) => 
                 setInitialState((preInitialState) => ({
                   ...preInitialState,
                   settings,
-                  routes: []
+                  routes: [],
                 }))
               }}
             />

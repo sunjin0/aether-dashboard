@@ -54,8 +54,16 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
         }}
         fieldProps={{ showSearch: true, optionFilterProp: 'label' }}
       />
-      <ProFormText name="name" label="知识库名称" rules={[{ required: true, message: '请输入知识库名称' }]} />
-      <ProFormTextArea name="description" label="描述" fieldProps={{ rows: 4, maxLength: 1000, showCount: true }} />
+      <ProFormText
+        name="name"
+        label="知识库名称"
+        rules={[{ required: true, message: '请输入知识库名称' }]}
+      />
+      <ProFormTextArea
+        name="description"
+        label="描述"
+        fieldProps={{ rows: 4, maxLength: 1000, showCount: true }}
+      />
       <ProFormText name="ownerAdminId" label="归属后台用户 ID" />
       <ProFormSelect
         name="visibility"

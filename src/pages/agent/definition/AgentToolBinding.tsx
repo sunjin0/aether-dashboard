@@ -1,21 +1,21 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { PlusOutlined } from '@ant-design/icons';
-import { ActionType, ProTable } from '@ant-design/pro-components';
-import { Button, message, Modal, Popconfirm, Space, Form, Select, InputNumber } from 'antd';
+import React, { useEffect, useRef, useState } from 'react'
+import { PlusOutlined } from '@ant-design/icons'
+import { ActionType, ProTable } from '@ant-design/pro-components'
+import { Button, message, Modal, Popconfirm, Space, Form, Select, InputNumber } from 'antd'
 import {
   getAgentBoundTools,
   bindToolToAgent,
   unbindToolFromAgent,
   updateToolPriority,
-} from '@/services/agent/AgentDefinitionController';
-import { getAgentToolList } from '@/services/agent/ToolController';
-import { AgentToolBinding, BindToolRequest, AgentTool } from '@/services/entity/Agent';
-import { useIntl } from '@umijs/max';
+} from '@/services/agent/AgentDefinitionController'
+import { getAgentToolList } from '@/services/agent/ToolController'
+import { AgentToolBinding, BindToolRequest, AgentTool } from '@/services/entity/Agent'
+import { useIntl } from '@umijs/max'
 
 const statusValueEnum = {
   0: { text: '禁用', status: 'Default' },
   1: { text: '启用', status: 'Success' },
-};
+}
 
 interface AgentToolBindingProps {
   agentId: string;
@@ -24,17 +24,17 @@ interface AgentToolBindingProps {
 }
 
 const AgentToolBinding: React.FC<AgentToolBindingProps> = ({ agentId, open, setOpen }) => {
-  const actionRef = useRef<ActionType>();
-  const intl = useIntl();
-  const [bindModalVisible, setBindModalVisible] = useState(false);
-  const [toolOptions, setToolOptions] = useState<{ label: string; value: string }[]>([]);
-  const [form] = Form.useForm();
+  const actionRef = useRef<ActionType>()
+  const intl = useIntl()
+  const [bindModalVisible, setBindModalVisible] = useState(false)
+  const [toolOptions, setToolOptions] = useState<{ label: string; value: string }[]>([])
+  const [form] = Form.useForm()
 
   useEffect(() => {
     if (open && agentId) {
-      actionRef.current?.reload();
+      actionRef.current?.reload()
     }
-  }, [agentId, open]);
+  }, [agentId, open])
 
   // 加载可用工具列表
   const loadToolOptions = async () => {
@@ -42,7 +42,7 @@ const AgentToolBinding: React.FC<AgentToolBindingProps> = ({ agentId, open, setO
       current: 1,
       pageSize: 1000,
       status: 1,
-    });
+    })
 
     if (code === 200 && data) {
       const options = data
@@ -50,62 +50,62 @@ const AgentToolBinding: React.FC<AgentToolBindingProps> = ({ agentId, open, setO
         .map((item) => ({
           label: `${item.name || item.id} (${item.code}) / ${item.mcpServerName || '-'} / ${item.mcpToolName || '-'}`,
           value: item.id as string,
-        }));
-      setToolOptions(options);
+        }))
+      setToolOptions(options)
     }
-  };
+  }
 
   const handleOpenBindModal = () => {
-    loadToolOptions();
-    form.resetFields();
-    setBindModalVisible(true);
-  };
+    loadToolOptions()
+    form.resetFields()
+    setBindModalVisible(true)
+  }
 
   const handleBindTool = async () => {
     try {
-      const values = await form.validateFields();
+      const values = await form.validateFields()
 
       const params: BindToolRequest = {
         toolId: values.toolId,
         priority: values.priority || 0,
         status: 1,
-      };
+      }
 
-      const { code, message: msg } = await bindToolToAgent(agentId, params);
+      const { code, message: msg } = await bindToolToAgent(agentId, params)
       if (code === 200) {
-        message.success(msg || '绑定成功');
-        setBindModalVisible(false);
-        form.resetFields();
-        actionRef.current?.reload();
+        message.success(msg || '绑定成功')
+        setBindModalVisible(false)
+        form.resetFields()
+        actionRef.current?.reload()
       } else {
-        message.error(msg || '绑定失败');
+        message.error(msg || '绑定失败')
       }
     } catch (error) {
-      message.error('请检查表单填写');
+      message.error('请检查表单填写')
     }
-  };
+  }
 
   const handleUnbind = async (toolId: string) => {
-    const { code, message: msg } = await unbindToolFromAgent(agentId, toolId);
+    const { code, message: msg } = await unbindToolFromAgent(agentId, toolId)
     if (code === 200) {
-      message.success(msg || '解绑成功');
-      actionRef.current?.reload();
+      message.success(msg || '解绑成功')
+      actionRef.current?.reload()
     } else {
-      message.error(msg || '解绑失败');
+      message.error(msg || '解绑失败')
     }
-  };
+  }
 
   const handlePriorityChange = async (toolId: string, newPriority: number) => {
     const { code, message: msg } = await updateToolPriority(agentId, toolId, {
       priority: newPriority,
-    });
+    })
     if (code === 200) {
-      message.success(msg || '优先级调整成功');
-      actionRef.current?.reload();
+      message.success(msg || '优先级调整成功')
+      actionRef.current?.reload()
     } else {
-      message.error(msg || '优先级调整失败');
+      message.error(msg || '优先级调整失败')
     }
-  };
+  }
 
   const columns: any[] = [
     {
@@ -152,7 +152,7 @@ const AgentToolBinding: React.FC<AgentToolBindingProps> = ({ agentId, open, setO
         </Popconfirm>,
       ],
     },
-  ];
+  ]
 
   return (
     <>
@@ -161,10 +161,10 @@ const AgentToolBinding: React.FC<AgentToolBindingProps> = ({ agentId, open, setO
         rowKey="toolId"
         request={async () => {
           if (!agentId) {
-            return { data: [], total: 0, success: true };
+            return { data: [], total: 0, success: true }
           }
-          const { data, code } = await getAgentBoundTools(agentId);
-          return { data: data || [], total: (data || []).length, success: code === 200 };
+          const { data, code } = await getAgentBoundTools(agentId)
+          return { data: data || [], total: (data || []).length, success: code === 200 }
         }}
         toolBarRender={() => [
           <Button key="bind" icon={<PlusOutlined />} type="primary" onClick={handleOpenBindModal}>
@@ -181,8 +181,8 @@ const AgentToolBinding: React.FC<AgentToolBindingProps> = ({ agentId, open, setO
         open={bindModalVisible}
         onOk={handleBindTool}
         onCancel={() => {
-          setBindModalVisible(false);
-          form.resetFields();
+          setBindModalVisible(false)
+          form.resetFields()
         }}
         width={600}
       >
@@ -222,7 +222,7 @@ const AgentToolBinding: React.FC<AgentToolBindingProps> = ({ agentId, open, setO
         </Form>
       </Modal>
     </>
-  );
-};
+  )
+}
 
-export default AgentToolBinding;
+export default AgentToolBinding

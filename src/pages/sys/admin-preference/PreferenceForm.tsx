@@ -1,12 +1,17 @@
-import DrawerForm from '@/components/DrawerForm';
+import DrawerForm from '@/components/DrawerForm'
 import {
   addAdminPreference,
   getAdminPreference,
   updateAdminPreference,
-} from '@/services/sys/AdminPreferenceController';
-import { ProFormDigit, ProFormSelect, ProFormText, ProFormTextArea } from '@ant-design/pro-components';
-import { Form } from 'antd';
-import { getOptionList } from '@/services/sys/DictController';
+} from '@/services/sys/AdminPreferenceController'
+import {
+  ProFormDigit,
+  ProFormSelect,
+  ProFormText,
+  ProFormTextArea,
+} from '@ant-design/pro-components'
+import { Form } from 'antd'
+import { getOptionList } from '@/services/sys/DictController'
 
 interface PreferenceFormProps {
   id?: string;
@@ -16,7 +21,7 @@ interface PreferenceFormProps {
 }
 
 const PreferenceForm: React.FC<PreferenceFormProps> = ({ id, open, setOpen, onSuccess }) => {
-  const [form] = Form.useForm();
+  const [form] = Form.useForm()
 
   return (
     <DrawerForm
@@ -26,11 +31,11 @@ const PreferenceForm: React.FC<PreferenceFormProps> = ({ id, open, setOpen, onSu
       form={form}
       request={getAdminPreference}
       onSuccess={async (values) => {
-        const payload = { ...values, status: Number(values.status) };
-        if (id) await updateAdminPreference({ ...payload, id });
-        else await addAdminPreference(payload);
-        onSuccess();
-        return true;
+        const payload = { ...values, status: Number(values.status) }
+        if (id) await updateAdminPreference({ ...payload, id })
+        else await addAdminPreference(payload)
+        onSuccess()
+        return true
       }}
     >
       <ProFormSelect
@@ -65,7 +70,7 @@ const PreferenceForm: React.FC<PreferenceFormProps> = ({ id, open, setOpen, onSu
         ]}
       />
     </DrawerForm>
-  );
-};
+  )
+}
 
-export default PreferenceForm;
+export default PreferenceForm

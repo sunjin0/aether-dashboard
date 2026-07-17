@@ -1,27 +1,29 @@
-import {request} from "@umijs/max";
-import {ResponseStructure} from "@/services/entity/Common";
-import {Resource, ResourceSearchParams} from "@/services/entity/Sys";
-
-
+import { request } from '@umijs/max'
+import { ResponseStructure } from '@/services/entity/Common'
+import { Resource, ResourceSearchParams } from '@/services/entity/Sys'
 
 /**
  * @description 资源列表
  * @since 2025-07-17
  */
-export const getResourceList = async (params: ResourceSearchParams): Promise<ResponseStructure<Resource[]>> => {
+export const getResourceList = async (
+  params: ResourceSearchParams,
+): Promise<ResponseStructure<Resource[]>> => {
   return request('/api/sys/resource/list', {
     method: 'POST',
     data: params,
-  });
-};
+  })
+}
 /**
  * @description 资源详情
  * @since 2025-07-17
  */
-export const getResourceInfo = async (params: ResourceSearchParams): Promise<ResponseStructure<Resource>> => {
-  return request(`/api/sys/resource/info`, {
+export const getResourceInfo = async (
+  params: ResourceSearchParams,
+): Promise<ResponseStructure<Resource>> => {
+  return request('/api/sys/resource/info', {
     method: 'GET',
-    params:{id:params},
+    params: { id: params },
   })
 }
 /**
@@ -29,7 +31,7 @@ export const getResourceInfo = async (params: ResourceSearchParams): Promise<Res
  * @since 2025-07-17
  */
 export const addResourceInfo = async (params: Resource) => {
-  return request(`/api/sys/resource/add`, {
+  return request('/api/sys/resource/add', {
     method: 'POST',
     data: params,
   })
@@ -39,7 +41,7 @@ export const addResourceInfo = async (params: Resource) => {
  * @since 2025-07-17
  */
 export const updateResourceInfo = async (params: Resource) => {
-  return request(`/api/sys/resource/update`, {
+  return request('/api/sys/resource/update', {
     method: 'POST',
     data: params,
   })
@@ -49,9 +51,9 @@ export const updateResourceInfo = async (params: Resource) => {
  * @since 2025-07-17
  */
 export const deleteResourceInfo = async (params: ResourceSearchParams) => {
-  return request(`/api/sys/resource/delete`, {
+  return request('/api/sys/resource/delete', {
     method: 'GET',
-    params:{id: params.id},
+    params: { id: params.id },
   })
 }
 /**
@@ -59,7 +61,6 @@ export const deleteResourceInfo = async (params: ResourceSearchParams) => {
  * @since 2025-07-17
  */
 export const getResourceOptions = async (): Promise<Resource[]> => {
-  const {data} =await request('/api/sys/resource/select', {});
+  const { data } = await request('/api/sys/resource/select', {})
   return data
 }
-

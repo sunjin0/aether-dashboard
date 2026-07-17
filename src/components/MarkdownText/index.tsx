@@ -1,7 +1,7 @@
-import React from 'react';
-import ReactMarkdown from 'react-markdown';
-import {Empty, Spin} from 'antd';
-import './index.less';
+import React from 'react'
+import ReactMarkdown from 'react-markdown'
+import { Empty, Spin } from 'antd'
+import './index.less'
 
 export interface MarkdownTextProps {
   content?: string;
@@ -10,7 +10,7 @@ export interface MarkdownTextProps {
   loading?: boolean;
 }
 
-const MarkdownText: React.FC<MarkdownTextProps> = ({content, error, className, loading}) => {
+const MarkdownText: React.FC<MarkdownTextProps> = ({ content, error, className, loading }) => {
   if (!content) {
     if (loading) {
       return (
@@ -18,9 +18,9 @@ const MarkdownText: React.FC<MarkdownTextProps> = ({content, error, className, l
           <Spin />
           <span>思考中...</span>
         </div>
-      );
+      )
     }
-    return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无内容" />;
+    return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无内容" />
   }
 
   return (
@@ -29,7 +29,7 @@ const MarkdownText: React.FC<MarkdownTextProps> = ({content, error, className, l
     >
       <ReactMarkdown>{content}</ReactMarkdown>
     </div>
-  );
-};
+  )
+}
 
-export default MarkdownText;
+export default MarkdownText

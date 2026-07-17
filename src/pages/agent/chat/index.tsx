@@ -368,9 +368,10 @@ const ChatDebugPage: React.FC = () => {
         // 解析现有 questionConfig
         let parsed: any = null
         try {
-          parsed = typeof item.questionConfig === 'string'
-            ? JSON.parse(item.questionConfig)
-            : item.questionConfig
+          parsed =
+            typeof item.questionConfig === 'string'
+              ? JSON.parse(item.questionConfig)
+              : item.questionConfig
         } catch {
           // ignore
         }
@@ -398,9 +399,7 @@ const ChatDebugPage: React.FC = () => {
           } else if ('confirmed' in userAnswer) {
             answersWithLabels[q.id] = {
               confirmed: userAnswer.confirmed,
-              label: userAnswer.confirmed
-                ? (q.confirmText || '确认')
-                : (q.cancelText || '取消'),
+              label: userAnswer.confirmed ? q.confirmText || '确认' : q.cancelText || '取消',
               answeredAt: Date.now(),
             }
           }
@@ -496,12 +495,10 @@ const ChatDebugPage: React.FC = () => {
             conversationId: data.conversationId,
             role: 'assistant',
             messageType: 'interaction',
-            interactionType: data.interactionType as any || 'group',
+            interactionType: (data.interactionType as any) || 'group',
             interactionStatus: 'pending',
             content: data.content,
-            questionConfig: data.questionConfig
-              ? JSON.stringify(data.questionConfig)
-              : undefined,
+            questionConfig: data.questionConfig ? JSON.stringify(data.questionConfig) : undefined,
           }
 
           // 追加交互卡片（保留当前流式 assistant 消息）
@@ -543,7 +540,8 @@ const ChatDebugPage: React.FC = () => {
                 conversationId: doneConversationId || item.conversationId,
                 content: data.content || item.content,
                 sources: data.sources ?? item.sources ?? [],
-                reasoningContent: data.reasoningContent || item.reasoningContent || item.reasoningStream,
+                reasoningContent:
+                  data.reasoningContent || item.reasoningContent || item.reasoningStream,
                 reasoningStream: undefined,
                 reasoningTokens: data.reasoningTokens ?? item.reasoningTokens,
                 model: data.model || item.model,
@@ -648,8 +646,8 @@ const ChatDebugPage: React.FC = () => {
 
     try {
       const payload: any = conversationId
-        ? { agentId: sendAgentId, conversationId, message: content}
-        : { agentId: sendAgentId, message: content}
+        ? { agentId: sendAgentId, conversationId, message: content }
+        : { agentId: sendAgentId, message: content }
       if (thinking) {
         payload.thinking = true
         payload.reasoningEffort = reasoningEffort
@@ -702,12 +700,10 @@ const ChatDebugPage: React.FC = () => {
             conversationId: data.conversationId,
             role: 'assistant',
             messageType: 'interaction',
-            interactionType: data.interactionType as any || 'group',
+            interactionType: (data.interactionType as any) || 'group',
             interactionStatus: 'pending',
             content: data.content,
-            questionConfig: data.questionConfig
-              ? JSON.stringify(data.questionConfig)
-              : undefined,
+            questionConfig: data.questionConfig ? JSON.stringify(data.questionConfig) : undefined,
           }
 
           // 追加交互卡片（保留当前流式 assistant 消息）
@@ -732,7 +728,8 @@ const ChatDebugPage: React.FC = () => {
               conversationId: doneConversationId || item.conversationId,
               content: data.content || item.content,
               sources: data.sources ?? item.sources ?? [],
-              reasoningContent: data.reasoningContent || item.reasoningContent || item.reasoningStream,
+              reasoningContent:
+                data.reasoningContent || item.reasoningContent || item.reasoningStream,
               reasoningStream: undefined,
               reasoningTokens: data.reasoningTokens ?? item.reasoningTokens,
               model: data.model || item.model,
@@ -859,7 +856,9 @@ const ChatDebugPage: React.FC = () => {
     >
       <div className="agent-chat-page">
         {/* 侧边栏 */}
-        <div className={`agent-chat-sidebar ${sidebarCollapsed ? 'agent-chat-sidebar-collapsed' : ''}`}>
+        <div
+          className={`agent-chat-sidebar ${sidebarCollapsed ? 'agent-chat-sidebar-collapsed' : ''}`}
+        >
           {!sidebarCollapsed && (
             <>
               <div className="agent-chat-sidebar-header">
@@ -914,7 +913,9 @@ const ChatDebugPage: React.FC = () => {
                         dataSource={items}
                         renderItem={(item) => (
                           <List.Item
-                            className={item.id === conversationId ? 'agent-chat-session-active' : undefined}
+                            className={
+                              item.id === conversationId ? 'agent-chat-session-active' : undefined
+                            }
                             onClick={() => handleSelectConversation(item)}
                           >
                             <List.Item.Meta
@@ -976,12 +977,7 @@ const ChatDebugPage: React.FC = () => {
             </div>
             <div className="agent-chat-panel-actions">
               {sending && (
-                <Button
-                  type="primary"
-                  danger
-                  icon={<ClearOutlined />}
-                  onClick={handleStop}
-                >
+                <Button type="primary" danger icon={<ClearOutlined />} onClick={handleStop}>
                   停止生成
                 </Button>
               )}
@@ -990,11 +986,7 @@ const ChatDebugPage: React.FC = () => {
 
           {/* 消息列表 */}
           <div className="agent-chat-message-container">
-            <div
-              className="agent-chat-message-scroll"
-              ref={messageListRef}
-              onScroll={handleScroll}
-            >
+            <div className="agent-chat-message-scroll" ref={messageListRef} onScroll={handleScroll}>
               <Spin spinning={loadingMessages}>
                 <div className="agent-chat-message-list">
                   {!messages.length ? (
@@ -1003,7 +995,9 @@ const ChatDebugPage: React.FC = () => {
                         image="https://gw.alipayobjects.com/zos/antfincdn/ZHrcdLPrvN/empty.svg"
                         description={
                           <span style={{ fontSize: 15, color: 'rgba(0, 0, 0, 0.45)' }}>
-                            {currentAgent ? `与 ${currentAgent.name} 开始对话` : '选择一个 Agent 开始对话'}
+                            {currentAgent
+                              ? `与 ${currentAgent.name} 开始对话`
+                              : '选择一个 Agent 开始对话'}
                           </span>
                         }
                       >
@@ -1027,7 +1021,8 @@ const ChatDebugPage: React.FC = () => {
                           status={item.streamStatus}
                           errorMessage={item.errorMsg}
                           onQuestionSubmit={
-                            item.messageType === 'interaction' && item.interactionStatus === 'pending'
+                            item.messageType === 'interaction' &&
+                            item.interactionStatus === 'pending'
                               ? handleReplyQuestion
                               : undefined
                           }
@@ -1042,10 +1037,7 @@ const ChatDebugPage: React.FC = () => {
 
             {showScrollBottom && (
               <div className="agent-chat-scroll-bottom">
-                <Button
-                  icon={<ArrowDownOutlined />}
-                  onClick={handleScrollBottom}
-                >
+                <Button icon={<ArrowDownOutlined />} onClick={handleScrollBottom}>
                   回到底部
                 </Button>
               </div>
@@ -1055,10 +1047,7 @@ const ChatDebugPage: React.FC = () => {
           {/* 底部输入 */}
           <div className="agent-chat-input-bar">
             <div className="agent-chat-thinking-bar">
-              <Checkbox
-                checked={thinking}
-                onChange={(e) => setThinking(e.target.checked)}
-              >
+              <Checkbox checked={thinking} onChange={(e) => setThinking(e.target.checked)}>
                 <span className="agent-chat-thinking-label">深度思考</span>
               </Checkbox>
               {thinking && (
@@ -1080,7 +1069,11 @@ const ChatDebugPage: React.FC = () => {
               <div className="agent-chat-input-box">
                 <Input.TextArea
                   value={input}
-                  disabled={sending || chatTurnState === 'waiting_user' || chatTurnState === 'submitting_answer'}
+                  disabled={
+                    sending ||
+                    chatTurnState === 'waiting_user' ||
+                    chatTurnState === 'submitting_answer'
+                  }
                   autoSize={{ minRows: 1, maxRows: 3 }}
                   placeholder="输入消息，支持 Markdown 格式..."
                   onChange={(event) => setInput(event.target.value)}
@@ -1097,7 +1090,12 @@ const ChatDebugPage: React.FC = () => {
               <Button
                 className="agent-chat-send-btn"
                 type="primary"
-                disabled={sending || !input.trim() || chatTurnState === 'waiting_user' || chatTurnState === 'submitting_answer'}
+                disabled={
+                  sending ||
+                  !input.trim() ||
+                  chatTurnState === 'waiting_user' ||
+                  chatTurnState === 'submitting_answer'
+                }
                 onClick={() => handleSend()}
               >
                 发送
@@ -1111,9 +1109,7 @@ const ChatDebugPage: React.FC = () => {
                 <kbd>Shift</kbd> + <kbd>Enter</kbd> 换行
               </span>
               {currentAgent?.model && (
-                <span style={{ marginLeft: 'auto' }}>
-                  模型: {currentAgent.model}
-                </span>
+                <span style={{ marginLeft: 'auto' }}>模型: {currentAgent.model}</span>
               )}
             </div>
           </div>

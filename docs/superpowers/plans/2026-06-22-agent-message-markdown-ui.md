@@ -30,6 +30,7 @@
 ### Task 1: Add Markdown Dependency
 
 **Files:**
+
 - Modify: `package.json`
 - Potentially modify local npm lockfile if npm creates or updates one
 
@@ -50,6 +51,7 @@ Expected: One dependency entry is found.
 ### Task 2: Add Shared Message Bubble Component
 
 **Files:**
+
 - Create: `src/components/AgentMessageBubble/index.tsx`
 - Create: `src/components/AgentMessageBubble/index.less`
 
@@ -60,11 +62,11 @@ Create `src/components/AgentMessageBubble/index.tsx`:
 ```tsx
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import {Typography} from 'antd';
-import {AgentMessage} from '@/services/entity/Agent';
+import { Typography } from 'antd';
+import { AgentMessage } from '@/services/entity/Agent';
 import './index.less';
 
-const {Text} = Typography;
+const { Text } = Typography;
 
 export interface AgentMessageBubbleProps {
   message: AgentMessage;
@@ -99,7 +101,7 @@ const getMessageMeta = (message: AgentMessage) => {
   ].filter(Boolean);
 };
 
-const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({message, align, compact}) => {
+const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({ message, align, compact }) => {
   const role = getRole(message.role);
   const placement = getAlign(message, align);
   const metas = getMessageMeta(message);
@@ -318,6 +320,7 @@ Expected: Finds import and usage.
 ### Task 3: Refactor Chat Page To Use Shared Component
 
 **Files:**
+
 - Modify: `src/pages/agent/chat/index.tsx`
 - Create: `src/pages/agent/chat/index.less`
 
@@ -333,7 +336,7 @@ import './index.less';
 Keep Ant Design imports that are still used:
 
 ```ts
-import {Button, Card, Empty, Input, List, message, Select, Spin, Typography} from 'antd';
+import { Button, Card, Empty, Input, List, message, Select, Spin, Typography } from 'antd';
 ```
 
 After refactor, `Typography` is used only for `Text` in the sidebar and header.
@@ -343,8 +346,8 @@ After refactor, `Typography` is used only for `Text` in the sidebar and header.
 Add this helper below `renderConversationTitle`:
 
 ```ts
-  const currentAgent = agents.find((item) => item.id === agentId);
-  const currentConversation = conversations.find((item) => item.id === conversationId);
+const currentAgent = agents.find((item) => item.id === agentId);
+const currentConversation = conversations.find((item) => item.id === conversationId);
 ```
 
 - [ ] **Step 3: Replace JSX layout with class-based layout**
@@ -352,106 +355,103 @@ Add this helper below `renderConversationTitle`:
 Replace the current return block in `src/pages/agent/chat/index.tsx` with:
 
 ```tsx
-  return (
-    <PageContainer>
-      <div className="agent-chat-page">
-        <Card className="agent-chat-sidebar" bodyStyle={{padding: 0}}>
-          <div className="agent-chat-sidebar-header">
-            <Select
-              placeholder="请选择启用 Agent"
-              loading={loadingAgents}
-              value={agentId}
-              showSearch={true}
-              allowClear={true}
-              optionFilterProp="label"
-              onChange={(value) => {
-                setAgentId(value);
-                setConversationId(undefined);
-                setMessages([]);
-              }}
-              options={agents
-                .filter((item) => item.id)
-                .map((item) => ({label: item.name || item.code || item.id, value: item.id}))}
-            />
-            <Button type="primary" block={true} onClick={handleNewConversation}>
-              新建会话
-            </Button>
-          </div>
-          <Spin spinning={loadingConversations}>
-            <List
-              className="agent-chat-session-list"
-              dataSource={conversations}
-              locale={{emptyText: '暂无会话'}}
-              renderItem={(item) => (
-                <List.Item
-                  className={item.id === conversationId ? 'agent-chat-session-active' : undefined}
-                  onClick={() => handleSelectConversation(item)}
-                >
-                  <List.Item.Meta
-                    title={
-                      <Text strong={item.id === conversationId} ellipsis={true}>
-                        {renderConversationTitle(item)}
-                      </Text>
-                    }
-                    description={item.updatedAt || item.createdAt}
-                  />
-                </List.Item>
-              )}
-            />
-          </Spin>
-        </Card>
+return (
+  <PageContainer>
+    <div className="agent-chat-page">
+      <Card className="agent-chat-sidebar" bodyStyle={{ padding: 0 }}>
+        <div className="agent-chat-sidebar-header">
+          <Select
+            placeholder="请选择启用 Agent"
+            loading={loadingAgents}
+            value={agentId}
+            showSearch={true}
+            allowClear={true}
+            optionFilterProp="label"
+            onChange={(value) => {
+              setAgentId(value);
+              setConversationId(undefined);
+              setMessages([]);
+            }}
+            options={agents
+              .filter((item) => item.id)
+              .map((item) => ({ label: item.name || item.code || item.id, value: item.id }))}
+          />
+          <Button type="primary" block={true} onClick={handleNewConversation}>
+            新建会话
+          </Button>
+        </div>
+        <Spin spinning={loadingConversations}>
+          <List
+            className="agent-chat-session-list"
+            dataSource={conversations}
+            locale={{ emptyText: '暂无会话' }}
+            renderItem={(item) => (
+              <List.Item
+                className={item.id === conversationId ? 'agent-chat-session-active' : undefined}
+                onClick={() => handleSelectConversation(item)}
+              >
+                <List.Item.Meta
+                  title={
+                    <Text strong={item.id === conversationId} ellipsis={true}>
+                      {renderConversationTitle(item)}
+                    </Text>
+                  }
+                  description={item.updatedAt || item.createdAt}
+                />
+              </List.Item>
+            )}
+          />
+        </Spin>
+      </Card>
 
-        <Card className="agent-chat-panel" bodyStyle={{padding: 0}}>
-          <div className="agent-chat-panel-header">
-            <div>
-              <Text strong={true}>{currentAgent?.name || currentAgent?.code || '未选择 Agent'}</Text>
-              <div className="agent-chat-panel-subtitle">
-                {currentConversation ? renderConversationTitle(currentConversation) : '新会话'}
-              </div>
+      <Card className="agent-chat-panel" bodyStyle={{ padding: 0 }}>
+        <div className="agent-chat-panel-header">
+          <div>
+            <Text strong={true}>{currentAgent?.name || currentAgent?.code || '未选择 Agent'}</Text>
+            <div className="agent-chat-panel-subtitle">
+              {currentConversation ? renderConversationTitle(currentConversation) : '新会话'}
             </div>
-            {conversationId ? <Text type="secondary">会话：{conversationId}</Text> : null}
           </div>
+          {conversationId ? <Text type="secondary">会话：{conversationId}</Text> : null}
+        </div>
 
-          <Spin spinning={loadingMessages} wrapperClassName="agent-chat-message-spin">
-            <div className="agent-chat-message-list">
-              {!messages.length ? (
-                <Empty description="请选择会话或发送新消息" />
-              ) : (
-                <>
-                  {messages.map((item, index) => (
-                    <AgentMessageBubble
-                      key={item.id || `${item.role}-${index}`}
-                      message={item}
-                    />
-                  ))}
-                  <div ref={messageEndRef} />
-                </>
-              )}
-            </div>
-          </Spin>
-
-          <div className="agent-chat-input-bar">
-            <Input.TextArea
-              value={input}
-              disabled={sending}
-              autoSize={{minRows: 2, maxRows: 6}}
-              placeholder="支持 Markdown，Shift+Enter 换行"
-              onChange={(event) => setInput(event.target.value)}
-              onPressEnter={(event) => {
-                if (!event.shiftKey) {
-                  event.preventDefault();
-                  handleSend();
-                }
-              }}
-            />
-            <Button type="primary" loading={sending} disabled={sending} onClick={handleSend}>
-              发送
-            </Button>
+        <Spin spinning={loadingMessages} wrapperClassName="agent-chat-message-spin">
+          <div className="agent-chat-message-list">
+            {!messages.length ? (
+              <Empty description="请选择会话或发送新消息" />
+            ) : (
+              <>
+                {messages.map((item, index) => (
+                  <AgentMessageBubble key={item.id || `${item.role}-${index}`} message={item} />
+                ))}
+                <div ref={messageEndRef} />
+              </>
+            )}
           </div>
-        </Card>
-      </div>
-    </PageContainer>
-  );
+        </Spin>
+
+        <div className="agent-chat-input-bar">
+          <Input.TextArea
+            value={input}
+            disabled={sending}
+            autoSize={{ minRows: 2, maxRows: 6 }}
+            placeholder="支持 Markdown，Shift+Enter 换行"
+            onChange={(event) => setInput(event.target.value)}
+            onPressEnter={(event) => {
+              if (!event.shiftKey) {
+                event.preventDefault();
+                handleSend();
+              }
+            }}
+          />
+          <Button type="primary" loading={sending} disabled={sending} onClick={handleSend}>
+            发送
+          </Button>
+        </div>
+      </Card>
+    </div>
+  </PageContainer>
+);
 ```
 
 - [ ] **Step 4: Create Chat page styles**
@@ -609,6 +609,7 @@ Expected: Finds component import/usage and placeholder text.
 ### Task 4: Refactor Conversation Message Rendering
 
 **Files:**
+
 - Modify: `src/pages/agent/conversation/index.tsx`
 
 - [ ] **Step 1: Update imports**
@@ -622,7 +623,7 @@ import AgentMessageBubble from '@/components/AgentMessageBubble';
 Ant Design import must become:
 
 ```ts
-import {Button, Card, Drawer, Empty, message, Popconfirm, Spin} from 'antd';
+import { Button, Card, Drawer, Empty, message, Popconfirm, Spin } from 'antd';
 ```
 
 - [ ] **Step 2: Remove local message meta renderer**
@@ -634,21 +635,21 @@ Delete the local `renderMessageMeta` function. The shared component now owns met
 Replace the `Card title="消息列表"` body content with:
 
 ```tsx
-          <Card title="消息列表" style={{marginTop: 16}}>
-            {!messages.length ? (
-              <Empty description="暂无消息" />
-            ) : (
-              <div className="agent-conversation-message-list">
-                {messages.map((item, index) => (
-                  <AgentMessageBubble
-                    key={item.id || `${item.role}-${index}`}
-                    message={item}
-                    compact={true}
-                  />
-                ))}
-              </div>
-            )}
-          </Card>
+<Card title="消息列表" style={{ marginTop: 16 }}>
+  {!messages.length ? (
+    <Empty description="暂无消息" />
+  ) : (
+    <div className="agent-conversation-message-list">
+      {messages.map((item, index) => (
+        <AgentMessageBubble
+          key={item.id || `${item.role}-${index}`}
+          message={item}
+          compact={true}
+        />
+      ))}
+    </div>
+  )}
+</Card>
 ```
 
 - [ ] **Step 4: Verify Conversation uses compact shared component**
@@ -662,6 +663,7 @@ Expected: Finds import and compact usage.
 ### Task 5: Verify Markdown UI Implementation
 
 **Files:**
+
 - Inspect: `package.json`
 - Inspect: `src/components/AgentMessageBubble/index.tsx`
 - Inspect: `src/components/AgentMessageBubble/index.less`

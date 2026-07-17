@@ -1,7 +1,6 @@
-import {request} from "@umijs/max";
-import {Resource, Role, RoleSearchParams} from "@/services/entity/Sys";
-import {ResponseStructure} from "@/services/entity/Common";
-
+import { request } from '@umijs/max'
+import { Resource, Role, RoleSearchParams } from '@/services/entity/Sys'
+import { ResponseStructure } from '@/services/entity/Common'
 
 /**
  * @description 角色列表
@@ -11,16 +10,16 @@ export const getRoleList = async (params: RoleSearchParams): Promise<ResponseStr
   return request('/api/sys/role/list', {
     method: 'POST',
     data: params,
-  });
-};
+  })
+}
 /**
  * @description 角色详情
  * @since 2025-07-17
  */
 export const getRoleInfo = async (params: RoleSearchParams): Promise<ResponseStructure<Role>> => {
-  return request(`/api/sys/role/info`, {
+  return request('/api/sys/role/info', {
     method: 'GET',
-    params:{id:params},
+    params: { id: params },
   })
 }
 /**
@@ -28,7 +27,7 @@ export const getRoleInfo = async (params: RoleSearchParams): Promise<ResponseStr
  * @since 2025-07-17
  */
 export const addRoleInfo = async (params: Role) => {
-  return request(`/api/sys/role/add`, {
+  return request('/api/sys/role/add', {
     method: 'POST',
     data: params,
   })
@@ -38,7 +37,7 @@ export const addRoleInfo = async (params: Role) => {
  * @since 2025-07-17
  */
 export const updateRoleInfo = async (params: Role) => {
-  return request(`/api/sys/role/update`, {
+  return request('/api/sys/role/update', {
     method: 'POST',
     data: params,
   })
@@ -48,9 +47,9 @@ export const updateRoleInfo = async (params: Role) => {
  * @since 2025-07-17
  */
 export const deleteRoleInfo = async (params: RoleSearchParams) => {
-  return request(`/api/sys/role/delete`, {
+  return request('/api/sys/role/delete', {
     method: 'GET',
-    params:{id: params.id},
+    params: { id: params.id },
   })
 }
 /**
@@ -58,7 +57,7 @@ export const deleteRoleInfo = async (params: RoleSearchParams) => {
  * @since 2025-07-17
  */
 export const getResourceList = async () => {
-  return request(`/api/sys/role/resource`, {
+  return request('/api/sys/role/resource', {
     method: 'GET',
   })
 }
@@ -67,10 +66,10 @@ export const getResourceList = async () => {
  * @since 2025-07-17
  */
 export const getRoleAuthorization = async (params: RoleSearchParams) => {
-  return request(`/api/sys/role-resource/permission`, {
+  return request('/api/sys/role-resource/permission', {
     method: 'GET',
-    params:{
-      roleId: params.id
+    params: {
+      roleId: params.id,
     },
   })
 }
@@ -79,11 +78,11 @@ export const getRoleAuthorization = async (params: RoleSearchParams) => {
  * @since 2025-07-17
  */
 export const saveRoleAuthorization = async (params: RoleSearchParams) => {
-  return request(`/api/sys/role-resource/save`, {
+  return request('/api/sys/role-resource/save', {
     method: 'POST',
     data: {
       roleId: params.id,
-      resourceIds: params.resourceIds
+      resourceIds: params.resourceIds,
     },
   })
 }

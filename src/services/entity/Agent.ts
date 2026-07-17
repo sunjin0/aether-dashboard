@@ -719,5 +719,3 @@ export interface MessageStatistics {
   totalTokens: number;
   avgLatencyMs: number;
 }
-
-

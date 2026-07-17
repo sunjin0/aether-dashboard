@@ -1,10 +1,10 @@
-import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
-import InteractiveQuestionCard from './index';
+import React from 'react'
+import { fireEvent, render, screen } from '@testing-library/react'
+import InteractiveQuestionCard from './index'
 
 describe('InteractiveQuestionCard', () => {
   it('renders a confirmation layout for MCP tool approvals', () => {
-    const onSubmit = jest.fn();
+    const onSubmit = jest.fn()
 
     render(
       <InteractiveQuestionCard
@@ -29,21 +29,21 @@ describe('InteractiveQuestionCard', () => {
         }}
         onSubmit={onSubmit}
       />,
-    );
+    )
 
-    expect(screen.getByText('工具调用确认')).toBeTruthy();
-    expect(screen.getByText('list_commits')).toBeTruthy();
-    expect(screen.getByText('中风险')).toBeTruthy();
-    expect(screen.getByText(/"owner": "sunjin0"/)).toBeTruthy();
-    expect(screen.queryByText('多项提问')).toBeNull();
+    expect(screen.getByText('工具调用确认')).toBeTruthy()
+    expect(screen.getByText('list_commits')).toBeTruthy()
+    expect(screen.getByText('中风险')).toBeTruthy()
+    expect(screen.getByText(/"owner": "sunjin0"/)).toBeTruthy()
+    expect(screen.queryByText('多项提问')).toBeNull()
 
-    fireEvent.click(screen.getByRole('button', { name: /确认执行/ }));
+    fireEvent.click(screen.getByRole('button', { name: /确认执行/ }))
 
-    expect(onSubmit).toHaveBeenCalledWith({ confirm: { confirmed: true } });
-  });
+    expect(onSubmit).toHaveBeenCalledWith({ confirm: { confirmed: true } })
+  })
 
   it('renders tool details and authorization choices for choice-based confirmations', () => {
-    const onSubmit = jest.fn();
+    const onSubmit = jest.fn()
 
     render(
       <InteractiveQuestionCard
@@ -71,20 +71,20 @@ describe('InteractiveQuestionCard', () => {
         }}
         onSubmit={onSubmit}
       />,
-    );
+    )
 
-    expect(screen.getByText('search_commits')).toBeTruthy();
-    expect(screen.getByText('低风险')).toBeTruthy();
-    expect(screen.getByText('仅本次执行')).toBeTruthy();
+    expect(screen.getByText('search_commits')).toBeTruthy()
+    expect(screen.getByText('低风险')).toBeTruthy()
+    expect(screen.getByText('仅本次执行')).toBeTruthy()
 
-    fireEvent.click(screen.getByLabelText('仅本次执行'));
-    fireEvent.click(screen.getByRole('button', { name: /确\s*认/ }));
+    fireEvent.click(screen.getByLabelText('仅本次执行'))
+    fireEvent.click(screen.getByRole('button', { name: /确\s*认/ }))
 
-    expect(onSubmit).toHaveBeenCalledWith({ decision: { selected: 'once' } });
-  });
+    expect(onSubmit).toHaveBeenCalledWith({ decision: { selected: 'once' } })
+  })
 
   it('submits trimmed custom input instead of a selected single choice', () => {
-    const onSubmit = jest.fn();
+    const onSubmit = jest.fn()
 
     render(
       <InteractiveQuestionCard
@@ -98,19 +98,19 @@ describe('InteractiveQuestionCard', () => {
         }}
         onSubmit={onSubmit}
       />,
-    );
+    )
 
-    fireEvent.click(screen.getByLabelText('不确定'));
+    fireEvent.click(screen.getByLabelText('不确定'))
     fireEvent.change(screen.getByPlaceholderText('输入你的 GitHub 用户名...'), {
       target: { value: '  octocat  ' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: /提\s*交/ }));
+    })
+    fireEvent.click(screen.getByRole('button', { name: /提\s*交/ }))
 
-    expect(onSubmit).toHaveBeenCalledWith({ github_username: { selected: 'octocat' } });
-  });
+    expect(onSubmit).toHaveBeenCalledWith({ github_username: { selected: 'octocat' } })
+  })
 
   it('submits trimmed custom input instead of selected multiple choices', () => {
-    const onSubmit = jest.fn();
+    const onSubmit = jest.fn()
 
     render(
       <InteractiveQuestionCard
@@ -125,18 +125,18 @@ describe('InteractiveQuestionCard', () => {
         }}
         onSubmit={onSubmit}
       />,
-    );
+    )
 
-    fireEvent.click(screen.getByLabelText('前端项目'));
+    fireEvent.click(screen.getByLabelText('前端项目'))
     fireEvent.change(screen.getByPlaceholderText('简单描述一下仓库内容...'), {
       target: { value: '  管理后台  ' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: /提\s*交/ }));
+    })
+    fireEvent.click(screen.getByRole('button', { name: /提\s*交/ }))
 
     expect(onSubmit).toHaveBeenCalledWith({
       repo_description: { selected: ['管理后台'] },
-    });
-  });
+    })
+  })
 
   it('clears selected choices when custom input has content', () => {
     render(
@@ -151,18 +151,18 @@ describe('InteractiveQuestionCard', () => {
           customInputPlaceholder: '简单描述一下仓库内容...',
         }}
       />,
-    );
+    )
 
-    fireEvent.click(screen.getByLabelText('前端项目'));
+    fireEvent.click(screen.getByLabelText('前端项目'))
     fireEvent.change(screen.getByPlaceholderText('简单描述一下仓库内容...'), {
       target: { value: '管理后台' },
-    });
+    })
 
-    expect((screen.getByLabelText('前端项目') as HTMLInputElement).checked).toBe(false);
-  });
+    expect((screen.getByLabelText('前端项目') as HTMLInputElement).checked).toBe(false)
+  })
 
   it('submits custom input from a tabbed question group', () => {
-    const onSubmit = jest.fn();
+    const onSubmit = jest.fn()
 
     render(
       <InteractiveQuestionCard
@@ -183,15 +183,15 @@ describe('InteractiveQuestionCard', () => {
         }}
         onSubmit={onSubmit}
       />,
-    );
+    )
 
     fireEvent.change(screen.getByPlaceholderText('输入你的 GitHub 用户名...'), {
       target: { value: '  octocat  ' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: /确认提交/ }));
+    })
+    fireEvent.click(screen.getByRole('button', { name: /确认提交/ }))
 
-    expect(onSubmit).toHaveBeenCalledWith({ github_username: { selected: 'octocat' } });
-  });
+    expect(onSubmit).toHaveBeenCalledWith({ github_username: { selected: 'octocat' } })
+  })
 
   it('keeps the current tab after another question is answered', () => {
     render(
@@ -216,11 +216,11 @@ describe('InteractiveQuestionCard', () => {
           ],
         }}
       />,
-    );
+    )
 
-    fireEvent.click(screen.getByRole('tab', { name: /问题 2/ }));
-    fireEvent.click(screen.getByLabelText('否'));
+    fireEvent.click(screen.getByRole('tab', { name: /问题 2/ }))
+    fireEvent.click(screen.getByLabelText('否'))
 
-    expect(screen.getByRole('tab', { name: /问题 2/ }).getAttribute('aria-selected')).toBe('true');
-  });
-});
+    expect(screen.getByRole('tab', { name: /问题 2/ }).getAttribute('aria-selected')).toBe('true')
+  })
+})

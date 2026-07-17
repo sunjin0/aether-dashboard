@@ -1,8 +1,6 @@
 # Agent 平台前端对接变更说明（V0.6）
 
-> 日期：2026-07-07
-> 范围：本次后端改动涉及的前端对接点
-> 目标读者：前端开发
+> 日期：2026-07-07范围：本次后端改动涉及的前端对接点目标读者：前端开发
 
 ---
 
@@ -26,13 +24,13 @@
 
 ## 2. 受影响接口总览
 
-| 接口 | 方法 | 是否有变化 | 前端动作 |
-|------|------|------------|----------|
-| `/api/agent/chat` | POST | 有变化 | 响应 `data` 新增推理字段 |
-| `/api/agent/chat/stream` | GET | 有变化 | `done` 事件返回推理字段 |
-| `/api/agent/conversation/{id}/messages` | GET | 有变化 | 历史消息新增推理字段 |
-| `/api/agent/run/list` | POST | 有变化 | 请求体支持 `startTime`、`endTime` |
-| `/api/agent/run/statistics` | GET | 有变化 | 由占位 0 改为真实统计 |
+| 接口                                    | 方法 | 是否有变化 | 前端动作                          |
+| --------------------------------------- | ---- | ---------- | --------------------------------- |
+| `/api/agent/chat`                       | POST | 有变化     | 响应 `data` 新增推理字段          |
+| `/api/agent/chat/stream`                | GET  | 有变化     | `done` 事件返回推理字段           |
+| `/api/agent/conversation/{id}/messages` | GET  | 有变化     | 历史消息新增推理字段              |
+| `/api/agent/run/list`                   | POST | 有变化     | 请求体支持 `startTime`、`endTime` |
+| `/api/agent/run/statistics`             | GET  | 有变化     | 由占位 0 改为真实统计             |
 
 其他 Agent 管理、模型供应商、工具管理接口本次无前端契约变化。
 
@@ -46,27 +44,27 @@
 
 ```ts
 interface AgentMessage {
-  id: string
-  conversationId: string
-  role: 'user' | 'assistant' | 'tool'
-  content: string
-  reasoningContent?: string
-  reasoningTokens?: number
-  model?: string
-  promptTokens?: number
-  completionTokens?: number
-  totalTokens?: number
-  latencyMs?: number
+  id: string;
+  conversationId: string;
+  role: 'user' | 'assistant' | 'tool';
+  content: string;
+  reasoningContent?: string;
+  reasoningTokens?: number;
+  model?: string;
+  promptTokens?: number;
+  completionTokens?: number;
+  totalTokens?: number;
+  latencyMs?: number;
 }
 ```
 
 字段说明：
 
-| 字段 | 说明 | 展示建议 |
-|------|------|----------|
-| `content` | 最终回复内容 | 主回答区域 |
-| `reasoningContent` | 推理过程 | 折叠面板，不要混入主回答 |
-| `reasoningTokens` | 推理 token 数 | 调试信息、详情面板、统计展示 |
+| 字段               | 说明          | 展示建议                     |
+| ------------------ | ------------- | ---------------------------- |
+| `content`          | 最终回复内容  | 主回答区域                   |
+| `reasoningContent` | 推理过程      | 折叠面板，不要混入主回答     |
+| `reasoningTokens`  | 推理 token 数 | 调试信息、详情面板、统计展示 |
 
 ### 3.2 重要规则
 
@@ -76,15 +74,15 @@ interface AgentMessage {
 
 ```ts
 if (message.reasoningContent) {
-  renderReasoningPanel(message.reasoningContent)
+  renderReasoningPanel(message.reasoningContent);
 }
 
 if (message.content) {
-  renderAnswer(message.content)
+  renderAnswer(message.content);
 } else if (message.reasoningContent) {
-  renderWarning('模型仅返回推理过程，未返回最终答案')
+  renderWarning('模型仅返回推理过程，未返回最终答案');
 } else {
-  renderError('模型未返回有效内容')
+  renderError('模型未返回有效内容');
 }
 ```
 
@@ -193,7 +191,7 @@ data: {"conversationId":"conversation-1","chunk":"你好"}
 
 ```ts
 eventSource.addEventListener('done', (event) => {
-  const data = JSON.parse(event.data)
+  const data = JSON.parse(event.data);
 
   updateAssistantMessage(data.messageId, {
     content: data.content || getStreamingContent(data.messageId),
@@ -203,8 +201,8 @@ eventSource.addEventListener('done', (event) => {
     promptTokens: data.promptTokens,
     completionTokens: data.completionTokens,
     totalTokens: data.totalTokens,
-  })
-})
+  });
+});
 ```
 
 ### 5.4 注意
@@ -299,7 +297,7 @@ const payload = {
   status,
   startTime: dateRange?.[0]?.getTime(),
   endTime: dateRange?.[1]?.getTime(),
-}
+};
 ```
 
 ---
@@ -314,11 +312,11 @@ GET /api/agent/run/statistics
 
 ### 8.2 Query 参数
 
-| 参数 | 必填 | 说明 |
-|------|------|------|
-| `agentId` | 否 | Agent 定义 ID |
-| `startTime` | 否 | 开始时间，毫秒时间戳 |
-| `endTime` | 否 | 结束时间，毫秒时间戳 |
+| 参数        | 必填 | 说明                 |
+| ----------- | ---- | -------------------- |
+| `agentId`   | 否   | Agent 定义 ID        |
+| `startTime` | 否   | 开始时间，毫秒时间戳 |
+| `endTime`   | 否   | 结束时间，毫秒时间戳 |
 
 示例：
 
@@ -364,7 +362,7 @@ GET /api/agent/run/statistics?agentId=agent-1&startTime=1783390574000&endTime=17
 错误率格式化建议：
 
 ```ts
-const errorRateText = `${(data.errorRate * 100).toFixed(2)}%`
+const errorRateText = `${(data.errorRate * 100).toFixed(2)}%`;
 ```
 
 ---
@@ -402,7 +400,7 @@ const errorRateText = `${(data.errorRate * 100).toFixed(2)}%`
 旧消息没有 `reasoningContent` 和 `reasoningTokens`，前端按空值处理即可。
 
 ```ts
-const reasoningContent = message.reasoningContent || ''
+const reasoningContent = message.reasoningContent || '';
 ```
 
 ### 10.2 token 为 0
@@ -423,7 +421,7 @@ const reasoningContent = message.reasoningContent || ''
 判断消息是否有效，应看：
 
 ```ts
-Boolean(message.content || message.reasoningContent)
+Boolean(message.content || message.reasoningContent);
 ```
 
 ### 10.3 content 与 reasoningContent 的展示边界
@@ -453,4 +451,3 @@ api/src/main/resources/sql/agent-platform-v0.6-reasoning-message.sql
 ```
 
 如果未执行迁移，聊天接口保存 assistant 消息时会因缺少列而失败。
-

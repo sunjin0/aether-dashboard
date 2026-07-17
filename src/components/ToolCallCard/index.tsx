@@ -1,9 +1,9 @@
-import React from 'react';
-import { Collapse, Tag, Typography } from 'antd';
-import { AgentToolCallLog } from '@/services/entity/Agent';
-import './index.less';
+import React from 'react'
+import { Collapse, Tag, Typography } from 'antd'
+import { AgentToolCallLog } from '@/services/entity/Agent'
+import './index.less'
 
-const { Text } = Typography;
+const { Text } = Typography
 
 export interface ToolCallCardProps {
   log: AgentToolCallLog;
@@ -15,27 +15,27 @@ const toolStatusMap: Record<number, { text: string; color: string }> = {
   1: { text: '失败', color: 'error' },
   2: { text: '超时', color: 'warning' },
   3: { text: '安全拦截', color: 'purple' },
-};
+}
 
 const formatJSON = (json: string): string => {
   try {
-    const obj = JSON.parse(json);
-    return JSON.stringify(obj, null, 2);
+    const obj = JSON.parse(json)
+    return JSON.stringify(obj, null, 2)
   } catch {
-    return json;
+    return json
   }
-};
+}
 
 const formatLatency = (ms?: number): string => {
-  if (!ms) return '-';
+  if (!ms) return '-'
   if (ms >= 1000) {
-    return `${(ms / 1000).toFixed(1)}s`;
+    return `${(ms / 1000).toFixed(1)}s`
   }
-  return `${ms}ms`;
-};
+  return `${ms}ms`
+}
 
 const ToolCallCard: React.FC<ToolCallCardProps> = ({ log, compact }) => {
-  const statusInfo = toolStatusMap[log.status || 0] || { text: '未知', color: 'default' };
+  const statusInfo = toolStatusMap[log.status || 0] || { text: '未知', color: 'default' }
 
   const header = (
     <div className="tool-call-card-header">
@@ -50,7 +50,7 @@ const ToolCallCard: React.FC<ToolCallCardProps> = ({ log, compact }) => {
         </Text>
       )}
     </div>
-  );
+  )
 
   const items = [
     {
@@ -81,20 +81,22 @@ const ToolCallCard: React.FC<ToolCallCardProps> = ({ log, compact }) => {
 
           {log.requestUrl && (
             <div className="tool-call-card-meta">
-              <Text type="secondary">{log.requestMethod} {log.requestUrl}</Text>
+              <Text type="secondary">
+                {log.requestMethod} {log.requestUrl}
+              </Text>
               {log.responseStatus && <Text type="secondary"> · {log.responseStatus}</Text>}
             </div>
           )}
         </div>
       ),
     },
-  ];
+  ]
 
   return (
     <div className={`tool-call-card ${compact ? 'tool-call-card-compact' : ''}`}>
       <Collapse size="small" ghost items={items} />
     </div>
-  );
-};
+  )
+}
 
-export default ToolCallCard;
+export default ToolCallCard

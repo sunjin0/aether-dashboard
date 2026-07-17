@@ -30,12 +30,12 @@
 ### Task 1: 扩展 Agent 定义类型
 
 **Files:**
+
 - Modify: `src/services/entity/Agent.ts`
 
 - [ ] **Step 1: 在 `Agent.ts` 末尾追加类型**
 
 ```ts
-
 /**
  * @description Agent 定义
  */
@@ -83,13 +83,14 @@ Expected: 可能仍失败在既有两个基线错误；不得出现 `src/service
 ### Task 2: 新增 Agent 定义服务层
 
 **Files:**
+
 - Create: `src/services/agent/AgentDefinitionController.ts`
 
 - [ ] **Step 1: 创建服务文件**
 
 ```ts
-import {request} from '@umijs/max';
-import {ResponseStructure} from '@/services/entity/Common';
+import { request } from '@umijs/max';
+import { ResponseStructure } from '@/services/entity/Common';
 import {
   AgentDefinition,
   AgentDefinitionSearchParams,
@@ -190,6 +191,7 @@ Expected: 只允许既有基线错误；不得出现 `AgentDefinitionController.
 ### Task 3: 新增 Agent 定义表单抽屉
 
 **Files:**
+
 - Create: `src/pages/agent/definition/AgentDefinitionForm.tsx`
 
 - [ ] **Step 1: 创建表单组件**
@@ -202,23 +204,23 @@ import {
   ProFormText,
   ProFormTextArea,
 } from '@ant-design/pro-components';
-import {Form} from 'antd';
+import { Form } from 'antd';
 import {
   addAgentDefinitionInfo,
   getAgentDefinitionInfo,
   updateAgentDefinitionInfo,
 } from '@/services/agent/AgentDefinitionController';
-import {getModelProviderList} from '@/services/agent/ModelProviderController';
+import { getModelProviderList } from '@/services/agent/ModelProviderController';
 
 const statusOptions = [
-  {label: '草稿', value: 0},
-  {label: '启用', value: 1},
-  {label: '禁用', value: 2},
+  { label: '草稿', value: 0 },
+  { label: '启用', value: 1 },
+  { label: '禁用', value: 2 },
 ];
 
 const accessTypeOptions = [
-  {label: 'private', value: 'private'},
-  {label: 'public', value: 'public'},
+  { label: 'private', value: 'private' },
+  { label: 'public', value: 'public' },
 ];
 
 const AgentDefinitionForm = (props: {
@@ -227,7 +229,7 @@ const AgentDefinitionForm = (props: {
   setOpen?: (open: boolean) => void;
   onSuccess: () => void;
 }) => {
-  const {id, open, setOpen, onSuccess} = props;
+  const { id, open, setOpen, onSuccess } = props;
   const [form] = Form.useForm();
 
   return (
@@ -248,17 +250,17 @@ const AgentDefinitionForm = (props: {
       form={form}
     >
       <ProFormText name="id" hidden={true} />
-      <ProFormText name="name" label="Agent 名称" rules={[{required: true}]} />
-      <ProFormText name="code" label="Agent 编码" rules={[{required: true}]} />
+      <ProFormText name="name" label="Agent 名称" rules={[{ required: true }]} />
+      <ProFormText name="code" label="Agent 编码" rules={[{ required: true }]} />
       <ProFormTextArea name="description" label="描述" />
       <ProFormTextArea name="systemPrompt" label="系统提示词" />
       <ProFormSelect
         name="modelProviderId"
         label="模型供应商"
         showSearch={true}
-        rules={[{required: true}]}
+        rules={[{ required: true }]}
         request={async () => {
-          const {data} = await getModelProviderList({
+          const { data } = await getModelProviderList({
             current: 1,
             pageSize: 1000,
             status: 1,
@@ -271,16 +273,21 @@ const AgentDefinitionForm = (props: {
             }));
         }}
       />
-      <ProFormText name="model" label="模型名称" rules={[{required: true}]} />
+      <ProFormText name="model" label="模型名称" rules={[{ required: true }]} />
       <ProFormDigit name="temperature" label="温度参数" min={0} max={2} />
-      <ProFormDigit name="maxTokens" label="最大输出 token" min={1} fieldProps={{precision: 0}} />
+      <ProFormDigit name="maxTokens" label="最大输出 token" min={1} fieldProps={{ precision: 0 }} />
       <ProFormSelect
         name="status"
         label="状态"
         options={statusOptions}
-        rules={[{required: true}]}
+        rules={[{ required: true }]}
       />
-      <ProFormDigit name="maxToolRounds" label="最大工具轮次" min={0} fieldProps={{precision: 0}} />
+      <ProFormDigit
+        name="maxToolRounds"
+        label="最大工具轮次"
+        min={0}
+        fieldProps={{ precision: 0 }}
+      />
       <ProFormSelect name="accessType" label="访问类型" options={accessTypeOptions} />
     </DrawerForm>
   );
@@ -300,16 +307,17 @@ Expected: 只允许既有基线错误；不得出现 `AgentDefinitionForm.tsx` �
 ### Task 4: 新增 Agent 定义列表页
 
 **Files:**
+
 - Create: `src/pages/agent/definition/index.tsx`
 
 - [ ] **Step 1: 创建列表页面组件**
 
 ```tsx
-import React, {useRef, useState} from 'react';
-import {PlusOutlined} from '@ant-design/icons';
-import {ActionType, PageContainer, ProTable} from '@ant-design/pro-components';
-import {Button, message, Popconfirm} from 'antd';
-import {FormattedMessage, history, useAccess} from '@@/exports';
+import React, { useRef, useState } from 'react';
+import { PlusOutlined } from '@ant-design/icons';
+import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components';
+import { Button, message, Popconfirm } from 'antd';
+import { FormattedMessage, history, useAccess } from '@@/exports';
 import AgentDefinitionForm from '@/pages/agent/definition/AgentDefinitionForm';
 import {
   copyAgentDefinitionInfo,
@@ -317,17 +325,17 @@ import {
   getAgentDefinitionList,
   updateAgentDefinitionStatus,
 } from '@/services/agent/AgentDefinitionController';
-import {AgentDefinition, AgentDefinitionSearchParams} from '@/services/entity/Agent';
+import { AgentDefinition, AgentDefinitionSearchParams } from '@/services/entity/Agent';
 
 const statusValueEnum = {
-  0: {text: '草稿', status: 'Default'},
-  1: {text: '启用', status: 'Success'},
-  2: {text: '禁用', status: 'Error'},
+  0: { text: '草稿', status: 'Default' },
+  1: { text: '启用', status: 'Success' },
+  2: { text: '禁用', status: 'Error' },
 };
 
 const accessTypeValueEnum = {
-  private: {text: 'private'},
-  public: {text: 'public'},
+  private: { text: 'private' },
+  public: { text: 'public' },
 };
 
 const AgentDefinitionPage: React.FC = () => {
@@ -343,7 +351,7 @@ const AgentDefinitionPage: React.FC = () => {
       message.error('缺少 Agent ID');
       return;
     }
-    const {code, message: msg} = await deleteAgentDefinitionInfo(record.id);
+    const { code, message: msg } = await deleteAgentDefinitionInfo(record.id);
     if (code === 200) {
       message.success(msg || '删除成功');
       ref.current?.reload();
@@ -357,7 +365,7 @@ const AgentDefinitionPage: React.FC = () => {
       message.error('缺少 Agent ID');
       return;
     }
-    const {code, message: msg} = await copyAgentDefinitionInfo(record.id);
+    const { code, message: msg } = await copyAgentDefinitionInfo(record.id);
     if (code === 200) {
       message.success(msg || '复制成功');
       ref.current?.reload();
@@ -372,7 +380,7 @@ const AgentDefinitionPage: React.FC = () => {
       return;
     }
     const nextStatus = record.status === 1 ? 2 : 1;
-    const {code, message: msg} = await updateAgentDefinitionStatus(record.id, {
+    const { code, message: msg } = await updateAgentDefinitionStatus(record.id, {
       status: nextStatus,
     });
     if (code === 200) {
@@ -384,17 +392,28 @@ const AgentDefinitionPage: React.FC = () => {
   };
 
   const columns: any[] = [
-    {title: 'Agent 名称', dataIndex: 'name', valueType: 'text', ellipsis: true},
-    {title: 'Agent 编码', dataIndex: 'code', valueType: 'text', ellipsis: true},
-    {title: '模型供应商', dataIndex: 'modelProviderId', valueType: 'text', ellipsis: true},
-    {title: '模型名称', dataIndex: 'model', valueType: 'text', ellipsis: true},
-    {title: '状态', dataIndex: 'status', valueType: 'select', valueEnum: statusValueEnum},
-    {title: '温度参数', dataIndex: 'temperature', valueType: 'digit', hideInSearch: true},
-    {title: '最大 token', dataIndex: 'maxTokens', valueType: 'digit', hideInSearch: true},
-    {title: '最大工具轮次', dataIndex: 'maxToolRounds', valueType: 'digit', hideInSearch: true},
-    {title: '访问类型', dataIndex: 'accessType', valueType: 'select', valueEnum: accessTypeValueEnum},
-    {title: '描述', dataIndex: 'description', valueType: 'text', ellipsis: true, hideInSearch: true},
-    {title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime', hideInSearch: true},
+    { title: 'Agent 名称', dataIndex: 'name', valueType: 'text', ellipsis: true },
+    { title: 'Agent 编码', dataIndex: 'code', valueType: 'text', ellipsis: true },
+    { title: '模型供应商', dataIndex: 'modelProviderId', valueType: 'text', ellipsis: true },
+    { title: '模型名称', dataIndex: 'model', valueType: 'text', ellipsis: true },
+    { title: '状态', dataIndex: 'status', valueType: 'select', valueEnum: statusValueEnum },
+    { title: '温度参数', dataIndex: 'temperature', valueType: 'digit', hideInSearch: true },
+    { title: '最大 token', dataIndex: 'maxTokens', valueType: 'digit', hideInSearch: true },
+    { title: '最大工具轮次', dataIndex: 'maxToolRounds', valueType: 'digit', hideInSearch: true },
+    {
+      title: '访问类型',
+      dataIndex: 'accessType',
+      valueType: 'select',
+      valueEnum: accessTypeValueEnum,
+    },
+    {
+      title: '描述',
+      dataIndex: 'description',
+      valueType: 'text',
+      ellipsis: true,
+      hideInSearch: true,
+    },
+    { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime', hideInSearch: true },
     {
       title: '操作',
       valueType: 'option',
@@ -402,15 +421,38 @@ const AgentDefinitionPage: React.FC = () => {
       fixed: 'right',
       render: (_: any, record: AgentDefinition) =>
         write && [
-          <Button type="link" key="edit" onClick={() => { setId(record.id); setOpen(true); }}>编辑</Button>,
+          <Button
+            type="link"
+            key="edit"
+            onClick={() => {
+              setId(record.id);
+              setOpen(true);
+            }}
+          >
+            编辑
+          </Button>,
           <Popconfirm key="copy" title="确认复制该 Agent？" onConfirm={() => handleCopy(record)}>
-            <Button type="link" key="copy-button">复制</Button>
+            <Button type="link" key="copy-button">
+              复制
+            </Button>
           </Popconfirm>,
-          <Popconfirm key="status" title={`确认${record.status === 1 ? '禁用' : '启用'}该 Agent？`} onConfirm={() => handleStatusChange(record)}>
-            <Button type="link" key="status-button">{record.status === 1 ? '禁用' : '启用'}</Button>
+          <Popconfirm
+            key="status"
+            title={`确认${record.status === 1 ? '禁用' : '启用'}该 Agent？`}
+            onConfirm={() => handleStatusChange(record)}
+          >
+            <Button type="link" key="status-button">
+              {record.status === 1 ? '禁用' : '启用'}
+            </Button>
           </Popconfirm>,
-          <Popconfirm key="delete" title="确认删除该 Agent？" onConfirm={() => handleDelete(record)}>
-            <Button type="link" key="delete-button">删除</Button>
+          <Popconfirm
+            key="delete"
+            title="确认删除该 Agent？"
+            onConfirm={() => handleDelete(record)}
+          >
+            <Button type="link" key="delete-button">
+              删除
+            </Button>
           </Popconfirm>,
         ],
     },
@@ -424,7 +466,15 @@ const AgentDefinitionPage: React.FC = () => {
         request={async (params: AgentDefinitionSearchParams) => getAgentDefinitionList(params)}
         toolBarRender={() =>
           write && [
-            <Button key="button" icon={<PlusOutlined />} type="primary" onClick={() => { setId(undefined); setOpen(true); }}>
+            <Button
+              key="button"
+              icon={<PlusOutlined />}
+              type="primary"
+              onClick={() => {
+                setId(undefined);
+                setOpen(true);
+              }}
+            >
               <FormattedMessage id="pages.common.new" />
             </Button>,
           ]
@@ -462,6 +512,7 @@ Expected: 无匹配。
 ### Task 5: 注册 Agent 定义路由
 
 **Files:**
+
 - Modify: `config/routes.ts`
 
 - [ ] **Step 1: 在 Agent 平台 routes 中加入 Agent 定义**
@@ -493,6 +544,7 @@ Expected: 三项均有匹配。
 ### Task 6: 最终验证
 
 **Files:**
+
 - Verify: `src/services/entity/Agent.ts`
 - Verify: `src/services/agent/AgentDefinitionController.ts`
 - Verify: `src/pages/agent/definition/AgentDefinitionForm.tsx`

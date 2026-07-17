@@ -33,7 +33,7 @@ const AgentToolForm = (props: {
   const { id, open, setOpen, onSuccess } = props
   const intl = useIntl()
   const [form] = Form.useForm()
-  const schema = Form.useWatch('mcpInputSchema', {form, preserve: true})
+  const schema = Form.useWatch('mcpInputSchema', { form, preserve: true })
   const [schemaMode, setSchemaMode] = useState<'edit' | 'preview'>('edit')
   const format = (key: string, values?: Record<string, string>) =>
     intl.formatMessage({ id: key }, values)
@@ -67,11 +67,11 @@ const AgentToolForm = (props: {
       request={getAgentToolInfo}
       form={form}
       onSuccess={async (values) => {
-        const payload = { ...values, status: Number(values.status) };
-        if (id) await updateAgentToolInfo(payload);
-        else await addAgentToolInfo(payload);
-        onSuccess();
-        return true;
+        const payload = { ...values, status: Number(values.status) }
+        if (id) await updateAgentToolInfo(payload)
+        else await addAgentToolInfo(payload)
+        onSuccess()
+        return true
       }}
     >
       <ProFormText name="id" hidden />
@@ -97,10 +97,10 @@ const AgentToolForm = (props: {
         label={format('pages.agent.tool.mcpServer')}
         rules={[{ required: true }]}
         request={async () => {
-          const { code, data } = await getMcpServerList({ current: 1, pageSize: 1000, status: 1 });
+          const { code, data } = await getMcpServerList({ current: 1, pageSize: 1000, status: 1 })
           return code === 200
             ? (data || []).map((item) => ({ label: `${item.name} (${item.code})`, value: item.id }))
-            : [];
+            : []
         }}
       />
       <ProFormText
@@ -146,7 +146,7 @@ const AgentToolForm = (props: {
       />
       <ProFormTextArea name="remark" label={format('pages.common.remark')} />
     </DrawerForm>
-  );
+  )
 }
 
 export default AgentToolForm

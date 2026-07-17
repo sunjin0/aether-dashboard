@@ -37,17 +37,17 @@
 
 ## 字段说明
 
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `categories[].value` | string | 工具的 `toolType`，供列表请求的 `toolType` 使用 |
-| `categories[].label` | string | 分类展示名称 |
-| `categories[].count` | number | 该分类下有权限查看的工具数 |
-| `statuses[].value` | number | 工具状态；当前约定 `1` 为已集成/启用，`0` 为未集成/禁用 |
-| `statuses[].label` | string | 状态展示名称 |
-| `statuses[].count` | number | 对应状态的工具数 |
-| `sources[].value` | string | MCP 服务 ID，供列表请求的 `mcpServerId` 使用 |
-| `sources[].label` | string | MCP 服务名称 |
-| `sources[].count` | number | 来自该服务的工具数 |
+| 字段                 | 类型   | 说明                                                    |
+| -------------------- | ------ | ------------------------------------------------------- |
+| `categories[].value` | string | 工具的 `toolType`，供列表请求的 `toolType` 使用         |
+| `categories[].label` | string | 分类展示名称                                            |
+| `categories[].count` | number | 该分类下有权限查看的工具数                              |
+| `statuses[].value`   | number | 工具状态；当前约定 `1` 为已集成/启用，`0` 为未集成/禁用 |
+| `statuses[].label`   | string | 状态展示名称                                            |
+| `statuses[].count`   | number | 对应状态的工具数                                        |
+| `sources[].value`    | string | MCP 服务 ID，供列表请求的 `mcpServerId` 使用            |
+| `sources[].label`    | string | MCP 服务名称                                            |
+| `sources[].count`    | number | 来自该服务的工具数                                      |
 
 ## 后端实现要求
 

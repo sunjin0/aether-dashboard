@@ -23,7 +23,15 @@ jest.mock('@/components/JsonDisplay', () => () => null)
 jest.mock('@ant-design/pro-components', () => ({
   PageContainer: ({ children }: any) => <>{children}</>,
   ProTable: ({ columns }: any) => (
-    <button type="button" onClick={() => columns.find((column: any) => column.valueType === 'option').render(null, { id: 'server-1' })[0].props.onClick()}>
+    <button
+      type="button"
+      onClick={() =>
+        columns
+          .find((column: any) => column.valueType === 'option')
+          .render(null, { id: 'server-1' })[0]
+          .props.onClick()
+      }
+    >
       Discover
     </button>
   ),
@@ -33,11 +41,16 @@ jest.mock('antd', () => {
   const React = require('react')
   return {
     Button: ({ children, onClick }: any) => <button onClick={onClick}>{children}</button>,
-    Checkbox: ({ checked, onChange, children }: any) => <label><input type="checkbox" checked={checked} onChange={onChange} />{children}</label>,
+    Checkbox: ({ checked, onChange, children }: any) => (
+      <label>
+        <input type="checkbox" checked={checked} onChange={onChange} />
+        {children}
+      </label>
+    ),
     Drawer: ({ children }: any) => <>{children}</>,
     Empty: () => null,
     Input: { Search: () => null },
-    Modal: ({ children, open }: any) => open ? <>{children}</> : null,
+    Modal: ({ children, open }: any) => (open ? <>{children}</> : null),
     Popconfirm: ({ children }: any) => <>{children}</>,
     Space: ({ children }: any) => <div>{children}</div>,
     Tag: ({ children }: any) => <>{children}</>,

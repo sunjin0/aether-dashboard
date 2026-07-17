@@ -107,20 +107,20 @@ DELETE /api/agent/tool/{id}
 
 表单字段：
 
-| 字段 | 控件 | 必填 | 说明 |
-|------|------|------|------|
-| `name` | 输入框 | 是 | 工具名称 |
-| `code` | 输入框 | 是 | 工具编码 |
-| `description` | 多行文本 | 否 | 工具描述 |
-| `type` | 下拉框 | 是 | 首版只提供 `http` |
-| `httpMethod` | 下拉框 | 否 | `GET` 或 `POST` |
-| `httpUrl` | 输入框 | 否 | HTTP 请求地址 |
-| `httpHeaders` | 多行文本 | 否 | JSON 字符串模板 |
-| `httpBodyTemplate` | 多行文本 | 否 | 请求体模板 |
-| `responseExtractRule` | 多行文本 | 否 | 响应提取规则 |
-| `timeoutMs` | 数字输入 | 否 | 超时时间，单位毫秒 |
-| `cacheTtlSeconds` | 数字输入 | 否 | 缓存 TTL，单位秒 |
-| `status` | 单选或下拉 | 是 | `0` 禁用，`1` 启用 |
+| 字段                  | 控件       | 必填 | 说明               |
+| --------------------- | ---------- | ---- | ------------------ |
+| `name`                | 输入框     | 是   | 工具名称           |
+| `code`                | 输入框     | 是   | 工具编码           |
+| `description`         | 多行文本   | 否   | 工具描述           |
+| `type`                | 下拉框     | 是   | 首版只提供 `http`  |
+| `httpMethod`          | 下拉框     | 否   | `GET` 或 `POST`    |
+| `httpUrl`             | 输入框     | 否   | HTTP 请求地址      |
+| `httpHeaders`         | 多行文本   | 否   | JSON 字符串模板    |
+| `httpBodyTemplate`    | 多行文本   | 否   | 请求体模板         |
+| `responseExtractRule` | 多行文本   | 否   | 响应提取规则       |
+| `timeoutMs`           | 数字输入   | 否   | 超时时间，单位毫秒 |
+| `cacheTtlSeconds`     | 数字输入   | 否   | 缓存 TTL，单位秒   |
+| `status`              | 单选或下拉 | 是   | `0` 禁用，`1` 启用 |
 
 `httpHeaders`、`httpBodyTemplate`、`responseExtractRule` 不做 JSON 强校验。它们作为模板字符串提交，避免前端限制后续模板语法。
 
@@ -134,7 +134,7 @@ DELETE /api/agent/tool/{id}
 写权限沿用项目现有模式：
 
 ```ts
-useAccess()[history.location.pathname]
+useAccess()[history.location.pathname];
 ```
 
 没有写权限时隐藏：

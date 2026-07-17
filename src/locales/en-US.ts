@@ -177,4 +177,4 @@ export default {
   'pages.agent.mcpServer.deleteConfirm': 'Delete this MCP server?',
   'pages.agent.mcpServer.deleteFailed':
     'This MCP server still has associated tools. Delete or migrate them first.',
-};
+}

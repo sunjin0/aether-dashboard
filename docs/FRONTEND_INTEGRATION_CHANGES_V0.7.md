@@ -1,8 +1,6 @@
 # Agent 平台前端对接变更说明（V0.7）
 
-> 日期：2026-07-07
-> 范围：本次后端改动涉及的前端对接点
-> 目标读者：前端开发
+> 日期：2026-07-07范围：本次后端改动涉及的前端对接点目标读者：前端开发
 
 ---
 
@@ -24,10 +22,10 @@
 
 ## 2. 受影响接口总览
 
-| 接口 | 方法 | 是否有变化 | 前端动作 |
-|------|------|------------|----------|
-| `/api/agent/chat` | POST | 有变化 | 请求体新增 `thinking`、`reasoningEffort` |
-| `/api/agent/chat/stream` | GET | 有变化 | 新增 Query 参数 + 新增 `reasoning` SSE 事件 |
+| 接口                     | 方法 | 是否有变化 | 前端动作                                    |
+| ------------------------ | ---- | ---------- | ------------------------------------------- |
+| `/api/agent/chat`        | POST | 有变化     | 请求体新增 `thinking`、`reasoningEffort`    |
+| `/api/agent/chat/stream` | GET  | 有变化     | 新增 Query 参数 + 新增 `reasoning` SSE 事件 |
 
 其他接口本次无前端契约变化。
 
@@ -38,7 +36,7 @@
 ### 3.1 参数说明
 
 | 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
+| --- | --- | --- | --- |
 | `thinking` | Boolean | 否 | 是否启用深度思考。不传则使用 Agent 默认配置 |
 | `reasoningEffort` | String | 否 | 推理力度：`low` / `medium` / `high`。`thinking=true` 时生效，不传默认 `medium` |
 
@@ -46,11 +44,11 @@
 
 ### 3.2 reasoningEffort 取值
 
-| 值 | 说明 | 适用场景 |
-|----|------|----------|
-| `low` | 轻度推理 | 简单问答、速度优先 |
-| `medium` | 中等推理 | 一般分析、默认值 |
-| `high` | 深度推理 | 复杂逻辑、数学推导、代码分析 |
+| 值       | 说明     | 适用场景                     |
+| -------- | -------- | ---------------------------- |
+| `low`    | 轻度推理 | 简单问答、速度优先           |
+| `medium` | 中等推理 | 一般分析、默认值             |
+| `high`   | 深度推理 | 复杂逻辑、数学推导、代码分析 |
 
 ### 3.3 注意事项
 
@@ -105,13 +103,13 @@ GET /api/agent/chat/stream
 
 ### 5.2 新增 Query 参数
 
-| 参数 | 必填 | 说明 |
-|------|------|------|
-| `agentId` | 是 | Agent 定义 ID |
-| `message` | 是 | 消息内容 |
-| `conversationId` | 否 | 会话 ID，首次对话不传 |
-| `thinking` | 否 | 是否启用深度思考 |
-| `reasoningEffort` | 否 | 推理力度：low/medium/high |
+| 参数              | 必填 | 说明                      |
+| ----------------- | ---- | ------------------------- |
+| `agentId`         | 是   | Agent 定义 ID             |
+| `message`         | 是   | 消息内容                  |
+| `conversationId`  | 否   | 会话 ID，首次对话不传     |
+| `thinking`        | 否   | 是否启用深度思考          |
+| `reasoningEffort` | 否   | 推理力度：low/medium/high |
 
 示例：
 
@@ -144,38 +142,38 @@ data: {"conversationId":"conversation-1","messageId":"msg-1","content":"根据�
 
 ```ts
 interface ReasoningEvent {
-  chunk: string          // 推理内容分片
-  conversationId: string // 会话 ID
+  chunk: string; // 推理内容分片
+  conversationId: string; // 会话 ID
 }
 ```
 
 ### 5.5 前端处理
 
 ```ts
-const eventSource = new EventSource(url)
+const eventSource = new EventSource(url);
 
 // 实时推理过程
 eventSource.addEventListener('reasoning', (event) => {
-  const data = JSON.parse(event.data)
-  appendReasoningContent(data.conversationId, data.chunk)
-})
+  const data = JSON.parse(event.data);
+  appendReasoningContent(data.conversationId, data.chunk);
+});
 
 // 最终回复内容（原有逻辑不变）
 eventSource.addEventListener('message', (event) => {
-  const data = JSON.parse(event.data)
-  appendMessageContent(data.conversationId, data.chunk)
-})
+  const data = JSON.parse(event.data);
+  appendMessageContent(data.conversationId, data.chunk);
+});
 
 // 完成事件（原有逻辑不变，reasoningContent 为完整推理过程）
 eventSource.addEventListener('done', (event) => {
-  const data = JSON.parse(event.data)
-  finalizeMessage(data)
-})
+  const data = JSON.parse(event.data);
+  finalizeMessage(data);
+});
 
 // 错误事件（原有逻辑不变）
 eventSource.addEventListener('error', (event) => {
   // ...
-})
+});
 ```
 
 ### 5.6 推荐 UI 交互
@@ -217,9 +215,9 @@ SSE comment 以 `:` 开头，浏览器 `EventSource` 会自动忽略，**不需�
 
 ### 6.3 超时变更
 
-| 项目 | 旧值 | 新值 |
-|------|------|------|
-| SSE 连接超时 | 30 秒 | 5 分钟 |
+| 项目            | 旧值  | 新值   |
+| --------------- | ----- | ------ |
+| SSE 连接超时    | 30 秒 | 5 分钟 |
 | LLM HTTP 读超时 | 30 秒 | 5 分钟 |
 
 前端 `EventSource` 不需要设置超时，浏览器会自动处理。如果前端有自定义超时逻辑，建议同步调整为 5 分钟以上。
@@ -230,14 +228,14 @@ SSE comment 以 `:` 开头，浏览器 `EventSource` 会自动忽略，**不需�
 
 V0.7 版本 SSE 流式聊天包含以下事件类型：
 
-| 事件 | 说明 | 是否新增 |
-|------|------|----------|
-| `reasoning` | 推理过程实时分片 | ✅ 新增 |
-| `message` | 最终回复内容分片 | 原有 |
-| `tool_call` | 工具调用通知 | 原有 |
-| `done` | 流完成，返回完整消息 | 原有 |
-| `error` | 错误 | 原有 |
-| `:heartbeat` | 心跳（comment，浏览器自动忽略） | ✅ 新增 |
+| 事件         | 说明                            | 是否新增 |
+| ------------ | ------------------------------- | -------- |
+| `reasoning`  | 推理过程实时分片                | ✅ 新增  |
+| `message`    | 最终回复内容分片                | 原有     |
+| `tool_call`  | 工具调用通知                    | 原有     |
+| `done`       | 流完成，返回完整消息            | 原有     |
+| `error`      | 错误                            | 原有     |
+| `:heartbeat` | 心跳（comment，浏览器自动忽略） | ✅ 新增  |
 
 ---
 

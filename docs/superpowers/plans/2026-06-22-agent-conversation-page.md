@@ -30,6 +30,7 @@
 ### Task 1: Conversation Service Contract Test
 
 **Files:**
+
 - Create: `src/services/agent/ConversationController.test.ts`
 
 - [ ] **Step 1: Write the failing service contract test**
@@ -37,7 +38,7 @@
 Create `src/services/agent/ConversationController.test.ts`:
 
 ```ts
-import {request} from '@umijs/max';
+import { request } from '@umijs/max';
 import {
   closeAgentConversation,
   deleteAgentConversation,
@@ -54,19 +55,19 @@ const mockedRequest = request as jest.Mock;
 
 describe('ConversationController', () => {
   beforeEach(() => {
-    mockedRequest.mockResolvedValue({code: 200, data: null});
+    mockedRequest.mockResolvedValue({ code: 200, data: null });
   });
 
   it('uses documented conversation management endpoints', async () => {
-    await getAgentConversationList({current: 1, pageSize: 20, title: 'hello'});
+    await getAgentConversationList({ current: 1, pageSize: 20, title: 'hello' });
     await getAgentConversationInfo('conversation-1');
-    await getAgentConversationMessages('conversation-1', {current: 1, pageSize: 20});
+    await getAgentConversationMessages('conversation-1', { current: 1, pageSize: 20 });
     await closeAgentConversation('conversation-1');
     await deleteAgentConversation('conversation-1');
 
     expect(mockedRequest).toHaveBeenNthCalledWith(1, '/api/agent/conversation/list', {
       method: 'POST',
-      data: {current: 1, pageSize: 20, title: 'hello'},
+      data: { current: 1, pageSize: 20, title: 'hello' },
     });
     expect(mockedRequest).toHaveBeenNthCalledWith(2, '/api/agent/conversation/conversation-1', {
       method: 'GET',
@@ -76,7 +77,7 @@ describe('ConversationController', () => {
       '/api/agent/conversation/conversation-1/messages',
       {
         method: 'GET',
-        params: {current: 1, pageSize: 20},
+        params: { current: 1, pageSize: 20 },
       },
     );
     expect(mockedRequest).toHaveBeenNthCalledWith(
@@ -104,6 +105,7 @@ Expected: FAIL because the conversation service functions are missing.
 ### Task 2: Conversation Service Implementation
 
 **Files:**
+
 - Modify: `src/services/agent/ConversationController.ts`
 - Modify: `src/services/agent/ChatController.ts`
 
@@ -112,8 +114,8 @@ Expected: FAIL because the conversation service functions are missing.
 Set `src/services/agent/ConversationController.ts` to:
 
 ```ts
-import {request} from '@umijs/max';
-import {ResponseStructure} from '@/services/entity/Common';
+import { request } from '@umijs/max';
+import { ResponseStructure } from '@/services/entity/Common';
 import {
   AgentConversation,
   AgentConversationSearchParams,
@@ -185,9 +187,9 @@ export const deleteAgentConversation = async (
 Keep `src/services/agent/ChatController.ts` focused on chat sending:
 
 ```ts
-import {request} from '@umijs/max';
-import {ResponseStructure} from '@/services/entity/Common';
-import {AgentChatRequest, AgentMessage} from '@/services/entity/Agent';
+import { request } from '@umijs/max';
+import { ResponseStructure } from '@/services/entity/Common';
+import { AgentChatRequest, AgentMessage } from '@/services/entity/Agent';
 
 /**
  * @description 发送 Agent 非流式聊天消息
@@ -213,6 +215,7 @@ Expected: PASS.
 ### Task 3: Update Chat Debug Imports
 
 **Files:**
+
 - Modify: `src/pages/agent/chat/index.tsx`
 
 - [ ] **Step 1: Split chat and conversation imports**
@@ -220,7 +223,7 @@ Expected: PASS.
 Replace the current import from `ChatController` with:
 
 ```ts
-import {sendAgentChat} from '@/services/agent/ChatController';
+import { sendAgentChat } from '@/services/agent/ChatController';
 import {
   getAgentConversationList,
   getAgentConversationMessages,
@@ -238,6 +241,7 @@ Expected: No matches.
 ### Task 4: Add Conversation Management Page
 
 **Files:**
+
 - Create: `src/pages/agent/conversation/index.tsx`
 
 - [ ] **Step 1: Create page component**
@@ -245,10 +249,21 @@ Expected: No matches.
 Create `src/pages/agent/conversation/index.tsx`:
 
 ```tsx
-import React, {useRef, useState} from 'react';
-import {ActionType, PageContainer, ProDescriptions, ProTable} from '@ant-design/pro-components';
-import {Button, Card, Drawer, Empty, List, message, Popconfirm, Space, Spin, Typography} from 'antd';
-import {history, useAccess} from '@@/exports';
+import React, { useRef, useState } from 'react';
+import { ActionType, PageContainer, ProDescriptions, ProTable } from '@ant-design/pro-components';
+import {
+  Button,
+  Card,
+  Drawer,
+  Empty,
+  List,
+  message,
+  Popconfirm,
+  Space,
+  Spin,
+  Typography,
+} from 'antd';
+import { history, useAccess } from '@@/exports';
 import {
   closeAgentConversation,
   deleteAgentConversation,
@@ -256,14 +271,18 @@ import {
   getAgentConversationList,
   getAgentConversationMessages,
 } from '@/services/agent/ConversationController';
-import {AgentConversation, AgentConversationSearchParams, AgentMessage} from '@/services/entity/Agent';
+import {
+  AgentConversation,
+  AgentConversationSearchParams,
+  AgentMessage,
+} from '@/services/entity/Agent';
 
-const {Paragraph, Text} = Typography;
+const { Paragraph, Text } = Typography;
 
 const statusValueEnum = {
-  0: {text: '进行中', status: 'Processing'},
-  1: {text: '关闭', status: 'Default'},
-  2: {text: '归档', status: 'Warning'},
+  0: { text: '进行中', status: 'Processing' },
+  1: { text: '关闭', status: 'Default' },
+  2: { text: '归档', status: 'Warning' },
 };
 
 const AgentConversationPage: React.FC = () => {
@@ -282,7 +301,7 @@ const AgentConversationPage: React.FC = () => {
     try {
       const [detailResult, messageResult] = await Promise.all([
         getAgentConversationInfo(id),
-        getAgentConversationMessages(id, {current: 1, pageSize: 20}),
+        getAgentConversationMessages(id, { current: 1, pageSize: 20 }),
       ]);
 
       if (detailResult.code === 200) {
@@ -319,7 +338,7 @@ const AgentConversationPage: React.FC = () => {
       return;
     }
 
-    const {code, message: msg} = await closeAgentConversation(record.id);
+    const { code, message: msg } = await closeAgentConversation(record.id);
     if (code === 200) {
       message.success(msg || '关闭成功');
       ref.current?.reload();
@@ -337,7 +356,7 @@ const AgentConversationPage: React.FC = () => {
       return;
     }
 
-    const {code, message: msg} = await deleteAgentConversation(record.id);
+    const { code, message: msg } = await deleteAgentConversation(record.id);
     if (code === 200) {
       message.success(msg || '删除成功');
       ref.current?.reload();
@@ -456,18 +475,18 @@ const AgentConversationPage: React.FC = () => {
               column={1}
               dataSource={conversation}
               columns={[
-                {title: 'ID', dataIndex: 'id'},
-                {title: '标题', dataIndex: 'title'},
-                {title: 'Agent ID', dataIndex: 'agentId'},
-                {title: '状态', dataIndex: 'status', valueEnum: statusValueEnum},
-                {title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime'},
-                {title: '更新时间', dataIndex: 'updatedAt', valueType: 'dateTime'},
+                { title: 'ID', dataIndex: 'id' },
+                { title: '标题', dataIndex: 'title' },
+                { title: 'Agent ID', dataIndex: 'agentId' },
+                { title: '状态', dataIndex: 'status', valueEnum: statusValueEnum },
+                { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime' },
+                { title: '更新时间', dataIndex: 'updatedAt', valueType: 'dateTime' },
               ]}
             />
           ) : (
             <Empty description="暂无会话详情" />
           )}
-          <Card title="消息列表" style={{marginTop: 16}}>
+          <Card title="消息列表" style={{ marginTop: 16 }}>
             {!messages.length ? (
               <Empty description="暂无消息" />
             ) : (
@@ -475,9 +494,9 @@ const AgentConversationPage: React.FC = () => {
                 dataSource={messages}
                 renderItem={(item, index) => (
                   <List.Item key={item.id || `${item.role}-${index}`}>
-                    <Space direction="vertical" size={4} style={{width: '100%'}}>
+                    <Space direction="vertical" size={4} style={{ width: '100%' }}>
                       <Text strong={true}>{item.role || 'unknown'}</Text>
-                      <Paragraph style={{whiteSpace: 'pre-wrap', marginBottom: 0}}>
+                      <Paragraph style={{ whiteSpace: 'pre-wrap', marginBottom: 0 }}>
                         {item.content}
                       </Paragraph>
                       {renderMessageMeta(item)}
@@ -513,6 +532,7 @@ Expected: Finds both values in the message request.
 ### Task 5: Register Conversation Route
 
 **Files:**
+
 - Modify: `config/routes.ts`
 
 - [ ] **Step 1: Add route under Agent platform**
@@ -538,6 +558,7 @@ Expected: Finds path, name, and component.
 ### Task 6: Verify Implementation
 
 **Files:**
+
 - Inspect: `src/services/agent/ConversationController.ts`
 - Inspect: `src/services/agent/ChatController.ts`
 - Inspect: `src/pages/agent/chat/index.tsx`

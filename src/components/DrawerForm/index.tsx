@@ -1,15 +1,12 @@
-import {
-  DrawerForm,
-} from '@ant-design/pro-components';
-import React, {useEffect, useState} from "react";
-import {Props} from "@/components";
-import {Button} from "antd";
-import {useIntl} from "@umijs/max";
-
+import { DrawerForm } from '@ant-design/pro-components'
+import React, { useEffect, useState } from 'react'
+import { Props } from '@/components'
+import { Button } from 'antd'
+import { useIntl } from '@umijs/max'
 
 export default (props: Props) => {
-  const {id, onSuccess, open, setOpen, children, form, request,readonly} = props;
-  const [loading, setLoading] = useState(false);
+  const { id, onSuccess, open, setOpen, children, form, request, readonly } = props
+  const [loading, setLoading] = useState(false)
   const intl = useIntl()
   return (
     <DrawerForm
@@ -19,16 +16,16 @@ export default (props: Props) => {
           return {
             data: {},
             success: true,
-            code: 200
-          };
-        const res = await request(params);
+            code: 200,
+          }
+        const res = await request(params)
         form.setFieldsValue(res.data)
         return res
       }}
       loading={loading}
       open={open}
       readonly={readonly}
-      onOpenChange={(open)=>{
+      onOpenChange={(open) => {
         if (setOpen) {
           setOpen(open)
         }
@@ -47,16 +44,16 @@ export default (props: Props) => {
             //关闭
             <Button
               key="cancel"
-                    onClick={() => {
-              if (setOpen) {
-                setOpen(false)
-              }
-            }}>
-              {intl.formatMessage({id: 'pages.common.close'})}
-            </Button>
+              onClick={() => {
+                if (setOpen) {
+                  setOpen(false)
+                }
+              }}
+            >
+              {intl.formatMessage({ id: 'pages.common.close' })}
+            </Button>,
           ]
-        }
-
+        },
       }}
       onFinish={async (values) => {
         try {
@@ -69,5 +66,5 @@ export default (props: Props) => {
     >
       {children}
     </DrawerForm>
-  );
-};
+  )
+}

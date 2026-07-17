@@ -1,7 +1,7 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import AgentMessageBubble from './index';
-import { KnowledgeSource } from '@/services/entity/Agent';
+import React from 'react'
+import { render, screen } from '@testing-library/react'
+import AgentMessageBubble from './index'
+import { KnowledgeSource } from '@/services/entity/Agent'
 
 describe('AgentMessageBubble', () => {
   it('renders markdown content and message metadata', () => {
@@ -17,16 +17,16 @@ describe('AgentMessageBubble', () => {
           latencyMs: 42,
         }}
       />,
-    );
+    )
 
-    expect(screen.getByRole('heading', { name: 'Title' })).toBeTruthy();
-    expect(screen.getByText('first item')).toBeTruthy();
-    expect(screen.getByText(/const ok = true/)).toBeTruthy();
-    expect(screen.getByText('助手')).toBeTruthy();
-    expect(screen.queryByText('🤖')).toBeNull();
-    expect(screen.getByText(/模型: gpt-test/)).toBeTruthy();
-    expect(screen.getByText(/耗时: 42ms/)).toBeTruthy();
-  });
+    expect(screen.getByRole('heading', { name: 'Title' })).toBeTruthy()
+    expect(screen.getByText('first item')).toBeTruthy()
+    expect(screen.getByText(/const ok = true/)).toBeTruthy()
+    expect(screen.getByText('助手')).toBeTruthy()
+    expect(screen.queryByText('🤖')).toBeNull()
+    expect(screen.getByText(/模型: gpt-test/)).toBeTruthy()
+    expect(screen.getByText(/耗时: 42ms/)).toBeTruthy()
+  })
 
   it('renders GFM tables as semantic table elements', () => {
     render(
@@ -36,12 +36,12 @@ describe('AgentMessageBubble', () => {
           content: '| 工具 | 能干嘛 |\n| --- | --- |\n| 搜索代码 | 搜索代码片段 |',
         }}
       />,
-    );
+    )
 
-    expect(screen.getByRole('table')).toBeTruthy();
-    expect(screen.getByRole('columnheader', { name: '工具' })).toBeTruthy();
-    expect(screen.getByRole('cell', { name: '搜索代码' })).toBeTruthy();
-  });
+    expect(screen.getByRole('table')).toBeTruthy()
+    expect(screen.getByRole('columnheader', { name: '工具' })).toBeTruthy()
+    expect(screen.getByRole('cell', { name: '搜索代码' })).toBeTruthy()
+  })
 
   it('generates unique anchor IDs for citations across messages', () => {
     const { container } = render(
@@ -56,13 +56,13 @@ describe('AgentMessageBubble', () => {
           ],
         }}
       />,
-    );
+    )
 
-    const citationLink = container.querySelector('a[href="#knowledge-source-msg-123-1"]');
-    expect(citationLink).toBeTruthy();
-    expect(citationLink?.textContent).toBe('【1】');
+    const citationLink = container.querySelector('a[href="#knowledge-source-msg-123-1"]')
+    expect(citationLink).toBeTruthy()
+    expect(citationLink?.textContent).toBe('【1】')
 
-    const sourceAnchor = container.querySelector('#knowledge-source-msg-123-1');
-    expect(sourceAnchor).toBeTruthy();
-  });
-});
+    const sourceAnchor = container.querySelector('#knowledge-source-msg-123-1')
+    expect(sourceAnchor).toBeTruthy()
+  })
+})

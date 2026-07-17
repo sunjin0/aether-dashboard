@@ -30,6 +30,7 @@
 ### Task 1: 新增模型供应商类型定义
 
 **Files:**
+
 - Create: `src/services/entity/Agent.ts`
 
 - [ ] **Step 1: 创建 Agent 实体类型文件**
@@ -81,6 +82,7 @@ Expected: TypeScript 检查可能因为后续页面还未实现而没有新增�
 ### Task 2: 新增模型供应商服务层
 
 **Files:**
+
 - Create: `src/services/agent/ModelProviderController.ts`
 - Depends on: `src/services/entity/Agent.ts`
 - Depends on: `src/services/entity/Common.ts`
@@ -90,8 +92,8 @@ Expected: TypeScript 检查可能因为后续页面还未实现而没有新增�
 使用 `apply_patch` 创建 `src/services/agent/ModelProviderController.ts`，内容如下：
 
 ```ts
-import {request} from '@umijs/max';
-import {ResponseStructure} from '@/services/entity/Common';
+import { request } from '@umijs/max';
+import { ResponseStructure } from '@/services/entity/Common';
 import {
   ModelProvider,
   ModelProviderSearchParams,
@@ -181,6 +183,7 @@ Expected: 服务层新增代码没有 TypeScript 错误；如果存在仓库原�
 ### Task 3: 新增模型供应商表单抽屉
 
 **Files:**
+
 - Create: `src/pages/agent/model-provider/ModelProviderForm.tsx`
 - Depends on: `src/components/DrawerForm/index.tsx`
 - Depends on: `src/services/agent/ModelProviderController.ts`
@@ -197,7 +200,7 @@ import {
   ProFormText,
   ProFormTextArea,
 } from '@ant-design/pro-components';
-import {Form} from 'antd';
+import { Form } from 'antd';
 import {
   addModelProviderInfo,
   getModelProviderInfo,
@@ -205,13 +208,13 @@ import {
 } from '@/services/agent/ModelProviderController';
 
 const typeOptions = [
-  {label: 'OpenAI', value: 'openai'},
-  {label: 'Local', value: 'local'},
+  { label: 'OpenAI', value: 'openai' },
+  { label: 'Local', value: 'local' },
 ];
 
 const statusOptions = [
-  {label: '禁用', value: 0},
-  {label: '启用', value: 1},
+  { label: '禁用', value: 0 },
+  { label: '启用', value: 1 },
 ];
 
 const ModelProviderForm = (props: {
@@ -220,7 +223,7 @@ const ModelProviderForm = (props: {
   setOpen?: (open: boolean) => void;
   onSuccess: () => void;
 }) => {
-  const {id, open, setOpen, onSuccess} = props;
+  const { id, open, setOpen, onSuccess } = props;
   const [form] = Form.useForm();
 
   return (
@@ -241,28 +244,20 @@ const ModelProviderForm = (props: {
       form={form}
     >
       <ProFormText name="id" hidden={true} />
-      <ProFormText
-        name="name"
-        label="供应商名称"
-        rules={[{required: true}]}
-      />
+      <ProFormText name="name" label="供应商名称" rules={[{ required: true }]} />
       <ProFormSelect
         name="type"
         label="供应商类型"
         options={typeOptions}
-        rules={[{required: true}]}
+        rules={[{ required: true }]}
       />
-      <ProFormText
-        name="apiBaseUrl"
-        label="API 基础地址"
-        rules={[{required: true}]}
-      />
+      <ProFormText name="apiBaseUrl" label="API 基础地址" rules={[{ required: true }]} />
       <ProFormText.Password
         name="apiKey"
         label="API Key"
         required={!id}
-        rules={[{required: !id}]}
-        fieldProps={{autoComplete: 'new-password'}}
+        rules={[{ required: !id }]}
+        fieldProps={{ autoComplete: 'new-password' }}
         extra={id ? '留空表示不修改原 API Key' : undefined}
       />
       <ProFormText name="defaultModel" label="默认模型" />
@@ -270,9 +265,9 @@ const ModelProviderForm = (props: {
         name="status"
         label="状态"
         options={statusOptions}
-        rules={[{required: true}]}
+        rules={[{ required: true }]}
       />
-      <ProFormDigit name="sort" label="排序" min={0} fieldProps={{precision: 0}} />
+      <ProFormDigit name="sort" label="排序" min={0} fieldProps={{ precision: 0 }} />
       <ProFormTextArea name="remark" label="备注" />
     </DrawerForm>
   );
@@ -298,6 +293,7 @@ Expected: `ModelProviderForm.tsx` 无 TypeScript 错误；如果 `ProFormDigit` 
 ### Task 4: 新增模型供应商列表页面
 
 **Files:**
+
 - Create: `src/pages/agent/model-provider/index.tsx`
 - Depends on: `src/pages/agent/model-provider/ModelProviderForm.tsx`
 - Depends on: `src/services/agent/ModelProviderController.ts`
@@ -308,27 +304,27 @@ Expected: `ModelProviderForm.tsx` 无 TypeScript 错误；如果 `ProFormDigit` 
 使用 `apply_patch` 创建 `src/pages/agent/model-provider/index.tsx`，内容如下：
 
 ```tsx
-import React, {useRef, useState} from 'react';
-import {PlusOutlined} from '@ant-design/icons';
-import {ActionType, PageContainer, ProTable} from '@ant-design/pro-components';
-import {Button, message, Popconfirm} from 'antd';
-import {FormattedMessage, history, useAccess} from '@@/exports';
+import React, { useRef, useState } from 'react';
+import { PlusOutlined } from '@ant-design/icons';
+import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components';
+import { Button, message, Popconfirm } from 'antd';
+import { FormattedMessage, history, useAccess } from '@@/exports';
 import ModelProviderForm from '@/pages/agent/model-provider/ModelProviderForm';
 import {
   deleteModelProviderInfo,
   getModelProviderList,
   updateModelProviderStatus,
 } from '@/services/agent/ModelProviderController';
-import {ModelProvider, ModelProviderSearchParams} from '@/services/entity/Agent';
+import { ModelProvider, ModelProviderSearchParams } from '@/services/entity/Agent';
 
 const typeValueEnum = {
-  openai: {text: 'OpenAI'},
-  local: {text: 'Local'},
+  openai: { text: 'OpenAI' },
+  local: { text: 'Local' },
 };
 
 const statusValueEnum = {
-  0: {text: '禁用', status: 'Default'},
-  1: {text: '启用', status: 'Success'},
+  0: { text: '禁用', status: 'Default' },
+  1: { text: '启用', status: 'Success' },
 };
 
 const ModelProviderPage: React.FC = () => {
@@ -344,7 +340,7 @@ const ModelProviderPage: React.FC = () => {
       message.error('缺少模型供应商 ID');
       return;
     }
-    const {code, message: msg} = await deleteModelProviderInfo(record.id);
+    const { code, message: msg } = await deleteModelProviderInfo(record.id);
     if (code === 200) {
       message.success(msg || '删除成功');
       ref.current?.reload();
@@ -359,7 +355,7 @@ const ModelProviderPage: React.FC = () => {
       return;
     }
     const nextStatus = record.status === 1 ? 0 : 1;
-    const {code, message: msg} = await updateModelProviderStatus(record.id, {
+    const { code, message: msg } = await updateModelProviderStatus(record.id, {
       status: nextStatus,
     });
     if (code === 200) {
@@ -464,9 +460,7 @@ const ModelProviderPage: React.FC = () => {
       <ProTable
         actionRef={ref}
         rowKey="id"
-        request={async (params: ModelProviderSearchParams) =>
-          getModelProviderList(params)
-        }
+        request={async (params: ModelProviderSearchParams) => getModelProviderList(params)}
         toolBarRender={() =>
           write && [
             <Button
@@ -517,6 +511,7 @@ Expected: 没有匹配结果。
 ### Task 5: 注册 Agent 平台路由
 
 **Files:**
+
 - Modify: `config/routes.ts`
 
 - [ ] **Step 1: 在 `config/routes.ts` 中加入 Agent 平台菜单**
@@ -571,6 +566,7 @@ Expected: `config/routes.ts` 无语法错误。
 ### Task 6: 最终验证
 
 **Files:**
+
 - Verify: `src/services/entity/Agent.ts`
 - Verify: `src/services/agent/ModelProviderController.ts`
 - Verify: `src/pages/agent/model-provider/ModelProviderForm.tsx`

@@ -30,6 +30,7 @@
 ### Task 1: Add Agent Run Types
 
 **Files:**
+
 - Modify: `src/services/entity/Agent.ts`
 
 - [ ] **Step 1: Add `AgentRun` and `AgentRunSearchParams` after `AgentMessageSearchParams`**
@@ -80,6 +81,7 @@ Expected: two matches, one for `AgentRun` and one for `AgentRunSearchParams`.
 ### Task 2: Add Run Controller Tests First
 
 **Files:**
+
 - Create: `src/services/agent/RunController.test.ts`
 
 - [ ] **Step 1: Create the failing endpoint test**
@@ -87,8 +89,8 @@ Expected: two matches, one for `AgentRun` and one for `AgentRunSearchParams`.
 Create `src/services/agent/RunController.test.ts` with:
 
 ```ts
-import {request} from '@umijs/max';
-import {getAgentRunInfo, getAgentRunList} from './RunController';
+import { request } from '@umijs/max';
+import { getAgentRunInfo, getAgentRunList } from './RunController';
 
 jest.mock('@umijs/max', () => ({
   request: jest.fn(),
@@ -98,7 +100,7 @@ const mockedRequest = request as jest.Mock;
 
 describe('RunController', () => {
   beforeEach(() => {
-    mockedRequest.mockResolvedValue({code: 200, data: null});
+    mockedRequest.mockResolvedValue({ code: 200, data: null });
   });
 
   it('uses documented run record endpoints', async () => {
@@ -137,6 +139,7 @@ Expected: FAIL because `./RunController` does not exist or exported functions ar
 ### Task 3: Implement Run Controller
 
 **Files:**
+
 - Create: `src/services/agent/RunController.ts`
 - Test: `src/services/agent/RunController.test.ts`
 
@@ -145,9 +148,9 @@ Expected: FAIL because `./RunController` does not exist or exported functions ar
 Create `src/services/agent/RunController.ts` with:
 
 ```ts
-import {request} from '@umijs/max';
-import {ResponseStructure} from '@/services/entity/Common';
-import {AgentRun, AgentRunSearchParams} from '@/services/entity/Agent';
+import { request } from '@umijs/max';
+import { ResponseStructure } from '@/services/entity/Common';
+import { AgentRun, AgentRunSearchParams } from '@/services/entity/Agent';
 
 /**
  * @description 获取 Agent 运行记录列表
@@ -182,6 +185,7 @@ Expected: PASS with one passing test suite.
 ### Task 4: Register the Route
 
 **Files:**
+
 - Modify: `config/routes.ts`
 
 - [ ] **Step 1: Add the route under `Agent 平台`**
@@ -209,6 +213,7 @@ Expected: three matches in `config/routes.ts`.
 ### Task 5: Add Run Page Styles
 
 **Files:**
+
 - Create: `src/pages/agent/run/index.less`
 
 - [ ] **Step 1: Create scoped styles**
@@ -249,6 +254,7 @@ Expected: two matches.
 ### Task 6: Implement the Run Page
 
 **Files:**
+
 - Create: `src/pages/agent/run/index.tsx`
 - Uses: `src/services/agent/RunController.ts`
 - Uses: `src/services/entity/Agent.ts`
@@ -259,19 +265,19 @@ Expected: two matches.
 Create `src/pages/agent/run/index.tsx` with:
 
 ```tsx
-import React, {useRef, useState} from 'react';
-import {ActionType, PageContainer, ProDescriptions, ProTable} from '@ant-design/pro-components';
-import {Alert, Button, Card, Drawer, Empty, message, Spin, Tag, Typography} from 'antd';
-import {getAgentRunInfo, getAgentRunList} from '@/services/agent/RunController';
-import {AgentRun, AgentRunSearchParams} from '@/services/entity/Agent';
+import React, { useRef, useState } from 'react';
+import { ActionType, PageContainer, ProDescriptions, ProTable } from '@ant-design/pro-components';
+import { Alert, Button, Card, Drawer, Empty, message, Spin, Tag, Typography } from 'antd';
+import { getAgentRunInfo, getAgentRunList } from '@/services/agent/RunController';
+import { AgentRun, AgentRunSearchParams } from '@/services/entity/Agent';
 import './index.less';
 
-const {Text} = Typography;
+const { Text } = Typography;
 
 const statusValueEnum = {
-  0: {text: '成功', status: 'Success'},
-  1: {text: '失败', status: 'Error'},
-  2: {text: '超时', status: 'Warning'},
+  0: { text: '成功', status: 'Success' },
+  1: { text: '失败', status: 'Error' },
+  2: { text: '超时', status: 'Warning' },
 };
 
 const renderStatusTag = (status?: number) => {
@@ -293,9 +299,7 @@ const renderTextBlock = (content?: string, error?: boolean) => {
   }
 
   return (
-    <div className={`agent-run-text-block${error ? ' agent-run-error-block' : ''}`}>
-      {content}
-    </div>
+    <div className={`agent-run-text-block${error ? ' agent-run-error-block' : ''}`}>{content}</div>
   );
 };
 
@@ -314,7 +318,7 @@ const AgentRunPage: React.FC = () => {
     setDrawerOpen(true);
     setDetailLoading(true);
     try {
-      const {code, data, message: msg} = await getAgentRunInfo(record.id);
+      const { code, data, message: msg } = await getAgentRunInfo(record.id);
       if (code === 200) {
         setRun(data);
       } else {
@@ -419,41 +423,41 @@ const AgentRunPage: React.FC = () => {
                 column={1}
                 dataSource={run}
                 columns={[
-                  {title: 'ID', dataIndex: 'id'},
-                  {title: 'Agent 定义 ID', dataIndex: 'agentDefinitionId'},
-                  {title: '用户 ID', dataIndex: 'userId'},
-                  {title: '会话 ID', dataIndex: 'conversationId'},
-                  {title: '输出消息 ID', dataIndex: 'messageId'},
-                  {title: '模型供应商 ID', dataIndex: 'modelProviderId'},
-                  {title: '模型', dataIndex: 'model'},
+                  { title: 'ID', dataIndex: 'id' },
+                  { title: 'Agent 定义 ID', dataIndex: 'agentDefinitionId' },
+                  { title: '用户 ID', dataIndex: 'userId' },
+                  { title: '会话 ID', dataIndex: 'conversationId' },
+                  { title: '输出消息 ID', dataIndex: 'messageId' },
+                  { title: '模型供应商 ID', dataIndex: 'modelProviderId' },
+                  { title: '模型', dataIndex: 'model' },
                   {
                     title: '状态',
                     dataIndex: 'status',
                     render: (_: any, record: AgentRun) => renderStatusTag(record.status),
                   },
-                  {title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime'},
-                  {title: '更新时间', dataIndex: 'updatedAt', valueType: 'dateTime'},
+                  { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime' },
+                  { title: '更新时间', dataIndex: 'updatedAt', valueType: 'dateTime' },
                 ]}
               />
-              <Card title="Token 与耗时" size="small" style={{marginTop: 16}}>
+              <Card title="Token 与耗时" size="small" style={{ marginTop: 16 }}>
                 <ProDescriptions
                   column={2}
                   dataSource={run}
                   columns={[
-                    {title: '输入 Token', dataIndex: 'promptTokens'},
-                    {title: '输出 Token', dataIndex: 'completionTokens'},
-                    {title: '总 Token', dataIndex: 'totalTokens'},
-                    {title: '总耗时(ms)', dataIndex: 'latencyMs'},
+                    { title: '输入 Token', dataIndex: 'promptTokens' },
+                    { title: '输出 Token', dataIndex: 'completionTokens' },
+                    { title: '总 Token', dataIndex: 'totalTokens' },
+                    { title: '总耗时(ms)', dataIndex: 'latencyMs' },
                   ]}
                 />
               </Card>
-              <Card title="输入内容摘要" size="small" style={{marginTop: 16}}>
+              <Card title="输入内容摘要" size="small" style={{ marginTop: 16 }}>
                 {renderTextBlock(run.inputContent)}
               </Card>
-              <Card title="输出内容摘要" size="small" style={{marginTop: 16}}>
+              <Card title="输出内容摘要" size="small" style={{ marginTop: 16 }}>
                 {renderTextBlock(run.outputContent)}
               </Card>
-              <Card title="错误信息" size="small" style={{marginTop: 16}}>
+              <Card title="错误信息" size="small" style={{ marginTop: 16 }}>
                 {run.errorMsg ? (
                   renderTextBlock(run.errorMsg, true)
                 ) : (
@@ -484,6 +488,7 @@ Expected: four matches.
 ### Task 7: Run Focused Verification
 
 **Files:**
+
 - Test: `src/services/agent/RunController.test.ts`
 - Verify: `src/pages/agent/run/index.tsx`
 - Verify: `config/routes.ts`

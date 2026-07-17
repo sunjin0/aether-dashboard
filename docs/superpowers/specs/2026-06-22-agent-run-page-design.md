@@ -94,17 +94,17 @@ export interface AgentRunSearchParams extends AgentRun {
 
 默认展示以下列：
 
-| 字段 | 展示 | 查询 |
-|------|------|------|
-| agentDefinitionId | Agent 定义 ID | 支持 |
-| conversationId | 会话 ID | 支持 |
-| messageId | 输出消息 ID | 不默认查询 |
-| model | 模型 | 支持 |
-| status | 状态 Tag | 支持 valueEnum |
-| totalTokens | 总 Token | 不查询 |
-| latencyMs | 耗时 ms | 不查询 |
-| createdAt | 创建时间 | 不查询 |
-| 操作 | 详情 | 不查询 |
+| 字段              | 展示          | 查询           |
+| ----------------- | ------------- | -------------- |
+| agentDefinitionId | Agent 定义 ID | 支持           |
+| conversationId    | 会话 ID       | 支持           |
+| messageId         | 输出消息 ID   | 不默认查询     |
+| model             | 模型          | 支持           |
+| status            | 状态 Tag      | 支持 valueEnum |
+| totalTokens       | 总 Token      | 不查询         |
+| latencyMs         | 耗时 ms       | 不查询         |
+| createdAt         | 创建时间      | 不查询         |
+| 操作              | 详情          | 不查询         |
 
 状态映射：
 

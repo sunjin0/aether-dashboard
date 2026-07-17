@@ -1,10 +1,8 @@
-﻿import type {RequestOptions} from '@@/plugin-request/request';
-import type {RequestConfig} from '@umijs/max';
-import {message, notification} from 'antd';
-import {getLocale} from "@@/exports";
-import {ErrorShowType, ResponseStructure} from "@/services/entity/Common";
-
-
+﻿import type { RequestOptions } from '@@/plugin-request/request'
+import type { RequestConfig } from '@umijs/max'
+import { message, notification } from 'antd'
+import { getLocale } from '@@/exports'
+import { ErrorShowType, ResponseStructure } from '@/services/entity/Common'
 
 /**
  * @name 错误处理
@@ -17,73 +15,71 @@ export const errorConfig: RequestConfig = {
     // 错误抛出
     errorThrower: (res) => {
       if (!res || typeof res !== 'object') {
-        return;
+        return
       }
-      const {success, data, errorCode, errorMessage, showType} =
-        res as unknown as ResponseStructure<any>;
+      const { success, data, errorCode, errorMessage, showType } =
+        res as unknown as ResponseStructure<any>
       if (!success) {
-        const error: any = new Error(errorMessage);
-        error.name = 'BizError';
-        error.info = {errorCode, errorMessage, showType, data};
-        throw error; // 抛出自制的错误
+        const error: any = new Error(errorMessage)
+        error.name = 'BizError'
+        error.info = { errorCode, errorMessage, showType, data }
+        throw error // 抛出自制的错误
       }
     },
     // 错误接收及处理
     errorHandler: (error: any, opts: any) => {
-      if (opts?.skipErrorHandler) throw error;
+      if (opts?.skipErrorHandler) throw error
       // 我们的 errorThrower 抛出的错误。
       if (error.name === 'BizError') {
-        const errorInfo: ResponseStructure<any> | undefined = error.info;
+        const errorInfo: ResponseStructure<any> | undefined = error.info
         if (errorInfo) {
-          const {errorMessage, errorCode} = errorInfo;
+          const { errorMessage, errorCode } = errorInfo
           switch (errorInfo.showType) {
             case ErrorShowType.SILENT:
               // do nothing
-              break;
+              break
             case ErrorShowType.WARN_MESSAGE:
-              message.warning(errorMessage);
-              break;
+              message.warning(errorMessage)
+              break
             case ErrorShowType.ERROR_MESSAGE:
-              message.error(errorMessage);
-              break;
+              message.error(errorMessage)
+              break
             case ErrorShowType.NOTIFICATION:
-
               notification.open({
                 description: errorMessage,
                 message: errorCode,
                 type: 'error',
-              });
+              })
               if (errorCode === 401) {
                 localStorage.removeItem('token')
                 localStorage.removeItem('refreshToken')
                 window.location.href = '/login'
               }
 
-              break;
+              break
             case ErrorShowType.REDIRECT:
               // TODO: redirect
-              break;
+              break
             default:
-              message.error(errorMessage);
+              message.error(errorMessage)
           }
         }
       } else if (error.response) {
-
         // Axios 的错误
         // 请求成功发出且服务器也响应了状态码，但状态代码超出了 2xx 的范围
         notification.open({
           description: error.response.data?.message || error.message,
           message: error.response.status,
           type: 'error',
-        });
+        })
       } else if (error.request) {
         // 请求已经成功发起，但没有收到响应
         // \`error.request\` 在浏览器中是 XMLHttpRequest 的实例，
         // 而在node.js中是 http.ClientRequest 的实例
-        message.error('None response! Please retry.');
+        message.error('None response! Please retry.')
       } else {
         // 发送请求时出了点问题
-        message.error('Request error, please retry.');
+        message.error('Request error, please retry.')
       }
     },
   },
@@ -97,11 +93,11 @@ export const errorConfig: RequestConfig = {
         ...config.headers,
         'Accept-Language': getLocale(),
       }
-      let item = localStorage.getItem('token');
+      const item = localStorage.getItem('token')
       if (item) {
-        config.headers.Authorization = "Bearer " + item
+        config.headers.Authorization = 'Bearer ' + item
       }
-      return {...config};
+      return { ...config }
     },
   ],
 
@@ -109,9 +105,9 @@ export const errorConfig: RequestConfig = {
   responseInterceptors: [
     (response) => {
       // 拦截响应数据，进行个性化处理
-      const {data} = response as { data: ResponseStructure<any> };
+      const { data } = response as { data: ResponseStructure<any> }
       if (!data || typeof data !== 'object') {
-        return response;
+        return response
       }
       data.success = data.code === 200
       if (!data?.success) {
@@ -120,9 +116,9 @@ export const errorConfig: RequestConfig = {
         data.showType = ErrorShowType.NOTIFICATION
       }
       if (data.message) {
-        message.success({content: data.message, key: data.message})
+        message.success({ content: data.message, key: data.message })
       }
-      return response;
+      return response
     },
   ],
-};
+}

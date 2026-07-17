@@ -30,6 +30,7 @@
 ### Task 1: Add Tool Call Log Types
 
 **Files:**
+
 - Modify: `src/services/entity/Agent.ts`
 
 - [ ] **Step 1: Add `AgentToolCallLog` and `AgentToolCallLogSearchParams` after `AgentRunSearchParams`**
@@ -78,6 +79,7 @@ Expected: two matches, one for `AgentToolCallLog` and one for `AgentToolCallLogS
 ### Task 2: Add Tool Call Log Controller Tests First
 
 **Files:**
+
 - Create: `src/services/agent/ToolCallLogController.test.ts`
 
 - [ ] **Step 1: Create the failing endpoint test**
@@ -85,8 +87,8 @@ Expected: two matches, one for `AgentToolCallLog` and one for `AgentToolCallLogS
 Create `src/services/agent/ToolCallLogController.test.ts` with:
 
 ```ts
-import {request} from '@umijs/max';
-import {getAgentToolCallLogInfo, getAgentToolCallLogList} from './ToolCallLogController';
+import { request } from '@umijs/max';
+import { getAgentToolCallLogInfo, getAgentToolCallLogList } from './ToolCallLogController';
 
 jest.mock('@umijs/max', () => ({
   request: jest.fn(),
@@ -96,7 +98,7 @@ const mockedRequest = request as jest.Mock;
 
 describe('ToolCallLogController', () => {
   beforeEach(() => {
-    mockedRequest.mockResolvedValue({code: 200, data: null});
+    mockedRequest.mockResolvedValue({ code: 200, data: null });
   });
 
   it('uses documented tool call log endpoints', async () => {
@@ -137,6 +139,7 @@ Expected: FAIL because `./ToolCallLogController` does not exist or exported func
 ### Task 3: Implement Tool Call Log Controller
 
 **Files:**
+
 - Create: `src/services/agent/ToolCallLogController.ts`
 - Test: `src/services/agent/ToolCallLogController.test.ts`
 
@@ -145,9 +148,9 @@ Expected: FAIL because `./ToolCallLogController` does not exist or exported func
 Create `src/services/agent/ToolCallLogController.ts` with:
 
 ```ts
-import {request} from '@umijs/max';
-import {ResponseStructure} from '@/services/entity/Common';
-import {AgentToolCallLog, AgentToolCallLogSearchParams} from '@/services/entity/Agent';
+import { request } from '@umijs/max';
+import { ResponseStructure } from '@/services/entity/Common';
+import { AgentToolCallLog, AgentToolCallLogSearchParams } from '@/services/entity/Agent';
 
 /**
  * @description 获取 Agent 工具调用日志列表
@@ -184,6 +187,7 @@ Expected: PASS with one passing test suite.
 ### Task 4: Register the Route
 
 **Files:**
+
 - Modify: `config/routes.ts`
 
 - [ ] **Step 1: Add the route under `Agent 平台`**
@@ -211,6 +215,7 @@ Expected: three matches in `config/routes.ts`.
 ### Task 5: Add Tool Call Log Page Styles
 
 **Files:**
+
 - Create: `src/pages/agent/tool-call-log/index.less`
 
 - [ ] **Step 1: Create scoped styles**
@@ -251,6 +256,7 @@ Expected: two matches.
 ### Task 6: Implement the Tool Call Log Page
 
 **Files:**
+
 - Create: `src/pages/agent/tool-call-log/index.tsx`
 - Uses: `src/services/agent/ToolCallLogController.ts`
 - Uses: `src/services/entity/Agent.ts`
@@ -261,31 +267,31 @@ Expected: two matches.
 Create `src/pages/agent/tool-call-log/index.tsx` with:
 
 ```tsx
-import React, {useState} from 'react';
-import {PageContainer, ProDescriptions, ProTable} from '@ant-design/pro-components';
-import {Alert, Button, Card, Drawer, Empty, message, Spin, Tag, Typography} from 'antd';
+import React, { useState } from 'react';
+import { PageContainer, ProDescriptions, ProTable } from '@ant-design/pro-components';
+import { Alert, Button, Card, Drawer, Empty, message, Spin, Tag, Typography } from 'antd';
 import {
   getAgentToolCallLogInfo,
   getAgentToolCallLogList,
 } from '@/services/agent/ToolCallLogController';
-import {AgentToolCallLog, AgentToolCallLogSearchParams} from '@/services/entity/Agent';
+import { AgentToolCallLog, AgentToolCallLogSearchParams } from '@/services/entity/Agent';
 import './index.less';
 
-const {Text} = Typography;
+const { Text } = Typography;
 
 const methodValueEnum = {
-  GET: {text: 'GET'},
-  POST: {text: 'POST'},
-  PUT: {text: 'PUT'},
-  DELETE: {text: 'DELETE'},
-  PATCH: {text: 'PATCH'},
+  GET: { text: 'GET' },
+  POST: { text: 'POST' },
+  PUT: { text: 'PUT' },
+  DELETE: { text: 'DELETE' },
+  PATCH: { text: 'PATCH' },
 };
 
 const statusValueEnum = {
-  0: {text: '成功', status: 'Success'},
-  1: {text: '失败', status: 'Error'},
-  2: {text: '超时', status: 'Warning'},
-  3: {text: '安全拦截', status: 'Processing'},
+  0: { text: '成功', status: 'Success' },
+  1: { text: '失败', status: 'Error' },
+  2: { text: '超时', status: 'Warning' },
+  3: { text: '安全拦截', status: 'Processing' },
 };
 
 const renderStatusTag = (status?: number) => {
@@ -310,7 +316,9 @@ const renderTextBlock = (content?: string, error?: boolean) => {
   }
 
   return (
-    <div className={`agent-tool-call-log-text-block${error ? ' agent-tool-call-log-error-block' : ''}`}>
+    <div
+      className={`agent-tool-call-log-text-block${error ? ' agent-tool-call-log-error-block' : ''}`}
+    >
       {content}
     </div>
   );
@@ -330,7 +338,7 @@ const AgentToolCallLogPage: React.FC = () => {
     setDrawerOpen(true);
     setDetailLoading(true);
     try {
-      const {code, data, message: msg} = await getAgentToolCallLogInfo(record.id);
+      const { code, data, message: msg } = await getAgentToolCallLogInfo(record.id);
       if (code === 200) {
         setToolCallLog(data);
       } else {
@@ -421,11 +429,9 @@ const AgentToolCallLogPage: React.FC = () => {
       />
       <ProTable
         rowKey="id"
-        request={async (params: AgentToolCallLogSearchParams) =>
-          getAgentToolCallLogList(params)
-        }
+        request={async (params: AgentToolCallLogSearchParams) => getAgentToolCallLogList(params)}
         columns={columns}
-        scroll={{x: 1200}}
+        scroll={{ x: 1200 }}
       />
       <Drawer
         title="工具调用日志详情"
@@ -441,33 +447,33 @@ const AgentToolCallLogPage: React.FC = () => {
                 column={1}
                 dataSource={toolCallLog}
                 columns={[
-                  {title: 'ID', dataIndex: 'id'},
-                  {title: '运行记录 ID', dataIndex: 'runId'},
-                  {title: '工具 ID', dataIndex: 'toolId'},
-                  {title: 'Agent 定义 ID', dataIndex: 'agentDefinitionId'},
-                  {title: '请求方法', dataIndex: 'requestMethod'},
-                  {title: '请求 URL', dataIndex: 'requestUrl'},
-                  {title: 'HTTP 状态码', dataIndex: 'responseStatus'},
+                  { title: 'ID', dataIndex: 'id' },
+                  { title: '运行记录 ID', dataIndex: 'runId' },
+                  { title: '工具 ID', dataIndex: 'toolId' },
+                  { title: 'Agent 定义 ID', dataIndex: 'agentDefinitionId' },
+                  { title: '请求方法', dataIndex: 'requestMethod' },
+                  { title: '请求 URL', dataIndex: 'requestUrl' },
+                  { title: 'HTTP 状态码', dataIndex: 'responseStatus' },
                   {
                     title: '执行状态',
                     dataIndex: 'status',
                     render: (_: any, record: AgentToolCallLog) => renderStatusTag(record.status),
                   },
-                  {title: '耗时(ms)', dataIndex: 'latencyMs'},
-                  {title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime'},
-                  {title: '更新时间', dataIndex: 'updatedAt', valueType: 'dateTime'},
+                  { title: '耗时(ms)', dataIndex: 'latencyMs' },
+                  { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime' },
+                  { title: '更新时间', dataIndex: 'updatedAt', valueType: 'dateTime' },
                 ]}
               />
-              <Card title="请求头" size="small" style={{marginTop: 16}}>
+              <Card title="请求头" size="small" style={{ marginTop: 16 }}>
                 {renderTextBlock(toolCallLog.requestHeaders)}
               </Card>
-              <Card title="请求体" size="small" style={{marginTop: 16}}>
+              <Card title="请求体" size="small" style={{ marginTop: 16 }}>
                 {renderTextBlock(toolCallLog.requestBody)}
               </Card>
-              <Card title="响应体" size="small" style={{marginTop: 16}}>
+              <Card title="响应体" size="small" style={{ marginTop: 16 }}>
                 {renderTextBlock(toolCallLog.responseBody)}
               </Card>
-              <Card title="错误信息" size="small" style={{marginTop: 16}}>
+              <Card title="错误信息" size="small" style={{ marginTop: 16 }}>
                 {toolCallLog.errorMsg ? (
                   renderTextBlock(toolCallLog.errorMsg, true)
                 ) : (
@@ -498,6 +504,7 @@ Expected: at least four matches, including the component name, style class, list
 ### Task 7: Run Focused Verification
 
 **Files:**
+
 - Test: `src/services/agent/ToolCallLogController.test.ts`
 - Verify: `src/pages/agent/tool-call-log/index.tsx`
 - Verify: `config/routes.ts`

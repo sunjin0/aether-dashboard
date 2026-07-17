@@ -1,14 +1,14 @@
-import DrawerForm from '@/components/DrawerForm';
-import { addMcpServer, getMcpServer, updateMcpServer } from '@/services/agent/McpServerController';
-import { getOptionList } from '@/services/sys/DictController';
+import DrawerForm from '@/components/DrawerForm'
+import { addMcpServer, getMcpServer, updateMcpServer } from '@/services/agent/McpServerController'
+import { getOptionList } from '@/services/sys/DictController'
 import {
   ProFormDigit,
   ProFormSelect,
   ProFormText,
   ProFormTextArea,
-} from '@ant-design/pro-components';
-import { Form } from 'antd';
-import { useIntl } from '@umijs/max';
+} from '@ant-design/pro-components'
+import { Form } from 'antd'
+import { useIntl } from '@umijs/max'
 
 const McpServerForm = (props: {
   id?: string;
@@ -16,17 +16,17 @@ const McpServerForm = (props: {
   setOpen: (open: boolean) => void;
   onSuccess: () => void;
 }) => {
-  const { id, open, setOpen, onSuccess } = props;
-  const intl = useIntl();
-  const [form] = Form.useForm();
-  const authType = Form.useWatch('authType', form);
+  const { id, open, setOpen, onSuccess } = props
+  const intl = useIntl()
+  const [form] = Form.useForm()
+  const authType = Form.useWatch('authType', form)
   const format = (key: string, values?: Record<string, string>) =>
-    intl.formatMessage({ id: key }, values);
+    intl.formatMessage({ id: key }, values)
   const validateJson = async (_: unknown, value?: string) => {
-    if (!value?.trim()) return Promise.resolve();
+    if (!value?.trim()) return Promise.resolve()
     try {
-      JSON.parse(value);
-      return Promise.resolve();
+      JSON.parse(value)
+      return Promise.resolve()
     } catch {
       return Promise.reject(
         new Error(
@@ -34,9 +34,9 @@ const McpServerForm = (props: {
             label: format('pages.agent.mcpServer.requestHeaders'),
           }),
         ),
-      );
+      )
     }
-  };
+  }
 
   return (
     <DrawerForm
@@ -46,11 +46,11 @@ const McpServerForm = (props: {
       request={getMcpServer}
       form={form}
       onSuccess={async (values) => {
-        const payload = { ...values, status: Number(values.status) };
-        if (id) await updateMcpServer(id, payload);
-        else await addMcpServer(payload);
-        onSuccess();
-        return true;
+        const payload = { ...values, status: Number(values.status) }
+        if (id) await updateMcpServer(id, payload)
+        else await addMcpServer(payload)
+        onSuccess()
+        return true
       }}
     >
       <ProFormText name="id" hidden />
@@ -112,7 +112,7 @@ const McpServerForm = (props: {
       />
       <ProFormTextArea name="remark" label={format('pages.common.remark')} />
     </DrawerForm>
-  );
-};
+  )
+}
 
-export default McpServerForm;
+export default McpServerForm

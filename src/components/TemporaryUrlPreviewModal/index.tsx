@@ -2,19 +2,19 @@
 import React, { useState } from 'react'
 
 export interface TemporaryUrlResult {
-  code?: number
-  message?: string
-  data?: string
+  code?: number;
+  message?: string;
+  data?: string;
 }
 
 interface TemporaryUrlPreviewModalProps {
   /** 每次打开时获取临时 URL，避免前端缓存过期链接。 */
-  getUrl: () => Promise<TemporaryUrlResult>
-  title?: string
-  triggerText?: string
-  disabled?: boolean
-  width?: number | string
-  previewHeight?: number | string
+  getUrl: () => Promise<TemporaryUrlResult>;
+  title?: string;
+  triggerText?: string;
+  disabled?: boolean;
+  width?: number | string;
+  previewHeight?: number | string;
 }
 
 const TemporaryUrlPreviewModal: React.FC<TemporaryUrlPreviewModalProps> = ({
@@ -45,13 +45,37 @@ const TemporaryUrlPreviewModal: React.FC<TemporaryUrlPreviewModalProps> = ({
     }
   }
 
-  const close = () => { setOpen(false); setUrl(undefined) }
+  const close = () => {
+    setOpen(false)
+    setUrl(undefined)
+  }
 
   return (
     <>
-      <Button type="link" loading={loading} disabled={disabled} onClick={showPreview}>{triggerText}</Button>
-      <Modal title={title} open={open} onCancel={close} footer={url ? <Button type="primary" href={url} target="_blank" rel="noreferrer">下载文件</Button> : null} width={width} destroyOnClose>
-        {url && <iframe title={title} src={url} style={{ display: 'block', width: '100%', height: previewHeight, border: 0 }} />}
+      <Button type="link" loading={loading} disabled={disabled} onClick={showPreview}>
+        {triggerText}
+      </Button>
+      <Modal
+        title={title}
+        open={open}
+        onCancel={close}
+        footer={
+          url ? (
+            <Button type="primary" href={url} target="_blank" rel="noreferrer">
+              下载文件
+            </Button>
+          ) : null
+        }
+        width={width}
+        destroyOnClose
+      >
+        {url && (
+          <iframe
+            title={title}
+            src={url}
+            style={{ display: 'block', width: '100%', height: previewHeight, border: 0 }}
+          />
+        )}
       </Modal>
     </>
   )

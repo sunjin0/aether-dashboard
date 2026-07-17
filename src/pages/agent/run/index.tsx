@@ -1,9 +1,25 @@
-import React, {useEffect, useRef, useState} from 'react'
-import {ActionType, PageContainer, ProDescriptions, ProTable} from '@ant-design/pro-components'
-import {Alert, Button, Card, DatePicker, Drawer, Empty, message, Spin, Statistic, Tag, Typography} from 'antd'
-import {getAgentRunInfo, getAgentRunList, getAgentRunStatistics} from '@/services/agent/RunController'
-import {getOptionList} from '@/services/sys/DictController'
-import {AgentRun, AgentRunSearchParams, AgentRunStatistics} from '@/services/entity/Agent'
+import React, { useEffect, useRef, useState } from 'react'
+import { ActionType, PageContainer, ProDescriptions, ProTable } from '@ant-design/pro-components'
+import {
+  Alert,
+  Button,
+  Card,
+  DatePicker,
+  Drawer,
+  Empty,
+  message,
+  Spin,
+  Statistic,
+  Tag,
+  Typography,
+} from 'antd'
+import {
+  getAgentRunInfo,
+  getAgentRunList,
+  getAgentRunStatistics,
+} from '@/services/agent/RunController'
+import { getOptionList } from '@/services/sys/DictController'
+import { AgentRun, AgentRunSearchParams, AgentRunStatistics } from '@/services/entity/Agent'
 import JsonDisplay from '@/components/JsonDisplay'
 import MarkdownText from '@/components/MarkdownText'
 import './index.less'
@@ -15,9 +31,9 @@ import {
   DatabaseOutlined,
   FieldTimeOutlined,
   WarningOutlined,
-} from '@ant-design/icons';
+} from '@ant-design/icons'
 
-const {Text} = Typography
+const { Text } = Typography
 
 const renderStatusTag = (status?: number) => {
   if (status === 0) {
@@ -32,7 +48,7 @@ const renderStatusTag = (status?: number) => {
   return <Tag>未知</Tag>
 }
 
-const {RangePicker} = DatePicker
+const { RangePicker } = DatePicker
 
 const AgentRunPage: React.FC = () => {
   const ref = useRef<ActionType>()
@@ -51,7 +67,7 @@ const AgentRunPage: React.FC = () => {
         params.startTime = dateRange[0]?.valueOf()
         params.endTime = dateRange[1]?.valueOf()
       }
-      const {code, data, message: msg} = await getAgentRunStatistics(params)
+      const { code, data, message: msg } = await getAgentRunStatistics(params)
       if (code === 200) {
         setStatistics(data)
       } else {
@@ -75,7 +91,7 @@ const AgentRunPage: React.FC = () => {
     setDrawerOpen(true)
     setDetailLoading(true)
     try {
-      const {code, data, message: msg} = await getAgentRunInfo(record.id)
+      const { code, data, message: msg } = await getAgentRunInfo(record.id)
       if (code === 200) {
         setRun(data)
       } else {
@@ -161,7 +177,7 @@ const AgentRunPage: React.FC = () => {
         </Button>,
       ],
     },
-  ];
+  ]
 
   return (
     <PageContainer className="agent-run-page">
@@ -169,14 +185,55 @@ const AgentRunPage: React.FC = () => {
         <Spin spinning={statisticsLoading}>
           {statistics ? (
             <div className="agent-run-statistics-grid">
-              <div className="agent-run-stat-card"><i className="run-stat-icon run-stat-blue"><ApiOutlined /></i><Statistic title="总调用次数" value={statistics.totalCalls || 0} /></div>
-              <div className="agent-run-stat-card"><i className="run-stat-icon run-stat-green"><CheckCircleFilled /></i><Statistic title="成功次数" value={statistics.successCalls || 0} /></div>
-              <div className="agent-run-stat-card"><i className="run-stat-icon run-stat-red"><CloseCircleFilled /></i><Statistic title="失败次数" value={statistics.failedCalls || 0} /></div>
-              <div className="agent-run-stat-card"><i className="run-stat-icon run-stat-orange"><ClockCircleOutlined /></i><Statistic title="超时次数" value={statistics.timeoutCalls || 0} /></div>
-              <div className="agent-run-stat-card"><i className="run-stat-icon run-stat-purple"><DatabaseOutlined /></i><Statistic title="总 Token" value={statistics.totalTokens || 0} /></div>
-              <div className="agent-run-stat-card"><i className="run-stat-icon run-stat-cyan"><FieldTimeOutlined /></i><Statistic title="平均耗时(ms)" value={statistics.avgLatencyMs || 0} /></div>
-              <div className="agent-run-stat-card"><i className="run-stat-icon run-stat-red"><WarningOutlined /></i><Statistic title="错误率" value={statistics.errorRate ? `${(statistics.errorRate * 100).toFixed(2)}%` : '0%'} /></div>
-            </div>          ) : (
+              <div className="agent-run-stat-card">
+                <i className="run-stat-icon run-stat-blue">
+                  <ApiOutlined />
+                </i>
+                <Statistic title="总调用次数" value={statistics.totalCalls || 0} />
+              </div>
+              <div className="agent-run-stat-card">
+                <i className="run-stat-icon run-stat-green">
+                  <CheckCircleFilled />
+                </i>
+                <Statistic title="成功次数" value={statistics.successCalls || 0} />
+              </div>
+              <div className="agent-run-stat-card">
+                <i className="run-stat-icon run-stat-red">
+                  <CloseCircleFilled />
+                </i>
+                <Statistic title="失败次数" value={statistics.failedCalls || 0} />
+              </div>
+              <div className="agent-run-stat-card">
+                <i className="run-stat-icon run-stat-orange">
+                  <ClockCircleOutlined />
+                </i>
+                <Statistic title="超时次数" value={statistics.timeoutCalls || 0} />
+              </div>
+              <div className="agent-run-stat-card">
+                <i className="run-stat-icon run-stat-purple">
+                  <DatabaseOutlined />
+                </i>
+                <Statistic title="总 Token" value={statistics.totalTokens || 0} />
+              </div>
+              <div className="agent-run-stat-card">
+                <i className="run-stat-icon run-stat-cyan">
+                  <FieldTimeOutlined />
+                </i>
+                <Statistic title="平均耗时(ms)" value={statistics.avgLatencyMs || 0} />
+              </div>
+              <div className="agent-run-stat-card">
+                <i className="run-stat-icon run-stat-red">
+                  <WarningOutlined />
+                </i>
+                <Statistic
+                  title="错误率"
+                  value={
+                    statistics.errorRate ? `${(statistics.errorRate * 100).toFixed(2)}%` : '0%'
+                  }
+                />
+              </div>
+            </div>
+          ) : (
             <Empty description="暂无统计数据" />
           )}
         </Spin>

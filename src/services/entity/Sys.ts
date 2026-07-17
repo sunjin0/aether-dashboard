@@ -14,7 +14,7 @@ export interface DictSearchParams extends Dict {
 export interface Dict {
   id?: number;
   code?: string;
-  parent?:string;
+  parent?: string;
   name?: string;
   nameCn?: string;
   val?: string;

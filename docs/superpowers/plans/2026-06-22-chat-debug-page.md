@@ -30,12 +30,12 @@
 ### Task 1: 扩展 Chat 和 Conversation 类型
 
 **Files:**
+
 - Modify: `src/services/entity/Agent.ts`
 
 - [ ] **Step 1: 在 `Agent.ts` 末尾追加类型**
 
 ```ts
-
 /**
  * @description Agent 聊天请求
  */
@@ -101,15 +101,16 @@ Expected: 可能仍失败在既有两个基线错误；不得出现 `src/service
 ### Task 2: 新增 Chat 和 Conversation 服务层
 
 **Files:**
+
 - Create: `src/services/agent/ChatController.ts`
 - Create: `src/services/agent/ConversationController.ts`
 
 - [ ] **Step 1: 创建 Chat 服务文件**
 
 ```ts
-import {request} from '@umijs/max';
-import {ResponseStructure} from '@/services/entity/Common';
-import {AgentChatRequest, AgentMessage} from '@/services/entity/Agent';
+import { request } from '@umijs/max';
+import { ResponseStructure } from '@/services/entity/Common';
+import { AgentChatRequest, AgentMessage } from '@/services/entity/Agent';
 
 /**
  * @description 发送 Agent 非流式聊天消息
@@ -127,8 +128,8 @@ export const sendAgentChat = async (
 - [ ] **Step 2: 创建 Conversation 服务文件**
 
 ```ts
-import {request} from '@umijs/max';
-import {ResponseStructure} from '@/services/entity/Common';
+import { request } from '@umijs/max';
+import { ResponseStructure } from '@/services/entity/Common';
 import {
   AgentConversation,
   AgentConversationSearchParams,
@@ -173,23 +174,24 @@ Expected: 只允许既有基线错误；不得出现 `ChatController.ts` 或 `Co
 ### Task 3: 新增 Chat 调试页面
 
 **Files:**
+
 - Create: `src/pages/agent/chat/index.tsx`
 
 - [ ] **Step 1: 创建页面组件**
 
 ```tsx
-import React, {useEffect, useRef, useState} from 'react';
-import {PageContainer} from '@ant-design/pro-components';
-import {Button, Card, Empty, Input, List, message, Select, Space, Spin, Typography} from 'antd';
-import {getAgentDefinitionList} from '@/services/agent/AgentDefinitionController';
-import {sendAgentChat} from '@/services/agent/ChatController';
+import React, { useEffect, useRef, useState } from 'react';
+import { PageContainer } from '@ant-design/pro-components';
+import { Button, Card, Empty, Input, List, message, Select, Space, Spin, Typography } from 'antd';
+import { getAgentDefinitionList } from '@/services/agent/AgentDefinitionController';
+import { sendAgentChat } from '@/services/agent/ChatController';
 import {
   getAgentConversationList,
   getAgentConversationMessages,
 } from '@/services/agent/ConversationController';
-import {AgentConversation, AgentDefinition, AgentMessage} from '@/services/entity/Agent';
+import { AgentConversation, AgentDefinition, AgentMessage } from '@/services/entity/Agent';
 
-const {Text, Paragraph} = Typography;
+const { Text, Paragraph } = Typography;
 
 const ChatDebugPage: React.FC = () => {
   const [agents, setAgents] = useState<AgentDefinition[]>([]);
@@ -207,7 +209,11 @@ const ChatDebugPage: React.FC = () => {
   const loadAgents = async () => {
     setLoadingAgents(true);
     try {
-      const {code, data, message: msg} = await getAgentDefinitionList({
+      const {
+        code,
+        data,
+        message: msg,
+      } = await getAgentDefinitionList({
         current: 1,
         pageSize: 1000,
         status: 1,
@@ -225,7 +231,11 @@ const ChatDebugPage: React.FC = () => {
   const loadConversations = async () => {
     setLoadingConversations(true);
     try {
-      const {code, data, message: msg} = await getAgentConversationList({
+      const {
+        code,
+        data,
+        message: msg,
+      } = await getAgentConversationList({
         current: 1,
         pageSize: 20,
       });
@@ -242,7 +252,11 @@ const ChatDebugPage: React.FC = () => {
   const loadMessages = async (id: string) => {
     setLoadingMessages(true);
     try {
-      const {code, data, message: msg} = await getAgentConversationMessages(id, {
+      const {
+        code,
+        data,
+        message: msg,
+      } = await getAgentConversationMessages(id, {
         current: 1,
         pageSize: 20,
       });
@@ -262,7 +276,7 @@ const ChatDebugPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    messageEndRef.current?.scrollIntoView({behavior: 'smooth'});
+    messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const handleNewConversation = () => {
@@ -301,9 +315,9 @@ const ChatDebugPage: React.FC = () => {
     setMessages((current) => [...current, userMessage]);
     try {
       const payload = conversationId
-        ? {agentId, conversationId, message: content}
-        : {agentId, message: content};
-      const {code, data, message: msg} = await sendAgentChat(payload);
+        ? { agentId, conversationId, message: content }
+        : { agentId, message: content };
+      const { code, data, message: msg } = await sendAgentChat(payload);
       if (code === 200) {
         setMessages((current) => [...current, data]);
         setInput('');
@@ -345,8 +359,11 @@ const ChatDebugPage: React.FC = () => {
 
   return (
     <PageContainer>
-      <div style={{display: 'flex', gap: 16, minHeight: 640}}>
-        <Card style={{width: 320}} bodyStyle={{display: 'flex', flexDirection: 'column', gap: 16, height: '100%'}}>
+      <div style={{ display: 'flex', gap: 16, minHeight: 640 }}>
+        <Card
+          style={{ width: 320 }}
+          bodyStyle={{ display: 'flex', flexDirection: 'column', gap: 16, height: '100%' }}
+        >
           <Select
             placeholder="请选择启用 Agent"
             loading={loadingAgents}
@@ -361,7 +378,7 @@ const ChatDebugPage: React.FC = () => {
             }}
             options={agents
               .filter((item) => item.id)
-              .map((item) => ({label: item.name || item.code || item.id, value: item.id}))}
+              .map((item) => ({ label: item.name || item.code || item.id, value: item.id }))}
           />
           <Button type="primary" onClick={handleNewConversation}>
             新建会话
@@ -369,10 +386,10 @@ const ChatDebugPage: React.FC = () => {
           <Spin spinning={loadingConversations}>
             <List
               dataSource={conversations}
-              locale={{emptyText: '暂无会话'}}
+              locale={{ emptyText: '暂无会话' }}
               renderItem={(item) => (
                 <List.Item
-                  style={{cursor: item.id ? 'pointer' : 'default'}}
+                  style={{ cursor: item.id ? 'pointer' : 'default' }}
                   onClick={() => handleSelectConversation(item)}
                 >
                   <List.Item.Meta
@@ -389,21 +406,35 @@ const ChatDebugPage: React.FC = () => {
           </Spin>
         </Card>
 
-        <Card style={{flex: 1}} bodyStyle={{display: 'flex', flexDirection: 'column', height: '100%', minHeight: 640}}>
+        <Card
+          style={{ flex: 1 }}
+          bodyStyle={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 640 }}
+        >
           <Spin spinning={loadingMessages}>
-            <div style={{flex: 1, overflowY: 'auto', paddingRight: 8, minHeight: 500}}>
+            <div style={{ flex: 1, overflowY: 'auto', paddingRight: 8, minHeight: 500 }}>
               {!messages.length ? (
                 <Empty description="请选择会话或发送新消息" />
               ) : (
-                <Space direction="vertical" size={12} style={{width: '100%'}}>
+                <Space direction="vertical" size={12} style={{ width: '100%' }}>
                   {messages.map((item, index) => {
                     const isUser = item.role === 'user';
                     return (
-                      <div key={item.id || `${item.role}-${index}`} style={{display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start'}}>
-                        <Card size="small" style={{maxWidth: '80%', background: isUser ? '#e6f4ff' : undefined}}>
+                      <div
+                        key={item.id || `${item.role}-${index}`}
+                        style={{
+                          display: 'flex',
+                          justifyContent: isUser ? 'flex-end' : 'flex-start',
+                        }}
+                      >
+                        <Card
+                          size="small"
+                          style={{ maxWidth: '80%', background: isUser ? '#e6f4ff' : undefined }}
+                        >
                           <Space direction="vertical" size={4}>
                             <Text type="secondary">{item.role || 'unknown'}</Text>
-                            <Paragraph style={{whiteSpace: 'pre-wrap', marginBottom: 0}}>{item.content}</Paragraph>
+                            <Paragraph style={{ whiteSpace: 'pre-wrap', marginBottom: 0 }}>
+                              {item.content}
+                            </Paragraph>
                             {renderMessageMeta(item)}
                           </Space>
                         </Card>
@@ -415,11 +446,11 @@ const ChatDebugPage: React.FC = () => {
               )}
             </div>
           </Spin>
-          <Space.Compact style={{width: '100%', marginTop: 16}}>
+          <Space.Compact style={{ width: '100%', marginTop: 16 }}>
             <Input.TextArea
               value={input}
               disabled={sending}
-              autoSize={{minRows: 2, maxRows: 6}}
+              autoSize={{ minRows: 2, maxRows: 6 }}
               placeholder="请输入消息内容"
               onChange={(event) => setInput(event.target.value)}
               onPressEnter={(event) => {
@@ -453,6 +484,7 @@ Expected: 只允许既有基线错误；不得出现 `src/pages/agent/chat/index
 ### Task 4: 注册 Chat 调试路由
 
 **Files:**
+
 - Modify: `config/routes.ts`
 
 - [ ] **Step 1: 在 Agent 平台 routes 中加入 Chat 调试**
@@ -480,6 +512,7 @@ Expected: 只允许既有基线错误；不得出现 `config/routes.ts` 新错�
 ### Task 5: 最终验证
 
 **Files:**
+
 - Verify: `src/services/entity/Agent.ts`
 - Verify: `src/services/agent/ChatController.ts`
 - Verify: `src/services/agent/ConversationController.ts`

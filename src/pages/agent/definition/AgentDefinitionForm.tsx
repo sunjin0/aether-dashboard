@@ -1,5 +1,5 @@
-import DrawerForm from '@/components/DrawerForm';
-import SystemPromptEditor from '@/components/SystemPromptEditor';
+import DrawerForm from '@/components/DrawerForm'
+import SystemPromptEditor from '@/components/SystemPromptEditor'
 import {
   ProFormDigit,
   ProFormSelect,
@@ -7,17 +7,17 @@ import {
   ProFormText,
   ProFormTextArea,
   ProFormDependency,
-} from '@ant-design/pro-components';
-import { Form } from 'antd';
+} from '@ant-design/pro-components'
+import { Form } from 'antd'
 import {
   addAgentDefinitionInfo,
   getAgentDefinitionInfo,
   updateAgentDefinitionInfo,
   getModelProviderList,
-} from '@/services/agent/AgentDefinitionController';
-import { getModelProviderInfo } from '@/services/agent/ModelProviderController';
-import { getAgentToolList } from '@/services/agent/ToolController';
-import { getOptionList } from '@/services/sys/DictController';
+} from '@/services/agent/AgentDefinitionController'
+import { getModelProviderInfo } from '@/services/agent/ModelProviderController'
+import { getAgentToolList } from '@/services/agent/ToolController'
+import { getOptionList } from '@/services/sys/DictController'
 
 const AgentDefinitionForm = (props: {
   id?: string;
@@ -25,8 +25,8 @@ const AgentDefinitionForm = (props: {
   setOpen?: (open: boolean) => void;
   onSuccess: () => void;
 }) => {
-  const { id, open, setOpen, onSuccess } = props;
-  const [form] = Form.useForm();
+  const { id, open, setOpen, onSuccess } = props
+  const [form] = Form.useForm()
 
   return (
     <DrawerForm
@@ -36,12 +36,12 @@ const AgentDefinitionForm = (props: {
       request={async (params) => getAgentDefinitionInfo(params)}
       onSuccess={async (values) => {
         if (id) {
-          await updateAgentDefinitionInfo(values);
+          await updateAgentDefinitionInfo(values)
         } else {
-          await addAgentDefinitionInfo(values);
+          await addAgentDefinitionInfo(values)
         }
-        onSuccess();
-        return true;
+        onSuccess()
+        return true
       }}
       form={form}
     >
@@ -64,9 +64,9 @@ const AgentDefinitionForm = (props: {
         fieldProps={{
           onChange: async (value: string) => {
             if (value) {
-              const { data } = await getModelProviderInfo(value);
+              const { data } = await getModelProviderInfo(value)
               if (data?.defaultModel) {
-                form.setFieldsValue({ model: data.defaultModel });
+                form.setFieldsValue({ model: data.defaultModel })
               }
             }
           },
@@ -97,7 +97,7 @@ const AgentDefinitionForm = (props: {
       <ProFormDependency name={['defaultThinking']}>
         {(values) => {
           if (!values.defaultThinking) {
-            return null;
+            return null
           }
           return (
             <ProFormSelect
@@ -106,7 +106,7 @@ const AgentDefinitionForm = (props: {
               request={async () => getOptionList('Agent_Reasoning_Effort')}
               placeholder="选择默认推理力度"
             />
-          );
+          )
         }}
       </ProFormDependency>
 
@@ -114,7 +114,7 @@ const AgentDefinitionForm = (props: {
         {(values) => {
           // 只有在编辑模式下才显示工具绑定选项
           if (!values.id) {
-            return null;
+            return null
           }
 
           return (
@@ -128,22 +128,22 @@ const AgentDefinitionForm = (props: {
                   current: 1,
                   pageSize: 1000,
                   status: 1,
-                });
+                })
 
                 return (data || [])
                   .filter((item) => item.id)
                   .map((item) => ({
                     label: `${item.name || item.id} (${item.code}) / ${item.mcpToolName || '-'}`,
                     value: item.id as string,
-                  }));
+                  }))
               }}
               placeholder="选择要绑定的工具（可多选）"
             />
-          );
+          )
         }}
       </ProFormDependency>
     </DrawerForm>
-  );
-};
+  )
+}
 
-export default AgentDefinitionForm;
+export default AgentDefinitionForm

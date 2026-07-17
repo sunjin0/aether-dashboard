@@ -1,7 +1,6 @@
 # Agent SSE 流式聊天前端对接方案
 
-> 适用版本：V0.4 SSE 流式响应
-> 后端接口：`GET /api/agent/chat/stream`
+> 适用版本：V0.4 SSE 流式响应后端接口：`GET /api/agent/chat/stream`
 
 ## 1. 对接结论
 
@@ -19,11 +18,11 @@ Authorization: Bearer <token>
 
 Query 参数：
 
-| 参数 | 必填 | 说明 |
-|------|------|------|
-| `agentId` | 是 | Agent 定义 ID |
-| `conversationId` | 否 | 会话 ID。首次对话不传，由后端自动创建 |
-| `message` | 是 | 用户输入内容 |
+| 参数             | 必填 | 说明                                  |
+| ---------------- | ---- | ------------------------------------- |
+| `agentId`        | 是   | Agent 定义 ID                         |
+| `conversationId` | 否   | 会话 ID。首次对话不传，由后端自动创建 |
+| `message`        | 是   | 用户输入内容                          |
 
 响应类型：
 
@@ -44,11 +43,11 @@ data: {"chunk":"你好","conversationId":"100","messageId":null}
 
 字段说明：
 
-| 字段 | 说明 |
-|------|------|
-| `chunk` | 当前文本分片 |
-| `conversationId` | 当前会话 ID |
-| `messageId` | 当前为 `null`，真实 assistant 消息 ID 在 `done` 事件返回 |
+| 字段             | 说明                                                     |
+| ---------------- | -------------------------------------------------------- |
+| `chunk`          | 当前文本分片                                             |
+| `conversationId` | 当前会话 ID                                              |
+| `messageId`      | 当前为 `null`，真实 assistant 消息 ID 在 `done` 事件返回 |
 
 ### 3.2 tool_call
 
@@ -81,11 +80,11 @@ data: {"conversationId":"100","messageId":"1000","totalTokens":50}
 
 字段说明：
 
-| 字段 | 说明 |
-|------|------|
-| `conversationId` | 当前会话 ID |
-| `messageId` | 后端保存后的 assistant 消息 ID |
-| `totalTokens` | 总 token 数，可能为空 |
+| 字段             | 说明                           |
+| ---------------- | ------------------------------ |
+| `conversationId` | 当前会话 ID                    |
+| `messageId`      | 后端保存后的 assistant 消息 ID |
+| `totalTokens`    | 总 token 数，可能为空          |
 
 ## 4. 前端状态流转
 
@@ -105,59 +104,59 @@ data: {"conversationId":"100","messageId":"1000","totalTokens":50}
 ```ts
 export type AgentStreamEvent =
   | {
-      event: 'message'
+      event: 'message';
       data: {
-        chunk: string
-        conversationId: string
-        messageId: string | null
-      }
+        chunk: string;
+        conversationId: string;
+        messageId: string | null;
+      };
     }
   | {
-      event: 'tool_call'
+      event: 'tool_call';
       data: {
-        conversationId?: string
-        toolName?: string
-        toolCallId?: string
-        arguments?: Record<string, unknown>
-      }
+        conversationId?: string;
+        toolName?: string;
+        toolCallId?: string;
+        arguments?: Record<string, unknown>;
+      };
     }
   | {
-      event: 'error'
+      event: 'error';
       data: {
-        code: number
-        message: string
-      }
+        code: number;
+        message: string;
+      };
     }
   | {
-      event: 'done'
+      event: 'done';
       data: {
-        conversationId: string
-        messageId: string
-        totalTokens?: number
-      }
-    }
+        conversationId: string;
+        messageId: string;
+        totalTokens?: number;
+      };
+    };
 ```
 
 ## 6. 推荐请求封装
 
 ```ts
 export async function streamAgentChat(params: {
-  token: string
-  agentId: string
-  conversationId?: string
-  message: string
-  signal?: AbortSignal
-  onMessage: (chunk: string, data: any) => void
-  onToolCall?: (data: any) => void
-  onDone: (data: any) => void
-  onError: (data: any) => void
+  token: string;
+  agentId: string;
+  conversationId?: string;
+  message: string;
+  signal?: AbortSignal;
+  onMessage: (chunk: string, data: any) => void;
+  onToolCall?: (data: any) => void;
+  onDone: (data: any) => void;
+  onError: (data: any) => void;
 }) {
-  const query = new URLSearchParams()
-  query.set('agentId', params.agentId)
-  query.set('message', params.message)
+  const query = new URLSearchParams();
+  query.set('agentId', params.agentId);
+  query.set('message', params.message);
 
   if (params.conversationId) {
-    query.set('conversationId', params.conversationId)
+    query.set('conversationId', params.conversationId);
   }
 
   const response = await fetch(`/api/agent/chat/stream?${query.toString()}`, {
@@ -167,86 +166,86 @@ export async function streamAgentChat(params: {
       Authorization: `Bearer ${params.token}`,
     },
     signal: params.signal,
-  })
+  });
 
   if (!response.ok || !response.body) {
-    throw new Error(`SSE request failed: ${response.status}`)
+    throw new Error(`SSE request failed: ${response.status}`);
   }
 
-  const reader = response.body.getReader()
-  const decoder = new TextDecoder('utf-8')
-  let buffer = ''
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder('utf-8');
+  let buffer = '';
 
   while (true) {
-    const { value, done } = await reader.read()
+    const { value, done } = await reader.read();
 
     if (done) {
-      break
+      break;
     }
 
-    buffer += decoder.decode(value, { stream: true })
+    buffer += decoder.decode(value, { stream: true });
 
-    const events = buffer.split('\n\n')
-    buffer = events.pop() || ''
+    const events = buffer.split('\n\n');
+    buffer = events.pop() || '';
 
     for (const rawEvent of events) {
-      const parsed = parseSseEvent(rawEvent)
+      const parsed = parseSseEvent(rawEvent);
 
       if (!parsed) {
-        continue
+        continue;
       }
 
       if (parsed.event === 'message') {
-        params.onMessage(parsed.data.chunk, parsed.data)
+        params.onMessage(parsed.data.chunk, parsed.data);
       }
 
       if (parsed.event === 'tool_call') {
-        params.onToolCall?.(parsed.data)
+        params.onToolCall?.(parsed.data);
       }
 
       if (parsed.event === 'error') {
-        params.onError(parsed.data)
-        return
+        params.onError(parsed.data);
+        return;
       }
 
       if (parsed.event === 'done') {
-        params.onDone(parsed.data)
-        return
+        params.onDone(parsed.data);
+        return;
       }
     }
   }
 }
 
 function parseSseEvent(raw: string): { event: string; data: any } | null {
-  const lines = raw.split('\n')
-  let event = 'message'
-  let data = ''
+  const lines = raw.split('\n');
+  let event = 'message';
+  let data = '';
 
   for (const line of lines) {
     if (line.startsWith('event:')) {
-      event = line.slice('event:'.length).trim()
+      event = line.slice('event:'.length).trim();
     }
 
     if (line.startsWith('data:')) {
-      data += line.slice('data:'.length).trim()
+      data += line.slice('data:'.length).trim();
     }
   }
 
   if (!data) {
-    return null
+    return null;
   }
 
   return {
     event,
     data: JSON.parse(data),
-  }
+  };
 }
 ```
 
 ## 7. 页面侧使用示例
 
 ```ts
-const controller = new AbortController()
+const controller = new AbortController();
 
 await streamAgentChat({
   token,
@@ -256,26 +255,26 @@ await streamAgentChat({
   signal: controller.signal,
 
   onMessage(chunk, data) {
-    currentConversationId = data.conversationId
-    updateAssistantDraft((old) => old + chunk)
+    currentConversationId = data.conversationId;
+    updateAssistantDraft((old) => old + chunk);
   },
 
   onToolCall(data) {
-    showToolCallStatus(data)
+    showToolCallStatus(data);
   },
 
   onDone(data) {
-    currentConversationId = data.conversationId
+    currentConversationId = data.conversationId;
     finalizeAssistantMessage({
       messageId: data.messageId,
       totalTokens: data.totalTokens,
-    })
+    });
   },
 
   onError(data) {
-    markAssistantMessageError(data.message)
+    markAssistantMessageError(data.message);
   },
-})
+});
 ```
 
 ## 8. 停止生成
@@ -283,7 +282,7 @@ await streamAgentChat({
 前端应为流式生成提供“停止生成”按钮。
 
 ```ts
-controller.abort()
+controller.abort();
 ```
 
 用户停止后，建议将当前 assistant 草稿标记为 `stopped` 或 `interrupted`，不要标记为正常完成。
@@ -294,23 +293,23 @@ controller.abort()
 
 ```ts
 const source = new EventSource(
-  `/api/agent/chat/stream?agentId=${agentId}&conversationId=${conversationId}&message=${encodeURIComponent(message)}`
-)
+  `/api/agent/chat/stream?agentId=${agentId}&conversationId=${conversationId}&message=${encodeURIComponent(message)}`,
+);
 
 source.addEventListener('message', (event) => {
-  const data = JSON.parse(event.data)
-  appendChunk(data.chunk)
-})
+  const data = JSON.parse(event.data);
+  appendChunk(data.chunk);
+});
 
 source.addEventListener('done', (event) => {
-  const data = JSON.parse(event.data)
-  finalizeMessage(data.messageId)
-  source.close()
-})
+  const data = JSON.parse(event.data);
+  finalizeMessage(data.messageId);
+  source.close();
+});
 
 source.addEventListener('error', () => {
-  source.close()
-})
+  source.close();
+});
 ```
 
 当前后端使用 `Authorization` 请求头鉴权，因此不推荐该方案。

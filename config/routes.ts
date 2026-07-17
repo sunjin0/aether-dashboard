@@ -115,7 +115,7 @@ export default [
     name: '知识库管理',
     icon: 'database',
     routes: [
-{
+      {
         path: '/knowledge/base',
         name: '知识库列表',
         component: './knowledge/base',

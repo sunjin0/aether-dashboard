@@ -165,7 +165,7 @@ GET /api/agent/conversation/{id}/messages?current=1&pageSize=20
 写权限沿用项目现有模式：
 
 ```ts
-useAccess()[history.location.pathname]
+useAccess()[history.location.pathname];
 ```
 
 没有写权限时隐藏：

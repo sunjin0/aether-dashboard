@@ -1,49 +1,44 @@
-import React, { useState } from 'react';
-import { Dropdown, Modal, Input, Button, List, Tag, Space, Typography, message } from 'antd';
-import {
-  BookOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  EditOutlined,
-} from '@ant-design/icons';
+import React, { useState } from 'react'
+import { Dropdown, Modal, Input, Button, List, Tag, Space, Typography, message } from 'antd'
+import { BookOutlined, PlusOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons'
 import {
   PromptTemplate,
   getAllTemplates,
   saveCustomTemplate,
   deleteCustomTemplate,
-} from './promptTemplates';
+} from './promptTemplates'
 
-const { Text } = Typography;
+const { Text } = Typography
 
 interface TemplateSelectProps {
   onSelect: (content: string) => void;
 }
 
 const TemplateSelect: React.FC<TemplateSelectProps> = ({ onSelect }) => {
-  const [manageOpen, setManageOpen] = useState(false);
-  const [templates, setTemplates] = useState<PromptTemplate[]>(getAllTemplates());
-  const [addOpen, setAddOpen] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newContent, setNewContent] = useState('');
+  const [manageOpen, setManageOpen] = useState(false)
+  const [templates, setTemplates] = useState<PromptTemplate[]>(getAllTemplates())
+  const [addOpen, setAddOpen] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [newContent, setNewContent] = useState('')
 
-  const presetTemplates = templates.filter((t) => t.category === 'preset');
-  const customTemplates = templates.filter((t) => t.category === 'custom');
+  const presetTemplates = templates.filter((t) => t.category === 'preset')
+  const customTemplates = templates.filter((t) => t.category === 'custom')
 
   const handleSelect = (template: PromptTemplate) => {
     Modal.confirm({
       title: '使用模板',
       content: `确定要使用「${template.name}」模板吗？当前内容将被替换。`,
       onOk: () => {
-        onSelect(template.content);
-        message.success('已应用模板');
+        onSelect(template.content)
+        message.success('已应用模板')
       },
-    });
-  };
+    })
+  }
 
   const handleAdd = () => {
     if (!newName.trim() || !newContent.trim()) {
-      message.warning('请填写完整信息');
-      return;
+      message.warning('请填写完整信息')
+      return
     }
 
     const template: PromptTemplate = {
@@ -51,27 +46,27 @@ const TemplateSelect: React.FC<TemplateSelectProps> = ({ onSelect }) => {
       name: newName,
       category: 'custom',
       content: newContent,
-    };
+    }
 
-    saveCustomTemplate(template);
-    setTemplates(getAllTemplates());
-    setAddOpen(false);
-    setNewName('');
-    setNewContent('');
-    message.success('模板已保存');
-  };
+    saveCustomTemplate(template)
+    setTemplates(getAllTemplates())
+    setAddOpen(false)
+    setNewName('')
+    setNewContent('')
+    message.success('模板已保存')
+  }
 
   const handleDelete = (id: string) => {
     Modal.confirm({
       title: '删除模板',
       content: '确定要删除这个自定义模板吗？',
       onOk: () => {
-        deleteCustomTemplate(id);
-        setTemplates(getAllTemplates());
-        message.success('模板已删除');
+        deleteCustomTemplate(id)
+        setTemplates(getAllTemplates())
+        message.success('模板已删除')
       },
-    });
-  };
+    })
+  }
 
   const menuItems = [
     ...presetTemplates.map((t) => ({
@@ -86,7 +81,7 @@ const TemplateSelect: React.FC<TemplateSelectProps> = ({ onSelect }) => {
       icon: <EditOutlined />,
       onClick: () => setManageOpen(true),
     },
-  ];
+  ]
 
   return (
     <>
@@ -116,7 +111,12 @@ const TemplateSelect: React.FC<TemplateSelectProps> = ({ onSelect }) => {
                 <Button size="small" onClick={() => handleSelect(item)}>
                   使用
                 </Button>,
-                <Button size="small" danger icon={<DeleteOutlined />} onClick={() => handleDelete(item.id)}>
+                <Button
+                  size="small"
+                  danger
+                  icon={<DeleteOutlined />}
+                  onClick={() => handleDelete(item.id)}
+                >
                   删除
                 </Button>,
               ]}
@@ -182,7 +182,7 @@ const TemplateSelect: React.FC<TemplateSelectProps> = ({ onSelect }) => {
         </Space>
       </Modal>
     </>
-  );
-};
+  )
+}
 
-export default TemplateSelect;
+export default TemplateSelect

@@ -1,5 +1,3 @@
-
-
 ```bash
 # use npm
 npm i @ant-design/pro-cli -g
@@ -39,4 +37,3 @@ $ cd myapp && npm install
 ```
 
 ## Browsers support
-

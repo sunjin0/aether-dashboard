@@ -23,7 +23,9 @@ const PreferencePage: React.FC = () => {
 
   const updateStatus = async (record: AdminPreference) => {
     if (!record.id) return
-    const response = await updateAdminPreferenceStatus(record.id, { status: record.status === 1 ? 0 : 1 })
+    const response = await updateAdminPreferenceStatus(record.id, {
+      status: record.status === 1 ? 0 : 1,
+    })
     if (response.code === 200) {
       message.success(response.message || '操作成功')
       ref.current?.reload()
@@ -119,7 +121,15 @@ const PreferencePage: React.FC = () => {
         request={(params: AdminPreferenceSearchParams) => getAdminPreferenceList(params)}
         toolBarRender={() =>
           write && [
-            <Button key="new" icon={<PlusOutlined />} type="primary" onClick={() => { setId(undefined); setOpen(true) }}>
+            <Button
+              key="new"
+              icon={<PlusOutlined />}
+              type="primary"
+              onClick={() => {
+                setId(undefined)
+                setOpen(true)
+              }}
+            >
               新增偏好
             </Button>,
           ]
@@ -129,7 +139,10 @@ const PreferencePage: React.FC = () => {
         id={id}
         open={open}
         setOpen={setOpen}
-        onSuccess={() => { setId(undefined); ref.current?.reload() }}
+        onSuccess={() => {
+          setId(undefined)
+          ref.current?.reload()
+        }}
       />
     </PageContainer>
   )

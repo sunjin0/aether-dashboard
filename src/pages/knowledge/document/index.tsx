@@ -101,7 +101,11 @@ const KnowledgeDocumentPage: React.FC = () => {
       },
       render: (_: unknown, record: Document) => {
         const item = getIndexStatus(record.indexStatus)
-        return <Tag color={record.indexStatus === 3 ? 'error' : item.color}>{record.indexStatus === 3 ? '失败' : item.label}</Tag>
+        return (
+          <Tag color={record.indexStatus === 3 ? 'error' : item.color}>
+            {record.indexStatus === 3 ? '失败' : item.label}
+          </Tag>
+        )
       },
     },
     {
@@ -124,10 +128,35 @@ const KnowledgeDocumentPage: React.FC = () => {
       render: (_: unknown, record: Document) => {
         if (!canManage || !record.id) return []
         return [
-          record.originalFileName ? <TemporaryUrlPreviewModal key="preview" title={record.originalFileName || record.title || '文件预览'} getUrl={() => getDocumentPreviewUrl(record.id!)} /> : null,
-          <Button key="versions" type="link" onClick={() => setVersionDocument(record)}>版本历史</Button>,
-          <Button key="edit" type="link" onClick={() => { setDocumentId(record.id); setFormKnowledgeBaseId(record.knowledgeBaseId); setFormOpen(true) }}>编辑</Button>,
-          <Button key="reindex" type="link" loading={reindexingId === record.id} onClick={() => reindex(record)}>重建索引</Button>,
+          record.originalFileName ? (
+            <TemporaryUrlPreviewModal
+              key="preview"
+              title={record.originalFileName || record.title || '文件预览'}
+              getUrl={() => getDocumentPreviewUrl(record.id!)}
+            />
+          ) : null,
+          <Button key="versions" type="link" onClick={() => setVersionDocument(record)}>
+            版本历史
+          </Button>,
+          <Button
+            key="edit"
+            type="link"
+            onClick={() => {
+              setDocumentId(record.id)
+              setFormKnowledgeBaseId(record.knowledgeBaseId)
+              setFormOpen(true)
+            }}
+          >
+            编辑
+          </Button>,
+          <Button
+            key="reindex"
+            type="link"
+            loading={reindexingId === record.id}
+            onClick={() => reindex(record)}
+          >
+            重建索引
+          </Button>,
           <Popconfirm
             key="delete"
             title="确认删除该文档？"
@@ -141,7 +170,9 @@ const KnowledgeDocumentPage: React.FC = () => {
               }
             }}
           >
-            <Button type="link" danger>删除</Button>
+            <Button type="link" danger>
+              删除
+            </Button>
           </Popconfirm>,
         ]
       },
@@ -195,7 +226,11 @@ const KnowledgeDocumentPage: React.FC = () => {
                   </>
                 }
                 upload={(file, values) =>
-                  uploadDocument(values.selectedKnowledgeBaseId as string, file, values.title as string)
+                  uploadDocument(
+                      values.selectedKnowledgeBaseId as string,
+                      file,
+                      values.title as string,
+                  )
                 }
                 onSuccess={reload}
               />,
@@ -229,13 +264,3 @@ const KnowledgeDocumentPage: React.FC = () => {
 }
 
 export default KnowledgeDocumentPage
-
-
-
-
-
-
-
-
-
-

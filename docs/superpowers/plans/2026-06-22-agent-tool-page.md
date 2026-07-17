@@ -28,6 +28,7 @@
 ### Task 1: Add Tool Entity Types
 
 **Files:**
+
 - Modify: `src/services/entity/Agent.ts`
 
 - [ ] **Step 1: Add interfaces after `AgentMessageSearchParams`**
@@ -35,7 +36,6 @@
 Append this code to `src/services/entity/Agent.ts` after the existing `AgentMessageSearchParams` interface:
 
 ```ts
-
 /**
  * @description Agent 工具
  */
@@ -77,6 +77,7 @@ Expected: Both interfaces are found.
 ### Task 2: Add Tool Service Controller
 
 **Files:**
+
 - Create: `src/services/agent/ToolController.ts`
 
 - [ ] **Step 1: Create service file**
@@ -84,9 +85,9 @@ Expected: Both interfaces are found.
 Create `src/services/agent/ToolController.ts` with this content:
 
 ```ts
-import {request} from '@umijs/max';
-import {ResponseStructure} from '@/services/entity/Common';
-import {AgentTool, AgentToolSearchParams} from '@/services/entity/Agent';
+import { request } from '@umijs/max';
+import { ResponseStructure } from '@/services/entity/Common';
+import { AgentTool, AgentToolSearchParams } from '@/services/entity/Agent';
 
 /**
  * @description 获取 Agent 工具列表
@@ -160,6 +161,7 @@ Expected: No matches.
 ### Task 3: Add Tool Drawer Form
 
 **Files:**
+
 - Create: `src/pages/agent/tool/AgentToolForm.tsx`
 
 - [ ] **Step 1: Create form component**
@@ -174,23 +176,23 @@ import {
   ProFormText,
   ProFormTextArea,
 } from '@ant-design/pro-components';
-import {Form} from 'antd';
+import { Form } from 'antd';
 import {
   addAgentToolInfo,
   getAgentToolInfo,
   updateAgentToolInfo,
 } from '@/services/agent/ToolController';
 
-const typeOptions = [{label: 'HTTP', value: 'http'}];
+const typeOptions = [{ label: 'HTTP', value: 'http' }];
 
 const httpMethodOptions = [
-  {label: 'GET', value: 'GET'},
-  {label: 'POST', value: 'POST'},
+  { label: 'GET', value: 'GET' },
+  { label: 'POST', value: 'POST' },
 ];
 
 const statusOptions = [
-  {label: '禁用', value: 0},
-  {label: '启用', value: 1},
+  { label: '禁用', value: 0 },
+  { label: '启用', value: 1 },
 ];
 
 const AgentToolForm = (props: {
@@ -199,7 +201,7 @@ const AgentToolForm = (props: {
   setOpen?: (open: boolean) => void;
   onSuccess: () => void;
 }) => {
-  const {id, open, setOpen, onSuccess} = props;
+  const { id, open, setOpen, onSuccess } = props;
   const [form] = Form.useForm();
 
   return (
@@ -220,14 +222,14 @@ const AgentToolForm = (props: {
       form={form}
     >
       <ProFormText name="id" hidden={true} />
-      <ProFormText name="name" label="工具名称" rules={[{required: true}]} />
-      <ProFormText name="code" label="工具编码" rules={[{required: true}]} />
+      <ProFormText name="name" label="工具名称" rules={[{ required: true }]} />
+      <ProFormText name="code" label="工具编码" rules={[{ required: true }]} />
       <ProFormTextArea name="description" label="描述" />
       <ProFormSelect
         name="type"
         label="工具类型"
         options={typeOptions}
-        rules={[{required: true}]}
+        rules={[{ required: true }]}
         initialValue="http"
       />
       <ProFormSelect name="httpMethod" label="HTTP 方法" options={httpMethodOptions} />
@@ -235,27 +237,22 @@ const AgentToolForm = (props: {
       <ProFormTextArea
         name="httpHeaders"
         label="HTTP Headers"
-        fieldProps={{placeholder: '请输入 JSON 字符串模板'}}
+        fieldProps={{ placeholder: '请输入 JSON 字符串模板' }}
       />
       <ProFormTextArea name="httpBodyTemplate" label="请求体模板" />
       <ProFormTextArea name="responseExtractRule" label="响应提取规则" />
-      <ProFormDigit
-        name="timeoutMs"
-        label="超时时间(ms)"
-        min={0}
-        fieldProps={{precision: 0}}
-      />
+      <ProFormDigit name="timeoutMs" label="超时时间(ms)" min={0} fieldProps={{ precision: 0 }} />
       <ProFormDigit
         name="cacheTtlSeconds"
         label="缓存 TTL(s)"
         min={0}
-        fieldProps={{precision: 0}}
+        fieldProps={{ precision: 0 }}
       />
       <ProFormSelect
         name="status"
         label="状态"
         options={statusOptions}
-        rules={[{required: true}]}
+        rules={[{ required: true }]}
         initialValue={1}
       />
     </DrawerForm>
@@ -276,6 +273,7 @@ Expected: No matches.
 ### Task 4: Add Tool List Page
 
 **Files:**
+
 - Create: `src/pages/agent/tool/index.tsx`
 
 - [ ] **Step 1: Create page component**
@@ -283,11 +281,11 @@ Expected: No matches.
 Create `src/pages/agent/tool/index.tsx` with this content:
 
 ```tsx
-import React, {useRef, useState} from 'react';
-import {PlusOutlined} from '@ant-design/icons';
-import {ActionType, PageContainer, ProTable} from '@ant-design/pro-components';
-import {Button, message, Popconfirm} from 'antd';
-import {FormattedMessage, history, useAccess} from '@@/exports';
+import React, { useRef, useState } from 'react';
+import { PlusOutlined } from '@ant-design/icons';
+import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components';
+import { Button, message, Popconfirm } from 'antd';
+import { FormattedMessage, history, useAccess } from '@@/exports';
 import AgentToolForm from '@/pages/agent/tool/AgentToolForm';
 import {
   deleteAgentToolInfo,
@@ -295,20 +293,20 @@ import {
   getAgentToolList,
   updateAgentToolInfo,
 } from '@/services/agent/ToolController';
-import {AgentTool, AgentToolSearchParams} from '@/services/entity/Agent';
+import { AgentTool, AgentToolSearchParams } from '@/services/entity/Agent';
 
 const typeValueEnum = {
-  http: {text: 'HTTP'},
+  http: { text: 'HTTP' },
 };
 
 const httpMethodValueEnum = {
-  GET: {text: 'GET'},
-  POST: {text: 'POST'},
+  GET: { text: 'GET' },
+  POST: { text: 'POST' },
 };
 
 const statusValueEnum = {
-  0: {text: '禁用', status: 'Default'},
-  1: {text: '启用', status: 'Success'},
+  0: { text: '禁用', status: 'Default' },
+  1: { text: '启用', status: 'Success' },
 };
 
 const AgentToolPage: React.FC = () => {
@@ -325,7 +323,7 @@ const AgentToolPage: React.FC = () => {
       return;
     }
 
-    const {code, message: msg} = await deleteAgentToolInfo(record.id);
+    const { code, message: msg } = await deleteAgentToolInfo(record.id);
     if (code === 200) {
       message.success(msg || '删除成功');
       ref.current?.reload();
@@ -347,7 +345,7 @@ const AgentToolPage: React.FC = () => {
       return;
     }
 
-    const {code, message: msg} = await updateAgentToolInfo({
+    const { code, message: msg } = await updateAgentToolInfo({
       ...detail.data,
       status: nextStatus,
     });
@@ -506,6 +504,7 @@ Expected: Both function names are found in `index.tsx`.
 ### Task 5: Register Route
 
 **Files:**
+
 - Modify: `config/routes.ts`
 
 - [ ] **Step 1: Add route under Agent platform**
@@ -558,6 +557,7 @@ Expected: All three strings are found.
 ### Task 6: Verify Implementation
 
 **Files:**
+
 - Inspect: `src/services/entity/Agent.ts`
 - Inspect: `src/services/agent/ToolController.ts`
 - Inspect: `src/pages/agent/tool/AgentToolForm.tsx`

@@ -1,87 +1,87 @@
-import React, {useRef, useState} from 'react';
-import {PageContainer, ProDescriptions, ProTable} from '@ant-design/pro-components';
-import {Alert, Button, Card, Drawer, Empty, message, Spin, Tag, Typography} from 'antd';
+import React, { useRef, useState } from 'react'
+import { PageContainer, ProDescriptions, ProTable } from '@ant-design/pro-components'
+import { Alert, Button, Card, Drawer, Empty, message, Spin, Tag, Typography } from 'antd'
 import {
   getAgentToolCallLogInfo,
   getAgentToolCallLogList,
-} from '@/services/agent/ToolCallLogController';
-import {getOptionList} from '@/services/sys/DictController';
-import {AgentToolCallLog, AgentToolCallLogSearchParams} from '@/services/entity/Agent';
-import JsonDisplay from '@/components/JsonDisplay';
-import MarkdownText from '@/components/MarkdownText';
-import './index.less';
+} from '@/services/agent/ToolCallLogController'
+import { getOptionList } from '@/services/sys/DictController'
+import { AgentToolCallLog, AgentToolCallLogSearchParams } from '@/services/entity/Agent'
+import JsonDisplay from '@/components/JsonDisplay'
+import MarkdownText from '@/components/MarkdownText'
+import './index.less'
 
-const {Text} = Typography;
+const { Text } = Typography
 
 const renderStatusTag = (status?: number) => {
   if (status === 0) {
-    return <Tag color="success">成功</Tag>;
+    return <Tag color="success">成功</Tag>
   }
   if (status === 1) {
-    return <Tag color="error">失败</Tag>;
+    return <Tag color="error">失败</Tag>
   }
   if (status === 2) {
-    return <Tag color="warning">超时</Tag>;
+    return <Tag color="warning">超时</Tag>
   }
   if (status === 3) {
-    return <Tag color="purple">安全拦截</Tag>;
+    return <Tag color="purple">安全拦截</Tag>
   }
-  return <Tag>未知</Tag>;
-};
+  return <Tag>未知</Tag>
+}
 
 const AgentToolCallLogPage: React.FC = () => {
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [toolCallLog, setToolCallLog] = useState<AgentToolCallLog>();
-  const [detailLoading, setDetailLoading] = useState(false);
-  const detailRequestRef = useRef(0);
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [toolCallLog, setToolCallLog] = useState<AgentToolCallLog>()
+  const [detailLoading, setDetailLoading] = useState(false)
+  const detailRequestRef = useRef(0)
 
   const normalizeSearchParams = (
-    params: Omit<AgentToolCallLogSearchParams, 'status'> & {status?: number | string | null},
+    params: Omit<AgentToolCallLogSearchParams, 'status'> & { status?: number | string | null },
   ): AgentToolCallLogSearchParams => {
-    const {status, ...restParams} = params;
+    const { status, ...restParams } = params
     if (status === undefined || status === null || status === '') {
-      return restParams;
+      return restParams
     }
 
     return {
       ...restParams,
       status: Number(status) as 0 | 1 | 2 | 3,
-    };
-  };
+    }
+  }
 
   const openDetail = async (record: AgentToolCallLog) => {
     if (!record.id) {
-      message.error('缺少工具调用日志 ID');
-      return;
+      message.error('缺少工具调用日志 ID')
+      return
     }
 
-    const requestId = detailRequestRef.current + 1;
-    detailRequestRef.current = requestId;
-    setToolCallLog(undefined);
-    setDrawerOpen(true);
-    setDetailLoading(true);
+    const requestId = detailRequestRef.current + 1
+    detailRequestRef.current = requestId
+    setToolCallLog(undefined)
+    setDrawerOpen(true)
+    setDetailLoading(true)
     try {
-      const {code, data, message: msg} = await getAgentToolCallLogInfo(record.id);
+      const { code, data, message: msg } = await getAgentToolCallLogInfo(record.id)
       if (detailRequestRef.current !== requestId) {
-        return;
+        return
       }
       if (code === 200) {
-        setToolCallLog(data);
+        setToolCallLog(data)
       } else {
-        setToolCallLog(undefined);
-        message.error(msg || '加载工具调用日志详情失败');
+        setToolCallLog(undefined)
+        message.error(msg || '加载工具调用日志详情失败')
       }
     } catch {
       if (detailRequestRef.current === requestId) {
-        setToolCallLog(undefined);
-        message.error('加载工具调用日志详情失败');
+        setToolCallLog(undefined)
+        message.error('加载工具调用日志详情失败')
       }
     } finally {
       if (detailRequestRef.current === requestId) {
-        setDetailLoading(false);
+        setDetailLoading(false)
       }
     }
-  };
+  }
 
   const columns: any[] = [
     {
@@ -151,7 +151,7 @@ const AgentToolCallLogPage: React.FC = () => {
         </Button>,
       ],
     },
-  ];
+  ]
 
   return (
     <PageContainer>
@@ -159,10 +159,10 @@ const AgentToolCallLogPage: React.FC = () => {
         rowKey="id"
         request={async (params: AgentToolCallLogSearchParams) => {
           try {
-            return await getAgentToolCallLogList(normalizeSearchParams(params));
+            return await getAgentToolCallLogList(normalizeSearchParams(params))
           } catch {
-            message.error('加载工具调用日志列表失败');
-            return { data: [], total: 0, success: false };
+            message.error('加载工具调用日志列表失败')
+            return { data: [], total: 0, success: false }
           }
         }}
         search={{
@@ -246,7 +246,7 @@ const AgentToolCallLogPage: React.FC = () => {
         </Spin>
       </Drawer>
     </PageContainer>
-  );
-};
+  )
+}
 
-export default AgentToolCallLogPage;
+export default AgentToolCallLogPage

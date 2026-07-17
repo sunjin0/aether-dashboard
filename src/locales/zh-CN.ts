@@ -172,4 +172,4 @@ export default {
   'pages.agent.mcpServer.importFailed': '工具导入失败',
   'pages.agent.mcpServer.deleteConfirm': '确认删除该 MCP 服务？',
   'pages.agent.mcpServer.deleteFailed': '该 MCP 服务下仍有关联工具，请先删除或迁移工具。',
-};
+}

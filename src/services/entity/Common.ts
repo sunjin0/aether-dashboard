@@ -6,7 +6,7 @@ export enum ErrorShowType {
   NOTIFICATION = 3,
   REDIRECT = 9,
 }
-export interface Response{
+export interface Response {
   code: number;
   message: string;
   data: any;
@@ -23,7 +23,7 @@ export interface ResponseStructure<T> {
   errorMessage?: string;
   showType?: ErrorShowType;
 }
-export interface Option{
+export interface Option {
   id?: number;
   label: string;
   value: string | number;

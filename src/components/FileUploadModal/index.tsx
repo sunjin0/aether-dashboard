@@ -4,27 +4,27 @@ import type { UploadFile } from 'antd/es/upload/interface'
 import React, { useState } from 'react'
 
 export interface UploadActionResult {
-  code?: number
-  message?: string
+  code?: number;
+  message?: string;
 }
 
 /** 上传弹窗中自定义表单字段的值，由调用方自行定义并传给接口。 */
-export type UploadExtraValues = Record<string, unknown>
+export type UploadExtraValues = Record<string, unknown>;
 
 interface FileUploadModalProps {
-  accept: string
-  allowedExtensions: string[]
-  maxSize?: number
-  triggerText?: string
-  title?: string
-  width?: number | string
-  disabled?: boolean
-  initialValues?: UploadExtraValues
+  accept: string;
+  allowedExtensions: string[];
+  maxSize?: number;
+  triggerText?: string;
+  title?: string;
+  width?: number | string;
+  disabled?: boolean;
+  initialValues?: UploadExtraValues;
   /** 调用方可传入任意 Form.Item，用于扩展上传接口参数。 */
-  extraFields?: React.ReactNode
+  extraFields?: React.ReactNode;
   /** 文件与已校验的自定义字段值同时提交给调用方。 */
-  upload: (file: File, values: UploadExtraValues) => Promise<UploadActionResult>
-  onSuccess?: () => void
+  upload: (file: File, values: UploadExtraValues) => Promise<UploadActionResult>;
+  onSuccess?: () => void;
 }
 
 const FileUploadModal: React.FC<FileUploadModalProps> = ({
@@ -86,19 +86,48 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
     }
   }
 
-  const fileList: UploadFile[] = file ? [{ uid: file.name, name: file.name, status: 'done', size: file.size }] : []
+  const fileList: UploadFile[] = file
+    ? [{ uid: file.name, name: file.name, status: 'done', size: file.size }]
+    : []
 
   return (
     <>
-      <Button icon={<UploadOutlined />} disabled={disabled} onClick={() => setOpen(true)}>{triggerText}</Button>
-      <Modal title={title} open={open} width={width} onCancel={reset} onOk={submit} okText="确认上传" cancelText="取消" confirmLoading={uploading} okButtonProps={{ disabled: !file }} destroyOnClose>
+      <Button icon={<UploadOutlined />} disabled={disabled} onClick={() => setOpen(true)}>
+        {triggerText}
+      </Button>
+      <Modal
+        title={title}
+        open={open}
+        width={width}
+        onCancel={reset}
+        onOk={submit}
+        okText="确认上传"
+        cancelText="取消"
+        confirmLoading={uploading}
+        okButtonProps={{ disabled: !file }}
+        destroyOnClose
+      >
         <Form form={form} layout="vertical" initialValues={initialValues}>
           {extraFields}
         </Form>
-        <Upload.Dragger accept={accept} maxCount={1} fileList={fileList} beforeUpload={beforeUpload} onRemove={() => { setFile(undefined); return true }}>
-          <p className="ant-upload-drag-icon"><InboxOutlined /></p>
+        <Upload.Dragger
+          accept={accept}
+          maxCount={1}
+          fileList={fileList}
+          beforeUpload={beforeUpload}
+          onRemove={() => {
+            setFile(undefined)
+            return true
+          }}
+        >
+          <p className="ant-upload-drag-icon">
+            <InboxOutlined />
+          </p>
           <p className="ant-upload-text">点击或拖拽文件到此处</p>
-          <p className="ant-upload-hint">支持 {allowedExtensions.join('、')}，单个文件不超过 {Math.floor(maxSize / 1024 / 1024)} MB</p>
+          <p className="ant-upload-hint">
+            支持 {allowedExtensions.join('、')}，单个文件不超过 {Math.floor(maxSize / 1024 / 1024)}{' '}
+            MB
+          </p>
         </Upload.Dragger>
       </Modal>
     </>

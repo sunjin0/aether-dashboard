@@ -91,17 +91,17 @@ export interface AgentToolCallLogSearchParams extends AgentToolCallLog {
 
 默认展示以下列：
 
-| 字段 | 展示 | 查询 |
-|------|------|------|
-| runId | 运行记录 ID | 支持 |
-| toolId | 工具 ID | 支持 |
-| agentDefinitionId | Agent 定义 ID | 支持 |
-| requestMethod | 请求方法 | 支持 valueEnum |
-| responseStatus | HTTP 状态码 | 不查询 |
-| status | 执行状态 Tag | 支持 valueEnum |
-| latencyMs | 耗时 ms | 不查询 |
-| createdAt | 创建时间 | 不查询 |
-| 操作 | 详情 | 不查询 |
+| 字段              | 展示          | 查询           |
+| ----------------- | ------------- | -------------- |
+| runId             | 运行记录 ID   | 支持           |
+| toolId            | 工具 ID       | 支持           |
+| agentDefinitionId | Agent 定义 ID | 支持           |
+| requestMethod     | 请求方法      | 支持 valueEnum |
+| responseStatus    | HTTP 状态码   | 不查询         |
+| status            | 执行状态 Tag  | 支持 valueEnum |
+| latencyMs         | 耗时 ms       | 不查询         |
+| createdAt         | 创建时间      | 不查询         |
+| 操作              | 详情          | 不查询         |
 
 请求方法筛选值：
 

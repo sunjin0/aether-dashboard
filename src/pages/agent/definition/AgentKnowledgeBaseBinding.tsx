@@ -37,7 +37,10 @@ const AgentKnowledgeBaseBinding: React.FC<AgentKnowledgeBaseBindingProps> = ({ a
     setOptions(
       (response.data || [])
         .filter((item) => item.id && item.status === 1 && item.indexStatus === 2)
-        .map((item) => ({ label: `${item.name || item.id}（${item.scope === 'PLATFORM' ? '平台级' : 'Agent 专属'}）`, value: item.id as string })),
+        .map((item) => ({
+          label: `${item.name || item.id}（${item.scope === 'PLATFORM' ? '平台级' : 'Agent 专属'}）`,
+          value: item.id as string,
+        })),
     )
     form.resetFields()
     setBindOpen(true)
@@ -60,11 +63,15 @@ const AgentKnowledgeBaseBinding: React.FC<AgentKnowledgeBaseBindingProps> = ({ a
   const columns: any[] = [
     { title: '知识库名称', dataIndex: 'knowledgeBaseName', ellipsis: true },
     {
-      title: '范围', dataIndex: 'scope', valueType: 'select',
+      title: '范围',
+      dataIndex: 'scope',
+      valueType: 'select',
       valueEnum: { PLATFORM: { text: '平台级' }, AGENT: { text: 'Agent 专属' } },
     },
     {
-      title: '状态', dataIndex: 'status', valueType: 'select',
+      title: '状态',
+      dataIndex: 'status',
+      valueType: 'select',
       valueEnum: { 0: { text: '禁用' }, 1: { text: '启用' } },
       render: (_: unknown, record: KnowledgeBaseBinding) => {
         const item = getSwitchStatus(record.status)
@@ -72,14 +79,20 @@ const AgentKnowledgeBaseBinding: React.FC<AgentKnowledgeBaseBindingProps> = ({ a
       },
     },
     {
-      title: '操作', valueType: 'option', key: 'option', fixed: 'right', width: 180,
+      title: '操作',
+      valueType: 'option',
+      key: 'option',
+      fixed: 'right',
+      width: 180,
       render: (_: unknown, record: KnowledgeBaseBinding) => [
         <Popconfirm
           key="status"
           title={`确认${record.status === 1 ? '禁用' : '启用'}该绑定？`}
           onConfirm={async () => {
             if (!record.id) return
-            const response = await updateKnowledgeBaseBindingStatus(record.id, { status: record.status === 1 ? 0 : 1 })
+            const response = await updateKnowledgeBaseBindingStatus(record.id, {
+              status: record.status === 1 ? 0 : 1,
+            })
             if (response.code === 200) {
               message.success(response.message || '操作成功')
               ref.current?.reload()
@@ -100,7 +113,9 @@ const AgentKnowledgeBaseBinding: React.FC<AgentKnowledgeBaseBindingProps> = ({ a
             } else message.error(response.message || '解绑失败')
           }}
         >
-          <Button type="link" danger>解绑</Button>
+          <Button type="link" danger>
+            解绑
+          </Button>
         </Popconfirm>,
       ],
     },
@@ -119,18 +134,32 @@ const AgentKnowledgeBaseBinding: React.FC<AgentKnowledgeBaseBindingProps> = ({ a
         }}
         request={(params) => getKnowledgeBaseBindingList({ ...params, agentDefinitionId: agentId })}
         toolBarRender={() => [
-          <Button key="bind" icon={<PlusOutlined />} type="primary" onClick={openBindingForm}>绑定已有知识库</Button>,
+          <Button key="bind" icon={<PlusOutlined />} type="primary" onClick={openBindingForm}>
+            绑定已有知识库
+          </Button>,
         ]}
       />
       <Modal
         title="绑定已有知识库"
         open={bindOpen}
         onOk={bind}
-        onCancel={() => { setBindOpen(false); form.resetFields() }}
+        onCancel={() => {
+          setBindOpen(false)
+          form.resetFields()
+        }}
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="knowledgeBaseId" label="知识库" rules={[{ required: true, message: '请选择知识库' }]}>
-            <Select showSearch options={options} optionFilterProp="label" placeholder="请选择知识库" />
+          <Form.Item
+            name="knowledgeBaseId"
+            label="知识库"
+            rules={[{ required: true, message: '请选择知识库' }]}
+          >
+            <Select
+              showSearch
+              options={options}
+              optionFilterProp="label"
+              placeholder="请选择知识库"
+            />
           </Form.Item>
         </Form>
       </Modal>

@@ -45,7 +45,10 @@ function getQuestionAnswer(
 }
 
 /** choice 答案展示文本 */
-function getChoiceAnswerText(answer: QuestionAnswer | undefined, config: ChoiceQuestionConfig): string {
+function getChoiceAnswerText(
+  answer: QuestionAnswer | undefined,
+  config: ChoiceQuestionConfig,
+): string {
   if (!answer) return ''
   // 优先读 selectedOptions（带 label）
   if (answer.selectedOptions?.length) {
@@ -55,9 +58,7 @@ function getChoiceAnswerText(answer: QuestionAnswer | undefined, config: ChoiceQ
   const selected = answer.selected
   if (!selected) return ''
   const values = Array.isArray(selected) ? selected : [selected]
-  return values
-    .map((val) => config.options.find((o) => o.value === val)?.label || val)
-    .join('、')
+  return values.map((val) => config.options.find((o) => o.value === val)?.label || val).join('、')
 }
 
 /** confirm 答案展示文本 */
@@ -79,7 +80,11 @@ function isAnswerFilled(answer: AskUserAnswer | undefined): boolean {
   return false
 }
 
-function getChoiceAnswer(value: string | string[], customValue: string, multiple?: boolean): AskUserAnswer {
+function getChoiceAnswer(
+  value: string | string[],
+  customValue: string,
+  multiple?: boolean,
+): AskUserAnswer {
   const custom = customValue.trim()
   if (multiple) {
     return { selected: custom ? [...(value as string[]), custom] : value }
@@ -96,7 +101,12 @@ function toAskUserAnswer(a: QuestionAnswer): AskUserAnswer | undefined {
 
 // ─── 导出类型 ─────────────────────────────────────────────────────────────
 
-export type InteractiveQuestionCardStatus = 'pending' | 'answered' | 'cancelled' | 'expired' | 'submitting';
+export type InteractiveQuestionCardStatus =
+  | 'pending'
+  | 'answered'
+  | 'cancelled'
+  | 'expired'
+  | 'submitting';
 
 export interface InteractiveQuestionCardProps {
   questionConfig: QuestionConfig | string;
@@ -219,7 +229,12 @@ interface SingleConfirmQuestionProps {
   onChange: (value: boolean) => void;
 }
 
-const SingleConfirmQuestion: React.FC<SingleConfirmQuestionProps> = ({ config, disabled, value, onChange }) => {
+const SingleConfirmQuestion: React.FC<SingleConfirmQuestionProps> = ({
+  config,
+  disabled,
+  value,
+  onChange,
+}) => {
   return (
     <div className="iq-card-confirm">
       <Button
@@ -268,7 +283,9 @@ const AnswerSummary: React.FC<{
   return (
     <div className="iq-card-answer-summary">
       <CheckOutlined style={{ color: '#52c41a', marginRight: 8, fontSize: 14 }} />
-      <Text type="secondary" className="iq-card-answer-text">{text}</Text>
+      <Text type="secondary" className="iq-card-answer-text">
+        {text}
+      </Text>
     </div>
   )
 }
@@ -313,26 +330,44 @@ const ConfirmLayout: React.FC<{
       </div>
       <div className="iq-card-confirm-layout-description">{approvalQuestion.question}</div>
       <div className="iq-card-confirm-layout-details">
-        <div><Text type="secondary">工具</Text><Text code>{config.toolName || '-'}</Text></div>
+        <div>
+          <Text type="secondary">工具</Text>
+          <Text code>{config.toolName || '-'}</Text>
+        </div>
         <div>
           <Text type="secondary">风险等级</Text>
           <span className={`iq-card-risk iq-card-risk-${config.riskLevel || 'low'}`}>
             {riskLabelMap[config.riskLevel || 'low'] || config.riskLevel}
           </span>
         </div>
-        {config.riskReason && <div><Text type="secondary">风险说明</Text><Text>{config.riskReason}</Text></div>}
+        {config.riskReason && (
+          <div>
+            <Text type="secondary">风险说明</Text>
+            <Text>{config.riskReason}</Text>
+          </div>
+        )}
       </div>
       <div className="iq-card-confirm-layout-arguments">
         <Text type="secondary">调用参数</Text>
         <pre>{JSON.stringify(config.arguments || {}, null, 2)}</pre>
       </div>
-      {!disabled && (
-        approvalQuestion.type === 'confirm' ? (
+      {!disabled &&
+        (approvalQuestion.type === 'confirm' ? (
           <div className="iq-card-confirm">
-            <Button type="primary" icon={<CheckCircleOutlined />} onClick={() => submit({ confirmed: true })} className="iq-card-confirm-btn">
+            <Button
+              type="primary"
+              icon={<CheckCircleOutlined />}
+              onClick={() => submit({ confirmed: true })}
+              className="iq-card-confirm-btn"
+            >
               {approvalQuestion.confirmText || '确认'}
             </Button>
-            <Button danger icon={<CloseCircleOutlined />} onClick={() => submit({ confirmed: false })} className="iq-card-confirm-btn">
+            <Button
+              danger
+              icon={<CloseCircleOutlined />}
+              onClick={() => submit({ confirmed: false })}
+              className="iq-card-confirm-btn"
+            >
               {approvalQuestion.cancelText || '取消'}
             </Button>
           </div>
@@ -355,15 +390,20 @@ const ConfirmLayout: React.FC<{
             <Button
               type="primary"
               className="iq-card-submit-btn"
-              disabled={!isAnswerFilled(getChoiceAnswer(selected, customValue, approvalQuestion.multiple))}
-              onClick={() => submit(getChoiceAnswer(selected, customValue, approvalQuestion.multiple))}
+              disabled={
+                !isAnswerFilled(getChoiceAnswer(selected, customValue, approvalQuestion.multiple))
+              }
+              onClick={() =>
+                submit(getChoiceAnswer(selected, customValue, approvalQuestion.multiple))
+              }
             >
               确认
             </Button>
           </>
-        )
+        ))}
+      {statusInfo && (
+        <Text className={`iq-card-status ${statusInfo.className}`}>{statusInfo.text}</Text>
       )}
-      {statusInfo && <Text className={`iq-card-status ${statusInfo.className}`}>{statusInfo.text}</Text>}
     </div>
   )
 }
@@ -384,18 +424,23 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
   if (!isGroup) {
     const qConfig = config as QuestionItemConfig
     const historyAnswer = getQuestionAnswer(qConfig.id, qConfig)
-    const hasHistory = !!historyAnswer && (status === 'answered' || status === 'cancelled' || status === 'expired')
+    const hasHistory =
+      !!historyAnswer && (status === 'answered' || status === 'cancelled' || status === 'expired')
 
     const [internalAnswers, setInternalAnswers] = useState<Record<string, AskUserAnswer>>({})
     const [customValue, setCustomValue] = useState('')
     const currentAnswers = externalAnswer || internalAnswers
     const currentAnswer = hasHistory ? toAskUserAnswer(historyAnswer!) : currentAnswers[qConfig.id]
-    const choiceValue = currentAnswer && 'selected' in currentAnswer
-      ? currentAnswer.selected
-      : (qConfig.type === 'choice' && qConfig.multiple ? [] : '')
-    const submittedAnswer = qConfig.type === 'choice'
-      ? getChoiceAnswer(choiceValue, customValue, qConfig.multiple)
-      : currentAnswer
+    const choiceValue =
+      currentAnswer && 'selected' in currentAnswer
+        ? currentAnswer.selected
+        : qConfig.type === 'choice' && qConfig.multiple
+          ? []
+          : ''
+    const submittedAnswer =
+      qConfig.type === 'choice'
+        ? getChoiceAnswer(choiceValue, customValue, qConfig.multiple)
+        : currentAnswer
     const filled = isAnswerFilled(submittedAnswer)
 
     const className = [
@@ -414,16 +459,17 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
       onSubmit?.({ ...currentAnswers, [qConfig.id]: submittedAnswer! })
     }, [onSubmit, currentAnswers, filled, qConfig.id, submittedAnswer])
 
-    const handleAnswerChange = useCallback((submittedAnswer: AskUserAnswer) => {
-      setInternalAnswers((prev) => ({ ...prev, [qConfig.id]: submittedAnswer }))
-    }, [qConfig.id])
+    const handleAnswerChange = useCallback(
+      (submittedAnswer: AskUserAnswer) => {
+        setInternalAnswers((prev) => ({ ...prev, [qConfig.id]: submittedAnswer }))
+      },
+      [qConfig.id],
+    )
 
     return (
       <div className={className}>
         <div className="iq-card-header">
-          <span className="iq-card-type-badge">
-            {qConfig.type === 'choice' ? '选择' : '确认'}
-          </span>
+          <span className="iq-card-type-badge">{qConfig.type === 'choice' ? '选择' : '确认'}</span>
           {!hasHistory && <span className="iq-card-required-tag">必填</span>}
         </div>
         <div className="iq-card-question">{qConfig.question}</div>
@@ -451,7 +497,9 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
               <SingleConfirmQuestion
                 config={qConfig}
                 disabled={disabled}
-                value={currentAnswer && 'confirmed' in currentAnswer ? currentAnswer.confirmed : null}
+                value={
+                  currentAnswer && 'confirmed' in currentAnswer ? currentAnswer.confirmed : null
+                }
                 onChange={(val) => handleAnswerChange({ confirmed: val })}
               />
             )}
@@ -467,9 +515,7 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
         )}
 
         {statusInfo && (
-          <Text className={`iq-card-status ${statusInfo.className}`}>
-            {statusInfo.text}
-          </Text>
+          <Text className={`iq-card-status ${statusInfo.className}`}>{statusInfo.text}</Text>
         )}
       </div>
     )
@@ -477,12 +523,7 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
 
   if (groupConfig?.layout === 'confirm') {
     return (
-      <ConfirmLayout
-        config={groupConfig}
-        disabled={disabled}
-        status={status}
-        onSubmit={onSubmit}
-      />
+      <ConfirmLayout config={groupConfig} disabled={disabled} status={status} onSubmit={onSubmit} />
     )
   }
 
@@ -496,7 +537,10 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
     const map: Record<string, { source: 'history' | 'interactive'; answer: AskUserAnswer }> = {}
     for (const q of config.questions) {
       const historyAnswer = getQuestionAnswer(q.id, q, groupConfig)
-      if (historyAnswer && (status === 'answered' || status === 'cancelled' || status === 'expired')) {
+      if (
+        historyAnswer &&
+        (status === 'answered' || status === 'cancelled' || status === 'expired')
+      ) {
         const ask = toAskUserAnswer(historyAnswer)
         if (ask) {
           map[q.id] = { source: 'history', answer: ask }
@@ -523,26 +567,30 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
   }, [])
 
   const allFilled = useMemo(
-    () => config.questions.every((q) => {
-      const r = resolvedAnswers[q.id]
-      if (q.type === 'choice') {
-        const value = r?.answer && 'selected' in r.answer ? r.answer.selected : (q.multiple ? [] : '')
-        return isAnswerFilled(getChoiceAnswer(value, customValues[q.id] || '', q.multiple))
-      }
-      return r && isAnswerFilled(r.answer)
-    }),
+    () =>
+      config.questions.every((q) => {
+        const r = resolvedAnswers[q.id]
+        if (q.type === 'choice') {
+          const value =
+            r?.answer && 'selected' in r.answer ? r.answer.selected : q.multiple ? [] : ''
+          return isAnswerFilled(getChoiceAnswer(value, customValues[q.id] || '', q.multiple))
+        }
+        return r && isAnswerFilled(r.answer)
+      }),
     [config.questions, customValues, resolvedAnswers],
   )
 
   const answeredCount = useMemo(
-    () => config.questions.filter((q) => {
-      const r = resolvedAnswers[q.id]
-      if (q.type === 'choice') {
-        const value = r?.answer && 'selected' in r.answer ? r.answer.selected : (q.multiple ? [] : '')
-        return isAnswerFilled(getChoiceAnswer(value, customValues[q.id] || '', q.multiple))
-      }
-      return !!r
-    }).length,
+    () =>
+      config.questions.filter((q) => {
+        const r = resolvedAnswers[q.id]
+        if (q.type === 'choice') {
+          const value =
+            r?.answer && 'selected' in r.answer ? r.answer.selected : q.multiple ? [] : ''
+          return isAnswerFilled(getChoiceAnswer(value, customValues[q.id] || '', q.multiple))
+        }
+        return !!r
+      }).length,
     [config.questions, customValues, resolvedAnswers],
   )
 
@@ -552,7 +600,8 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
     for (const q of config.questions) {
       const r = resolvedAnswers[q.id]
       if (q.type === 'choice') {
-        const value = r?.answer && 'selected' in r.answer ? r.answer.selected : (q.multiple ? [] : '')
+        const value =
+          r?.answer && 'selected' in r.answer ? r.answer.selected : q.multiple ? [] : ''
         result[q.id] = getChoiceAnswer(value, customValues[q.id] || '', q.multiple)
       } else if (r) {
         result[q.id] = r.answer
@@ -587,9 +636,8 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
       // 交互态
       const askAnswer = resolved?.answer
       if (q.type === 'choice') {
-        const value = askAnswer && 'selected' in askAnswer
-          ? askAnswer.selected
-          : (q.multiple ? [] : '')
+        const value =
+          askAnswer && 'selected' in askAnswer ? askAnswer.selected : q.multiple ? [] : ''
         return (
           <SingleChoiceQuestion
             config={q}
@@ -646,9 +694,7 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
   return (
     <div className={className}>
       <div className="iq-card-header">
-        <span className="iq-card-type-badge iq-card-type-badge-group">
-          多项提问
-        </span>
+        <span className="iq-card-type-badge iq-card-type-badge-group">多项提问</span>
         {!isAllHistory && <span className="iq-card-required-tag">必填</span>}
       </div>
 
@@ -684,9 +730,7 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
       )}
 
       {statusInfo && (
-        <Text className={`iq-card-status ${statusInfo.className}`}>
-          {statusInfo.text}
-        </Text>
+        <Text className={`iq-card-status ${statusInfo.className}`}>{statusInfo.text}</Text>
       )}
     </div>
   )

@@ -34,6 +34,7 @@ import {
   AgentDefinition,
   AgentMessage,
   AskUserAnswer,
+  KnowledgeSource,
 } from '@/services/entity/Agent'
 import { Option } from '@/services/entity/Common'
 import AgentMessageBubble from '@/components/AgentMessageBubble'
@@ -52,6 +53,18 @@ type ChatMessage = AgentMessage & {
   errorMsg?: string;
   reasoningStream?: string;
 };
+
+const restoreMessageSources = (messageItem: AgentMessage): ChatMessage => {
+  if (!messageItem.citations) {
+    return { ...messageItem, sources: messageItem.sources || [] }
+  }
+
+  try {
+    return { ...messageItem, sources: JSON.parse(messageItem.citations) as KnowledgeSource[] }
+  } catch {
+    return { ...messageItem, sources: [] }
+  }
+}
 
 type ChatTurnState = 'idle' | 'streaming' | 'waiting_user' | 'submitting_answer' | 'error';
 
@@ -103,9 +116,10 @@ const ChatDebugPage: React.FC = () => {
   }
 
   const setConversationMessages = (messageList: ChatMessage[]) => {
-    const pendingQuestion = findPendingQuestionMessage(messageList)
+    const restoredMessages = messageList.map(restoreMessageSources)
+    const pendingQuestion = findPendingQuestionMessage(restoredMessages)
 
-    setMessages(messageList)
+    setMessages(restoredMessages)
     setPendingQuestionMessage(pendingQuestion)
     setChatTurnState(pendingQuestion ? 'waiting_user' : 'idle')
   }
@@ -528,6 +542,7 @@ const ChatDebugPage: React.FC = () => {
                 id: data.messageId || item.id,
                 conversationId: doneConversationId || item.conversationId,
                 content: data.content || item.content,
+                sources: data.sources ?? item.sources ?? [],
                 reasoningContent: data.reasoningContent || item.reasoningContent || item.reasoningStream,
                 reasoningStream: undefined,
                 reasoningTokens: data.reasoningTokens ?? item.reasoningTokens,
@@ -716,6 +731,7 @@ const ChatDebugPage: React.FC = () => {
               id: data.messageId || item.id,
               conversationId: doneConversationId || item.conversationId,
               content: data.content || item.content,
+              sources: data.sources ?? item.sources ?? [],
               reasoningContent: data.reasoningContent || item.reasoningContent || item.reasoningStream,
               reasoningStream: undefined,
               reasoningTokens: data.reasoningTokens ?? item.reasoningTokens,

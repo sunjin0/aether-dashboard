@@ -374,6 +374,7 @@ export interface AgentStreamDoneData {
   conversationId?: string;
   messageId?: string;
   content?: string;
+  sources?: KnowledgeSource[];
   reasoningContent?: string;
   reasoningTokens?: number;
   model?: string;
@@ -382,6 +383,14 @@ export interface AgentStreamDoneData {
   totalTokens?: number;
   latencyMs?: number;
   waitingUser?: boolean;
+}
+
+export interface KnowledgeSource {
+  citationIndex: number;
+  documentName?: string;
+  sectionPath?: string;
+  content: string;
+  chunkId: string;
 }
 
 export type AgentStreamEvent =
@@ -426,6 +435,8 @@ export interface AgentMessage {
   answeredAt?: number;
   expiresAt?: number;
   content?: string;
+  citations?: string;
+  sources?: KnowledgeSource[];
   reasoningContent?: string;
   reasoningTokens?: number;
   toolCalls?: string;

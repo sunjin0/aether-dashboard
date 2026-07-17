@@ -239,6 +239,10 @@ export interface ChoiceQuestionConfig {
   question: string;
   options: QuestionOption[];
   multiple?: boolean;
+  /** 是否允许填写自定义内容 */
+  allowCustomInput?: boolean;
+  /** 自定义内容输入框占位文本 */
+  customInputPlaceholder?: string;
   /** 历史回显时携带的回答 */
   answer?: QuestionAnswer;
 }

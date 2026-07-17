@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react'
-import { Button, Checkbox, Radio, Tabs, Typography } from 'antd'
+import React, { useState, useMemo, useCallback } from 'react'
+import { Button, Checkbox, Input, Radio, Tabs, Typography } from 'antd'
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -79,6 +79,14 @@ function isAnswerFilled(answer: AskUserAnswer | undefined): boolean {
   return false
 }
 
+function getChoiceAnswer(value: string | string[], customValue: string, multiple?: boolean): AskUserAnswer {
+  const custom = customValue.trim()
+  if (multiple) {
+    return { selected: custom ? [...(value as string[]), custom] : value }
+  }
+  return { selected: custom || value }
+}
+
 /** QuestionAnswer → AskUserAnswer */
 function toAskUserAnswer(a: QuestionAnswer): AskUserAnswer | undefined {
   if (a.selected !== undefined) return { selected: a.selected }
@@ -105,9 +113,18 @@ interface SingleChoiceQuestionProps {
   disabled: boolean;
   value: string | string[];
   onChange: (value: string | string[]) => void;
+  customValue: string;
+  onCustomChange: (value: string) => void;
 }
 
-const SingleChoiceQuestion: React.FC<SingleChoiceQuestionProps> = ({ config, disabled, value, onChange }) => {
+const SingleChoiceQuestion: React.FC<SingleChoiceQuestionProps> = ({
+  config,
+  disabled,
+  value,
+  onChange,
+  customValue,
+  onCustomChange,
+}) => {
   if (config.multiple) {
     return (
       <div className="iq-card-choices">
@@ -138,6 +155,19 @@ const SingleChoiceQuestion: React.FC<SingleChoiceQuestionProps> = ({ config, dis
             )
           })}
         </div>
+        {config.allowCustomInput && (
+          <Input
+            style={{
+              marginTop: 10,
+              height: 50,
+            }}
+            value={customValue}
+            onChange={(event) => onCustomChange(event.target.value)}
+            placeholder={config.customInputPlaceholder || '请输入自定义内容'}
+            maxLength={200}
+            disabled={disabled}
+          />
+        )}
       </div>
     )
   }
@@ -165,6 +195,19 @@ const SingleChoiceQuestion: React.FC<SingleChoiceQuestionProps> = ({ config, dis
           )
         })}
       </div>
+      {config.allowCustomInput && (
+        <Input
+          style={{
+            marginTop: 10,
+            height: 50,
+          }}
+          value={customValue}
+          onChange={(event) => onCustomChange(event.target.value)}
+          placeholder={config.customInputPlaceholder || '请输入自定义内容'}
+          maxLength={200}
+          disabled={disabled}
+        />
+      )}
     </div>
   )
 }
@@ -251,6 +294,7 @@ const ConfirmLayout: React.FC<{
   onSubmit?: (answers: Record<string, AskUserAnswer>) => void;
 }> = ({ config, disabled, status, onSubmit }) => {
   const [selected, setSelected] = useState<string | string[]>('')
+  const [customValue, setCustomValue] = useState('')
   const approvalQuestion = config.questions[0]
   const statusInfo = statusLabelMap[status]
 
@@ -298,13 +342,21 @@ const ConfirmLayout: React.FC<{
               config={approvalQuestion}
               disabled={disabled}
               value={selected}
-              onChange={setSelected}
+              onChange={(value) => {
+                setSelected(value)
+                setCustomValue('')
+              }}
+              customValue={customValue}
+              onCustomChange={(value) => {
+                setCustomValue(value)
+                if (value) setSelected(approvalQuestion.multiple ? [] : '')
+              }}
             />
             <Button
               type="primary"
               className="iq-card-submit-btn"
-              disabled={!isAnswerFilled({ selected })}
-              onClick={() => submit({ selected })}
+              disabled={!isAnswerFilled(getChoiceAnswer(selected, customValue, approvalQuestion.multiple))}
+              onClick={() => submit(getChoiceAnswer(selected, customValue, approvalQuestion.multiple))}
             >
               确认
             </Button>
@@ -335,9 +387,16 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
     const hasHistory = !!historyAnswer && (status === 'answered' || status === 'cancelled' || status === 'expired')
 
     const [internalAnswers, setInternalAnswers] = useState<Record<string, AskUserAnswer>>({})
+    const [customValue, setCustomValue] = useState('')
     const currentAnswers = externalAnswer || internalAnswers
     const currentAnswer = hasHistory ? toAskUserAnswer(historyAnswer!) : currentAnswers[qConfig.id]
-    const filled = isAnswerFilled(currentAnswer)
+    const choiceValue = currentAnswer && 'selected' in currentAnswer
+      ? currentAnswer.selected
+      : (qConfig.type === 'choice' && qConfig.multiple ? [] : '')
+    const submittedAnswer = qConfig.type === 'choice'
+      ? getChoiceAnswer(choiceValue, customValue, qConfig.multiple)
+      : currentAnswer
+    const filled = isAnswerFilled(submittedAnswer)
 
     const className = [
       'iq-card',
@@ -352,8 +411,8 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
 
     const handleSingleSubmit = useCallback(() => {
       if (!filled) return
-      onSubmit?.(currentAnswers)
-    }, [onSubmit, currentAnswers, filled])
+      onSubmit?.({ ...currentAnswers, [qConfig.id]: submittedAnswer! })
+    }, [onSubmit, currentAnswers, filled, qConfig.id, submittedAnswer])
 
     const handleAnswerChange = useCallback((submittedAnswer: AskUserAnswer) => {
       setInternalAnswers((prev) => ({ ...prev, [qConfig.id]: submittedAnswer }))
@@ -377,10 +436,16 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
               <SingleChoiceQuestion
                 config={qConfig}
                 disabled={disabled}
-                value={currentAnswer && 'selected' in currentAnswer
-                  ? currentAnswer.selected
-                  : (qConfig.multiple ? [] : '')}
-                onChange={(val) => handleAnswerChange({ selected: val })}
+                value={choiceValue}
+                onChange={(val) => {
+                  handleAnswerChange({ selected: val })
+                  setCustomValue('')
+                }}
+                customValue={customValue}
+                onCustomChange={(value) => {
+                  setCustomValue(value)
+                  if (value) handleAnswerChange({ selected: qConfig.multiple ? [] : '' })
+                }}
               />
             ) : (
               <SingleConfirmQuestion
@@ -423,6 +488,7 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
 
   // ─── Group（Tabs）模式 ────────────────────────────────────────────────
   const [internalAnswers, setInternalAnswers] = useState<Record<string, AskUserAnswer>>({})
+  const [customValues, setCustomValues] = useState<Record<string, string>>({})
   const [activeTabKey, setActiveTabKey] = useState<string>(config.questions[0]?.id || '0')
 
   // 构建每道题的答案：优先 history → external → internal
@@ -448,15 +514,6 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
     return map
   }, [config.questions, groupConfig, status, externalAnswer, internalAnswers])
 
-  // 自动切换到第一个未回答的问题
-  useEffect(() => {
-    if (disabled) return
-    const firstUnanswered = config.questions.find((q) => !resolvedAnswers[q.id])
-    if (firstUnanswered) {
-      setActiveTabKey(firstUnanswered.id)
-    }
-  }, [disabled, config.questions, resolvedAnswers])
-
   const handleAnswerChange = useCallback((questionId: string, answer: AskUserAnswer) => {
     setInternalAnswers((prev) => ({ ...prev, [questionId]: answer }))
   }, [])
@@ -468,14 +525,25 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
   const allFilled = useMemo(
     () => config.questions.every((q) => {
       const r = resolvedAnswers[q.id]
+      if (q.type === 'choice') {
+        const value = r?.answer && 'selected' in r.answer ? r.answer.selected : (q.multiple ? [] : '')
+        return isAnswerFilled(getChoiceAnswer(value, customValues[q.id] || '', q.multiple))
+      }
       return r && isAnswerFilled(r.answer)
     }),
-    [config.questions, resolvedAnswers],
+    [config.questions, customValues, resolvedAnswers],
   )
 
   const answeredCount = useMemo(
-    () => config.questions.filter((q) => !!resolvedAnswers[q.id]).length,
-    [config.questions, resolvedAnswers],
+    () => config.questions.filter((q) => {
+      const r = resolvedAnswers[q.id]
+      if (q.type === 'choice') {
+        const value = r?.answer && 'selected' in r.answer ? r.answer.selected : (q.multiple ? [] : '')
+        return isAnswerFilled(getChoiceAnswer(value, customValues[q.id] || '', q.multiple))
+      }
+      return !!r
+    }).length,
+    [config.questions, customValues, resolvedAnswers],
   )
 
   const handleSubmit = useCallback(() => {
@@ -483,10 +551,15 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
     const result: Record<string, AskUserAnswer> = {}
     for (const q of config.questions) {
       const r = resolvedAnswers[q.id]
-      if (r) result[q.id] = r.answer
+      if (q.type === 'choice') {
+        const value = r?.answer && 'selected' in r.answer ? r.answer.selected : (q.multiple ? [] : '')
+        result[q.id] = getChoiceAnswer(value, customValues[q.id] || '', q.multiple)
+      } else if (r) {
+        result[q.id] = r.answer
+      }
     }
     onSubmit?.(result)
-  }, [onSubmit, config.questions, resolvedAnswers, allFilled])
+  }, [onSubmit, config.questions, customValues, resolvedAnswers, allFilled])
 
   const className = [
     'iq-card',
@@ -522,7 +595,15 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
             config={q}
             disabled={disabled}
             value={value}
-            onChange={(val) => handleAnswerChange(q.id, { selected: val })}
+            onChange={(val) => {
+              handleAnswerChange(q.id, { selected: val })
+              setCustomValues((prev) => ({ ...prev, [q.id]: '' }))
+            }}
+            customValue={customValues[q.id] || ''}
+            onCustomChange={(value) => {
+              setCustomValues((prev) => ({ ...prev, [q.id]: value }))
+              if (value) handleAnswerChange(q.id, { selected: q.multiple ? [] : '' })
+            }}
           />
         )
       }
@@ -540,10 +621,6 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
       return null
     }
 
-    const tabLabel = q.question.length > 10
-      ? `${q.question.slice(0, 10)}...`
-      : q.question
-
     return {
       key: q.id || `tab-${index}`,
       label: (
@@ -551,7 +628,7 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
           <span className={`iq-card-tab-num ${filled ? 'iq-card-tab-num-done' : ''}`}>
             {filled ? <CheckOutlined /> : index + 1}
           </span>
-          {tabLabel}
+          {`问题 ${index + 1}`}
         </span>
       ),
       children: (

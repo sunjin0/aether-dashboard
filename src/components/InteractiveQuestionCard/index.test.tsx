@@ -82,4 +82,145 @@ describe('InteractiveQuestionCard', () => {
 
     expect(onSubmit).toHaveBeenCalledWith({ decision: { selected: 'once' } });
   });
+
+  it('submits trimmed custom input instead of a selected single choice', () => {
+    const onSubmit = jest.fn();
+
+    render(
+      <InteractiveQuestionCard
+        questionConfig={{
+          id: 'github_username',
+          type: 'choice',
+          question: '你的 GitHub 用户名是什么？',
+          options: [{ id: 'unknown', label: '不确定', value: 'unknown_username' }],
+          allowCustomInput: true,
+          customInputPlaceholder: '输入你的 GitHub 用户名...',
+        }}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    fireEvent.click(screen.getByLabelText('不确定'));
+    fireEvent.change(screen.getByPlaceholderText('输入你的 GitHub 用户名...'), {
+      target: { value: '  octocat  ' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /提\s*交/ }));
+
+    expect(onSubmit).toHaveBeenCalledWith({ github_username: { selected: 'octocat' } });
+  });
+
+  it('submits trimmed custom input instead of selected multiple choices', () => {
+    const onSubmit = jest.fn();
+
+    render(
+      <InteractiveQuestionCard
+        questionConfig={{
+          id: 'repo_description',
+          type: 'choice',
+          question: '仓库大概是关于什么的？',
+          multiple: true,
+          options: [{ id: 'frontend', label: '前端项目', value: 'frontend' }],
+          allowCustomInput: true,
+          customInputPlaceholder: '简单描述一下仓库内容...',
+        }}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    fireEvent.click(screen.getByLabelText('前端项目'));
+    fireEvent.change(screen.getByPlaceholderText('简单描述一下仓库内容...'), {
+      target: { value: '  管理后台  ' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /提\s*交/ }));
+
+    expect(onSubmit).toHaveBeenCalledWith({
+      repo_description: { selected: ['管理后台'] },
+    });
+  });
+
+  it('clears selected choices when custom input has content', () => {
+    render(
+      <InteractiveQuestionCard
+        questionConfig={{
+          id: 'repo_description',
+          type: 'choice',
+          question: '仓库大概是关于什么的？',
+          multiple: true,
+          options: [{ id: 'frontend', label: '前端项目', value: 'frontend' }],
+          allowCustomInput: true,
+          customInputPlaceholder: '简单描述一下仓库内容...',
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByLabelText('前端项目'));
+    fireEvent.change(screen.getByPlaceholderText('简单描述一下仓库内容...'), {
+      target: { value: '管理后台' },
+    });
+
+    expect((screen.getByLabelText('前端项目') as HTMLInputElement).checked).toBe(false);
+  });
+
+  it('submits custom input from a tabbed question group', () => {
+    const onSubmit = jest.fn();
+
+    render(
+      <InteractiveQuestionCard
+        questionConfig={{
+          type: 'group',
+          layout: 'tabs',
+          question: '请确认以下问题后继续。',
+          questions: [
+            {
+              id: 'github_username',
+              type: 'choice',
+              question: '你的 GitHub 用户名是什么？',
+              options: [{ id: 'unknown', label: '不确定', value: 'unknown_username' }],
+              allowCustomInput: true,
+              customInputPlaceholder: '输入你的 GitHub 用户名...',
+            },
+          ],
+        }}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText('输入你的 GitHub 用户名...'), {
+      target: { value: '  octocat  ' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /确认提交/ }));
+
+    expect(onSubmit).toHaveBeenCalledWith({ github_username: { selected: 'octocat' } });
+  });
+
+  it('keeps the current tab after another question is answered', () => {
+    render(
+      <InteractiveQuestionCard
+        questionConfig={{
+          type: 'group',
+          layout: 'tabs',
+          question: '请确认以下问题后继续。',
+          questions: [
+            {
+              id: 'first',
+              type: 'choice',
+              question: '第一个问题',
+              options: [{ id: 'yes', label: '是', value: 'yes' }],
+            },
+            {
+              id: 'second',
+              type: 'choice',
+              question: '第二个问题',
+              options: [{ id: 'no', label: '否', value: 'no' }],
+            },
+          ],
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('tab', { name: /问题 2/ }));
+    fireEvent.click(screen.getByLabelText('否'));
+
+    expect(screen.getByRole('tab', { name: /问题 2/ }).getAttribute('aria-selected')).toBe('true');
+  });
 });

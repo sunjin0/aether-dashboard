@@ -2,7 +2,7 @@ const React = require('react');
 import { render } from '@testing-library/react';
 import Footer from '.';
 
-const mockDefaultFooter = jest.fn(() => null);
+const mockDefaultFooter = jest.fn((_props: any) => null);
 
 jest.mock('@ant-design/pro-components', () => ({
   DefaultFooter: (props: any) => mockDefaultFooter(props),

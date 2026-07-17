@@ -12,11 +12,14 @@ export const addKnowledgeBaseBinding = async (
 ): Promise<ResponseStructure<string>> =>
   request('/api/agent/knowledge-base-binding', { method: 'POST', data: params });
 
-export const updateKnowledgeBaseBindingStatus = async (
+export const updateKnowledgeBaseBinding = async (
   id: string,
-  params: { status: number },
+  params: Partial<KnowledgeBaseBinding>,
 ): Promise<ResponseStructure<void>> =>
   request(`/api/agent/knowledge-base-binding/${id}/status`, { method: 'PUT', data: params });
+
+/** @deprecated Use updateKnowledgeBaseBinding. Kept for existing callers. */
+export const updateKnowledgeBaseBindingStatus = updateKnowledgeBaseBinding;
 
 export const deleteKnowledgeBaseBinding = async (id: string): Promise<ResponseStructure<void>> =>
   request(`/api/agent/knowledge-base-binding/${id}`, { method: 'DELETE' });

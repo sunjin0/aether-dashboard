@@ -2,7 +2,7 @@ const React = require('react');
 import { render } from '@testing-library/react';
 import AgentConversationPage from '.';
 
-const mockProTable = jest.fn(() => null);
+const mockProTable = jest.fn((_props: any) => null);
 
 jest.mock('@ant-design/pro-components', () => ({
   PageContainer: ({ children }: any) => <>{children}</>,

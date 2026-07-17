@@ -36,7 +36,7 @@ const AgentKnowledgeBaseBinding: React.FC<AgentKnowledgeBaseBindingProps> = ({ a
     }
     setOptions(
       (response.data || [])
-        .filter((item) => item.id)
+        .filter((item) => item.id && item.status === 1 && item.indexStatus === 2)
         .map((item) => ({ label: `${item.name || item.id}（${item.scope === 'PLATFORM' ? '平台级' : 'Agent 专属'}）`, value: item.id as string })),
     )
     form.resetFields()

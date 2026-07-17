@@ -4,9 +4,9 @@ import {ResponseStructure} from "@/services/entity/Common";
  * 查询参数
  * @since 2025-07-23 10:46:11
  */
-export interface MemberSearchParams extends Member {
-    current: number;
-    pageSize: number;
+export interface MemberSearchParams extends Partial<Member> {
+    current?: number;
+    pageSize?: number;
 }
 /**
  * 实体

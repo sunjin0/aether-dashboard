@@ -51,9 +51,15 @@ const findMenuName = (menus: MenuItem[], pathname: string): string | undefined =
   return undefined;
 };
 
+const getRouteLabel = (pathname: string, menus: MenuItem[]): string => {
+  if (/^\/knowledge\/base\/[^/]+$/.test(pathname)) return '文档管理';
+  if (/^\/knowledge\/document\/[^/]+$/.test(pathname)) return '文档详情';
+  return pathname === '/dashboard' ? '仪表盘' : findMenuName(menus, pathname) || pathname;
+};
+
 const getTab = (pathname: string, menus: MenuItem[]): RouteTab => ({
   key: pathname,
-  label: pathname === '/dashboard' ? '仪表盘' : findMenuName(menus, pathname) || pathname,
+  label: getRouteLabel(pathname, menus),
   closable: pathname !== '/dashboard',
 });
 
@@ -69,7 +75,7 @@ const RouteTabs = ({ pathname, children }: RouteTabsProps) => {
       setMenusLoaded(routeMenusLoaded);
     };
     menuListeners.add(updateMenus);
-    return () => menuListeners.delete(updateMenus);
+    return () => { menuListeners.delete(updateMenus); };
   }, []);
 
   useEffect(() => {
@@ -92,7 +98,7 @@ const RouteTabs = ({ pathname, children }: RouteTabsProps) => {
 
   const items: TabsProps['items'] = tabs.map((tab) => ({
     key: tab.key,
-    label: tab.key === '/dashboard' ? '仪表盘' : findMenuName(menus, tab.key) || tab.label,
+    label: getRouteLabel(tab.key, menus),
     closable: tab.closable,
   }));
 

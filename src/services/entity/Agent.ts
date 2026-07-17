@@ -72,7 +72,12 @@ export interface KnowledgeBase {
   embeddingProviderId?: string;
   name?: string;
   description?: string;
+  ownerAdminId?: string;
+  visibility?: 'platform' | 'private' | 'shared';
+  retrievalConfig?: string;
   indexStatus?: 0 | 1 | 2;
+  referenceCount?: number;
+  lastReferencedAt?: number;
   status?: 0 | 1;
   createdAt?: number;
   updatedAt?: number;
@@ -90,13 +95,73 @@ export interface Document {
   title?: string;
   content?: string;
   sourceUrl?: string;
+  sourceType?: string;
+  originalFileName?: string;
+  fileExtension?: string;
+  mimeType?: string;
+  fileSize?: number;
+  fileChecksum?: string;
+  currentVersionNo?: number;
+  indexStatus?: 0 | 1 | 2 | 3;
+  indexErrorMessage?: string;
+  indexedAt?: number;
   chunkCount?: number;
+  referenceCount?: number;
+  lastReferencedAt?: number;
   status?: 0 | 1 | 2;
   createdAt?: number;
   updatedAt?: number;
 }
 
 export interface DocumentSearchParams extends Document {
+  current?: number;
+  pageSize?: number;
+}
+export interface KnowledgeDocumentVersion {
+  id?: string;
+  knowledgeDocumentId?: string;
+  versionNo?: number;
+  content?: string;
+  originalFileName?: string;
+  fileExtension?: string;
+  mimeType?: string;
+  fileSize?: number;
+  indexStatus?: 0 | 1 | 2 | 3;
+  chunkCount?: number;
+  indexedAt?: number;
+  indexErrorMessage?: string | null;
+  createdAt?: number;
+}
+
+/** 文档版本索引后生成的最小检索文本单元。 */
+export interface KnowledgeDocumentChunk {
+  id?: string;
+  chunkNo?: number;
+  content?: string;
+  tokenCount?: number;
+  createdAt?: number;
+}
+
+/** 知识库文档索引任务。 */
+export interface KnowledgeIndexJob {
+  id?: string;
+  knowledgeBaseId?: string;
+  documentId?: string;
+  documentVersionId?: string;
+  /** create-新建文本、upload-上传文件、update-编辑、reindex-重建、rollback-回滚、retry-人工重试。 */
+  jobType?: 'create' | 'upload' | 'update' | 'reindex' | 'rollback' | 'retry' | string;
+  status?: 'pending' | 'running' | 'success' | 'failed' | 'cancelled';
+  retryCount?: number;
+  maxRetryCount?: number;
+  errorMessage?: string | null;
+  statistics?: Record<string, unknown> | string | null;
+  startedAt?: number;
+  finishedAt?: number;
+  createdAt?: number;
+  updatedAt?: number;
+}
+
+export interface KnowledgeIndexJobSearchParams extends KnowledgeIndexJob {
   current?: number;
   pageSize?: number;
 }
@@ -639,3 +704,5 @@ export interface MessageStatistics {
   totalTokens: number;
   avgLatencyMs: number;
 }
+
+

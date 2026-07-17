@@ -115,15 +115,20 @@ export default [
     name: '知识库管理',
     icon: 'database',
     routes: [
-      {
+{
         path: '/knowledge/base',
-        name: '知识库管理',
+        name: '知识库列表',
         component: './knowledge/base',
       },
       {
         path: '/knowledge/document',
-        name: '知识库文档',
+        name: '文档管理',
         component: './knowledge/document',
+      },
+      {
+        path: '/knowledge/index-job',
+        name: '索引任务',
+        component: './knowledge/index-job',
       },
     ],
   },

@@ -77,22 +77,29 @@ describe('Login', () => {
     mockUseModel.mockReturnValue({initialState: {fetchUserInfo: mockFetchUserInfo}, setInitialState: mockSetInitialState});
   });
 
-  it('keeps nested inputs transparent so the dark field background remains visible while focused', () => {
+  it('keeps nested inputs transparent so the light field background remains visible while focused', () => {
     const styles = readFileSync(resolve(__dirname, 'Login.less'), 'utf8');
 
     expect(styles).toMatch(/\.ant-input-affix-wrapper\s*\{[\s\S]*?\.ant-input\s*\{\s*background: transparent;/);
   });
 
-  it('keeps validation-error inputs on the dark field background', () => {
+  it('keeps validation-error inputs on the light field background', () => {
     const styles = readFileSync(resolve(__dirname, 'Login.less'), 'utf8');
 
-    expect(styles).toMatch(/\.ant-input-status-error,[\s\S]*?\.ant-input-affix-wrapper-status-error\s*\{[\s\S]*?background: rgba\(3, 10, 26, 0\.5\) !important;/);
+    expect(styles).toMatch(/\.ant-input-status-error,[\s\S]*?\.ant-input-affix-wrapper-status-error\s*\{[\s\S]*?background: #fff !important;/);
   });
 
-  it('uses high-contrast colors for clear and password visibility icons', () => {
+  it('uses dark high-contrast colors for clear and password visibility icons', () => {
     const styles = readFileSync(resolve(__dirname, 'Login.less'), 'utf8');
 
-    expect(styles).toMatch(/\.ant-input-clear-icon,[\s\S]*?\.ant-input-password-icon\s*\{[\s\S]*?color: rgba\(218, 231, 255, 0\.78\) !important;/);
+    expect(styles).toMatch(/\.ant-input-clear-icon,[\s\S]*?\.ant-input-password-icon\s*\{[\s\S]*?color: rgba\(30, 50, 82, 0\.72\) !important;/);
+  });
+
+  it('uses a light page surface and white login panel', () => {
+    const styles = readFileSync(resolve(__dirname, 'Login.less'), 'utf8');
+
+    expect(styles).toMatch(/\.login-page\s*\{[\s\S]*?color: #172b4d;[\s\S]*?linear-gradient\(135deg, #f7fbff 0%, #edf5ff 48%, #f7f2ff 100%\)/);
+    expect(styles).toMatch(/\.login-panel\s*\{[\s\S]*?background: rgba\(255, 255, 255, 0\.86\);/);
   });
 
   it('presents Aether as an ambient AI workspace entry point', () => {

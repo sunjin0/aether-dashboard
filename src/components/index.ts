@@ -10,6 +10,10 @@ import { Question, SelectLang } from './RightContent'
 import { AvatarDropdown, AvatarName } from './RightContent/AvatarDropdown'
 import { ProFormInstance } from '@ant-design/pro-components'
 import React from 'react'
+import ProFormFileUpload from './ProFormFileUpload'
+import FileImage from './FileImage'
+export type { FileImageProps } from './FileImage'
+export type { ProFormFileUploadProps } from './ProFormFileUpload'
 export type Props = {
   id: string;
   request: (params: any) => Promise<any>;
@@ -20,4 +24,4 @@ export type Props = {
   children?: React.ReactNode;
   readonly?: boolean;
 };
-export { AvatarDropdown, AvatarName, Footer, Question, SelectLang }
+export { AvatarDropdown, AvatarName, FileImage, Footer, ProFormFileUpload, Question, SelectLang }

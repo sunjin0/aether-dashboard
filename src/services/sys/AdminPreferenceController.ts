@@ -46,43 +46,43 @@ export interface AdminPreferenceStatistics {
 }
 
 export const getAdminPreferenceStatistics = async (): Promise<ResponseStructure<AdminPreferenceStatistics>> =>
-  request('/api/sys/admin/preference/statistics', { method: 'GET' })
+  request('/api/sys/preference/statistics', { method: 'GET' })
 
 export const getAdminPreferenceList = async (
   params: AdminPreferenceSearchParams,
 ): Promise<ResponseStructure<AdminPreference[]>> =>
-  request('/api/sys/admin/preference/list', { method: 'POST', data: params })
+  request('/api/sys/preference/list', { method: 'POST', data: params })
 
 export const getAdminPreference = async (id: string): Promise<ResponseStructure<AdminPreference>> =>
-  request(`/api/sys/admin/preference/${id}`, { method: 'GET' })
+  request(`/api/sys/preference/${id}`, { method: 'GET' })
 
 export const addAdminPreference = async (
   params: AdminPreference,
 ): Promise<ResponseStructure<string>> =>
-  request('/api/sys/admin/preference', { method: 'POST', data: params })
+  request('/api/sys/preference', { method: 'POST', data: params })
 
 export const updateAdminPreference = async (
   params: AdminPreference,
 ): Promise<ResponseStructure<void>> =>
-  request(`/api/sys/admin/preference/${params.id}`, { method: 'PUT', data: params })
+  request(`/api/sys/preference/${params.id}`, { method: 'PUT', data: params })
 
 export const deleteAdminPreference = async (id: string): Promise<ResponseStructure<void>> =>
-  request(`/api/sys/admin/preference/${id}`, { method: 'DELETE' })
+  request(`/api/sys/preference/${id}`, { method: 'DELETE' })
 
 export const updateAdminPreferenceStatus = async (
   id: string,
   params: AdminPreferenceStatusParams,
 ): Promise<ResponseStructure<void>> =>
-  request(`/api/sys/admin/preference/${id}/status`, { method: 'PUT', data: params })
+  request(`/api/sys/preference/${id}/status`, { method: 'PUT', data: params })
 
 export const confirmAdminPreference = async (id: string): Promise<ResponseStructure<void>> =>
-  request(`/api/sys/admin/preference/${id}/feedback`, { method: 'POST' })
+  request(`/api/sys/preference/${id}/feedback`, { method: 'POST' })
 
 export const rejectAdminPreference = async (id: string): Promise<ResponseStructure<void>> =>
-  request(`/api/sys/admin/preference/${id}/feedback`, { method: 'DELETE' })
+  request(`/api/sys/preference/${id}/feedback`, { method: 'DELETE' })
 
 export const overrideAdminPreference = async (
   id: string,
   params: { value: string },
 ): Promise<ResponseStructure<void>> =>
-  request(`/api/sys/admin/preference/${id}/override`, { method: 'PUT', data: params })
+  request(`/api/sys/preference/${id}/override`, { method: 'PUT', data: params })

@@ -9,6 +9,7 @@ import {
   updateAdminInfo,
 } from '@/services/sys/AdminController'
 import { getOptionList } from '@/services/sys/DictController'
+import ProFormFileUpload from '@/components/ProFormFileUpload'
 
 const AdminForm = (props: {
   id: any;
@@ -60,6 +61,14 @@ const AdminForm = (props: {
         label={intl.formatMessage({ id: 'pages.common.gender' })}
         rules={[{ required: true }]}
         request={async () => getOptionList('Gender_Type')}
+      />
+      <ProFormFileUpload
+        name={'avatar'}
+        label={intl.formatMessage({ id: 'pages.common.avatar' })}
+        rules={[{ required: true }]}
+        mode="card"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        allowedExtensions={['png', 'jpg', 'jpeg', 'webp', 'gif']}
       />
       <ProFormSelect
         name={'type'}

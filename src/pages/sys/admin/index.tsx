@@ -2,7 +2,8 @@ import React, { useRef, useState } from 'react'
 
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
 import { history, request, useIntl } from '@umijs/max'
-import { Button, Image, message, Popconfirm } from 'antd'
+import { Button, message, Popconfirm } from 'antd'
+import FileImage from '@/components/FileImage'
 import AdminForm from '@/pages/sys/admin/AdminForm'
 import { useAccess } from '@@/exports'
 import { getOptionList } from '@/services/sys/DictController'
@@ -45,7 +46,9 @@ const Admin: React.FC = () => {
     {
       title: intl.formatMessage({ id: 'pages.common.avatar' }),
       dataIndex: 'avatar',
-      render: (text: string) => <Image src={text} width={40} height={40} alt={''} />,
+      render: (avatar: string) => (
+        <FileImage value={avatar} width={40} height={40} alt="头像" preview />
+      ),
       key: 'avatar',
       hideInSearch: true,
     },

@@ -4,6 +4,9 @@ import { message, notification } from 'antd'
 import { getLocale } from '@@/exports'
 import { ErrorShowType, ResponseStructure } from '@/services/entity/Common'
 
+const isBlobResponse = (data: unknown): data is Blob =>
+  typeof Blob !== 'undefined' && data instanceof Blob
+
 /**
  * @name 错误处理
  * pro 自带的错误处理， 可以在这里做自己的改动
@@ -14,7 +17,7 @@ export const errorConfig: RequestConfig = {
   errorConfig: {
     // 错误抛出
     errorThrower: (res) => {
-      if (!res || typeof res !== 'object') {
+      if (!res || typeof res !== 'object' || isBlobResponse(res)) {
         return
       }
       const { success, data, errorCode, errorMessage, showType } =
@@ -106,7 +109,7 @@ export const errorConfig: RequestConfig = {
     (response) => {
       // 拦截响应数据，进行个性化处理
       const { data } = response as { data: ResponseStructure<any> }
-      if (!data || typeof data !== 'object') {
+      if (!data || typeof data !== 'object' || isBlobResponse(data)) {
         return response
       }
       data.success = data.code === 200

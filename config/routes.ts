@@ -57,7 +57,7 @@ export default [
         component: './sys/dict',
       },
       {
-        path: '/sys/admin/preference',
+        path: '/sys/preference',
         name: '偏好管理',
         component: './sys/admin-preference',
       },

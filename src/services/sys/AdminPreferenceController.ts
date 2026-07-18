@@ -38,6 +38,16 @@ export interface AdminPreferenceStatusParams {
   status: number;
 }
 
+export interface AdminPreferenceStatistics {
+  total: number;
+  enabled: number;
+  implicit: number;
+  explicit: number;
+}
+
+export const getAdminPreferenceStatistics = async (): Promise<ResponseStructure<AdminPreferenceStatistics>> =>
+  request('/api/sys/admin/preference/statistics', { method: 'GET' })
+
 export const getAdminPreferenceList = async (
   params: AdminPreferenceSearchParams,
 ): Promise<ResponseStructure<AdminPreference[]>> =>

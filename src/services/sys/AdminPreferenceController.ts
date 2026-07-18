@@ -4,19 +4,34 @@ import { ResponseStructure } from '@/services/entity/Common'
 export interface AdminPreference {
   id?: string;
   adminId?: string;
+  adminName?: string;
   category?: string;
-  content?: string;
-  sourceConversationId?: string;
-  sourceMessageId?: string;
+  keyName?: string;
+  value?: string;
+  description?: string;
+  priority?: number;
+  scope?: string;
+  scopeDetail?: string;
+  source?: string;
   confidence?: number;
+  usageCount?: number;
+  lastUsedAt?: number;
+  expiresAt?: number;
+  decayRate?: number;
+  effectiveScore?: number;
   status?: number;
   createdAt?: number;
   updatedAt?: number;
 }
 
-export interface AdminPreferenceSearchParams extends AdminPreference {
+export interface AdminPreferenceSearchParams {
   current?: number;
   pageSize?: number;
+  category?: string;
+  keyName?: string;
+  value?: string;
+  adminId?: string;
+  status?: number;
 }
 
 export interface AdminPreferenceStatusParams {
@@ -49,3 +64,15 @@ export const updateAdminPreferenceStatus = async (
   params: AdminPreferenceStatusParams,
 ): Promise<ResponseStructure<void>> =>
   request(`/api/sys/admin/preference/${id}/status`, { method: 'PUT', data: params })
+
+export const confirmAdminPreference = async (id: string): Promise<ResponseStructure<void>> =>
+  request(`/api/sys/admin/preference/${id}/feedback`, { method: 'POST' })
+
+export const rejectAdminPreference = async (id: string): Promise<ResponseStructure<void>> =>
+  request(`/api/sys/admin/preference/${id}/feedback`, { method: 'DELETE' })
+
+export const overrideAdminPreference = async (
+  id: string,
+  params: { value: string },
+): Promise<ResponseStructure<void>> =>
+  request(`/api/sys/admin/preference/${id}/override`, { method: 'PUT', data: params })

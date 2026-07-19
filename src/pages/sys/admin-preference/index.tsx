@@ -156,8 +156,8 @@ const PreferencePage: React.FC = () => {
       dataIndex: 'source',
       width: 100,
       render: (_: unknown, record: AdminPreference) => {
-        const source = SOURCE_MAP[record.source || 'explicit']
-        return <Tag className={`pref-source-tag ${source.className}`}>{source.label}</Tag>
+        const source = SOURCE_MAP[record.source || 'explicit'];
+        return <Tag className={`pref-source-tag ${source.className}`}>{source.label}</Tag>;
       },
     },
     {
@@ -166,9 +166,14 @@ const PreferencePage: React.FC = () => {
       width: 90,
       sorter: true,
       render: (_: unknown, record: AdminPreference) => {
-        const val = record.confidence ?? 0
-        const cls = val >= 0.7 ? 'pref-confidence-high' : val >= 0.3 ? 'pref-confidence-mid' : 'pref-confidence-low'
-        return <span className={cls}>{(val * 100).toFixed(0)}%</span>
+        const val = record.confidence ?? 0;
+        const cls =
+          val >= 0.7
+            ? 'pref-confidence-high'
+            : val >= 0.3
+              ? 'pref-confidence-mid'
+              : 'pref-confidence-low';
+        return <span className={cls}>{(val * 100).toFixed(0)}%</span>;
       },
     },
     {
@@ -197,8 +202,8 @@ const PreferencePage: React.FC = () => {
       dataIndex: 'status',
       width: 80,
       render: (_: unknown, record: AdminPreference) => {
-        const item = getSwitchStatus(record.status)
-        return <Tag color={item.color}>{item.label}</Tag>
+        const item = getSwitchStatus(record.status);
+        return <Tag color={item.color}>{item.label}</Tag>;
       },
     },
     {
@@ -210,14 +215,46 @@ const PreferencePage: React.FC = () => {
         write && (
           <TableActionMenu
             items={[
-              { key: 'edit', label: '编辑', primary: true, onClick: () => { setId(record.id); setOpen(true) } },
-              { key: 'override', label: '覆盖', visible: record.status === 1, onClick: () => { setOverrideId(record.id); setOverrideRecord(record); setOverrideValue(record.value || '') } },
-              { key: 'delete', label: '删除', danger: true, confirm: { title: '确认删除该偏好？' }, onClick: async () => { if (!record.id) return; const response = await deleteAdminPreference(record.id); if (response.code === 200) { message.success(response.message || '删除成功'); refresh() } else message.error(response.message || '删除失败') } },
+              {
+                key: 'edit',
+                label: '编辑',
+                primary: true,
+                onClick: () => {
+                  setId(record.id);
+                  setOpen(true);
+                },
+              },
+              {
+                key: 'override',
+                label: '覆盖',
+                primary: true,
+                visible: record.status === 1,
+                onClick: () => {
+                  setOverrideId(record.id);
+                  setOverrideRecord(record);
+                  setOverrideValue(record.value || '');
+                },
+              },
+              {
+                key: 'delete',
+                label: '删除',
+                primary: true,
+                danger: true,
+                confirm: { title: '确认删除该偏好？' },
+                onClick: async () => {
+                  if (!record.id) return;
+                  const response = await deleteAdminPreference(record.id);
+                  if (response.code === 200) {
+                    message.success(response.message || '删除成功');
+                    refresh();
+                  } else message.error(response.message || '删除失败');
+                },
+              },
             ]}
           />
         ),
     },
-  ]
+  ];
 
   return (
     <PageContainer className="admin-preference-page">

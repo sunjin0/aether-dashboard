@@ -53,13 +53,13 @@ const Dict: React.FC = () => {
       valueType: 'option',
       key: 'option',
       fixed: 'right',
-      width: 150,
+      width: 200,
       render: (_: any, record: Record<any, any>, _a: any, action: any) =>
         write && (
           <TableActionMenu
             items={[
               { key: 'edit', label: intl.formatMessage({ id: 'pages.common.edit' }), primary: true, onClick: () => { setId(record.id); setOpen(true) } },
-              { key: 'delete', label: intl.formatMessage({ id: 'pages.common.delete' }), danger: true, confirm: { title: intl.formatMessage({ id: 'pages.confirm.delete' }) }, onClick: async () => { const { code, message: msg } = await deleteDictInfo(record); action?.reload(); if (code === 200) message.success(msg); else message.error(msg) } },
+              { key: 'delete', label: intl.formatMessage({ id: 'pages.common.delete' }), primary: true, danger: true, confirm: { title: intl.formatMessage({ id: 'pages.confirm.delete' }) }, onClick: async () => { const { code, message: msg } = await deleteDictInfo(record); action?.reload(); if (code === 200) message.success(msg); else message.error(msg) } },
             ]}
           />
         ),

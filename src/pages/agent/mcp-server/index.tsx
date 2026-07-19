@@ -155,19 +155,50 @@ const McpServerPage: React.FC = () => {
       title: format('pages.common.option'),
       valueType: 'option',
       fixed: 'right',
-      width: 200,
+      width: 250,
       render: (_: unknown, record: McpServer) =>
         write && (
           <TableActionMenu
             items={[
-              { key: 'discover', label: format('pages.agent.mcpServer.discover'), primary: true, loading: loading, onClick: async () => { await discover(record) } },
-              { key: 'edit', label: format('pages.agent.tool.edit'), primary: true, onClick: () => { setId(record.id); setOpen(true) } },
-              { key: 'delete', label: format('pages.common.delete'), danger: true, confirm: { title: format('pages.agent.mcpServer.deleteConfirm') }, onClick: async () => { if (!record.id) return; const response = await deleteMcpServer(record.id); if (response.code === 200) { message.success(response.message || format('pages.agent.tool.deleteSuccess')); ref.current?.reload() } else message.error(response.message || format('pages.agent.mcpServer.deleteFailed')) } },
+              {
+                key: 'discover',
+                label: format('pages.agent.mcpServer.discover'),
+                primary: true,
+                loading: loading,
+                onClick: async () => {
+                  await discover(record);
+                },
+              },
+              {
+                key: 'edit',
+                label: format('pages.agent.tool.edit'),
+                primary: true,
+                onClick: () => {
+                  setId(record.id);
+                  setOpen(true);
+                },
+              },
+              {
+                key: 'delete',
+                label: format('pages.common.delete'),
+                primary: true,
+                danger: true,
+                confirm: { title: format('pages.agent.mcpServer.deleteConfirm') },
+                onClick: async () => {
+                  if (!record.id) return;
+                  const response = await deleteMcpServer(record.id);
+                  if (response.code === 200) {
+                    message.success(response.message || format('pages.agent.tool.deleteSuccess'));
+                    ref.current?.reload();
+                  } else
+                    message.error(response.message || format('pages.agent.mcpServer.deleteFailed'));
+                },
+              },
             ]}
           />
         ),
     },
-  ]
+  ];
 
   return (
     <PageContainer>

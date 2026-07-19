@@ -111,19 +111,40 @@ const ModelProviderPage: React.FC = () => {
       valueType: 'option',
       key: 'option',
       fixed: 'right',
-      width: 150,
+      width: 200,
       render: (_: any, record: ModelProvider) =>
         write && (
           <TableActionMenu
             items={[
-              { key: 'edit', label: '编辑', primary: true, onClick: () => { setId(record.id); setOpen(true) } },
-              { key: 'status', label: record.status === 1 ? '禁用' : '启用', confirm: { title: `确认${record.status === 1 ? '禁用' : '启用'}该模型供应商？` }, onClick: () => handleStatusChange(record) },
-              { key: 'delete', label: '删除', danger: true, confirm: { title: '确认删除该模型供应商？' }, onClick: () => handleDelete(record) },
+              {
+                key: 'edit',
+                label: '编辑',
+                primary: true,
+                onClick: () => {
+                  setId(record.id);
+                  setOpen(true);
+                },
+              },
+              {
+                key: 'status',
+                label: record.status === 1 ? '禁用' : '启用',
+                primary: true,
+                confirm: { title: `确认${record.status === 1 ? '禁用' : '启用'}该模型供应商？` },
+                onClick: () => handleStatusChange(record),
+              },
+              {
+                key: 'delete',
+                label: '删除',
+                primary: true,
+                danger: true,
+                confirm: { title: '确认删除该模型供应商？' },
+                onClick: () => handleDelete(record),
+              },
             ]}
           />
         ),
     },
-  ]
+  ];
 
   return (
     <PageContainer>

@@ -43,9 +43,9 @@ const Resource: React.FC = () => {
       valueType: 'select',
       request: async () => {
         try {
-          return await getOptionList('Resource_Type', false)
+          return await getOptionList('Resource_Type', false);
         } catch {
-          return []
+          return [];
         }
       },
       key: 'type',
@@ -71,13 +71,33 @@ const Resource: React.FC = () => {
         write && (
           <TableActionMenu
             items={[
-              { key: 'edit', label: intl.formatMessage({ id: 'pages.common.edit' }), primary: true, onClick: () => { setId(record.id); setOpen(true) } },
-              { key: 'delete', label: intl.formatMessage({ id: 'pages.common.delete' }), danger: true, confirm: { title: intl.formatMessage({ id: 'pages.confirm.delete' }) }, onClick: async () => { const { code, message: msg } = await deleteResourceInfo(record); action?.reload(); if (code === 200) message.success(msg); else message.error(msg) } },
+              {
+                key: 'edit',
+                label: intl.formatMessage({ id: 'pages.common.edit' }),
+                primary: true,
+                onClick: () => {
+                  setId(record.id);
+                  setOpen(true);
+                },
+              },
+              {
+                key: 'delete',
+                label: intl.formatMessage({ id: 'pages.common.delete' }),
+                primary: true,
+                danger: true,
+                confirm: { title: intl.formatMessage({ id: 'pages.confirm.delete' }) },
+                onClick: async () => {
+                  const { code, message: msg } = await deleteResourceInfo(record);
+                  action?.reload();
+                  if (code === 200) message.success(msg);
+                  else message.error(msg);
+                },
+              },
             ]}
           />
         ),
     },
-  ]
+  ];
   return (
     <PageContainer>
       <ProTable

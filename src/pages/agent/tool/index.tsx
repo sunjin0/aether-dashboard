@@ -146,7 +146,7 @@ const AgentToolPage: React.FC = () => {
       dataIndex: 'name',
       width: 275,
       render: (_: unknown, record: AgentTool) => {
-        const meta = typeMeta(record.toolType)
+        const meta = typeMeta(record.toolType);
         return (
           <div className="tool-name-cell">
             <span className={`tool-icon tool-icon-${record.toolType || 'general'}`}>
@@ -157,7 +157,7 @@ const AgentToolPage: React.FC = () => {
               <small>{record.description || record.code || '暂无工具描述'}</small>
             </div>
           </div>
-        )
+        );
       },
     },
     {
@@ -217,21 +217,47 @@ const AgentToolPage: React.FC = () => {
     {
       title: '操作',
       key: 'option',
-      width: 200,
+      width: 250,
       fixed: 'right',
       render: (_: unknown, record: AgentTool) =>
         write && (
           <TableActionMenu
             items={[
-              { key: 'edit', label: '编辑', primary: true, onClick: () => { setId(record.id); setOpen(true) } },
-              { key: 'test', label: '测试', primary: true, visible: !!record.id, onClick: () => setTestToolId(record.id) },
-              { key: 'status', label: record.status === 1 ? '禁用' : '启用', confirm: { title: record.status === 1 ? '确认禁用该工具？' : '确认启用该工具？' }, onClick: () => handleStatusChange(record) },
-              { key: 'delete', label: '删除', danger: true, confirm: { title: intl.formatMessage({ id: 'pages.agent.tool.deleteConfirm' }) }, onClick: () => handleDelete(record) },
+              {
+                key: 'edit',
+                label: '编辑',
+                primary: true,
+                onClick: () => {
+                  setId(record.id);
+                  setOpen(true);
+                },
+              },
+              {
+                key: 'test',
+                label: '测试',
+                primary: true,
+                visible: !!record.id,
+                onClick: () => setTestToolId(record.id),
+              },
+              {
+                key: 'status',
+                label: record.status === 1 ? '禁用' : '启用',
+                confirm: { title: record.status === 1 ? '确认禁用该工具？' : '确认启用该工具？' },
+                onClick: () => handleStatusChange(record),
+              },
+              {
+                key: 'delete',
+                label: '删除',
+                primary: true,
+                danger: true,
+                confirm: { title: intl.formatMessage({ id: 'pages.agent.tool.deleteConfirm' }) },
+                onClick: () => handleDelete(record),
+              },
             ]}
           />
         ),
     },
-  ]
+  ];
 
   return (
     <PageContainer

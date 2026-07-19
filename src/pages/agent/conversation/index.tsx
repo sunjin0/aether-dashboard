@@ -213,20 +213,35 @@ const AgentConversationPage: React.FC = () => {
     {
       title: '操作',
       valueType: 'option',
-      width: 200,
+      width: 250,
       key: 'option',
       fixed: 'right',
       render: (_: any, record: AgentConversation) => (
         <TableActionMenu
           items={[
             { key: 'detail', label: '查看详情', primary: true, onClick: () => openDetail(record) },
-            { key: 'close', label: '关闭', visible: write && record.status === 0, confirm: { title: '确认关闭该会话？' }, onClick: () => handleCloseConversation(record) },
-            { key: 'delete', label: '删除', danger: true, visible: !!write, confirm: { title: '确认删除该会话？' }, onClick: () => handleDeleteConversation(record) },
+            {
+              key: 'close',
+              label: '关闭',
+              primary: true,
+              visible: write && record.status === 0,
+              confirm: { title: '确认关闭该会话？' },
+              onClick: () => handleCloseConversation(record),
+            },
+            {
+              key: 'delete',
+              label: '删除',
+              primary: true,
+              danger: true,
+              visible: !!write,
+              confirm: { title: '确认删除该会话？' },
+              onClick: () => handleDeleteConversation(record),
+            },
           ]}
         />
       ),
     },
-  ]
+  ];
 
   return (
     <PageContainer>

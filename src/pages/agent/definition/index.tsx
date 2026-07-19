@@ -160,7 +160,7 @@ const AgentDefinitionPage: React.FC = () => {
             items={[
               { key: 'edit', label: '编辑', primary: true, onClick: () => { setId(record.id); setOpen(true) } },
               { key: 'binding', label: '绑定工具', primary: true, onClick: () => { setCurrentAgentId(record.id || ''); setToolBindingVisible(true) } },
-              { key: 'knowledge-base', label: '知识库', primary: true, onClick: () => { setCurrentAgentId(record.id || ''); setKnowledgeBaseBindingVisible(true) } },
+              { key: 'knowledge-base', label: '知识库', onClick: () => { setCurrentAgentId(record.id || ''); setKnowledgeBaseBindingVisible(true) } },
               { key: 'copy', label: '复制', confirm: { title: '确认复制该 Agent？' }, onClick: () => handleCopy(record) },
               { key: 'status', label: record.status === 1 ? '禁用' : '启用', confirm: { title: `确认${record.status === 1 ? '禁用' : '启用'}该 Agent？` }, onClick: () => handleStatusChange(record) },
               { key: 'delete', label: '删除', danger: true, confirm: { title: '确认删除该 Agent？' }, onClick: () => handleDelete(record) },

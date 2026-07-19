@@ -1,4 +1,4 @@
-import { AvatarDropdown, AvatarName, FileImage, Footer, SelectLang } from '@/components';
+import { AvatarDropdown, AvatarName, FileImage, Footer, SelectLang } from '@/components'
 import {
   DashboardOutlined,
   DatabaseOutlined,
@@ -72,7 +72,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       src: <FileImage value={initialState?.currentUser?.avatar} />,
       title: <AvatarName />,
       render: (_, avatarChildren) => {
-        return <AvatarDropdown>{avatarChildren}</AvatarDropdown>;
+        return <AvatarDropdown>{avatarChildren}</AvatarDropdown>
       },
     },
     waterMarkProps: {
@@ -86,37 +86,42 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       },
       request: async () => {
         if (!initialState?.currentUser) {
-          return [];
+          return []
         }
 
         try {
-          const { data } = await getRoutes();
-          const menuData = Array.isArray(data) ? data : [];
-          setRouteMenus(menuData);
+          const { data } = await getRoutes()
+          const menuData = Array.isArray(data) ? data : []
+          setRouteMenus(menuData)
           menuData.forEach((item: any) => {
-            item.icon = iconMap[item.icon];
-          });
-          // path为空key，value是{write：boolean,read:boolean}
-          const routes = new Array<object>();
+            item.icon = iconMap[item.icon]
+          })
+          const routes = new Array<object>()
           menuData.forEach((item: any) => {
             if (item.children) {
               item.children.forEach((child: any) => {
-                routes[child.path] = { write: child.access?.includes('Write') };
-              });
+                routes[child.path] = { write: child.access?.includes('Write') }
+              })
             }
-          });
-          return menuData;
+          })
+          return menuData
         } catch {
-          return [];
+          return []
         }
+      },
+      menuItemRender: (item: any, dom: React.ReactNode) => {
+        if (item.isUrl || item.children?.length) {
+          return dom
+        }
+        return <Link to={item.path || '/'}>{dom}</Link>
       },
       defaultOpenAll: false,
     },
     onPageChange: () => {
-      const { location } = history;
+      const { location } = history
       // 如果没有登录，重定向到 login
       if (!initialState?.currentUser && location.pathname !== loginPath) {
-        history.push(loginPath);
+        history.push(loginPath)
       }
     },
     bgLayoutImgList: [
@@ -141,12 +146,13 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
     ],
     links: isDev
       ? [
-          <Link key="openapi" to="/umi/plugin/openapi" target="_blank">
-            <LinkOutlined />
-            <span>OpenAPI 文档</span>
-          </Link>,
-        ]
+        <Link key="openapi" to="/umi/plugin/openapi" target="_blank">
+          <LinkOutlined />
+          <span>OpenAPI 文档</span>
+        </Link>,
+      ]
       : [],
+    breadcrumbRender: () => [],
     menuHeaderRender: undefined,
     // 自定义 403 页面
     // unAccessible: <div>unAccessible</div>,
@@ -168,15 +174,15 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
                   ...preInitialState,
                   settings,
                   routes: [],
-                }));
+                }))
               }}
             />
           )}
         </AliveScope>
-      );
+      )
     },
     ...initialState?.settings,
-  };
+  }
 }
 
 /**

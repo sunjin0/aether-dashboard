@@ -1,4 +1,4 @@
-import DocumentForm from '@/pages/agent/knowledge-base/DocumentForm'
+﻿import DocumentForm from '@/pages/agent/knowledge-base/DocumentForm'
 import { getDocumentStatus, getIndexStatus } from '@/pages/agent/knowledge-base/status'
 import { Document, DocumentSearchParams } from '@/services/entity/Agent'
 import {
@@ -18,10 +18,11 @@ import {
   ProTable,
 } from '@ant-design/pro-components'
 import { history, useAccess, useLocation } from '@@/exports'
-import { Button, message, Popconfirm, Tag } from 'antd'
+import { Button, message, Tag } from 'antd'
 import React, { useRef, useState } from 'react'
 import FileUploadModal from '@/components/FileUploadModal'
 import TemporaryUrlPreviewModal from '@/components/TemporaryUrlPreviewModal'
+import TableActionMenu from '@/components/TableActionMenu'
 import DocumentVersionHistoryDrawer from './components/DocumentVersionHistoryDrawer'
 import { getKnowledgeBaseContext } from './query'
 
@@ -37,7 +38,7 @@ const KnowledgeDocumentPage: React.FC = () => {
   const [reindexingId, setReindexingId] = useState<string>()
   const [versionDocument, setVersionDocument] = useState<Document>()
   const access = useAccess()
-  const canManage = access['/knowledge/base']
+  const canWrite = access['/knowledge/document']
 
   const reload = () => actionRef.current?.reload()
 
@@ -87,7 +88,25 @@ const KnowledgeDocumentPage: React.FC = () => {
     },
     { title: '标题', dataIndex: 'title', ellipsis: true },
     { title: '文件', dataIndex: 'originalFileName', ellipsis: true, hideInSearch: true },
-    { title: '版本', dataIndex: 'currentVersionNo', valueType: 'digit', hideInSearch: true },
+    {
+      title: '发布版本',
+      dataIndex: 'currentPublishedVersionNo',
+      valueType: 'digit',
+      hideInSearch: true,
+    },
+    {
+      title: '审查状态',
+      dataIndex: 'reviewStatus',
+      valueType: 'select',
+      valueEnum: {
+        DRAFT: { text: '草稿' },
+        AI_REVIEWING: { text: 'AI 审查中' },
+        AI_REVIEWED: { text: '待处理建议' },
+        SUBMITTED: { text: '人工审批中' },
+        APPROVED: { text: '已通过' },
+        REJECTED: { text: '已拒绝' },
+      },
+    },
     { title: '分块数', dataIndex: 'chunkCount', valueType: 'digit', hideInSearch: true },
     {
       title: '索引状态',
@@ -124,56 +143,68 @@ const KnowledgeDocumentPage: React.FC = () => {
       valueType: 'option',
       key: 'option',
       fixed: 'right',
-      width: 500,
+      width: 300,
       render: (_: unknown, record: Document) => {
-        if (!canManage || !record.id) return []
+        if (!canWrite || !record.id) return []
+        const editable = record.reviewStatus === 'DRAFT' || record.reviewStatus === 'AI_REVIEWED'
+        const canReindex = record.reviewStatus === 'APPROVED' || record.indexStatus === 3
+        const canDelete = !['AI_REVIEWING', 'SUBMITTED'].includes(record.reviewStatus || '')
         return [
           record.originalFileName ? (
             <TemporaryUrlPreviewModal
               key="preview"
               title={record.originalFileName || record.title || '文件预览'}
               getUrl={() => getDocumentPreviewUrl(record.id!)}
+              triggerText="预览"
             />
           ) : null,
-          <Button key="versions" type="link" onClick={() => setVersionDocument(record)}>
-            版本历史
-          </Button>,
-          <Button
-            key="edit"
-            type="link"
-            onClick={() => {
-              setDocumentId(record.id)
-              setFormKnowledgeBaseId(record.knowledgeBaseId)
-              setFormOpen(true)
-            }}
-          >
-            编辑
-          </Button>,
-          <Button
-            key="reindex"
-            type="link"
-            loading={reindexingId === record.id}
-            onClick={() => reindex(record)}
-          >
-            重建索引
-          </Button>,
-          <Popconfirm
-            key="delete"
-            title="确认删除该文档？"
-            onConfirm={async () => {
-              const response = await deleteDocument(record.id!)
-              if (response.code === 200) {
-                message.success(response.message || '删除成功')
-                reload()
-              } else {
-                message.error(response.message || '删除失败')
-              }
-            }}
-          >
-            <Button type="link" danger>
-              删除
-            </Button>
-          </Popconfirm>,
+          <TableActionMenu
+            key="actions"
+            items={[
+              {
+                key: 'workspace',
+                label: '审查工作台',
+                primary: true,
+                onClick: () => history.push(`/knowledge/document/detail?id=${record.id}`),
+              },
+              {
+                key: 'edit',
+                label: '编辑',
+                visible: editable,
+                onClick: () => {
+                  setDocumentId(record.id)
+                  setFormKnowledgeBaseId(record.knowledgeBaseId)
+                  setFormOpen(true)
+                },
+              },
+              {
+                key: 'versions',
+                label: '版本历史',
+                onClick: () => setVersionDocument(record),
+              },
+              {
+                key: 'reindex',
+                label: '重建索引',
+                visible: canReindex,
+                loading: reindexingId === record.id,
+                onClick: () => reindex(record),
+              },
+              {
+                key: 'delete',
+                label: '删除',
+                danger: true,
+                visible: canDelete,
+                confirm: { title: '确认删除该文档？' },
+                onClick: async () => {
+                  const response = await deleteDocument(record.id!)
+                  if (response.code === 200) {
+                    message.success(response.message || '删除成功')
+                    reload()
+                  } else message.error(response.message || '删除失败')
+                },
+              },
+            ]}
+          />,
         ]
       },
     },
@@ -193,7 +224,7 @@ const KnowledgeDocumentPage: React.FC = () => {
         form={{ initialValues: { knowledgeBaseId: knowledgeBase.id || undefined } }}
         request={(params: DocumentSearchParams) => getDocumentList(params)}
         toolBarRender={() =>
-          canManage
+          canWrite
             ? [
               <FileUploadModal
                 key="upload"
@@ -242,7 +273,7 @@ const KnowledgeDocumentPage: React.FC = () => {
         documentId={versionDocument?.id}
         documentTitle={versionDocument?.title}
         open={Boolean(versionDocument)}
-        canManage={canManage}
+        canWrite={canWrite}
         onClose={() => setVersionDocument(undefined)}
         onRollbackSuccess={reload}
       />
@@ -264,3 +295,4 @@ const KnowledgeDocumentPage: React.FC = () => {
 }
 
 export default KnowledgeDocumentPage
+

@@ -5,15 +5,16 @@ import {
   rollbackDocumentVersion,
 } from '@/services/knowledge/DocumentController'
 import { ActionType, ProTable } from '@ant-design/pro-components'
-import { Button, Drawer, message, Popconfirm, Tag } from 'antd'
+import { Drawer, message, Tag } from 'antd'
 import React, { useEffect, useRef, useState } from 'react'
 import DocumentChunkDrawer from './DocumentChunkDrawer'
+import TableActionMenu from '@/components/TableActionMenu'
 
 interface DocumentVersionHistoryDrawerProps {
   documentId?: string;
   documentTitle?: string;
   open: boolean;
-  canManage: boolean;
+  canWrite: boolean;
   onClose: () => void;
   onRollbackSuccess: () => void;
 }
@@ -23,7 +24,7 @@ const DocumentVersionHistoryDrawer: React.FC<DocumentVersionHistoryDrawerProps> 
   documentId,
   documentTitle,
   open,
-  canManage,
+  canWrite,
   onClose,
   onRollbackSuccess,
 }) => {
@@ -73,31 +74,16 @@ const DocumentVersionHistoryDrawer: React.FC<DocumentVersionHistoryDrawerProps> 
           {
             title: '操作',
             valueType: 'option',
-            width: 220,
+            width: 180,
             render: (_, record) =>
-              record.id
-                ? [
-                  <Button key="chunks" type="link" onClick={() => setChunkVersion(record)}>
-                      查看分块
-                  </Button>,
-                  canManage ? (
-                    <Popconfirm
-                      key="rollback"
-                      title="确认以该版本创建新的最新版本并重新索引？"
-                      onConfirm={async () => {
-                        const response = await rollbackDocumentVersion(record.id!)
-                        if (response.code === 200) {
-                          message.success(response.message || '回滚任务已入队')
-                          actionRef.current?.reload()
-                          onRollbackSuccess()
-                        } else message.error(response.message || '回滚失败')
-                      }}
-                    >
-                      <Button type="link">回滚到此版本</Button>
-                    </Popconfirm>
-                  ) : null,
-                ].filter(Boolean)
-                : null,
+              record.id ? (
+                <TableActionMenu
+                  items={[
+                    { key: 'chunks', label: '查看分块', primary: true, onClick: () => setChunkVersion(record) },
+                    { key: 'rollback', label: '回滚到此版本', visible: !!canWrite, confirm: { title: '确认以该版本创建新的最新版本并重新索引？' }, onClick: async () => { const response = await rollbackDocumentVersion(record.id!); if (response.code === 200) { message.success(response.message || '回滚任务已入队'); actionRef.current?.reload(); onRollbackSuccess() } else message.error(response.message || '回滚失败') } },
+                  ]}
+                />
+              ) : null,
           },
         ]}
       />

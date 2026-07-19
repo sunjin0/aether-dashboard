@@ -2,7 +2,8 @@ import React, { useRef, useState } from 'react'
 
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
 import { request, useIntl } from '@umijs/max'
-import { Button, message, Popconfirm } from 'antd'
+import { Button, message } from 'antd'
+import TableActionMenu from '@/components/TableActionMenu'
 import { FormattedMessage } from '@@/plugin-locale'
 import { PlusOutlined } from '@ant-design/icons'
 import DictForm from '@/pages/sys/dict/DictForm'
@@ -51,38 +52,17 @@ const Dict: React.FC = () => {
       title: intl.formatMessage({ id: 'pages.common.option' }),
       valueType: 'option',
       key: 'option',
-      // 固定
       fixed: 'right',
-      render: (text: any, record: Record<any, any>, _: any, action: any) =>
-        write && [
-          <Button
-            type={'link'}
-            key="editable"
-            onClick={() => {
-              setId(record.id)
-              setOpen(true)
-            }}
-          >
-            {intl.formatMessage({ id: 'pages.common.edit' })}
-          </Button>,
-          <Popconfirm
-            key={'delete'}
-            title={intl.formatMessage({ id: 'pages.confirm.delete' })}
-            onConfirm={async () => {
-              const { code, message: msg } = await deleteDictInfo(record)
-              action?.reload()
-              if (code === 200) {
-                message.success(msg)
-              } else {
-                message.error(msg)
-              }
-            }}
-          >
-            <Button type={'link'} key={'delete'}>
-              {intl.formatMessage({ id: 'pages.common.delete' })}
-            </Button>
-          </Popconfirm>,
-        ],
+      width: 150,
+      render: (_: any, record: Record<any, any>, _a: any, action: any) =>
+        write && (
+          <TableActionMenu
+            items={[
+              { key: 'edit', label: intl.formatMessage({ id: 'pages.common.edit' }), primary: true, onClick: () => { setId(record.id); setOpen(true) } },
+              { key: 'delete', label: intl.formatMessage({ id: 'pages.common.delete' }), danger: true, confirm: { title: intl.formatMessage({ id: 'pages.confirm.delete' }) }, onClick: async () => { const { code, message: msg } = await deleteDictInfo(record); action?.reload(); if (code === 200) message.success(msg); else message.error(msg) } },
+            ]}
+          />
+        ),
     },
   ]
   return (

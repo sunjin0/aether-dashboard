@@ -72,9 +72,9 @@ export interface KnowledgeBase {
   embeddingProviderId?: string;
   name?: string;
   description?: string;
-  ownerAdminId?: string;
   visibility?: 'platform' | 'private' | 'shared';
   retrievalConfig?: string;
+  reviewConfig?: ReviewConfig;
   indexStatus?: 0 | 1 | 2;
   referenceCount?: number;
   lastReferencedAt?: number;
@@ -83,6 +83,14 @@ export interface KnowledgeBase {
   updatedAt?: number;
 }
 
+export interface ReviewConfig {
+  autoAiReview: boolean;
+  aiReviewRequired: boolean;
+  blockOnCriticalIssues: boolean;
+  requireDifferentApprover: boolean;
+  reviewModelProviderId: string;
+  reviewModel?: string;
+}
 export interface KnowledgeBaseSearchParams extends KnowledgeBase {
   current?: number;
   pageSize?: number;
@@ -102,6 +110,8 @@ export interface Document {
   fileSize?: number;
   fileChecksum?: string;
   currentVersionNo?: number;
+  currentPublishedVersionNo?: number;
+  reviewStatus?: ReviewStatus;
   indexStatus?: 0 | 1 | 2 | 3;
   indexErrorMessage?: string;
   indexedAt?: number;
@@ -122,6 +132,9 @@ export interface KnowledgeDocumentVersion {
   knowledgeDocumentId?: string;
   versionNo?: number;
   content?: string;
+  contentChecksum?: string;
+  reviewStatus?: ReviewStatus;
+  sourceVersionId?: string;
   originalFileName?: string;
   fileExtension?: string;
   mimeType?: string;
@@ -133,6 +146,69 @@ export interface KnowledgeDocumentVersion {
   createdAt?: number;
 }
 
+export type ReviewStatus =
+  | 'DRAFT'
+  | 'AI_REVIEWING'
+  | 'AI_REVIEWED'
+  | 'SUBMITTED'
+  | 'APPROVED'
+  | 'REJECTED';
+export interface KnowledgeAiReview {
+  id?: string;
+  versionId?: string;
+  status?: 'pending' | 'running' | 'success' | 'failed' | 'stale';
+  score?: number;
+  summary?: string;
+  model?: string;
+  errorMessage?: string;
+  createdAt?: number;
+  finishedAt?: number;
+}
+export interface KnowledgeAiReviewIssue {
+  id?: string;
+  severity?: 'critical' | 'major' | 'minor' | string;
+  category?: string;
+  title?: string;
+  description?: string;
+  originalExcerpt?: string;
+  suggestedPatch?: string;
+  status?: 'pending' | 'rejected' | 'manually_fixed' | 'ignored';
+  comment?: string;
+}
+export interface KnowledgeReviewTask {
+  id?: string;
+  documentId?: string;
+  documentTitle?: string;
+  documentVersionId?: string;
+  versionNo?: number;
+  knowledgeBaseId?: string;
+  submitterId?: string;
+  submitterName?: string;
+  claimantId?: string;
+  claimantName?: string;
+  status?: 'pending' | 'claimed' | 'approved' | 'rejected';
+  comment?: string;
+  submittedAt?: number;
+  createdAt?: number;
+  updatedAt?: number;
+}
+export interface KnowledgeReviewTaskDetail extends KnowledgeReviewTask {
+  document?: Document;
+  version?: KnowledgeDocumentVersion;
+  aiReview?: KnowledgeAiReview;
+  issues?: KnowledgeAiReviewIssue[];
+  actionLogs?: Array<{
+    action?: string;
+    operatorName?: string;
+    comment?: string;
+    createdAt?: number;
+  }>;
+}
+export interface KnowledgeReviewTaskSearchParams extends KnowledgeReviewTask {
+  current?: number;
+  pageSize?: number;
+  view?: 'available' | 'submittedByMe' | 'reviewedByMe' | 'all';
+}
 /** 文档版本索引后生成的最小检索文本单元。 */
 export interface KnowledgeDocumentChunk {
   id?: string;

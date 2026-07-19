@@ -1,20 +1,19 @@
 import React, { useRef, useState } from 'react'
 import { ActionType, PageContainer, ProDescriptions, ProTable } from '@ant-design/pro-components'
 import {
-  Button,
   Card,
   Col,
   Descriptions,
   Drawer,
   Empty,
   message,
-  Popconfirm,
   Row,
   Spin,
   Statistic,
   Tag,
 } from 'antd'
 import { history, useAccess } from '@@/exports'
+import TableActionMenu from '@/components/TableActionMenu'
 import {
   closeAgentConversation,
   deleteAgentConversation,
@@ -214,36 +213,18 @@ const AgentConversationPage: React.FC = () => {
     {
       title: '操作',
       valueType: 'option',
-      width: 250,
+      width: 200,
       key: 'option',
       fixed: 'right',
-      render: (_: any, record: AgentConversation) => [
-        <Button type="link" key="detail" onClick={() => openDetail(record)}>
-          查看详情
-        </Button>,
-        write && record.status === 0 ? (
-          <Popconfirm
-            key="close"
-            title="确认关闭该会话？"
-            onConfirm={() => handleCloseConversation(record)}
-          >
-            <Button type="link" key="close-button">
-              关闭
-            </Button>
-          </Popconfirm>
-        ) : null,
-        write ? (
-          <Popconfirm
-            key="delete"
-            title="确认删除该会话？"
-            onConfirm={() => handleDeleteConversation(record)}
-          >
-            <Button type="link" key="delete-button">
-              删除
-            </Button>
-          </Popconfirm>
-        ) : null,
-      ],
+      render: (_: any, record: AgentConversation) => (
+        <TableActionMenu
+          items={[
+            { key: 'detail', label: '查看详情', primary: true, onClick: () => openDetail(record) },
+            { key: 'close', label: '关闭', visible: write && record.status === 0, confirm: { title: '确认关闭该会话？' }, onClick: () => handleCloseConversation(record) },
+            { key: 'delete', label: '删除', danger: true, visible: !!write, confirm: { title: '确认删除该会话？' }, onClick: () => handleDeleteConversation(record) },
+          ]}
+        />
+      ),
     },
   ]
 

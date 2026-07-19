@@ -20,13 +20,13 @@ import {
   Input,
   message,
   Modal,
-  Popconfirm,
   Space,
   Tag,
   Typography,
 } from 'antd'
 import React, { useRef, useState } from 'react'
 import JsonDisplay from '@/components/JsonDisplay'
+import TableActionMenu from '@/components/TableActionMenu'
 
 const McpServerPage: React.FC = () => {
   const intl = useIntl()
@@ -155,38 +155,17 @@ const McpServerPage: React.FC = () => {
       title: format('pages.common.option'),
       valueType: 'option',
       fixed: 'right',
-      width: 250,
+      width: 200,
       render: (_: unknown, record: McpServer) =>
-        write && [
-          <Button key="discover" type="link" loading={loading} onClick={() => discover(record)}>
-            {format('pages.agent.mcpServer.discover')}
-          </Button>,
-          <Button
-            key="edit"
-            type="link"
-            onClick={() => {
-              setId(record.id)
-              setOpen(true)
-            }}
-          >
-            {format('pages.agent.tool.edit')}
-          </Button>,
-          <Popconfirm
-            key="delete"
-            title={format('pages.agent.mcpServer.deleteConfirm')}
-            onConfirm={async () => {
-              if (!record.id) return
-              const response = await deleteMcpServer(record.id)
-              if (response.code === 200) {
-                message.success(response.message || format('pages.agent.tool.deleteSuccess'))
-                ref.current?.reload()
-              } else
-                message.error(response.message || format('pages.agent.mcpServer.deleteFailed'))
-            }}
-          >
-            <Button type="link">{format('pages.common.delete')}</Button>
-          </Popconfirm>,
-        ],
+        write && (
+          <TableActionMenu
+            items={[
+              { key: 'discover', label: format('pages.agent.mcpServer.discover'), primary: true, loading: loading, onClick: async () => { await discover(record) } },
+              { key: 'edit', label: format('pages.agent.tool.edit'), primary: true, onClick: () => { setId(record.id); setOpen(true) } },
+              { key: 'delete', label: format('pages.common.delete'), danger: true, confirm: { title: format('pages.agent.mcpServer.deleteConfirm') }, onClick: async () => { if (!record.id) return; const response = await deleteMcpServer(record.id); if (response.code === 200) { message.success(response.message || format('pages.agent.tool.deleteSuccess')); ref.current?.reload() } else message.error(response.message || format('pages.agent.mcpServer.deleteFailed')) } },
+            ]}
+          />
+        ),
     },
   ]
 

@@ -8,9 +8,10 @@ import { getKnowledgeBaseList } from '@/services/knowledge/KnowledgeBaseControll
 import { KnowledgeBaseBinding } from '@/services/entity/Agent'
 import { PlusOutlined } from '@ant-design/icons'
 import { ActionType, ProTable } from '@ant-design/pro-components'
-import { Button, Form, message, Modal, Popconfirm, Select, Tag } from 'antd'
+import { Button, Form, message, Modal, Select, Tag } from 'antd'
 import React, { useEffect, useRef, useState } from 'react'
 import { getSwitchStatus } from '@/pages/agent/knowledge-base/status'
+import TableActionMenu from '@/components/TableActionMenu'
 
 interface AgentKnowledgeBaseBindingProps {
   agentId: string;
@@ -83,41 +84,15 @@ const AgentKnowledgeBaseBinding: React.FC<AgentKnowledgeBaseBindingProps> = ({ a
       valueType: 'option',
       key: 'option',
       fixed: 'right',
-      width: 180,
-      render: (_: unknown, record: KnowledgeBaseBinding) => [
-        <Popconfirm
-          key="status"
-          title={`确认${record.status === 1 ? '禁用' : '启用'}该绑定？`}
-          onConfirm={async () => {
-            if (!record.id) return
-            const response = await updateKnowledgeBaseBindingStatus(record.id, {
-              status: record.status === 1 ? 0 : 1,
-            })
-            if (response.code === 200) {
-              message.success(response.message || '操作成功')
-              ref.current?.reload()
-            } else message.error(response.message || '操作失败')
-          }}
-        >
-          <Button type="link">{record.status === 1 ? '禁用' : '启用'}</Button>
-        </Popconfirm>,
-        <Popconfirm
-          key="delete"
-          title="确认解绑该知识库？"
-          onConfirm={async () => {
-            if (!record.id) return
-            const response = await deleteKnowledgeBaseBinding(record.id)
-            if (response.code === 200) {
-              message.success(response.message || '解绑成功')
-              ref.current?.reload()
-            } else message.error(response.message || '解绑失败')
-          }}
-        >
-          <Button type="link" danger>
-            解绑
-          </Button>
-        </Popconfirm>,
-      ],
+      width: 150,
+      render: (_: unknown, record: KnowledgeBaseBinding) => (
+        <TableActionMenu
+          items={[
+            { key: 'status', label: record.status === 1 ? '禁用' : '启用', confirm: { title: `确认${record.status === 1 ? '禁用' : '启用'}该绑定？` }, onClick: async () => { if (!record.id) return; const response = await updateKnowledgeBaseBindingStatus(record.id, { status: record.status === 1 ? 0 : 1 }); if (response.code === 200) { message.success(response.message || '操作成功'); ref.current?.reload() } else message.error(response.message || '操作失败') } },
+            { key: 'delete', label: '解绑', danger: true, confirm: { title: '确认解绑该知识库？' }, onClick: async () => { if (!record.id) return; const response = await deleteKnowledgeBaseBinding(record.id); if (response.code === 200) { message.success(response.message || '解绑成功'); ref.current?.reload() } else message.error(response.message || '解绑失败') } },
+          ]}
+        />
+      ),
     },
   ]
 

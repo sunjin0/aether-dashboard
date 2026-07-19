@@ -82,3 +82,11 @@ export const getEmbeddingProviderOptions = async () =>
   request('/api/agent/model-provider/embedding-options', {
     method: 'GET',
   })
+
+/** 获取可用于 AI 文档审查的已启用非 Embedding 模型供应商。 */
+export const getReviewModelProviderOptions = async () => {
+  const response = await getModelProviderList({ current: 1, pageSize: 1000, status: 1 })
+  return (response.data || [])
+    .filter((provider) => provider.id && provider.type?.toLowerCase() !== 'embedding')
+    .map((provider) => ({ label: provider.name || provider.id!, value: provider.id! }))
+}

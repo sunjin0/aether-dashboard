@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react'
 
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
-import { Button, message, Popconfirm } from 'antd'
+import { Button, message } from 'antd'
 import { useIntl } from '@umijs/max'
 import RoleForm from '@/pages/sys/role/RoleForm'
 import { PlusOutlined } from '@ant-design/icons'
@@ -9,6 +9,7 @@ import { FormattedMessage, history, useAccess } from '@@/exports'
 import AuthorizationForm from '@/pages/sys/role/AuthorizationForm'
 import { deleteRoleInfo, getRoleList } from '@/services/sys/RoleController'
 import { RoleSearchParams } from '@/services/entity/Sys'
+import TableActionMenu from '@/components/TableActionMenu'
 
 const Role: React.FC = () => {
   const intl = useIntl()
@@ -41,46 +42,17 @@ const Role: React.FC = () => {
       dataIndex: 'option',
       valueType: 'option',
       fixed: 'right',
+      width: 200,
       render: (_: any, record: any) =>
-        write && [
-          <Button
-            type={'link'}
-            key="editable"
-            onClick={() => {
-              setId(record.id)
-              setOpen(true)
-            }}
-          >
-            {intl.formatMessage({ id: 'pages.common.edit' })}
-          </Button>,
-          <Button
-            type={'link'}
-            key="auth"
-            onClick={() => {
-              setId(record.id)
-              setAuthorizationOpen(true)
-            }}
-          >
-            {intl.formatMessage({ id: 'pages.sys.auth.role.resource' })}
-          </Button>,
-          <Popconfirm
-            key={'delete'}
-            title={intl.formatMessage({ id: 'pages.confirm.delete' })}
-            onConfirm={async () => {
-              const { code, message: msg } = await deleteRoleInfo(record)
-              if (code === 200) {
-                message.success(msg)
-              } else {
-                message.error(msg)
-              }
-              ref.current?.reload()
-            }}
-          >
-            <Button type={'link'} key={'delete'}>
-              {intl.formatMessage({ id: 'pages.common.delete' })}
-            </Button>
-          </Popconfirm>,
-        ],
+        write && (
+          <TableActionMenu
+            items={[
+              { key: 'edit', label: intl.formatMessage({ id: 'pages.common.edit' }), primary: true, onClick: () => { setId(record.id); setOpen(true) } },
+              { key: 'auth', label: intl.formatMessage({ id: 'pages.sys.auth.role.resource' }), primary: true, onClick: () => { setId(record.id); setAuthorizationOpen(true) } },
+              { key: 'delete', label: intl.formatMessage({ id: 'pages.common.delete' }), danger: true, confirm: { title: intl.formatMessage({ id: 'pages.confirm.delete' }) }, onClick: async () => { const { code, message: msg } = await deleteRoleInfo(record); if (code === 200) message.success(msg); else message.error(msg); ref.current?.reload() } },
+            ]}
+          />
+        ),
     },
   ]
   return (

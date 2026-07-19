@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react'
 import { PlusOutlined } from '@ant-design/icons'
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
-import { Button, message, Popconfirm } from 'antd'
+import { Button, message } from 'antd'
 import { FormattedMessage, history, useAccess } from '@@/exports'
 import ModelProviderForm from '@/pages/agent/model-provider/ModelProviderForm'
 import {
@@ -11,6 +11,7 @@ import {
 } from '@/services/agent/ModelProviderController'
 import { getOptionList } from '@/services/sys/DictController'
 import { ModelProvider, ModelProviderSearchParams } from '@/services/entity/Agent'
+import TableActionMenu from '@/components/TableActionMenu'
 
 const ModelProviderPage: React.FC = () => {
   const [open, setOpen] = useState(false)
@@ -110,37 +111,17 @@ const ModelProviderPage: React.FC = () => {
       valueType: 'option',
       key: 'option',
       fixed: 'right',
+      width: 150,
       render: (_: any, record: ModelProvider) =>
-        write && [
-          <Button
-            type="link"
-            key="edit"
-            onClick={() => {
-              setId(record.id)
-              setOpen(true)
-            }}
-          >
-            编辑
-          </Button>,
-          <Popconfirm
-            key="status"
-            title={`确认${record.status === 1 ? '禁用' : '启用'}该模型供应商？`}
-            onConfirm={() => handleStatusChange(record)}
-          >
-            <Button type="link" key="status-button">
-              {record.status === 1 ? '禁用' : '启用'}
-            </Button>
-          </Popconfirm>,
-          <Popconfirm
-            key="delete"
-            title="确认删除该模型供应商？"
-            onConfirm={() => handleDelete(record)}
-          >
-            <Button type="link" key="delete-button">
-              删除
-            </Button>
-          </Popconfirm>,
-        ],
+        write && (
+          <TableActionMenu
+            items={[
+              { key: 'edit', label: '编辑', primary: true, onClick: () => { setId(record.id); setOpen(true) } },
+              { key: 'status', label: record.status === 1 ? '禁用' : '启用', confirm: { title: `确认${record.status === 1 ? '禁用' : '启用'}该模型供应商？` }, onClick: () => handleStatusChange(record) },
+              { key: 'delete', label: '删除', danger: true, confirm: { title: '确认删除该模型供应商？' }, onClick: () => handleDelete(record) },
+            ]}
+          />
+        ),
     },
   ]
 

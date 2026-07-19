@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { PlusOutlined } from '@ant-design/icons'
 import { ActionType, ProTable } from '@ant-design/pro-components'
-import { Button, message, Modal, Popconfirm, Space, Form, Select, InputNumber } from 'antd'
+import { Button, message, Modal, Space, Form, Select, InputNumber } from 'antd'
 import {
   getAgentBoundTools,
   bindToolToAgent,
@@ -11,6 +11,7 @@ import {
 import { getAgentToolList } from '@/services/agent/ToolController'
 import { AgentToolBinding, BindToolRequest, AgentTool } from '@/services/entity/Agent'
 import { useIntl } from '@umijs/max'
+import TableActionMenu from '@/components/TableActionMenu'
 
 const statusValueEnum = {
   0: { text: '禁用', status: 'Default' },
@@ -137,20 +138,16 @@ const AgentToolBinding: React.FC<AgentToolBindingProps> = ({ agentId, open, setO
     {
       title: intl.formatMessage({ id: 'pages.common.option' }),
       valueType: 'option',
-      width: 150,
+      width: 120,
       key: 'option',
       fixed: 'right',
-      render: (_: any, record: AgentToolBinding) => [
-        <Popconfirm
-          key="unbind"
-          title={intl.formatMessage({ id: 'pages.agent.tool.unbindConfirm' })}
-          onConfirm={() => record.toolId && handleUnbind(record.toolId)}
-        >
-          <Button type="link" danger size="small">
-            {intl.formatMessage({ id: 'pages.agent.tool.unbind' })}
-          </Button>
-        </Popconfirm>,
-      ],
+      render: (_: any, record: AgentToolBinding) => (
+        <TableActionMenu
+          items={[
+            { key: 'unbind', label: intl.formatMessage({ id: 'pages.agent.tool.unbind' }), danger: true, confirm: { title: intl.formatMessage({ id: 'pages.agent.tool.unbindConfirm' }) }, onClick: () => { if (record.toolId) return handleUnbind(record.toolId) } },
+          ]}
+        />
+      ),
     },
   ]
 

@@ -2,7 +2,8 @@ import React, { useRef, useState } from 'react'
 
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
 import { useIntl } from '@umijs/max'
-import { Button, message, Popconfirm } from 'antd'
+import { Button, message } from 'antd'
+import TableActionMenu from '@/components/TableActionMenu'
 import ResourceForm from '@/pages/sys/resource/ResourceForm'
 import { FormattedMessage } from '@@/plugin-locale'
 import { PlusOutlined } from '@ant-design/icons'
@@ -66,36 +67,15 @@ const Resource: React.FC = () => {
       key: 'option',
       // 固定
       fixed: 'right',
-      render: (text: any, record: Record<any, any>, _: any, action: any) =>
-        write && [
-          <Button
-            type={'link'}
-            key="editable"
-            onClick={() => {
-              setId(record.id)
-              setOpen(true)
-            }}
-          >
-            {intl.formatMessage({ id: 'pages.common.edit' })}
-          </Button>,
-          <Popconfirm
-            key={'delete'}
-            title={intl.formatMessage({ id: 'pages.confirm.delete' })}
-            onConfirm={async () => {
-              const { code, message: msg } = await deleteResourceInfo(record)
-              action?.reload()
-              if (code === 200) {
-                message.success(msg)
-              } else {
-                message.error(msg)
-              }
-            }}
-          >
-            <Button type={'link'} key={'delete'}>
-              {intl.formatMessage({ id: 'pages.common.delete' })}
-            </Button>
-          </Popconfirm>,
-        ],
+      render: (_: any, record: Record<any, any>, _a: any, action: any) =>
+        write && (
+          <TableActionMenu
+            items={[
+              { key: 'edit', label: intl.formatMessage({ id: 'pages.common.edit' }), primary: true, onClick: () => { setId(record.id); setOpen(true) } },
+              { key: 'delete', label: intl.formatMessage({ id: 'pages.common.delete' }), danger: true, confirm: { title: intl.formatMessage({ id: 'pages.confirm.delete' }) }, onClick: async () => { const { code, message: msg } = await deleteResourceInfo(record); action?.reload(); if (code === 200) message.success(msg); else message.error(msg) } },
+            ]}
+          />
+        ),
     },
   ]
   return (

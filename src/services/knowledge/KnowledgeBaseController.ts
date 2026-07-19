@@ -1,21 +1,39 @@
 import { request } from '@umijs/max'
-import { KnowledgeBase, KnowledgeBaseSearchParams } from '@/services/entity/Agent'
+import { KnowledgeBase, KnowledgeBaseSearchParams, ReviewConfig } from '@/services/entity/Agent'
 import { ResponseStructure } from '@/services/entity/Common'
+
+type KnowledgeBaseMutation = Omit<KnowledgeBase, 'reviewConfig'> & { reviewConfig?: string }
+
+const parseReviewConfig = (value: ReviewConfig | string | undefined): ReviewConfig | undefined => {
+  if (!value || typeof value !== 'string') return value as ReviewConfig | undefined
+  try {
+    return JSON.parse(value) as ReviewConfig
+  } catch {
+    return undefined
+  }
+}
+
+const normalizeKnowledgeBase = (item: KnowledgeBase): KnowledgeBase => ({
+  ...item,
+  reviewConfig: parseReviewConfig(item.reviewConfig),
+})
 
 export const getKnowledgeBaseList = async (
   params: KnowledgeBaseSearchParams,
-): Promise<ResponseStructure<KnowledgeBase[]>> =>
-  request('/api/knowledge/base/list', { method: 'POST', data: params })
+): Promise<ResponseStructure<KnowledgeBase[]>> => {
+  const response = await request<ResponseStructure<KnowledgeBase[]>>('/api/knowledge/base/list', { method: 'POST', data: params })
+  return { ...response, data: (response.data || []).map(normalizeKnowledgeBase) }
+}
 
-export const getKnowledgeBase = async (id: string): Promise<ResponseStructure<KnowledgeBase>> =>
-  request(`/api/knowledge/base/${id}`, { method: 'GET' })
+export const getKnowledgeBase = async (id: string): Promise<ResponseStructure<KnowledgeBase>> => {
+  const response = await request<ResponseStructure<KnowledgeBase>>(`/api/knowledge/base/${id}`, { method: 'GET' })
+  return { ...response, data: normalizeKnowledgeBase(response.data) }
+}
 
-export const addKnowledgeBase = async (params: KnowledgeBase): Promise<ResponseStructure<string>> =>
+export const addKnowledgeBase = async (params: KnowledgeBaseMutation): Promise<ResponseStructure<string>> =>
   request('/api/knowledge/base', { method: 'POST', data: params })
 
-export const updateKnowledgeBase = async (
-  params: KnowledgeBase,
-): Promise<ResponseStructure<void>> =>
+export const updateKnowledgeBase = async (params: KnowledgeBaseMutation): Promise<ResponseStructure<void>> =>
   request(`/api/knowledge/base/${params.id}`, { method: 'PUT', data: params })
 
 export const deleteKnowledgeBase = async (id: string): Promise<ResponseStructure<void>> =>

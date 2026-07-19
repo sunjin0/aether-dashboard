@@ -10,6 +10,7 @@ import { history, useAccess } from '@@/exports'
 import { Alert, Button, message, Popconfirm, Tag } from 'antd'
 import React, { useRef, useState } from 'react'
 import { getIndexStatus, getSwitchStatus } from '@/pages/agent/knowledge-base/status'
+import TableActionMenu from '@/components/TableActionMenu'
 
 const KnowledgeBasePage: React.FC = () => {
   const ref = useRef<ActionType>()
@@ -52,8 +53,8 @@ const KnowledgeBasePage: React.FC = () => {
       valueType: 'select',
       valueEnum: { 0: { text: '禁用' }, 1: { text: '启用' } },
       render: (_: unknown, record: KnowledgeBase) => {
-        const item = getSwitchStatus(record.status)
-        return <Tag color={item.color}>{item.label}</Tag>
+        const item = getSwitchStatus(record.status);
+        return <Tag color={item.color}>{item.label}</Tag>;
       },
     },
     {
@@ -62,8 +63,8 @@ const KnowledgeBasePage: React.FC = () => {
       valueType: 'select',
       valueEnum: { 0: { text: '未索引' }, 1: { text: '索引中' }, 2: { text: '已索引' } },
       render: (_: unknown, record: KnowledgeBase) => {
-        const item = getIndexStatus(record.indexStatus)
-        return <Tag color={item.color}>{item.label}</Tag>
+        const item = getIndexStatus(record.indexStatus);
+        return <Tag color={item.color}>{item.label}</Tag>;
       },
     },
     { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime', hideInSearch: true },
@@ -75,47 +76,48 @@ const KnowledgeBasePage: React.FC = () => {
       fixed: 'right',
       width: 250,
       render: (_: unknown, record: KnowledgeBase) =>
-        write && [
-          <Button
-            key="documents"
-            type="link"
-            onClick={() =>
-              history.push(
-                `/knowledge/document?knowledgeBaseId=${record.id}&knowledgeBaseName=${encodeURIComponent(record.name || '')}`,
-              )
-            }
-          >
-            文档管理
-          </Button>,
-          <Button
-            key="edit"
-            type="link"
-            onClick={() => {
-              setId(record.id)
-              setOpen(true)
-            }}
-          >
-            编辑
-          </Button>,
-          <Popconfirm
-            key="delete"
-            title="确认删除该知识库？"
-            onConfirm={async () => {
-              if (!record.id) return
-              const response = await deleteKnowledgeBase(record.id)
-              if (response.code === 200) {
-                message.success(response.message || '删除成功')
-                ref.current?.reload()
-              } else message.error(response.message || '删除失败')
-            }}
-          >
-            <Button type="link" danger>
-              删除
-            </Button>
-          </Popconfirm>,
-        ],
+        write && (
+          <TableActionMenu
+            key="actions"
+            items={[
+              {
+                key: 'documents',
+                label: '文档管理',
+                primary: true,
+                onClick: () =>
+                  history.push(
+                    `/knowledge/document?knowledgeBaseId=${record.id}&knowledgeBaseName=${encodeURIComponent(record.name || '')}`,
+                  ),
+              },
+              {
+                key: 'edit',
+                label: '编辑',
+                primary: true,
+                onClick: () => {
+                  setId(record.id);
+                  setOpen(true);
+                },
+              },
+              {
+                key: 'delete',
+                label: '删除',
+                primary: true,
+                danger: true,
+                confirm: { title: '确认删除该文档？' },
+                onClick: () => {
+                  if (record.id != null) {
+                    deleteKnowledgeBase(record.id).then(() => {
+                      message.success('删除成功');
+                      ref.current?.reload();
+                    });
+                  }
+                },
+              },
+            ]}
+          />
+        ),
     },
-  ]
+  ];
 
   return (
     <PageContainer>
@@ -146,7 +148,7 @@ const KnowledgeBasePage: React.FC = () => {
             </Button>,
           ]
         }
-      />
+      />{' '}
       <KnowledgeBaseForm
         id={id}
         open={open}

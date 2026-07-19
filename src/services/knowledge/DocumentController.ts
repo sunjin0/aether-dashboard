@@ -38,6 +38,23 @@ export const getDocumentVersions = async (
   id: string,
 ): Promise<ResponseStructure<KnowledgeDocumentVersion[]>> =>
   request(`/api/knowledge/document/${id}/versions`, { method: 'GET' })
+export const getDocumentVersion = async (
+  versionId: string,
+): Promise<ResponseStructure<KnowledgeDocumentVersion>> =>
+  request(`/api/knowledge/document/version/${versionId}`, { method: 'GET' })
+export const updateDocumentDraft = async (
+  versionId: string,
+  content: string,
+  expectedChecksum: string,
+): Promise<ResponseStructure<KnowledgeDocumentVersion>> =>
+  request(`/api/knowledge/document/version/${versionId}/draft`, {
+    method: 'PUT',
+    data: { content, expectedChecksum },
+  })
+export const reviseDocumentVersion = async (
+  versionId: string,
+): Promise<ResponseStructure<string>> =>
+  request(`/api/knowledge/document/version/${versionId}/revise`, { method: 'POST' })
 export const rollbackDocumentVersion = async (
   versionId: string,
 ): Promise<ResponseStructure<string>> =>

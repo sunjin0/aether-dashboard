@@ -5,8 +5,6 @@ import {
   CheckCircleFilled,
   CodeOutlined,
   DatabaseOutlined,
-  DeleteOutlined,
-  EditOutlined,
   FileTextOutlined,
   FolderOpenOutlined,
   GlobalOutlined,
@@ -15,18 +13,7 @@ import {
   ToolOutlined,
 } from '@ant-design/icons'
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
-import {
-  Button,
-  Input,
-  message,
-  Popconfirm,
-  Progress,
-  Select,
-  Spin,
-  Switch,
-  Tag,
-  Tooltip,
-} from 'antd'
+import { Button, Input, message, Progress, Select, Spin, Switch, Tag } from 'antd'
 import { history, useAccess, useIntl } from '@@/exports'
 import AgentToolForm from '@/pages/agent/tool/AgentToolForm'
 import AgentToolTestModal from '@/pages/agent/tool/AgentToolTestModal'
@@ -46,6 +33,7 @@ import {
 } from '@/services/entity/Agent'
 import './index.less'
 import { getOptionList } from '@/services/sys/DictController'
+import TableActionMenu from '@/components/TableActionMenu'
 const toolTypesMap = [
   { value: 'knowledge', icon: <DatabaseOutlined /> },
   { value: 'ops', icon: <ToolOutlined /> },
@@ -229,38 +217,18 @@ const AgentToolPage: React.FC = () => {
     {
       title: '操作',
       key: 'option',
-      width: 210,
+      width: 200,
+      fixed: 'right',
       render: (_: unknown, record: AgentTool) =>
         write && (
-          <div className="tool-actions">
-            <Button
-              type="link"
-              icon={<EditOutlined />}
-              onClick={() => {
-                setId(record.id)
-                setOpen(true)
-              }}
-            >
-              编辑
-            </Button>
-            <Button type="link" disabled={!record.id} onClick={() => setTestToolId(record.id)}>
-              测试
-            </Button>
-            <Popconfirm
-              title={record.status === 1 ? '确认禁用该工具？' : '确认启用该工具？'}
-              onConfirm={() => handleStatusChange(record)}
-            >
-              <Button type="link">{record.status === 1 ? '禁用' : '启用'}</Button>
-            </Popconfirm>
-            <Popconfirm
-              title={intl.formatMessage({ id: 'pages.agent.tool.deleteConfirm' })}
-              onConfirm={() => handleDelete(record)}
-            >
-              <Tooltip title="删除">
-                <Button type="link" danger icon={<DeleteOutlined />} />
-              </Tooltip>
-            </Popconfirm>
-          </div>
+          <TableActionMenu
+            items={[
+              { key: 'edit', label: '编辑', primary: true, onClick: () => { setId(record.id); setOpen(true) } },
+              { key: 'test', label: '测试', primary: true, visible: !!record.id, onClick: () => setTestToolId(record.id) },
+              { key: 'status', label: record.status === 1 ? '禁用' : '启用', confirm: { title: record.status === 1 ? '确认禁用该工具？' : '确认启用该工具？' }, onClick: () => handleStatusChange(record) },
+              { key: 'delete', label: '删除', danger: true, confirm: { title: intl.formatMessage({ id: 'pages.agent.tool.deleteConfirm' }) }, onClick: () => handleDelete(record) },
+            ]}
+          />
         ),
     },
   ]

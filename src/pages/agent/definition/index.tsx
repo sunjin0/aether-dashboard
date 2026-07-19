@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react'
 import { PlusOutlined } from '@ant-design/icons'
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
-import { Button, message, Popconfirm, Modal } from 'antd'
+import { Button, message, Modal } from 'antd'
 import { FormattedMessage, history, useAccess } from '@@/exports'
 import AgentDefinitionForm from '@/pages/agent/definition/AgentDefinitionForm'
 import AgentToolBinding from '@/pages/agent/definition/AgentToolBinding'
@@ -15,6 +15,7 @@ import {
 } from '@/services/agent/AgentDefinitionController'
 import { getOptionList } from '@/services/sys/DictController'
 import { AgentDefinition, AgentDefinitionSearchParams } from '@/services/entity/Agent'
+import TableActionMenu from '@/components/TableActionMenu'
 
 const AgentDefinitionPage: React.FC = () => {
   const [open, setOpen] = useState(false)
@@ -150,65 +151,22 @@ const AgentDefinitionPage: React.FC = () => {
     {
       title: '操作',
       valueType: 'option',
-      width: 400,
+      width: 250,
       key: 'option',
       fixed: 'right',
       render: (_: any, record: AgentDefinition) =>
-        write && [
-          <Button
-            type="link"
-            key="edit"
-            onClick={() => {
-              setId(record.id)
-              setOpen(true)
-            }}
-          >
-            编辑
-          </Button>,
-          <Button
-            type="link"
-            key="binding"
-            onClick={() => {
-              setCurrentAgentId(record.id || '')
-              setToolBindingVisible(true)
-            }}
-          >
-            绑定工具
-          </Button>,
-          <Button
-            type="link"
-            key="knowledge-base"
-            onClick={() => {
-              setCurrentAgentId(record.id || '')
-              setKnowledgeBaseBindingVisible(true)
-            }}
-          >
-            知识库
-          </Button>,
-          <Popconfirm key="copy" title="确认复制该 Agent？" onConfirm={() => handleCopy(record)}>
-            <Button type="link" key="copy-button">
-              复制
-            </Button>
-          </Popconfirm>,
-          <Popconfirm
-            key="status"
-            title={`确认${record.status === 1 ? '禁用' : '启用'}该 Agent？`}
-            onConfirm={() => handleStatusChange(record)}
-          >
-            <Button type="link" key="status-button">
-              {record.status === 1 ? '禁用' : '启用'}
-            </Button>
-          </Popconfirm>,
-          <Popconfirm
-            key="delete"
-            title="确认删除该 Agent？"
-            onConfirm={() => handleDelete(record)}
-          >
-            <Button type="link" key="delete-button">
-              删除
-            </Button>
-          </Popconfirm>,
-        ],
+        write && (
+          <TableActionMenu
+            items={[
+              { key: 'edit', label: '编辑', primary: true, onClick: () => { setId(record.id); setOpen(true) } },
+              { key: 'binding', label: '绑定工具', primary: true, onClick: () => { setCurrentAgentId(record.id || ''); setToolBindingVisible(true) } },
+              { key: 'knowledge-base', label: '知识库', primary: true, onClick: () => { setCurrentAgentId(record.id || ''); setKnowledgeBaseBindingVisible(true) } },
+              { key: 'copy', label: '复制', confirm: { title: '确认复制该 Agent？' }, onClick: () => handleCopy(record) },
+              { key: 'status', label: record.status === 1 ? '禁用' : '启用', confirm: { title: `确认${record.status === 1 ? '禁用' : '启用'}该 Agent？` }, onClick: () => handleStatusChange(record) },
+              { key: 'delete', label: '删除', danger: true, confirm: { title: '确认删除该 Agent？' }, onClick: () => handleDelete(record) },
+            ]}
+          />
+        ),
     },
   ]
 

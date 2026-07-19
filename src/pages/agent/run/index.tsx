@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react'
 import { ActionType, PageContainer, ProDescriptions, ProTable } from '@ant-design/pro-components'
 import {
   Alert,
-  Button,
   Card,
   DatePicker,
   Drawer,
@@ -13,6 +12,7 @@ import {
   Tag,
   Typography,
 } from 'antd'
+import TableActionMenu from '@/components/TableActionMenu'
 import {
   getAgentRunInfo,
   getAgentRunList,
@@ -171,11 +171,13 @@ const AgentRunPage: React.FC = () => {
       width: 120,
       key: 'option',
       fixed: 'right',
-      render: (_: any, record: AgentRun) => [
-        <Button type="link" key="detail" onClick={() => openDetail(record)}>
-          查看详情
-        </Button>,
-      ],
+      render: (_: any, record: AgentRun) => (
+        <TableActionMenu
+          items={[
+            { key: 'detail', label: '查看详情', primary: true, onClick: () => openDetail(record) },
+          ]}
+        />
+      ),
     },
   ]
 

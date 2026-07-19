@@ -126,6 +126,24 @@ export default [
         component: './knowledge/document',
       },
       {
+        path: '/knowledge/document/detail',
+        name: '文档工作台',
+        component: './knowledge/document-detail',
+        hideInMenu: true,
+      },
+      {
+        path: '/knowledge/review/detail',
+        name: '审批详情',
+        component: './knowledge/review/detail',
+        hideInMenu: true,
+      },
+      {
+        path: '/knowledge/reviews',
+        name: '审批中心',
+        hideInMenu: true,
+        component: './knowledge/review',
+      },
+      {
         path: '/knowledge/index-job',
         name: '索引任务',
         component: './knowledge/index-job',

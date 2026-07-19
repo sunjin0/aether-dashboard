@@ -2,7 +2,8 @@ import { KnowledgeIndexJob, KnowledgeIndexJobSearchParams } from '@/services/ent
 import { getIndexJobList, retryIndexJob } from '@/services/knowledge/IndexJobController'
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
 import { useAccess } from '@@/exports'
-import { Button, Descriptions, message, Popconfirm, Tag, Tooltip } from 'antd'
+import { Descriptions, message, Tag, Tooltip } from 'antd'
+import TableActionMenu from '@/components/TableActionMenu'
 import React, { useRef } from 'react'
 
 const statusLabels: Record<string, { text: string; color: string }> = {
@@ -47,6 +48,7 @@ const KnowledgeIndexJobPage: React.FC = () => {
     <PageContainer title="索引任务">
       <ProTable<KnowledgeIndexJob>
         actionRef={actionRef}
+        polling={3000}
         rowKey="id"
         scroll={{ x: 1800 }}
         request={(params: KnowledgeIndexJobSearchParams) => getIndexJobList(params)}
@@ -183,22 +185,15 @@ const KnowledgeIndexJobPage: React.FC = () => {
           {
             title: '操作',
             valueType: 'option',
+            width: 100,
             fixed: 'right',
             render: (_, record) =>
               canRetry && record.status === 'failed' ? (
-                <Popconfirm
-                  title="确认重试该索引任务？"
-                  onConfirm={async () => {
-                    if (!record.id) return
-                    const result = await retryIndexJob(record.id)
-                    if (result.code === 200) {
-                      message.success(result.message || '重试任务已入队')
-                      actionRef.current?.reload()
-                    } else message.error(result.message || '重试失败')
-                  }}
-                >
-                  <Button type="link">重试</Button>
-                </Popconfirm>
+                <TableActionMenu
+                  items={[
+                    { key: 'retry', label: '重试', primary: true, confirm: { title: '确认重试该索引任务？' }, onClick: async () => { if (!record.id) return; const result = await retryIndexJob(record.id); if (result.code === 200) { message.success(result.message || '重试任务已入队'); actionRef.current?.reload() } else message.error(result.message || '重试失败') } },
+                  ]}
+                />
               ) : null,
           },
         ]}

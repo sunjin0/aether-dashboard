@@ -11,8 +11,6 @@ import { getAdminList } from '@/services/sys/AdminController'
 import {
   AppstoreOutlined,
   CheckCircleFilled,
-  DeleteOutlined,
-  EditOutlined,
   ExperimentOutlined,
   PlusOutlined,
   SearchOutlined,
@@ -20,10 +18,11 @@ import {
 } from '@ant-design/icons'
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
 import { history, useAccess } from '@@/exports'
-import { Button, Input, message, Modal, Popconfirm, Select, Spin, Tag } from 'antd'
+import { Button, Input, message, Modal, Select, Spin, Tag } from 'antd'
 import React, { useEffect, useRef, useState } from 'react'
 import { getSwitchStatus } from '@/pages/agent/knowledge-base/status'
 import dayjs from 'dayjs'
+import TableActionMenu from '@/components/TableActionMenu'
 import './index.less'
 
 const CATEGORY_MAP: Record<string, string> = {
@@ -205,47 +204,17 @@ const PreferencePage: React.FC = () => {
     {
       title: '操作',
       key: 'option',
-      width: 200,
+      width: 180,
       fixed: 'right',
       render: (_: unknown, record: AdminPreference) =>
         write && (
-          <div className="pref-actions">
-            <Button
-              type="link"
-              icon={<EditOutlined />}
-              onClick={() => {
-                setId(record.id)
-                setOpen(true)
-              }}
-            >
-              编辑
-            </Button>
-            {record.status === 1 && (
-              <Button
-                type="link"
-                onClick={() => {
-                  setOverrideId(record.id)
-                  setOverrideRecord(record)
-                  setOverrideValue(record.value || '')
-                }}
-              >
-                覆盖
-              </Button>
-            )}
-            <Popconfirm
-              title="确认删除该偏好？"
-              onConfirm={async () => {
-                if (!record.id) return
-                const response = await deleteAdminPreference(record.id)
-                if (response.code === 200) {
-                  message.success(response.message || '删除成功')
-                  refresh()
-                } else message.error(response.message || '删除失败')
-              }}
-            >
-              <Button type="link" danger icon={<DeleteOutlined />} />
-            </Popconfirm>
-          </div>
+          <TableActionMenu
+            items={[
+              { key: 'edit', label: '编辑', primary: true, onClick: () => { setId(record.id); setOpen(true) } },
+              { key: 'override', label: '覆盖', visible: record.status === 1, onClick: () => { setOverrideId(record.id); setOverrideRecord(record); setOverrideValue(record.value || '') } },
+              { key: 'delete', label: '删除', danger: true, confirm: { title: '确认删除该偏好？' }, onClick: async () => { if (!record.id) return; const response = await deleteAdminPreference(record.id); if (response.code === 200) { message.success(response.message || '删除成功'); refresh() } else message.error(response.message || '删除失败') } },
+            ]}
+          />
         ),
     },
   ]

@@ -2,7 +2,8 @@ import React, { useRef, useState } from 'react'
 
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
 import { history, request, useIntl } from '@umijs/max'
-import { Button, message, Popconfirm } from 'antd'
+import { Button, message } from 'antd'
+import TableActionMenu from '@/components/TableActionMenu'
 import FileImage from '@/components/FileImage'
 import AdminForm from '@/pages/sys/admin/AdminForm'
 import { useAccess } from '@@/exports'
@@ -74,34 +75,15 @@ const Admin: React.FC = () => {
       dataIndex: 'option',
       key: 'option',
       valueType: 'option',
-      render: (text: any, record: any, _: any, action: any) =>
-        write && [
-          <Button
-            type={'link'}
-            key="editable"
-            onClick={() => {
-              setId(record.id)
-              setOpen(true)
-            }}
-          >
-            {intl.formatMessage({ id: 'pages.common.edit' })}
-          </Button>,
-          <Popconfirm
-            key={'delete'}
-            title={intl.formatMessage({ id: 'pages.confirm.delete' })}
-            onConfirm={async () => {
-              const { code, message: msg } = await deleteAdminInfo(record)
-              if (code === 200) {
-                message.success(msg)
-              } else {
-                message.error(msg)
-              }
-              action?.reload()
-            }}
-          >
-            <Button type={'link'}>{intl.formatMessage({ id: 'pages.common.delete' })}</Button>
-          </Popconfirm>,
-        ],
+      render: (_: any, record: any, _a: any, action: any) =>
+        write && (
+          <TableActionMenu
+            items={[
+              { key: 'edit', label: intl.formatMessage({ id: 'pages.common.edit' }), primary: true, onClick: () => { setId(record.id); setOpen(true) } },
+              { key: 'delete', label: intl.formatMessage({ id: 'pages.common.delete' }), danger: true, confirm: { title: intl.formatMessage({ id: 'pages.confirm.delete' }) }, onClick: async () => { const { code, message: msg } = await deleteAdminInfo(record); if (code === 200) message.success(msg); else message.error(msg); action?.reload() } },
+            ]}
+          />
+        ),
     },
   ]
   return (

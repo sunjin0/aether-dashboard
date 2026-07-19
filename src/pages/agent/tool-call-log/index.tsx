@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react'
 import { PageContainer, ProDescriptions, ProTable } from '@ant-design/pro-components'
-import { Alert, Button, Card, Drawer, Empty, message, Spin, Tag, Typography } from 'antd'
+import { Alert, Card, Drawer, Empty, message, Spin, Tag, Typography } from 'antd'
+import TableActionMenu from '@/components/TableActionMenu'
 import {
   getAgentToolCallLogInfo,
   getAgentToolCallLogList,
@@ -145,11 +146,13 @@ const AgentToolCallLogPage: React.FC = () => {
       width: 120,
       key: 'option',
       fixed: 'right',
-      render: (_: any, record: AgentToolCallLog) => [
-        <Button type="link" key="detail" onClick={() => openDetail(record)}>
-          查看详情
-        </Button>,
-      ],
+      render: (_: any, record: AgentToolCallLog) => (
+        <TableActionMenu
+          items={[
+            { key: 'detail', label: '查看详情', primary: true, onClick: () => openDetail(record) },
+          ]}
+        />
+      ),
     },
   ]
 

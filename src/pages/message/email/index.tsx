@@ -2,7 +2,8 @@ import React, { useRef, useState } from 'react'
 
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
 import { request, useIntl, history } from '@umijs/max'
-import { Button, message, Popconfirm, Tag } from 'antd'
+import { message, Tag } from 'antd'
+import TableActionMenu from '@/components/TableActionMenu'
 import { useAccess } from '@@/exports'
 import Model from '@/components/Model'
 import { getOptionList } from '@/services/sys/DictController'
@@ -75,30 +76,15 @@ const Email: React.FC = () => {
       title: intl.formatMessage({ id: 'pages.common.option' }),
       valueType: 'option',
       fixed: 'right',
-      render: (text: any, record: any, _: any, action: any) =>
-        write && [
-          <Model
-            key={'preview'}
-            buttonText={intl.formatMessage({ id: 'pages.common.preview' })}
-            title={intl.formatMessage({ id: 'pages.email.content' })}
-            text={record.body}
-          />,
-          <Popconfirm
-            key={'delete'}
-            title={intl.formatMessage({ id: 'pages.confirm.delete' })}
-            onConfirm={async () => {
-              const { code, message: msg } = await deleteEmailInfo(record)
-              if (code === 200) {
-                message.success(msg)
-              } else {
-                message.error(msg)
-              }
-              action?.reload()
-            }}
-          >
-            <Button type={'link'}>{intl.formatMessage({ id: 'pages.common.delete' })}</Button>
-          </Popconfirm>,
-        ],
+      render: (_: any, record: any, _a: any, action: any) =>
+        write && (
+          <TableActionMenu
+            items={[
+              { key: 'preview', label: <Model buttonText={intl.formatMessage({ id: 'pages.common.preview' })} title={intl.formatMessage({ id: 'pages.email.content' })} text={record.body} />, primary: true, onClick: () => {} },
+              { key: 'delete', label: intl.formatMessage({ id: 'pages.common.delete' }), danger: true, confirm: { title: intl.formatMessage({ id: 'pages.confirm.delete' }) }, onClick: async () => { const { code, message: msg } = await deleteEmailInfo(record); if (code === 200) message.success(msg); else message.error(msg); action?.reload() } },
+            ]}
+          />
+        ),
     },
   ]
   return (

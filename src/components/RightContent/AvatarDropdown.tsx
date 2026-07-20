@@ -1,5 +1,5 @@
 import { LogoutOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons'
-import { history, request, useModel } from '@umijs/max'
+import { history, request, useIntl, useModel } from '@umijs/max'
 import { message, Spin } from 'antd'
 import type { MenuProps } from 'antd'
 import { createStyles } from 'antd-style'
@@ -39,6 +39,7 @@ const useStyles = createStyles(({ token }) => {
 })
 
 export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu, children }) => {
+  const intl = useIntl()
   /**
    * 退出登录，并且将当前的 url 保存
    */
@@ -108,12 +109,12 @@ export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu, childre
     {
       key: 'center',
       icon: <UserOutlined />,
-      label: '个人中心',
+      label: intl.formatMessage({ id: 'components.avatarDropdown.profile' }),
     },
     {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: '退出登录',
+      label: intl.formatMessage({ id: 'components.avatarDropdown.logout' }),
     },
   ]
 

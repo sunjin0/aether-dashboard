@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react'
+import { useIntl } from '@umijs/max'
 import { Input, Button, Tabs } from 'antd'
 import { RocketOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons'
 import MarkdownText from '@/components/MarkdownText'
@@ -28,11 +29,13 @@ const SystemPromptEditor: React.FC<SystemPromptEditorProps> = ({
   value = '',
   onChange,
   agentName,
-  placeholder = '输入系统提示词...',
+  placeholder: placeholderProp,
   disabled,
 }) => {
+  const intl = useIntl()
   const [generateOpen, setGenerateOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<string>('edit')
+  const placeholder = placeholderProp ?? intl.formatMessage({ id: 'pages.components.systemPromptEditor.placeholder' })
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -77,7 +80,7 @@ const SystemPromptEditor: React.FC<SystemPromptEditorProps> = ({
             onClick={() => setGenerateOpen(true)}
             disabled={disabled}
           >
-            AI 生成
+            {intl.formatMessage({ id: 'pages.components.systemPromptEditor.aiGenerate' })}
           </Button>
           <TemplateSelect onSelect={handleTemplateSelect} />
         </div>
@@ -96,7 +99,7 @@ const SystemPromptEditor: React.FC<SystemPromptEditorProps> = ({
               key: 'edit',
               label: (
                 <span>
-                  <EditOutlined /> 编辑
+                  <EditOutlined /> {intl.formatMessage({ id: 'pages.common.edit' })}
                 </span>
               ),
               children: (
@@ -114,7 +117,7 @@ const SystemPromptEditor: React.FC<SystemPromptEditorProps> = ({
               key: 'preview',
               label: (
                 <span>
-                  <EyeOutlined /> 预览
+                  <EyeOutlined /> {intl.formatMessage({ id: 'pages.common.preview' })}
                 </span>
               ),
               children: (
@@ -128,8 +131,8 @@ const SystemPromptEditor: React.FC<SystemPromptEditorProps> = ({
       </div>
 
       <div className="system-prompt-editor-status">
-        <span>字符: {stats.chars}</span>
-        <span>Token(估): {stats.tokens}</span>
+        <span>{intl.formatMessage({ id: 'pages.components.systemPromptEditor.characters' }, { count: stats.chars })}</span>
+        <span>{intl.formatMessage({ id: 'pages.components.systemPromptEditor.tokens' }, { count: stats.tokens })}</span>
       </div>
 
       <PromptGenerateModal

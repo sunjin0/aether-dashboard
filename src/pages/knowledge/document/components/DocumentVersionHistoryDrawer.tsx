@@ -5,6 +5,7 @@ import {
   rollbackDocumentVersion,
 } from '@/services/knowledge/DocumentController'
 import { ActionType, ProTable } from '@ant-design/pro-components'
+import { useIntl } from '@umijs/max'
 import { Drawer, message, Tag } from 'antd'
 import React, { useEffect, useRef, useState } from 'react'
 import DocumentChunkDrawer from './DocumentChunkDrawer'
@@ -30,6 +31,7 @@ const DocumentVersionHistoryDrawer: React.FC<DocumentVersionHistoryDrawerProps> 
 }) => {
   const actionRef = useRef<ActionType>()
   const [chunkVersion, setChunkVersion] = useState<KnowledgeDocumentVersion>()
+  const intl = useIntl()
 
   /** 切换文档或重新打开抽屉时重新加载版本，避免展示上一份文档的数据。 */
   useEffect(() => {
@@ -38,7 +40,7 @@ const DocumentVersionHistoryDrawer: React.FC<DocumentVersionHistoryDrawerProps> 
 
   return (
     <Drawer
-      title={`版本历史${documentTitle ? ` - ${documentTitle}` : ''}`}
+      title={`${intl.formatMessage({ id: 'pages.knowledge.document.versionHistory' })}${documentTitle ? ` - ${documentTitle}` : ''}`}
       width={1000}
       open={open}
       onClose={onClose}
@@ -53,34 +55,34 @@ const DocumentVersionHistoryDrawer: React.FC<DocumentVersionHistoryDrawerProps> 
           documentId ? getDocumentVersions(documentId) : Promise.resolve({ code: 200, data: [] })
         }
         columns={[
-          { title: '版本号', dataIndex: 'versionNo', width: 100, valueType: 'digit' },
+          { title: intl.formatMessage({ id: 'pages.knowledge.document.versionHistory.versionNumber' }), dataIndex: 'versionNo', width: 100, valueType: 'digit' },
           {
-            title: '索引状态',
+            title: intl.formatMessage({ id: 'pages.knowledge.document.indexStatus' }),
             dataIndex: 'indexStatus',
             width: 120,
             render: (_, record) => {
               const status = getIndexStatus(record.indexStatus)
               return (
                 <Tag color={record.indexStatus === 3 ? 'error' : status.color}>
-                  {record.indexStatus === 3 ? '失败' : status.label}
+                  {record.indexStatus === 3 ? intl.formatMessage({ id: 'pages.knowledge.document.versionHistory.indexStatus.failed' }) : status.label}
                 </Tag>
               )
             },
           },
-          { title: '分块数', dataIndex: 'chunkCount', width: 100, valueType: 'digit' },
-          { title: '索引完成时间', dataIndex: 'indexedAt', valueType: 'dateTime', width: 180 },
-          { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime', width: 180 },
-          { title: '索引错误', dataIndex: 'indexErrorMessage', ellipsis: true },
+          { title: intl.formatMessage({ id: 'pages.knowledge.document.versionHistory.chunkCount' }), dataIndex: 'chunkCount', width: 100, valueType: 'digit' },
+          { title: intl.formatMessage({ id: 'pages.knowledge.document.versionHistory.indexedAt' }), dataIndex: 'indexedAt', valueType: 'dateTime', width: 180 },
+          { title: intl.formatMessage({ id: 'pages.knowledge.document.versionHistory.createdAt' }), dataIndex: 'createdAt', valueType: 'dateTime', width: 180 },
+          { title: intl.formatMessage({ id: 'pages.knowledge.document.versionHistory.indexError' }), dataIndex: 'indexErrorMessage', ellipsis: true },
           {
-            title: '操作',
+            title: intl.formatMessage({ id: 'pages.common.option' }),
             valueType: 'option',
             width: 180,
             render: (_, record) =>
               record.id ? (
                 <TableActionMenu
                   items={[
-                    { key: 'chunks', label: '查看分块', primary: true, onClick: () => setChunkVersion(record) },
-                    { key: 'rollback', label: '回滚到此版本', visible: !!canWrite, confirm: { title: '确认以该版本创建新的最新版本并重新索引？' }, onClick: async () => { const response = await rollbackDocumentVersion(record.id!); if (response.code === 200) { message.success(response.message || '回滚任务已入队'); actionRef.current?.reload(); onRollbackSuccess() } else message.error(response.message || '回滚失败') } },
+                    { key: 'chunks', label: intl.formatMessage({ id: 'pages.knowledge.document.versionHistory.viewChunks' }), primary: true, onClick: () => setChunkVersion(record) },
+                    { key: 'rollback', label: intl.formatMessage({ id: 'pages.knowledge.document.versionHistory.rollback' }), visible: !!canWrite, confirm: { title: intl.formatMessage({ id: 'pages.knowledge.document.versionHistory.rollbackConfirm' }) }, onClick: async () => { const response = await rollbackDocumentVersion(record.id!); if (response.code === 200) { message.success(response.message || intl.formatMessage({ id: 'pages.knowledge.document.versionHistory.rollbackQueued' })); actionRef.current?.reload(); onRollbackSuccess() } else message.error(response.message || intl.formatMessage({ id: 'pages.knowledge.document.versionHistory.rollbackFailed' })) } },
                   ]}
                 />
               ) : null,

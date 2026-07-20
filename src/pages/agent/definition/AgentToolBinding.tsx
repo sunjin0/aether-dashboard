@@ -13,11 +13,6 @@ import { AgentToolBinding, BindToolRequest, AgentTool } from '@/services/entity/
 import { useIntl } from '@umijs/max'
 import TableActionMenu from '@/components/TableActionMenu'
 
-const statusValueEnum = {
-  0: { text: '禁用', status: 'Default' },
-  1: { text: '启用', status: 'Success' },
-}
-
 interface AgentToolBindingProps {
   agentId: string;
   open: boolean;
@@ -74,25 +69,25 @@ const AgentToolBinding: React.FC<AgentToolBindingProps> = ({ agentId, open, setO
 
       const { code, message: msg } = await bindToolToAgent(agentId, params)
       if (code === 200) {
-        message.success(msg || '绑定成功')
+        message.success(msg || intl.formatMessage({ id: 'pages.agent.definition.bindSuccess' }))
         setBindModalVisible(false)
         form.resetFields()
         actionRef.current?.reload()
       } else {
-        message.error(msg || '绑定失败')
+        message.error(msg || intl.formatMessage({ id: 'pages.agent.definition.bindFailed' }))
       }
     } catch (error) {
-      message.error('请检查表单填写')
+      message.error(intl.formatMessage({ id: 'pages.agent.definition.checkForm' }))
     }
   }
 
   const handleUnbind = async (toolId: string) => {
     const { code, message: msg } = await unbindToolFromAgent(agentId, toolId)
     if (code === 200) {
-      message.success(msg || '解绑成功')
+      message.success(msg || intl.formatMessage({ id: 'pages.agent.definition.unbindSuccess' }))
       actionRef.current?.reload()
     } else {
-      message.error(msg || '解绑失败')
+      message.error(msg || intl.formatMessage({ id: 'pages.agent.definition.unbindFailed' }))
     }
   }
 
@@ -101,10 +96,10 @@ const AgentToolBinding: React.FC<AgentToolBindingProps> = ({ agentId, open, setO
       priority: newPriority,
     })
     if (code === 200) {
-      message.success(msg || '优先级调整成功')
+      message.success(msg || intl.formatMessage({ id: 'pages.agent.definition.priorityUpdateSuccess' }))
       actionRef.current?.reload()
     } else {
-      message.error(msg || '优先级调整失败')
+      message.error(msg || intl.formatMessage({ id: 'pages.agent.definition.priorityUpdateFailed' }))
     }
   }
 
@@ -132,7 +127,7 @@ const AgentToolBinding: React.FC<AgentToolBindingProps> = ({ agentId, open, setO
       key: 'toolStatus',
       dataIndex: 'status',
       valueType: 'select',
-      valueEnum: statusValueEnum,
+      valueEnum: { 0: { text: intl.formatMessage({ id: 'pages.common.disabled' }), status: 'Default' }, 1: { text: intl.formatMessage({ id: 'pages.common.enabled' }), status: 'Success' } },
       width: 100,
     },
     {
@@ -207,7 +202,7 @@ const AgentToolBinding: React.FC<AgentToolBindingProps> = ({ agentId, open, setO
             name="priority"
             label={intl.formatMessage({ id: 'pages.agent.tool.priority' })}
             initialValue={0}
-            rules={[{ required: true, message: '请输入优先级' }]}
+            rules={[{ required: true, message: intl.formatMessage({ id: 'pages.agent.definition.enterPriority' }) }]}
           >
             <InputNumber
               min={0}

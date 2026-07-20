@@ -17,7 +17,7 @@ import {
   ProFormText,
   ProTable,
 } from '@ant-design/pro-components'
-import { history, useAccess, useLocation } from '@@/exports'
+import { history, useAccess, useIntl, useLocation } from '@@/exports'
 import { Button, message, Tag } from 'antd'
 import React, { useRef, useState } from 'react'
 import FileUploadModal from '@/components/FileUploadModal'
@@ -30,6 +30,7 @@ const KnowledgeDocumentPage: React.FC = () => {
   const actionRef = useRef<ActionType>()
   const formRef = useRef<ProFormInstance>()
   const location = useLocation()
+  const intl = useIntl()
   const knowledgeBase = getKnowledgeBaseContext(location.search)
   const [formOpen, setFormOpen] = useState(false)
   const [documentId, setDocumentId] = useState<string>()
@@ -48,10 +49,10 @@ const KnowledgeDocumentPage: React.FC = () => {
     try {
       const response = await reindexDocument(record.id)
       if (response.code === 200) {
-        message.success(response.message || '索引任务已入队，完成后文档才可用于聊天')
+        message.success(response.message || intl.formatMessage({ id: 'pages.knowledge.document.reindexQueued' }))
         reload()
       } else {
-        message.error(response.message || '重建索引失败')
+        message.error(response.message || intl.formatMessage({ id: 'pages.knowledge.document.reindexFailed' }))
       }
     } finally {
       setReindexingId(undefined)
@@ -69,7 +70,7 @@ const KnowledgeDocumentPage: React.FC = () => {
       hideInSearch: true,
     },
     {
-      title: '知识库',
+      title: intl.formatMessage({ id: 'pages.knowledge.document.knowledgeBase' }),
       dataIndex: 'knowledgeBaseId',
       valueType: 'select',
       request: async () => {
@@ -86,49 +87,49 @@ const KnowledgeDocumentPage: React.FC = () => {
         },
       },
     },
-    { title: '标题', dataIndex: 'title', ellipsis: true },
-    { title: '文件', dataIndex: 'originalFileName', ellipsis: true, hideInSearch: true },
+    { title: intl.formatMessage({ id: 'pages.knowledge.document.documentTitle' }), dataIndex: 'title', ellipsis: true },
+    { title: intl.formatMessage({ id: 'pages.knowledge.document.file' }), dataIndex: 'originalFileName', ellipsis: true, hideInSearch: true },
     {
-      title: '发布版本',
+      title: intl.formatMessage({ id: 'pages.knowledge.document.publishedVersion' }),
       dataIndex: 'currentPublishedVersionNo',
       valueType: 'digit',
       hideInSearch: true,
     },
     {
-      title: '审查状态',
+      title: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus' }),
       dataIndex: 'reviewStatus',
       valueType: 'select',
       valueEnum: {
-        DRAFT: { text: '草稿' },
-        AI_REVIEWING: { text: 'AI 审查中' },
-        AI_REVIEWED: { text: '待处理建议' },
-        SUBMITTED: { text: '人工审批中' },
-        APPROVED: { text: '已通过' },
-        REJECTED: { text: '已拒绝' },
+        DRAFT: { text: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.draft' }) },
+        AI_REVIEWING: { text: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.aiReviewing' }) },
+        AI_REVIEWED: { text: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.recommendationsPending' }) },
+        SUBMITTED: { text: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.humanReviewing' }) },
+        APPROVED: { text: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.approved' }) },
+        REJECTED: { text: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.rejected' }) },
       },
     },
-    { title: '分块数', dataIndex: 'chunkCount', valueType: 'digit', hideInSearch: true },
+    { title: intl.formatMessage({ id: 'pages.knowledge.document.chunkCount' }), dataIndex: 'chunkCount', valueType: 'digit', hideInSearch: true },
     {
-      title: '索引状态',
+      title: intl.formatMessage({ id: 'pages.knowledge.document.indexStatus' }),
       dataIndex: 'indexStatus',
       valueType: 'select',
       valueEnum: {
-        0: { text: '未索引' },
-        1: { text: '索引中' },
-        2: { text: '已完成' },
-        3: { text: '失败' },
+        0: { text: intl.formatMessage({ id: 'pages.knowledge.document.indexStatus.notIndexed' }) },
+        1: { text: intl.formatMessage({ id: 'pages.knowledge.document.indexStatus.indexing' }) },
+        2: { text: intl.formatMessage({ id: 'pages.knowledge.document.indexStatus.completed' }) },
+        3: { text: intl.formatMessage({ id: 'pages.knowledge.document.indexStatus.failed' }) },
       },
       render: (_: unknown, record: Document) => {
         const item = getIndexStatus(record.indexStatus)
         return (
           <Tag color={record.indexStatus === 3 ? 'error' : item.color}>
-            {record.indexStatus === 3 ? '失败' : item.label}
+            {record.indexStatus === 3 ? intl.formatMessage({ id: 'pages.knowledge.document.indexStatus.failed' }) : item.label}
           </Tag>
         )
       },
     },
     {
-      title: '处理状态',
+      title: intl.formatMessage({ id: 'pages.knowledge.document.processingStatus' }),
       dataIndex: 'status',
       hideInSearch: true,
       render: (_: unknown, record: Document) => {
@@ -136,10 +137,10 @@ const KnowledgeDocumentPage: React.FC = () => {
         return <Tag color={item.color}>{item.label}</Tag>
       },
     },
-    { title: '索引错误', dataIndex: 'indexErrorMessage', hideInSearch: true, ellipsis: true },
-    { title: '更新时间', dataIndex: 'updatedAt', valueType: 'dateTime', hideInSearch: true },
+    { title: intl.formatMessage({ id: 'pages.knowledge.document.indexError' }), dataIndex: 'indexErrorMessage', hideInSearch: true, ellipsis: true },
+    { title: intl.formatMessage({ id: 'pages.common.updateTime' }), dataIndex: 'updatedAt', valueType: 'dateTime', hideInSearch: true },
     {
-      title: '操作',
+      title: intl.formatMessage({ id: 'pages.common.option' }),
       valueType: 'option',
       key: 'option',
       fixed: 'right',
@@ -153,9 +154,9 @@ const KnowledgeDocumentPage: React.FC = () => {
           record.originalFileName ? (
             <TemporaryUrlPreviewModal
               key="preview"
-              title={record.originalFileName || record.title || '文件预览'}
+              title={record.originalFileName || record.title || intl.formatMessage({ id: 'pages.knowledge.document.filePreview' })}
               getUrl={() => getDocumentPreviewUrl(record.id!)}
-              triggerText="预览"
+              triggerText={intl.formatMessage({ id: 'pages.knowledge.document.preview' })}
             />
           ) : null,
           <TableActionMenu
@@ -163,13 +164,13 @@ const KnowledgeDocumentPage: React.FC = () => {
             items={[
               {
                 key: 'workspace',
-                label: '审查工作台',
+                label: intl.formatMessage({ id: 'pages.knowledge.document.reviewWorkspace' }),
                 primary: true,
                 onClick: () => history.push(`/knowledge/document/detail?id=${record.id}`),
               },
               {
                 key: 'edit',
-                label: '编辑',
+                label: intl.formatMessage({ id: 'pages.knowledge.document.edit' }),
                 visible: editable,
                 onClick: () => {
                   setDocumentId(record.id)
@@ -179,28 +180,28 @@ const KnowledgeDocumentPage: React.FC = () => {
               },
               {
                 key: 'versions',
-                label: '版本历史',
+                label: intl.formatMessage({ id: 'pages.knowledge.document.versionHistory' }),
                 onClick: () => setVersionDocument(record),
               },
               {
                 key: 'reindex',
-                label: '重建索引',
+                label: intl.formatMessage({ id: 'pages.knowledge.document.reindex' }),
                 visible: canReindex,
                 loading: reindexingId === record.id,
                 onClick: () => reindex(record),
               },
               {
                 key: 'delete',
-                label: '删除',
+                label: intl.formatMessage({ id: 'pages.common.delete' }),
                 danger: true,
                 visible: canDelete,
-                confirm: { title: '确认删除该文档？' },
+                confirm: { title: intl.formatMessage({ id: 'pages.knowledge.document.deleteConfirm' }) },
                 onClick: async () => {
                   const response = await deleteDocument(record.id!)
                   if (response.code === 200) {
-                    message.success(response.message || '删除成功')
+                    message.success(response.message || intl.formatMessage({ id: 'pages.knowledge.document.deleteSuccess' }))
                     reload()
-                  } else message.error(response.message || '删除失败')
+                  } else message.error(response.message || intl.formatMessage({ id: 'pages.knowledge.document.deleteFailed' }))
                 },
               },
             ]}
@@ -212,8 +213,8 @@ const KnowledgeDocumentPage: React.FC = () => {
 
   return (
     <PageContainer
-      title="文档管理"
-      extra={<Button onClick={() => history.push('/knowledge/base')}>知识库管理</Button>}
+      title={intl.formatMessage({ id: 'pages.knowledge.document.title' })}
+      extra={<Button onClick={() => history.push('/knowledge/base')}>{intl.formatMessage({ id: 'pages.knowledge.document.knowledgeBaseManagement' })}</Button>}
     >
       <ProTable<Document>
         actionRef={actionRef}
@@ -230,14 +231,14 @@ const KnowledgeDocumentPage: React.FC = () => {
                 key="upload"
                 accept=".txt,.md,.pdf,.docx"
                 allowedExtensions={['txt', 'md', 'pdf', 'docx']}
-                title="上传知识库文件"
+                title={intl.formatMessage({ id: 'pages.knowledge.document.uploadTitle' })}
                 extraFields={
                   <>
                     <ProFormSelect
                       name="selectedKnowledgeBaseId"
-                      label="知识库"
-                      placeholder="请选择知识库"
-                      rules={[{ required: true, message: '请选择知识库' }]}
+                      label={intl.formatMessage({ id: 'pages.knowledge.document.knowledgeBase' })}
+                      placeholder={intl.formatMessage({ id: 'pages.knowledge.document.selectKnowledgeBase' })}
+                      rules={[{ required: true, message: intl.formatMessage({ id: 'pages.knowledge.document.selectKnowledgeBase' }) }]}
                       request={async () => {
                         const response = await getKnowledgeBaseList({
                           current: 1,
@@ -250,9 +251,9 @@ const KnowledgeDocumentPage: React.FC = () => {
                     />
                     <ProFormText
                       name="title"
-                      label="标题"
-                      placeholder="请输入标题"
-                      rules={[{ required: true, message: '请输入标题' }]}
+                      label={intl.formatMessage({ id: 'pages.knowledge.document.documentTitle' })}
+                      placeholder={intl.formatMessage({ id: 'pages.knowledge.document.enterTitle' })}
+                      rules={[{ required: true, message: intl.formatMessage({ id: 'pages.knowledge.document.enterTitle' }) }]}
                     />
                   </>
                 }

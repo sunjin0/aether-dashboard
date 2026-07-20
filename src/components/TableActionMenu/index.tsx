@@ -2,6 +2,7 @@
 import { Button, Dropdown, Popconfirm, Space } from 'antd'
 import type { MenuProps } from 'antd'
 import React from 'react'
+import { useIntl } from '@umijs/max'
 
 export interface TableActionItem {
   key: string
@@ -26,6 +27,7 @@ interface TableActionMenuProps {
 }
 
 const TableActionMenu: React.FC<TableActionMenuProps> = ({ items, maxPrimary = 3 }) => {
+  const intl = useIntl()
   const visibleItems = items.filter((item) => item.visible !== false)
   const primaryItems = visibleItems.filter((item) => item.primary).slice(0, maxPrimary)
   const primaryKeys = new Set(primaryItems.map((item) => item.key))
@@ -52,7 +54,7 @@ const TableActionMenu: React.FC<TableActionMenuProps> = ({ items, maxPrimary = 3
       ))}
       {moreItems.length > 0 && (
         <Dropdown menu={{ items: menuItems }} trigger={['click']}>
-          <Button type="link">更多 <DownOutlined /></Button>
+          <Button type="link">{intl.formatMessage({ id: 'components.tableActionMenu.more' })} <DownOutlined /></Button>
         </Dropdown>
       )}
     </Space>
@@ -60,4 +62,3 @@ const TableActionMenu: React.FC<TableActionMenuProps> = ({ items, maxPrimary = 3
 }
 
 export default TableActionMenu
-

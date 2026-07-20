@@ -12,6 +12,7 @@ import { Button, Form, message, Modal, Select, Tag } from 'antd'
 import React, { useEffect, useRef, useState } from 'react'
 import { getSwitchStatus } from '@/pages/agent/knowledge-base/status'
 import TableActionMenu from '@/components/TableActionMenu'
+import { useIntl } from '@umijs/max'
 
 interface AgentKnowledgeBaseBindingProps {
   agentId: string;
@@ -20,6 +21,8 @@ interface AgentKnowledgeBaseBindingProps {
 }
 
 const AgentKnowledgeBaseBinding: React.FC<AgentKnowledgeBaseBindingProps> = ({ agentId, open }) => {
+  const intl = useIntl()
+  const format = (id: string) => intl.formatMessage({ id })
   const ref = useRef<ActionType>()
   const [bindOpen, setBindOpen] = useState(false)
   const [options, setOptions] = useState<{ label: string; value: string }[]>([])
@@ -32,14 +35,14 @@ const AgentKnowledgeBaseBinding: React.FC<AgentKnowledgeBaseBindingProps> = ({ a
   const openBindingForm = async () => {
     const response = await getKnowledgeBaseList({ current: 1, pageSize: 1000, status: 1 })
     if (response.code !== 200) {
-      message.error(response.message || '加载知识库失败')
+      message.error(response.message || format('pages.agent.knowledgeBase.loadFailed'))
       return
     }
     setOptions(
       (response.data || [])
         .filter((item) => item.id && item.status === 1 && item.indexStatus === 2)
         .map((item) => ({
-          label: `${item.name || item.id}（${item.scope === 'PLATFORM' ? '平台级' : 'Agent 专属'}）`,
+          label: `${item.name || item.id} (${item.scope === 'PLATFORM' ? format('pages.agent.knowledgeBase.platform') : format('pages.agent.knowledgeBase.agentOnly')})`,
           value: item.id as string,
         })),
     )
@@ -55,32 +58,32 @@ const AgentKnowledgeBaseBinding: React.FC<AgentKnowledgeBaseBindingProps> = ({ a
       status: 1,
     })
     if (response.code === 200) {
-      message.success(response.message || '绑定成功')
+      message.success(response.message || format('pages.agent.definition.bindSuccess'))
       setBindOpen(false)
       ref.current?.reload()
-    } else message.error(response.message || '绑定失败')
+    } else message.error(response.message || format('pages.agent.definition.bindFailed'))
   }
 
   const columns: any[] = [
-    { title: '知识库名称', dataIndex: 'knowledgeBaseName', ellipsis: true },
+    { title: format('pages.agent.knowledgeBase.name'), dataIndex: 'knowledgeBaseName', ellipsis: true },
     {
-      title: '范围',
+      title: format('pages.agent.knowledgeBase.scope'),
       dataIndex: 'scope',
       valueType: 'select',
-      valueEnum: { PLATFORM: { text: '平台级' }, AGENT: { text: 'Agent 专属' } },
+      valueEnum: { PLATFORM: { text: format('pages.agent.knowledgeBase.platform') }, AGENT: { text: format('pages.agent.knowledgeBase.agentOnly') } },
     },
     {
-      title: '状态',
+      title: format('pages.common.status'),
       dataIndex: 'status',
       valueType: 'select',
-      valueEnum: { 0: { text: '禁用' }, 1: { text: '启用' } },
+      valueEnum: { 0: { text: format('pages.common.disabled') }, 1: { text: format('pages.common.enabled') } },
       render: (_: unknown, record: KnowledgeBaseBinding) => {
         const item = getSwitchStatus(record.status)
         return <Tag color={item.color}>{item.label}</Tag>
       },
     },
     {
-      title: '操作',
+      title: format('pages.common.option'),
       valueType: 'option',
       key: 'option',
       fixed: 'right',
@@ -88,8 +91,8 @@ const AgentKnowledgeBaseBinding: React.FC<AgentKnowledgeBaseBindingProps> = ({ a
       render: (_: unknown, record: KnowledgeBaseBinding) => (
         <TableActionMenu
           items={[
-            { key: 'status', label: record.status === 1 ? '禁用' : '启用', confirm: { title: `确认${record.status === 1 ? '禁用' : '启用'}该绑定？` }, onClick: async () => { if (!record.id) return; const response = await updateKnowledgeBaseBindingStatus(record.id, { status: record.status === 1 ? 0 : 1 }); if (response.code === 200) { message.success(response.message || '操作成功'); ref.current?.reload() } else message.error(response.message || '操作失败') } },
-            { key: 'delete', label: '解绑', danger: true, confirm: { title: '确认解绑该知识库？' }, onClick: async () => { if (!record.id) return; const response = await deleteKnowledgeBaseBinding(record.id); if (response.code === 200) { message.success(response.message || '解绑成功'); ref.current?.reload() } else message.error(response.message || '解绑失败') } },
+            { key: 'status', label: record.status === 1 ? format('pages.common.disabled') : format('pages.common.enabled'), confirm: { title: format('pages.agent.definition.bindingStatusConfirm') }, onClick: async () => { if (!record.id) return; const response = await updateKnowledgeBaseBindingStatus(record.id, { status: record.status === 1 ? 0 : 1 }); if (response.code === 200) { message.success(response.message || format('pages.agent.definition.operationSuccess')); ref.current?.reload() } else message.error(response.message || format('pages.agent.definition.operationFailed')) } },
+            { key: 'delete', label: format('pages.agent.tool.unbind'), danger: true, confirm: { title: format('pages.agent.definition.unbindKnowledgeBaseConfirm') }, onClick: async () => { if (!record.id) return; const response = await deleteKnowledgeBaseBinding(record.id); if (response.code === 200) { message.success(response.message || format('pages.agent.definition.unbindSuccess')); ref.current?.reload() } else message.error(response.message || format('pages.agent.definition.unbindFailed')) } },
           ]}
         />
       ),
@@ -110,12 +113,12 @@ const AgentKnowledgeBaseBinding: React.FC<AgentKnowledgeBaseBindingProps> = ({ a
         request={(params) => getKnowledgeBaseBindingList({ ...params, agentDefinitionId: agentId })}
         toolBarRender={() => [
           <Button key="bind" icon={<PlusOutlined />} type="primary" onClick={openBindingForm}>
-            绑定已有知识库
+            {format('pages.agent.definition.bindExistingKnowledgeBase')}
           </Button>,
         ]}
       />
       <Modal
-        title="绑定已有知识库"
+        title={format('pages.agent.definition.bindExistingKnowledgeBase')}
         open={bindOpen}
         onOk={bind}
         onCancel={() => {
@@ -126,14 +129,14 @@ const AgentKnowledgeBaseBinding: React.FC<AgentKnowledgeBaseBindingProps> = ({ a
         <Form form={form} layout="vertical">
           <Form.Item
             name="knowledgeBaseId"
-            label="知识库"
-            rules={[{ required: true, message: '请选择知识库' }]}
+            label={format('pages.agent.knowledgeBase.name')}
+            rules={[{ required: true, message: format('pages.agent.knowledgeBase.select') }]}
           >
             <Select
               showSearch
               options={options}
               optionFilterProp="label"
-              placeholder="请选择知识库"
+              placeholder={format('pages.agent.knowledgeBase.select')}
             />
           </Form.Item>
         </Form>

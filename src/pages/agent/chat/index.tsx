@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { PageContainer } from '@ant-design/pro-components'
+import { useIntl } from '@umijs/max'
 import {
   Button,
   Checkbox,
@@ -70,14 +71,14 @@ type ChatTurnState = 'idle' | 'streaming' | 'waiting_user' | 'submitting_answer'
 
 const createClientId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random()}`
 
-const quickStartQuestions = [
-  '帮我写一个Hello World',
-  '解释一下机器学习',
-  '推荐一些学习资源',
-  '如何提高代码质量',
-]
-
 const ChatDebugPage: React.FC = () => {
+  const intl = useIntl()
+  const quickStartQuestions = [
+    intl.formatMessage({ id: 'pages.agent.chat.quickStart.helloWorld' }),
+    intl.formatMessage({ id: 'pages.agent.chat.quickStart.machineLearning' }),
+    intl.formatMessage({ id: 'pages.agent.chat.quickStart.learningResources' }),
+    intl.formatMessage({ id: 'pages.agent.chat.quickStart.codeQuality' }),
+  ]
   const [agents, setAgents] = useState<AgentDefinition[]>([])
   const [agentId, setAgentId] = useState<string>()
   const [conversationId, setConversationId] = useState<string>()
@@ -139,7 +140,7 @@ const ChatDebugPage: React.FC = () => {
       if (code === 200) {
         setAgents(data || [])
       } else {
-        message.error(msg || '加载 Agent 列表失败')
+        message.error(msg || intl.formatMessage({ id: 'pages.agent.chat.loadAgentsFailed' }))
       }
     } finally {
       setLoadingAgents(false)
@@ -161,7 +162,7 @@ const ChatDebugPage: React.FC = () => {
       if (code === 200) {
         setConversations(data || [])
       } else {
-        message.error(msg || '加载会话列表失败')
+        message.error(msg || intl.formatMessage({ id: 'pages.agent.chat.loadConversationsFailed' }))
       }
     } finally {
       setLoadingConversations(false)
@@ -183,7 +184,7 @@ const ChatDebugPage: React.FC = () => {
       if (code === 200) {
         setConversationMessages(data || [])
       } else {
-        message.error(msg || '加载消息列表失败')
+        message.error(msg || intl.formatMessage({ id: 'pages.agent.chat.loadMessagesFailed' }))
       }
     } finally {
       setLoadingMessages(false)
@@ -346,7 +347,7 @@ const ChatDebugPage: React.FC = () => {
 
   const handleReplyQuestion = async (answers: Record<string, AskUserAnswer>) => {
     if (chatTurnState !== 'waiting_user' || !pendingQuestionMessage) {
-      message.error('请等待上一个问题处理完成')
+      message.error(intl.formatMessage({ id: 'pages.agent.chat.waitPreviousQuestion' }))
       return
     }
 
@@ -354,7 +355,7 @@ const ChatDebugPage: React.FC = () => {
     const questionConversationId = pendingQuestionMessage.conversationId || conversationId
 
     if (!questionMessageId || !questionConversationId) {
-      message.error('提问消息信息不完整')
+      message.error(intl.formatMessage({ id: 'pages.agent.chat.incompleteQuestion' }))
       return
     }
 
@@ -399,7 +400,9 @@ const ChatDebugPage: React.FC = () => {
           } else if ('confirmed' in userAnswer) {
             answersWithLabels[q.id] = {
               confirmed: userAnswer.confirmed,
-              label: userAnswer.confirmed ? q.confirmText || '确认' : q.cancelText || '取消',
+              label: userAnswer.confirmed
+                ? q.confirmText || intl.formatMessage({ id: 'pages.agent.chat.confirm' })
+                : q.cancelText || intl.formatMessage({ id: 'pages.agent.chat.cancel' }),
               answeredAt: Date.now(),
             }
           }
@@ -479,7 +482,7 @@ const ChatDebugPage: React.FC = () => {
         onError: (data) => {
           terminalEventReceived = true
           flushTypewriterQueue(assistantClientId)
-          const errorMsg = data.message || '回复失败'
+          const errorMsg = data.message || intl.formatMessage({ id: 'pages.agent.chat.replyFailed' })
           markAssistantError(assistantClientId, errorMsg)
           message.error(errorMsg)
           setChatTurnState('error')
@@ -571,11 +574,11 @@ const ChatDebugPage: React.FC = () => {
       }
       if (!terminalEventReceived) {
         flushTypewriterQueue(assistantClientId)
-        markAssistantError(assistantClientId, '连接已断开')
+        markAssistantError(assistantClientId, intl.formatMessage({ id: 'pages.agent.chat.connectionClosed' }))
       }
     } catch (error: any) {
       if (error?.response?.status === 409 || error?.status === 409) {
-        message.warning('提问已处理或已过期')
+        message.warning(intl.formatMessage({ id: 'pages.agent.chat.questionExpired' }))
         if (questionConversationId) {
           await loadMessages(questionConversationId)
         }
@@ -585,7 +588,7 @@ const ChatDebugPage: React.FC = () => {
         markAssistantStopped(assistantClientId)
         setChatTurnState('idle')
       } else {
-        const errorMsg = error instanceof Error ? error.message : '回复失败'
+        const errorMsg = error instanceof Error ? error.message : intl.formatMessage({ id: 'pages.agent.chat.replyFailed' })
         flushTypewriterQueue(assistantClientId)
         markAssistantError(assistantClientId, errorMsg)
         message.error(errorMsg)
@@ -609,11 +612,11 @@ const ChatDebugPage: React.FC = () => {
       : undefined
     const sendAgentId = conversationAgentId || agentId
     if (!sendAgentId) {
-      message.error('请选择 Agent')
+      message.error(intl.formatMessage({ id: 'pages.agent.chat.selectAgent' }))
       return
     }
     if (!content) {
-      message.error('请输入消息内容')
+      message.error(intl.formatMessage({ id: 'pages.agent.chat.enterMessage' }))
       return
     }
 
@@ -684,7 +687,7 @@ const ChatDebugPage: React.FC = () => {
         onError: (data) => {
           terminalEventReceived = true
           flushTypewriterQueue(assistantClientId)
-          const errorMsg = data.message || '生成失败'
+          const errorMsg = data.message || intl.formatMessage({ id: 'pages.agent.chat.generateFailed' })
           markAssistantError(assistantClientId, errorMsg)
           message.error(errorMsg)
           setChatTurnState('error')
@@ -770,7 +773,7 @@ const ChatDebugPage: React.FC = () => {
       }
       if (!terminalEventReceived && !stoppedByUserRef.current) {
         flushTypewriterQueue(assistantClientId)
-        markAssistantError(assistantClientId, '连接已断开')
+        markAssistantError(assistantClientId, intl.formatMessage({ id: 'pages.agent.chat.connectionClosed' }))
       }
       if (shouldReloadConversations) {
         await loadConversations()
@@ -781,10 +784,10 @@ const ChatDebugPage: React.FC = () => {
         setChatTurnState('idle')
         return
       }
-      const errorMsg = error instanceof Error ? error.message : '发送失败'
+      const errorMsg = error instanceof Error ? error.message : intl.formatMessage({ id: 'pages.agent.chat.sendFailed' })
       flushTypewriterQueue(assistantClientId)
       markAssistantError(assistantClientId, errorMsg)
-      message.error(errorMsg || '发送失败')
+      message.error(errorMsg || intl.formatMessage({ id: 'pages.agent.chat.sendFailed' }))
       setChatTurnState('error')
     } finally {
       setSending(false)
@@ -806,7 +809,7 @@ const ChatDebugPage: React.FC = () => {
   }
 
   const renderConversationTitle = (item: AgentConversation) => {
-    return item.title || item.createdAt || item.id || '未命名会话'
+    return item.title || item.createdAt || item.id || intl.formatMessage({ id: 'pages.agent.chat.untitledConversation' })
   }
 
   const renderTimeGroup = (date: string) => {
@@ -814,11 +817,11 @@ const ChatDebugPage: React.FC = () => {
     const target = new Date(date)
     const diffDays = Math.floor((now.getTime() - target.getTime()) / (1000 * 60 * 60 * 24))
 
-    if (diffDays === 0) return '今天'
-    if (diffDays === 1) return '昨天'
-    if (diffDays < 7) return '最近7天'
-    if (diffDays < 30) return '最近30天'
-    return '更早'
+    if (diffDays === 0) return intl.formatMessage({ id: 'pages.agent.chat.today' })
+    if (diffDays === 1) return intl.formatMessage({ id: 'pages.agent.chat.yesterday' })
+    if (diffDays < 7) return intl.formatMessage({ id: 'pages.agent.chat.recentWeek' })
+    if (diffDays < 30) return intl.formatMessage({ id: 'pages.agent.chat.recentMonth' })
+    return intl.formatMessage({ id: 'pages.agent.chat.earlier' })
   }
 
   const groupedConversations = useMemo(() => {
@@ -850,7 +853,7 @@ const ChatDebugPage: React.FC = () => {
   return (
     <PageContainer
       header={{
-        title: '会话',
+        title: intl.formatMessage({ id: 'pages.agent.chat.title' }),
         breadcrumb: undefined,
       }}
     >
@@ -863,7 +866,7 @@ const ChatDebugPage: React.FC = () => {
             <>
               <div className="agent-chat-sidebar-header">
                 <Select
-                  placeholder="选择 Agent"
+                  placeholder={intl.formatMessage({ id: 'pages.agent.chat.selectAgentPlaceholder' })}
                   loading={loadingAgents}
                   value={activeAgentId}
                   disabled={sending}
@@ -884,7 +887,7 @@ const ChatDebugPage: React.FC = () => {
                       value: item.id,
                     }))}
                 />
-                <Tooltip title="新建会话">
+                <Tooltip title={intl.formatMessage({ id: 'pages.agent.chat.newConversation' })}>
                   <Button
                     type="primary"
                     icon={<PlusOutlined />}
@@ -896,7 +899,7 @@ const ChatDebugPage: React.FC = () => {
 
               <div className="agent-chat-sidebar-search">
                 <Input
-                  placeholder="搜索会话..."
+                  placeholder={intl.formatMessage({ id: 'pages.agent.chat.searchConversations' })}
                   prefix={<SearchOutlined />}
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
@@ -939,7 +942,7 @@ const ChatDebugPage: React.FC = () => {
                   {Object.keys(groupedConversations).length === 0 && (
                     <Empty
                       image={Empty.PRESENTED_IMAGE_SIMPLE}
-                      description={searchText ? '没有找到匹配的会话' : '暂无会话'}
+                      description={intl.formatMessage({ id: searchText ? 'pages.agent.chat.noMatchingConversations' : 'pages.agent.chat.noConversations' })}
                       style={{ padding: '40px 0' }}
                     />
                   )}
@@ -955,7 +958,7 @@ const ChatDebugPage: React.FC = () => {
           <div className="agent-chat-panel-header">
             <div className="agent-chat-panel-info">
               <div className="agent-chat-panel-title">
-                <Tooltip title={sidebarCollapsed ? '展开侧边栏' : '收起侧边栏'}>
+                <Tooltip title={intl.formatMessage({ id: sidebarCollapsed ? 'pages.agent.chat.expandSidebar' : 'pages.agent.chat.collapseSidebar' })}>
                   <Button
                     type="text"
                     icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
@@ -963,7 +966,7 @@ const ChatDebugPage: React.FC = () => {
                   />
                 </Tooltip>
                 <Text strong={true} style={{ fontSize: 16 }}>
-                  {currentAgent?.name || currentAgent?.code || '未选择 Agent'}
+                  {currentAgent?.name || currentAgent?.code || intl.formatMessage({ id: 'pages.agent.chat.noAgentSelected' })}
                 </Text>
                 {currentAgent?.model && (
                   <Tag color="blue" style={{ marginLeft: 8 }}>
@@ -972,13 +975,13 @@ const ChatDebugPage: React.FC = () => {
                 )}
               </div>
               <div className="agent-chat-panel-subtitle">
-                {currentConversation ? renderConversationTitle(currentConversation) : '新会话'}
+                {currentConversation ? renderConversationTitle(currentConversation) : intl.formatMessage({ id: 'pages.agent.chat.newConversationTitle' })}
               </div>
             </div>
             <div className="agent-chat-panel-actions">
               {sending && (
                 <Button type="primary" danger icon={<ClearOutlined />} onClick={handleStop}>
-                  停止生成
+                  {intl.formatMessage({ id: 'pages.agent.chat.stopGenerating' })}
                 </Button>
               )}
             </div>
@@ -996,8 +999,8 @@ const ChatDebugPage: React.FC = () => {
                         description={
                           <span style={{ fontSize: 15, color: 'rgba(0, 0, 0, 0.45)' }}>
                             {currentAgent
-                              ? `与 ${currentAgent.name} 开始对话`
-                              : '选择一个 Agent 开始对话'}
+                              ? intl.formatMessage({ id: 'pages.agent.chat.startChatWithAgent' }, { name: currentAgent.name })
+                              : intl.formatMessage({ id: 'pages.agent.chat.selectAgentToStart' })}
                           </span>
                         }
                       >
@@ -1038,7 +1041,7 @@ const ChatDebugPage: React.FC = () => {
             {showScrollBottom && (
               <div className="agent-chat-scroll-bottom">
                 <Button icon={<ArrowDownOutlined />} onClick={handleScrollBottom}>
-                  回到底部
+                  {intl.formatMessage({ id: 'pages.agent.chat.backToBottom' })}
                 </Button>
               </div>
             )}
@@ -1048,7 +1051,7 @@ const ChatDebugPage: React.FC = () => {
           <div className="agent-chat-input-bar">
             <div className="agent-chat-thinking-bar">
               <Checkbox checked={thinking} onChange={(e) => setThinking(e.target.checked)}>
-                <span className="agent-chat-thinking-label">深度思考</span>
+                <span className="agent-chat-thinking-label">{intl.formatMessage({ id: 'pages.agent.chat.deepThinking' })}</span>
               </Checkbox>
               {thinking && (
                 <Select
@@ -1061,7 +1064,7 @@ const ChatDebugPage: React.FC = () => {
               )}
               {thinking && sending && (
                 <Tag color="processing" style={{ marginLeft: 8 }}>
-                  思考中...
+                  {intl.formatMessage({ id: 'pages.agent.chat.thinking' })}
                 </Tag>
               )}
             </div>
@@ -1075,7 +1078,7 @@ const ChatDebugPage: React.FC = () => {
                     chatTurnState === 'submitting_answer'
                   }
                   autoSize={{ minRows: 1, maxRows: 3 }}
-                  placeholder="输入消息，支持 Markdown 格式..."
+                  placeholder={intl.formatMessage({ id: 'pages.agent.chat.inputPlaceholder' })}
                   onChange={(event) => setInput(event.target.value)}
                   onPressEnter={(event) => {
                     if (!event.shiftKey) {
@@ -1098,18 +1101,18 @@ const ChatDebugPage: React.FC = () => {
                 }
                 onClick={() => handleSend()}
               >
-                发送
+                {intl.formatMessage({ id: 'pages.agent.chat.send' })}
               </Button>
             </div>
             <div className="agent-chat-input-hint">
               <span>
-                <kbd>Enter</kbd> 发送
+                <kbd>Enter</kbd> {intl.formatMessage({ id: 'pages.agent.chat.send' })}
               </span>
               <span>
-                <kbd>Shift</kbd> + <kbd>Enter</kbd> 换行
+                <kbd>Shift</kbd> + <kbd>Enter</kbd> {intl.formatMessage({ id: 'pages.agent.chat.newLine' })}
               </span>
               {currentAgent?.model && (
-                <span style={{ marginLeft: 'auto' }}>模型: {currentAgent.model}</span>
+                <span style={{ marginLeft: 'auto' }}>{intl.formatMessage({ id: 'pages.agent.chat.model' }, { model: currentAgent.model })}</span>
               )}
             </div>
           </div>

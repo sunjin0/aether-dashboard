@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react'
 import { PlusOutlined } from '@ant-design/icons'
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
 import { Button, message } from 'antd'
-import { FormattedMessage, history, useAccess } from '@@/exports'
+import { FormattedMessage, history, useAccess, useIntl } from '@@/exports'
 import ModelProviderForm from '@/pages/agent/model-provider/ModelProviderForm'
 import {
   deleteModelProviderInfo,
@@ -20,25 +20,27 @@ const ModelProviderPage: React.FC = () => {
   const permissionMap = useAccess()
   const path = history.location.pathname
   const write = permissionMap[path]
+  const intl = useIntl()
+  const format = (id: string, values?: Record<string, string>) => intl.formatMessage({ id }, values)
 
   const handleDelete = async (record: ModelProvider) => {
     if (!record.id) {
-      message.error('缺少模型供应商 ID')
+      message.error(format('pages.agent.modelProvider.missingId'))
       return
     }
 
     const { code, message: msg } = await deleteModelProviderInfo(record.id)
     if (code === 200) {
-      message.success(msg || '删除成功')
+      message.success(msg || format('pages.agent.modelProvider.deleteSuccess'))
       ref.current?.reload()
     } else {
-      message.error(msg || '删除失败')
+      message.error(msg || format('pages.agent.modelProvider.deleteFailed'))
     }
   }
 
   const handleStatusChange = async (record: ModelProvider) => {
     if (!record.id) {
-      message.error('缺少模型供应商 ID')
+      message.error(format('pages.agent.modelProvider.missingId'))
       return
     }
 
@@ -47,48 +49,48 @@ const ModelProviderPage: React.FC = () => {
       status: nextStatus,
     })
     if (code === 200) {
-      message.success(msg || '操作成功')
+      message.success(msg || format('pages.agent.modelProvider.operationSuccess'))
       ref.current?.reload()
     } else {
-      message.error(msg || '操作失败')
+      message.error(msg || format('pages.agent.modelProvider.operationFailed'))
     }
   }
 
   const columns: any[] = [
     {
-      title: '供应商名称',
+      title: format('pages.agent.modelProvider.name'),
       dataIndex: 'name',
       valueType: 'select',
       request: async () => getOptionList('Model_Provider_Name'),
       ellipsis: true,
     },
     {
-      title: '类型',
+      title: format('pages.agent.modelProvider.type'),
       dataIndex: 'type',
       valueType: 'select',
       request: async () => getOptionList('Model_Provider_Type'),
     },
     {
-      title: 'API 基础地址',
+      title: format('pages.agent.modelProvider.apiBaseUrl'),
       dataIndex: 'apiBaseUrl',
       valueType: 'text',
       ellipsis: true,
     },
     {
-      title: '默认模型',
+      title: format('pages.agent.modelProvider.defaultModel'),
       dataIndex: 'defaultModel',
       valueType: 'text',
       ellipsis: true,
     },
     {
-      title: '状态',
+      title: format('pages.common.status'),
       key: 'modelProviderStatus',
       dataIndex: 'status',
       valueType: 'select',
       request: async () => getOptionList('Agent_Status'),
     },
     {
-      title: '排序',
+      title: format('pages.common.sort.number'),
       dataIndex: 'sort',
       valueType: 'digit',
       hideInSearch: true,
@@ -101,13 +103,13 @@ const ModelProviderPage: React.FC = () => {
     //   hideInSearch: true,
     // },
     {
-      title: '创建时间',
+      title: format('pages.common.createTime'),
       dataIndex: 'createdAt',
       valueType: 'dateTime',
       hideInSearch: true,
     },
     {
-      title: '操作',
+      title: format('pages.common.option'),
       valueType: 'option',
       key: 'option',
       fixed: 'right',
@@ -118,33 +120,33 @@ const ModelProviderPage: React.FC = () => {
             items={[
               {
                 key: 'edit',
-                label: '编辑',
+                label: format('pages.common.edit'),
                 primary: true,
                 onClick: () => {
-                  setId(record.id);
-                  setOpen(true);
+                  setId(record.id)
+                  setOpen(true)
                 },
               },
               {
                 key: 'status',
-                label: record.status === 1 ? '禁用' : '启用',
+                label: record.status === 1 ? format('pages.common.disabled') : format('pages.common.enabled'),
                 primary: true,
-                confirm: { title: `确认${record.status === 1 ? '禁用' : '启用'}该模型供应商？` },
+                confirm: { title: format('pages.agent.modelProvider.statusConfirm') },
                 onClick: () => handleStatusChange(record),
               },
               {
                 key: 'delete',
-                label: '删除',
+                label: format('pages.common.delete'),
                 primary: true,
                 danger: true,
-                confirm: { title: '确认删除该模型供应商？' },
+                confirm: { title: format('pages.agent.modelProvider.deleteConfirm') },
                 onClick: () => handleDelete(record),
               },
             ]}
           />
         ),
     },
-  ];
+  ]
 
   return (
     <PageContainer>

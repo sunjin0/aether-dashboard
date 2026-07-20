@@ -48,7 +48,7 @@ const Admin: React.FC = () => {
       title: intl.formatMessage({ id: 'pages.common.avatar' }),
       dataIndex: 'avatar',
       render: (avatar: string) => (
-        <FileImage value={avatar} width={40} height={40} alt="头像" preview />
+        <FileImage value={avatar} width={40} height={40} alt={intl.formatMessage({ id: 'pages.common.avatar' })} preview />
       ),
       key: 'avatar',
       hideInSearch: true,

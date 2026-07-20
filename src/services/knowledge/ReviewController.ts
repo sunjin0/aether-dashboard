@@ -1,6 +1,8 @@
 import { request } from '@umijs/max'
 import { ResponseStructure } from '@/services/entity/Common'
 import {
+  AiReviewDiff,
+  AiReviewDiffAcceptResult,
   KnowledgeAiReview,
   KnowledgeAiReviewIssue,
   KnowledgeReviewTask,
@@ -19,6 +21,39 @@ export const getAiReviewIssues = (
   id: string,
 ): Promise<ResponseStructure<KnowledgeAiReviewIssue[]>> =>
   request(`/api/knowledge/ai-review/${id}/issues`, { method: 'GET' })
+export const getAiReviewDiff = (id: string): Promise<ResponseStructure<AiReviewDiff>> =>
+  request(`/api/knowledge/ai-review/${id}/diff`, { method: 'GET' })
+export const acceptAiReviewIssue = (
+  reviewId: string,
+  issueId: string,
+  data: { expectedChecksum: string; replacement?: string; comment?: string },
+): Promise<ResponseStructure<AiReviewDiffAcceptResult>> =>
+  request(`/api/knowledge/ai-review/${reviewId}/issues/${issueId}/accept`, { method: 'POST', data })
+export const rejectAiReviewIssue = (
+  reviewId: string,
+  issueId: string,
+  data?: { comment?: string },
+): Promise<ResponseStructure<void>> =>
+  request(`/api/knowledge/ai-review/${reviewId}/issues/${issueId}/reject`, { method: 'POST', data })
+export const acceptAiReviewIssues = (
+  reviewId: string,
+  data: { issueIds: string[]; expectedChecksum: string; comment?: string },
+): Promise<ResponseStructure<AiReviewDiffAcceptResult>> =>
+  request(`/api/knowledge/ai-review/${reviewId}/issues/accept-batch`, { method: 'POST', data })
+export const applyAcceptedAiReviewIssues = (
+  reviewId: string,
+  data: { expectedChecksum: string },
+): Promise<ResponseStructure<AiReviewDiffAcceptResult>> =>
+  request(`/api/knowledge/ai-review/${reviewId}/issues/apply`, { method: 'POST', data })
+export const unacceptAiReviewIssue = (
+  reviewId: string,
+  issueId: string,
+  data?: { comment?: string },
+): Promise<ResponseStructure<void>> =>
+  request(`/api/knowledge/ai-review/${reviewId}/issues/${issueId}/unaccept`, {
+    method: 'POST',
+    data,
+  })
 export const handleAiReviewIssue = (
   id: string,
   data: { status: 'rejected' | 'manually_fixed' | 'ignored'; comment?: string },

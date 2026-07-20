@@ -28,6 +28,10 @@ jest.mock('antd', () => ({
 jest.mock('@@/exports', () => ({
   history: { location: { pathname: '/agent/conversation' } },
   useAccess: () => ({}),
+  useIntl: () => ({
+    formatMessage: ({ id, defaultMessage }: { id: string; defaultMessage?: string }) =>
+      defaultMessage || id,
+  }),
 }))
 
 jest.mock('@/services/agent/ConversationController', () => ({}))
@@ -35,7 +39,7 @@ jest.mock('@/services/sys/DictController', () => ({}))
 jest.mock('@/components/AgentMessageBubble', () => () => null)
 
 describe('AgentConversationPage', () => {
-  it('uses a page-specific field cache key for the status dictionary', () => {
+  it('uses localized page-specific status column metadata', () => {
     render(<AgentConversationPage />)
 
     const statusColumn = mockProTable.mock.calls[0][0].columns.find(
@@ -43,5 +47,6 @@ describe('AgentConversationPage', () => {
     )
 
     expect(statusColumn.key).toBe('agent-conversation-status')
+    expect(statusColumn.title).toBe('pages.common.status')
   })
 })

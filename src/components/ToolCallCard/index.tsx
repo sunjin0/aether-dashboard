@@ -1,6 +1,7 @@
 import React from 'react'
 import { Collapse, Tag, Typography } from 'antd'
 import { AgentToolCallLog } from '@/services/entity/Agent'
+import { useIntl } from '@umijs/max'
 import './index.less'
 
 const { Text } = Typography
@@ -8,13 +9,6 @@ const { Text } = Typography
 export interface ToolCallCardProps {
   log: AgentToolCallLog;
   compact?: boolean;
-}
-
-const toolStatusMap: Record<number, { text: string; color: string }> = {
-  0: { text: '成功', color: 'success' },
-  1: { text: '失败', color: 'error' },
-  2: { text: '超时', color: 'warning' },
-  3: { text: '安全拦截', color: 'purple' },
 }
 
 const formatJSON = (json: string): string => {
@@ -35,12 +29,19 @@ const formatLatency = (ms?: number): string => {
 }
 
 const ToolCallCard: React.FC<ToolCallCardProps> = ({ log, compact }) => {
-  const statusInfo = toolStatusMap[log.status || 0] || { text: '未知', color: 'default' }
+  const intl = useIntl()
+  const toolStatusMap: Record<number, { text: string; color: string }> = {
+    0: { text: intl.formatMessage({ id: 'components.toolCallCard.status.success' }), color: 'success' },
+    1: { text: intl.formatMessage({ id: 'components.toolCallCard.status.failed' }), color: 'error' },
+    2: { text: intl.formatMessage({ id: 'components.toolCallCard.status.timeout' }), color: 'warning' },
+    3: { text: intl.formatMessage({ id: 'components.toolCallCard.status.blocked' }), color: 'purple' },
+  }
+  const statusInfo = toolStatusMap[log.status || 0] || { text: intl.formatMessage({ id: 'components.toolCallCard.status.unknown' }), color: 'default' }
 
   const header = (
     <div className="tool-call-card-header">
-      <Text type="secondary">工具：</Text>
-      <span className="tool-call-card-name">{log.toolName || '未知工具'}</span>
+      <Text type="secondary">{intl.formatMessage({ id: 'components.toolCallCard.tool' })}</Text>
+      <span className="tool-call-card-name">{log.toolName || intl.formatMessage({ id: 'components.toolCallCard.unknownTool' })}</span>
       <Tag color={statusInfo.color} className="tool-call-card-status-tag">
         {statusInfo.text}
       </Tag>
@@ -60,21 +61,21 @@ const ToolCallCard: React.FC<ToolCallCardProps> = ({ log, compact }) => {
         <div className="tool-call-card-detail">
           {log.arguments && (
             <div className="tool-call-card-section">
-              <div className="tool-call-card-label">参数</div>
+              <div className="tool-call-card-label">{intl.formatMessage({ id: 'components.toolCallCard.arguments' })}</div>
               <pre className="tool-call-card-json">{formatJSON(log.arguments)}</pre>
             </div>
           )}
 
           {log.responseBody && (
             <div className="tool-call-card-section">
-              <div className="tool-call-card-label">结果</div>
+              <div className="tool-call-card-label">{intl.formatMessage({ id: 'components.toolCallCard.result' })}</div>
               <pre className="tool-call-card-json">{formatJSON(log.responseBody)}</pre>
             </div>
           )}
 
           {log.errorMsg && (
             <div className="tool-call-card-section">
-              <div className="tool-call-card-label tool-call-card-label-error">错误</div>
+              <div className="tool-call-card-label tool-call-card-label-error">{intl.formatMessage({ id: 'components.toolCallCard.error' })}</div>
               <pre className="tool-call-card-json tool-call-card-json-error">{log.errorMsg}</pre>
             </div>
           )}

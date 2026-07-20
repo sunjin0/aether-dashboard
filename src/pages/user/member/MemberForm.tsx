@@ -37,7 +37,7 @@ const MemberForm = (props: {
       <ProFormText name={'id'} hidden={true} />
       <ProFormText
         name={'username'}
-        label={'用户名'}
+        label={intl.formatMessage({ id: 'pages.user.member.username' })}
         required
         rules={[
           {
@@ -47,7 +47,7 @@ const MemberForm = (props: {
       />
       <ProFormText
         name={'password'}
-        label={'密码'}
+        label={intl.formatMessage({ id: 'pages.common.password' })}
         required
         rules={[
           {
@@ -57,7 +57,7 @@ const MemberForm = (props: {
       />
       <ProFormText
         name={'nickname'}
-        label={'昵称'}
+        label={intl.formatMessage({ id: 'pages.user.member.nickname' })}
         required
         rules={[
           {
@@ -67,7 +67,7 @@ const MemberForm = (props: {
       />
       <ProFormText
         name={'email'}
-        label={'邮箱'}
+        label={intl.formatMessage({ id: 'pages.common.email' })}
         required
         rules={[
           {
@@ -77,7 +77,7 @@ const MemberForm = (props: {
       />
       <ProFormText
         name={'phone'}
-        label={'手机号'}
+        label={intl.formatMessage({ id: 'pages.common.phone' })}
         required
         rules={[
           {

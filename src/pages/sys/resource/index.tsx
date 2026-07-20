@@ -43,9 +43,9 @@ const Resource: React.FC = () => {
       valueType: 'select',
       request: async () => {
         try {
-          return await getOptionList('Resource_Type', false);
+          return await getOptionList('Resource_Type', false)
         } catch {
-          return [];
+          return []
         }
       },
       key: 'type',
@@ -76,8 +76,8 @@ const Resource: React.FC = () => {
                 label: intl.formatMessage({ id: 'pages.common.edit' }),
                 primary: true,
                 onClick: () => {
-                  setId(record.id);
-                  setOpen(true);
+                  setId(record.id)
+                  setOpen(true)
                 },
               },
               {
@@ -87,17 +87,17 @@ const Resource: React.FC = () => {
                 danger: true,
                 confirm: { title: intl.formatMessage({ id: 'pages.confirm.delete' }) },
                 onClick: async () => {
-                  const { code, message: msg } = await deleteResourceInfo(record);
-                  action?.reload();
-                  if (code === 200) message.success(msg);
-                  else message.error(msg);
+                  const { code, message: msg } = await deleteResourceInfo(record)
+                  action?.reload()
+                  if (code === 200) message.success(msg)
+                  else message.error(msg)
                 },
               },
             ]}
           />
         ),
     },
-  ];
+  ]
   return (
     <PageContainer>
       <ProTable

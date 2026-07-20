@@ -17,13 +17,6 @@ import { useIntl } from '@umijs/max'
 import JsonDisplay from '@/components/JsonDisplay'
 import React, { useState } from 'react'
 
-const toolTypeOptions = [
-  { label: '信息库', value: 'knowledge' },
-  { label: '运维', value: 'ops' },
-  { label: '开发', value: 'dev' },
-  { label: '通用', value: 'general' },
-]
-
 const AgentToolForm = (props: {
   id?: string;
   open?: boolean;
@@ -88,9 +81,9 @@ const AgentToolForm = (props: {
       <ProFormTextArea name="description" label={format('pages.common.description')} />
       <ProFormSelect
         name="toolType"
-        label="业务类型"
+        label={format('pages.agent.tool.businessType')}
         request={async () => getOptionList('Agent_Tool_Business_Type')}
-        placeholder="请选择业务类型"
+        placeholder={format('pages.agent.tool.selectBusinessType')}
       />
       <ProFormSelect
         name="mcpServerId"
@@ -111,7 +104,7 @@ const AgentToolForm = (props: {
       <Form.Item label={format('pages.agent.tool.inputSchema')}>
         <Segmented
           options={[
-            { label: '编辑', value: 'edit' },
+            { label: format('pages.common.edit'), value: 'edit' },
             { label: format('pages.agent.tool.schemaPreview'), value: 'preview' },
           ]}
           value={schemaMode}

@@ -1,5 +1,6 @@
 ﻿import { Button, message, Modal } from 'antd'
 import React, { useState } from 'react'
+import { useIntl } from '@umijs/max'
 
 export interface TemporaryUrlResult {
   code?: number;
@@ -19,12 +20,13 @@ interface TemporaryUrlPreviewModalProps {
 
 const TemporaryUrlPreviewModal: React.FC<TemporaryUrlPreviewModalProps> = ({
   getUrl,
-  title = '文件预览',
-  triggerText = '预览/下载',
+  title,
+  triggerText,
   disabled,
   width = '90vw',
   previewHeight = '75vh',
 }) => {
+  const intl = useIntl()
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
   const [url, setUrl] = useState<string>()
@@ -38,7 +40,7 @@ const TemporaryUrlPreviewModal: React.FC<TemporaryUrlPreviewModalProps> = ({
         setUrl(response.data)
         setOpen(true)
       } else {
-        message.error(response.message || '获取预览链接失败')
+        message.error(response.message || intl.formatMessage({ id: 'components.temporaryUrlPreviewModal.getUrlFailed' }))
       }
     } finally {
       setLoading(false)
@@ -53,16 +55,16 @@ const TemporaryUrlPreviewModal: React.FC<TemporaryUrlPreviewModalProps> = ({
   return (
     <>
       <Button type="link" loading={loading} disabled={disabled} onClick={showPreview}>
-        {triggerText}
+        {triggerText || intl.formatMessage({ id: 'components.temporaryUrlPreviewModal.previewDownload' })}
       </Button>
       <Modal
-        title={title}
+        title={title || intl.formatMessage({ id: 'components.temporaryUrlPreviewModal.filePreview' })}
         open={open}
         onCancel={close}
         footer={
           url ? (
             <Button type="primary" href={url} target="_blank" rel="noreferrer">
-              下载文件
+              {intl.formatMessage({ id: 'components.temporaryUrlPreviewModal.download' })}
             </Button>
           ) : null
         }
@@ -71,7 +73,7 @@ const TemporaryUrlPreviewModal: React.FC<TemporaryUrlPreviewModalProps> = ({
       >
         {url && (
           <iframe
-            title={title}
+            title={title || intl.formatMessage({ id: 'components.temporaryUrlPreviewModal.filePreview' })}
             src={url}
             style={{ display: 'block', width: '100%', height: previewHeight, border: 0 }}
           />

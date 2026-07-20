@@ -3,6 +3,7 @@ import { ProFormUploadButton } from '@ant-design/pro-components'
 import { Form, message } from 'antd'
 import type { ButtonProps, FormItemProps, UploadFile, UploadProps } from 'antd'
 import React, { useEffect, useState } from 'react'
+import { useIntl } from '@umijs/max'
 import {
   createFilePreviewUrl,
   downloadFile,
@@ -50,6 +51,7 @@ const FileUploadControl: React.FC<FileUploadControlProps> = ({
   onSuccess,
   onError,
 }) => {
+  const intl = useIntl()
   const [fileList, setFileList] = useState<UploadFile[]>([])
 
   useEffect(() => {
@@ -86,11 +88,11 @@ const FileUploadControl: React.FC<FileUploadControlProps> = ({
   const validateFile = (file: File) => {
     const extension = file.name.split('.').pop()?.toLowerCase()
     if (allowedExtensions.length > 0 && (!extension || !allowedExtensions.includes(extension))) {
-      message.error(`仅支持 ${allowedExtensions.join('、')} 文件`)
+      message.error(intl.formatMessage({ id: 'components.proFormFileUpload.unsupportedType' }, { extensions: allowedExtensions.join(', ') }))
       return false
     }
     if (file.size > maxSize) {
-      message.error(`文件大小不能超过 ${Math.floor(maxSize / 1024 / 1024)} MB`)
+      message.error(intl.formatMessage({ id: 'components.proFormFileUpload.maxSize' }, { maxSize: Math.floor(maxSize / 1024 / 1024) }))
       return false
     }
     return true
@@ -99,14 +101,14 @@ const FileUploadControl: React.FC<FileUploadControlProps> = ({
   const customRequest: NonNullable<UploadProps['customRequest']> = async (options) => {
     const selectedFile = options.file as File
     if (!validateFile(selectedFile)) {
-      options.onError?.(new Error('文件校验失败'))
+      options.onError?.(new Error(intl.formatMessage({ id: 'components.proFormFileUpload.validationFailed' })))
       return
     }
 
     try {
       const response = await uploadFile(selectedFile)
       if (response.code !== 200 || !response.data?.objectKey) {
-        throw new Error(response.message || '文件上传失败')
+        throw new Error(response.message || intl.formatMessage({ id: 'components.proFormFileUpload.uploadFailed' }))
       }
 
       const result = response.data
@@ -115,7 +117,7 @@ const FileUploadControl: React.FC<FileUploadControlProps> = ({
       options.onSuccess?.(response)
     } catch (error) {
       onError?.(error)
-      options.onError?.(error instanceof Error ? error : new Error('文件上传失败'))
+      options.onError?.(error instanceof Error ? error : new Error(intl.formatMessage({ id: 'components.proFormFileUpload.uploadFailed' })))
     }
   }
 
@@ -137,7 +139,7 @@ const FileUploadControl: React.FC<FileUploadControlProps> = ({
       max={max}
       listType={mode === 'card' ? 'picture-card' : 'text'}
       icon={mode === 'card' ? <PlusOutlined /> : <UploadOutlined />}
-      title={title ?? (mode === 'card' ? '上传文件' : '选择文件')}
+      title={title ?? intl.formatMessage({ id: mode === 'card' ? 'components.proFormFileUpload.uploadFile' : 'components.proFormFileUpload.selectFile' })}
       disabled={disabled}
       buttonProps={buttonProps}
       fieldProps={{

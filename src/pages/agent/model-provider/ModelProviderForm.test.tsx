@@ -22,6 +22,11 @@ jest.mock('antd', () => ({
     useForm: () => [{}],
     useWatch: () => undefined,
   },
+}))
+jest.mock('@umijs/max', () => ({
+  useIntl: () => ({
+    formatMessage: ({ id }: { id: string }) => id,
+  }),
 }));
 (global as any).React = React
 const ModelProviderForm = require('./ModelProviderForm').default
@@ -30,8 +35,12 @@ describe('ModelProviderForm', () => {
   it('uses text inputs for the provider name and default model', () => {
     render(<ModelProviderForm onSuccess={jest.fn()} />)
 
-    expect(screen.getByRole('textbox', { name: '供应商名称' })).toBeTruthy()
-    expect(screen.getByRole('textbox', { name: '默认模型' })).toBeTruthy()
+    expect(
+      screen.getByRole('textbox', { name: 'pages.agent.modelProvider.name' }),
+    ).toBeTruthy()
+    expect(
+      screen.getByRole('textbox', { name: 'pages.agent.modelProvider.defaultModel' }),
+    ).toBeTruthy()
     expect(screen.queryByRole('combobox', { name: 'name' })).toBeNull()
     expect(screen.queryByRole('combobox', { name: 'defaultModel' })).toBeNull()
   })

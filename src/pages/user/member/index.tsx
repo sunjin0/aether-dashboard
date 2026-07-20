@@ -28,31 +28,31 @@ const Member: React.FC = () => {
   const write = permissionMap[path]
   const columns: any = [
     {
-      title: '用户名',
+      title: intl.formatMessage({ id: 'pages.user.member.username' }),
       dataIndex: 'username',
       valueType: 'test',
       ellipsis: true,
     },
     {
-      title: '密码',
+      title: intl.formatMessage({ id: 'pages.common.password' }),
       dataIndex: 'password',
       valueType: 'test',
       ellipsis: true,
     },
     {
-      title: '昵称',
+      title: intl.formatMessage({ id: 'pages.user.member.nickname' }),
       dataIndex: 'nickname',
       valueType: 'test',
       ellipsis: true,
     },
     {
-      title: '邮箱',
+      title: intl.formatMessage({ id: 'pages.common.email' }),
       dataIndex: 'email',
       valueType: 'test',
       ellipsis: true,
     },
     {
-      title: '手机号',
+      title: intl.formatMessage({ id: 'pages.common.phone' }),
       dataIndex: 'phone',
       valueType: 'test',
       ellipsis: true,

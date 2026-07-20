@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { useIntl } from '@umijs/max'
 import { Button, Modal, Typography, Spin, Space, message, Select, Avatar, Input } from 'antd'
 import {
   ThunderboltOutlined,
@@ -27,6 +28,7 @@ interface OptimizerButtonProps {
 }
 
 const OptimizerButton: React.FC<OptimizerButtonProps> = ({ prompt, onOptimized, disabled }) => {
+  const intl = useIntl()
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -136,7 +138,7 @@ ${prompt}`
               const newMessages = [...prev]
               newMessages[newMessages.length - 1] = {
                 role: 'assistant',
-                content: `[错误] ${err.message || '优化失败'}`,
+                content: intl.formatMessage({ id: 'pages.components.systemPromptEditor.errorWithMessage' }, { message: err.message || intl.formatMessage({ id: 'pages.components.systemPromptEditor.optimizeFailed' }) }),
               }
               return newMessages
             })
@@ -153,7 +155,7 @@ ${prompt}`
           const newMessages = [...prev]
           newMessages[newMessages.length - 1] = {
             role: 'assistant',
-            content: '[错误] 优化失败',
+            content: intl.formatMessage({ id: 'pages.components.systemPromptEditor.errorWithMessage' }, { message: intl.formatMessage({ id: 'pages.components.systemPromptEditor.optimizeFailed' }) }),
           }
           return newMessages
         })
@@ -204,13 +206,13 @@ ${prompt}`
         icon={<ThunderboltOutlined />}
         onClick={() => setOpen(true)}
         disabled={disabled || !prompt}
-        title={!prompt ? '请先输入提示词' : '一键优化提示词'}
+        title={!prompt ? intl.formatMessage({ id: 'pages.components.systemPromptEditor.enterPromptFirst' }) : '一键优化提示词'}
       >
-        优化
+        {intl.formatMessage({ id: 'pages.components.systemPromptEditor.optimize' })}
       </Button>
 
       <Modal
-        title="优化系统提示词"
+        title={intl.formatMessage({ id: 'pages.components.systemPromptEditor.optimizeTitle' })}
         open={open}
         onCancel={handleClose}
         footer={null}
@@ -219,12 +221,12 @@ ${prompt}`
         className="optimizer-modal"
       >
         <div style={{ marginBottom: 16 }}>
-          <Text type="secondary">与 AI 对话，逐步优化你的系统提示词</Text>
+          <Text type="secondary">{intl.formatMessage({ id: 'pages.components.systemPromptEditor.optimizeDescription' })}</Text>
         </div>
 
         <div style={{ marginBottom: 16 }}>
           <Select
-            placeholder="选择用于优化的 Agent"
+            placeholder={intl.formatMessage({ id: 'pages.components.systemPromptEditor.selectOptimizeAgent' })}
             style={{ width: '100%' }}
             value={selectedAgentId}
             onChange={setSelectedAgentId}
@@ -235,12 +237,12 @@ ${prompt}`
               label: `${agent.name} (${agent.code})`,
               value: agent.id,
             }))}
-            notFoundContent={loadingAgents ? <Spin size="small" /> : '暂无可用 Agent'}
+            notFoundContent={loadingAgents ? <Spin size="small" /> : intl.formatMessage({ id: 'pages.components.systemPromptEditor.noAvailableAgents' })}
           />
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <Text style={{ display: 'block', marginBottom: 8 }}>原始提示词</Text>
+          <Text style={{ display: 'block', marginBottom: 8 }}>{intl.formatMessage({ id: 'pages.components.systemPromptEditor.originalPrompt' })}</Text>
           <div
             style={{
               border: '1px solid #d9d9d9',
@@ -262,7 +264,7 @@ ${prompt}`
             {messages.length === 0 && selectedAgentId && (
               <div className="chat-empty">
                 <ThunderboltOutlined style={{ fontSize: 48, color: '#d9d9d9', marginBottom: 16 }} />
-                <Text type="secondary">点击"开始优化"或输入反馈来优化提示词</Text>
+                <Text type="secondary">{intl.formatMessage({ id: 'pages.components.systemPromptEditor.clickToStartOptimize' })}</Text>
               </div>
             )}
 
@@ -299,7 +301,7 @@ ${prompt}`
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={selectedAgentId ? '输入优化反馈... (Enter 发送)' : '请先选择 Agent'}
+                placeholder={selectedAgentId ? intl.formatMessage({ id: 'pages.components.systemPromptEditor.optimizeInputPlaceholder' }) : intl.formatMessage({ id: 'pages.components.systemPromptEditor.selectAgentFirst' })}
                 autoSize={{ minRows: 2, maxRows: 6 }}
                 disabled={!selectedAgentId || loading}
               />
@@ -311,11 +313,11 @@ ${prompt}`
                     onClick={() => sendMessage('请开始优化')}
                     disabled={!selectedAgentId || loading}
                   >
-                    开始优化
+                    {intl.formatMessage({ id: 'pages.components.systemPromptEditor.startOptimization' })}
                   </Button>
                 ) : loading ? (
                   <Button icon={<StopOutlined />} onClick={handleStop}>
-                    停止
+                    {intl.formatMessage({ id: 'pages.common.stop' })}
                   </Button>
                 ) : (
                   <Button
@@ -324,7 +326,7 @@ ${prompt}`
                     onClick={() => sendMessage(input)}
                     disabled={!input.trim() || !selectedAgentId}
                   >
-                    发送
+                    {intl.formatMessage({ id: 'pages.common.send' })}
                   </Button>
                 )}
               </div>
@@ -334,9 +336,9 @@ ${prompt}`
 
         <div style={{ marginTop: 16, textAlign: 'right' }}>
           <Space>
-            <Button onClick={handleClose}>取消</Button>
+            <Button onClick={handleClose}>{intl.formatMessage({ id: 'pages.common.cancel' })}</Button>
             <Button type="primary" onClick={handleUse} disabled={!lastAssistantMessage || loading}>
-              使用优化结果
+              {intl.formatMessage({ id: 'pages.components.systemPromptEditor.useOptimizationResult' })}
             </Button>
           </Space>
         </div>

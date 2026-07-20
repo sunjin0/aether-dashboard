@@ -18,6 +18,7 @@ import {
 import { getModelProviderInfo } from '@/services/agent/ModelProviderController'
 import { getAgentToolList } from '@/services/agent/ToolController'
 import { getOptionList } from '@/services/sys/DictController'
+import { useIntl } from '@umijs/max'
 
 const AgentDefinitionForm = (props: {
   id?: string;
@@ -26,6 +27,8 @@ const AgentDefinitionForm = (props: {
   onSuccess: () => void;
 }) => {
   const { id, open, setOpen, onSuccess } = props
+  const intl = useIntl()
+  const format = (id: string) => intl.formatMessage({ id })
   const [form] = Form.useForm()
 
   return (
@@ -46,18 +49,18 @@ const AgentDefinitionForm = (props: {
       form={form}
     >
       <ProFormText name="id" hidden={true} />
-      <ProFormText name="name" label="Agent 名称" rules={[{ required: true }]} />
-      <ProFormText name="code" label="Agent 编码" rules={[{ required: true }]} />
-      <ProFormTextArea name="description" label="描述" />
-      <Form.Item name="systemPrompt" label="系统提示词">
+      <ProFormText name="name" label={format('pages.agent.definition.name')} rules={[{ required: true }]} />
+      <ProFormText name="code" label={format('pages.agent.definition.code')} rules={[{ required: true }]} />
+      <ProFormTextArea name="description" label={format('pages.common.description')} />
+      <Form.Item name="systemPrompt" label={format('pages.agent.definition.systemPrompt')}>
         <SystemPromptEditor
           agentName={form.getFieldValue('name')}
-          placeholder="输入系统提示词，或使用 AI 生成/模板..."
+          placeholder={format('pages.agent.definition.systemPromptPlaceholder')}
         />
       </Form.Item>
       <ProFormSelect
         name="modelProviderId"
-        label="模型供应商"
+        label={format('pages.agent.definition.modelProvider')}
         showSearch={true}
         rules={[{ required: true }]}
         request={async () => getModelProviderList()}
@@ -72,28 +75,28 @@ const AgentDefinitionForm = (props: {
           },
         }}
       />
-      <ProFormText name="model" label="模型名称" rules={[{ required: true }]} disabled />
-      <ProFormDigit name="temperature" label="温度参数" min={0} max={2} />
-      <ProFormDigit name="maxTokens" label="最大输出 token" min={1} fieldProps={{ precision: 0 }} />
+      <ProFormText name="model" label={format('pages.agent.definition.model')} rules={[{ required: true }]} disabled />
+      <ProFormDigit name="temperature" label={format('pages.agent.definition.temperature')} min={0} max={2} />
+      <ProFormDigit name="maxTokens" label={format('pages.agent.definition.maxTokens')} min={1} fieldProps={{ precision: 0 }} />
       <ProFormSelect
         name="status"
-        label="状态"
+        label={format('pages.common.status')}
         request={async () => getOptionList('Agent_Definition_Status')}
         rules={[{ required: true }]}
       />
       <ProFormDigit
         name="maxToolRounds"
-        label="最大工具轮次"
+        label={format('pages.agent.definition.maxToolRounds')}
         min={0}
         fieldProps={{ precision: 0 }}
       />
       <ProFormSelect
         name="accessType"
-        label="访问类型"
+        label={format('pages.agent.definition.accessType')}
         request={async () => getOptionList('Agent_Access_Type')}
       />
 
-      <ProFormSwitch name="defaultThinking" label="默认启用深度思考" />
+      <ProFormSwitch name="defaultThinking" label={format('pages.agent.definition.defaultThinking')} />
       <ProFormDependency name={['defaultThinking']}>
         {(values) => {
           if (!values.defaultThinking) {
@@ -102,9 +105,9 @@ const AgentDefinitionForm = (props: {
           return (
             <ProFormSelect
               name="defaultReasoningEffort"
-              label="默认推理力度"
+              label={format('pages.agent.definition.defaultReasoningEffort')}
               request={async () => getOptionList('Agent_Reasoning_Effort')}
-              placeholder="选择默认推理力度"
+              placeholder={format('pages.agent.definition.selectDefaultReasoningEffort')}
             />
           )
         }}
@@ -120,7 +123,7 @@ const AgentDefinitionForm = (props: {
           return (
             <ProFormSelect
               name="toolIds"
-              label="绑定工具"
+              label={format('pages.agent.tool.bind')}
               mode="multiple"
               showSearch
               request={async () => {
@@ -137,7 +140,7 @@ const AgentDefinitionForm = (props: {
                     value: item.id as string,
                   }))
               }}
-              placeholder="选择要绑定的工具（可多选）"
+              placeholder={format('pages.agent.definition.selectToolsToBind')}
             />
           )
         }}

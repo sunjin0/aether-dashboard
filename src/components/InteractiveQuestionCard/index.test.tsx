@@ -1,6 +1,36 @@
-import React from 'react'
+const React = require('react')
 import { fireEvent, render, screen } from '@testing-library/react'
 import InteractiveQuestionCard from './index'
+
+jest.mock('@umijs/max', () => ({
+  useIntl: () => ({
+    locale: 'zh-CN',
+    formatMessage: ({ id }: { id: string }, values?: Record<string, number>) => {
+      const messages: Record<string, string> = {
+        'components.interactiveQuestionCard.customInputPlaceholder': '请输入自定义内容',
+        'components.interactiveQuestionCard.confirm': '确认',
+        'components.interactiveQuestionCard.cancel': '取消',
+        'components.interactiveQuestionCard.risk.low': '低风险',
+        'components.interactiveQuestionCard.risk.medium': '中风险',
+        'components.interactiveQuestionCard.toolCallConfirmation': '工具调用确认',
+        'components.interactiveQuestionCard.tool': '工具',
+        'components.interactiveQuestionCard.riskLevel': '风险等级',
+        'components.interactiveQuestionCard.riskReason': '风险说明',
+        'components.interactiveQuestionCard.arguments': '调用参数',
+        'components.interactiveQuestionCard.choice': '选择',
+        'components.interactiveQuestionCard.required': '必填',
+        'components.interactiveQuestionCard.submit': '提交',
+        'components.interactiveQuestionCard.multipleQuestions': '多项提问',
+        'components.interactiveQuestionCard.confirmSubmit': '确认提交',
+        'components.interactiveQuestionCard.questionPrefix': '第 {number} 题',
+      }
+      if (id === 'components.interactiveQuestionCard.questionNumber') return `问题 ${values?.count}`
+      if (id === 'components.interactiveQuestionCard.questionPrefix') return `第 ${values?.number} 题`
+      if (id === 'components.interactiveQuestionCard.remainingQuestions') return `还需回答 ${values?.count} 个问题`
+      return messages[id] || id
+    },
+  }),
+}))
 
 describe('InteractiveQuestionCard', () => {
   it('renders a confirmation layout for MCP tool approvals', () => {
@@ -185,6 +215,7 @@ describe('InteractiveQuestionCard', () => {
       />,
     )
 
+    expect(screen.getByText('第 1 题')).toBeTruthy()
     fireEvent.change(screen.getByPlaceholderText('输入你的 GitHub 用户名...'), {
       target: { value: '  octocat  ' },
     })

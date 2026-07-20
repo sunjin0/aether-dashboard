@@ -17,27 +17,13 @@ import {
   ThunderboltOutlined,
 } from '@ant-design/icons'
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
-import { history, useAccess } from '@@/exports'
+import { history, useAccess, useIntl } from '@@/exports'
 import { Button, Input, message, Modal, Select, Spin, Tag } from 'antd'
 import React, { useEffect, useRef, useState } from 'react'
 import { getSwitchStatus } from '@/pages/agent/knowledge-base/status'
 import dayjs from 'dayjs'
 import TableActionMenu from '@/components/TableActionMenu'
 import './index.less'
-
-const CATEGORY_MAP: Record<string, string> = {
-  language: '语言',
-  style: '表达风格',
-  format: '输出格式',
-  tech_stack: '技术栈',
-  tool_strategy: '工具策略',
-}
-
-const SOURCE_MAP: Record<string, { label: string; color: string; className: string }> = {
-  explicit: { label: '手动', color: 'blue', className: 'pref-source-explicit' },
-  implicit: { label: '自动学习', color: 'orange', className: 'pref-source-implicit' },
-  manual_override: { label: '手动覆盖', color: 'purple', className: 'pref-source-override' },
-}
 
 interface PrefStatistics {
   total: number
@@ -47,6 +33,14 @@ interface PrefStatistics {
 }
 
 const PreferencePage: React.FC = () => {
+  const intl = useIntl()
+  const format = (id: string, values?: Record<string, string | number>) => intl.formatMessage({ id }, values)
+  const categoryMap = Object.fromEntries(['language', 'style', 'format', 'tech_stack', 'tool_strategy'].map((value) => [value, format(`pages.sys.preference.category.${value}`)]))
+  const sourceMap: Record<string, { label: string; color: string; className: string }> = {
+    explicit: { label: format('pages.sys.preference.source.explicit'), color: 'blue', className: 'pref-source-explicit' },
+    implicit: { label: format('pages.sys.preference.source.implicit'), color: 'orange', className: 'pref-source-implicit' },
+    manual_override: { label: format('pages.sys.preference.source.manualOverride'), color: 'purple', className: 'pref-source-override' },
+  }
   const ref = useRef<ActionType>()
   const [open, setOpen] = useState(false)
   const [id, setId] = useState<string>()
@@ -103,19 +97,19 @@ const PreferencePage: React.FC = () => {
 
   const handleOverride = async () => {
     if (!overrideId || !overrideValue.trim()) {
-      message.warning('请输入新值')
+      message.warning(format('pages.sys.preference.enterNewValue'))
       return
     }
     setOverrideLoading(true)
     try {
       const response = await overrideAdminPreference(overrideId, { value: overrideValue.trim() })
       if (response.code === 200) {
-        message.success(response.message || '覆盖成功')
+        message.success(response.message || format('pages.sys.preference.overrideSuccess'))
         setOverrideId(undefined)
         setOverrideRecord(undefined)
         setOverrideValue('')
         refresh()
-      } else message.error(response.message || '操作失败')
+      } else message.error(response.message || format('pages.sys.preference.operationFailed'))
     } finally {
       setOverrideLoading(false)
     }
@@ -123,14 +117,14 @@ const PreferencePage: React.FC = () => {
 
   const columns: any[] = [
     {
-      title: '分类',
+      title: format('pages.sys.preference.category'),
       dataIndex: 'category',
       width: 100,
       render: (_: unknown, record: AdminPreference) =>
-        CATEGORY_MAP[record.category || ''] || record.category,
+        categoryMap[record.category || ''] || record.category,
     },
     {
-      title: '键名',
+      title: format('pages.sys.preference.keyName'),
       dataIndex: 'keyName',
       width: 150,
       ellipsis: true,
@@ -138,59 +132,59 @@ const PreferencePage: React.FC = () => {
         <span className="pref-key-cell">{record.keyName}</span>
       ),
     },
-    { title: '偏好值', dataIndex: 'value', width: 150, ellipsis: true },
+    { title: format('pages.sys.preference.value'), dataIndex: 'value', width: 150, ellipsis: true },
     {
-      title: '描述',
+      title: format('pages.common.description'),
       dataIndex: 'description',
       width: 180,
       ellipsis: true,
     },
     {
-      title: '优先级',
+      title: format('pages.sys.preference.priority'),
       dataIndex: 'priority',
       width: 80,
       sorter: true,
     },
     {
-      title: '来源',
+      title: format('pages.sys.preference.source'),
       dataIndex: 'source',
       width: 100,
       render: (_: unknown, record: AdminPreference) => {
-        const source = SOURCE_MAP[record.source || 'explicit'];
-        return <Tag className={`pref-source-tag ${source.className}`}>{source.label}</Tag>;
+        const source = sourceMap[record.source || 'explicit']
+        return <Tag className={`pref-source-tag ${source.className}`}>{source.label}</Tag>
       },
     },
     {
-      title: '置信度',
+      title: format('pages.sys.preference.confidence'),
       dataIndex: 'confidence',
       width: 90,
       sorter: true,
       render: (_: unknown, record: AdminPreference) => {
-        const val = record.confidence ?? 0;
+        const val = record.confidence ?? 0
         const cls =
           val >= 0.7
             ? 'pref-confidence-high'
             : val >= 0.3
               ? 'pref-confidence-mid'
-              : 'pref-confidence-low';
-        return <span className={cls}>{(val * 100).toFixed(0)}%</span>;
+              : 'pref-confidence-low'
+        return <span className={cls}>{(val * 100).toFixed(0)}%</span>
       },
     },
     {
-      title: '使用次数',
+      title: format('pages.sys.preference.usageCount'),
       dataIndex: 'usageCount',
       width: 90,
       sorter: true,
     },
     {
-      title: '有效分数',
+      title: format('pages.sys.preference.effectiveScore'),
       dataIndex: 'effectiveScore',
       width: 90,
       sorter: true,
       render: (_: unknown, record: AdminPreference) => record.effectiveScore?.toFixed(1) || '-',
     },
     {
-      title: '最后使用',
+      title: format('pages.sys.preference.lastUsedAt'),
       dataIndex: 'lastUsedAt',
       width: 140,
       sorter: true,
@@ -198,16 +192,16 @@ const PreferencePage: React.FC = () => {
         record.lastUsedAt ? dayjs(record.lastUsedAt).format('YYYY-MM-DD HH:mm') : '-',
     },
     {
-      title: '状态',
+      title: format('pages.common.status'),
       dataIndex: 'status',
       width: 80,
       render: (_: unknown, record: AdminPreference) => {
-        const item = getSwitchStatus(record.status);
-        return <Tag color={item.color}>{item.label}</Tag>;
+        const item = getSwitchStatus(record.status)
+        return <Tag color={item.color}>{item.label}</Tag>
       },
     },
     {
-      title: '操作',
+      title: format('pages.common.option'),
       key: 'option',
       width: 180,
       fixed: 'right',
@@ -217,44 +211,44 @@ const PreferencePage: React.FC = () => {
             items={[
               {
                 key: 'edit',
-                label: '编辑',
+                label: format('pages.common.edit'),
                 primary: true,
                 onClick: () => {
-                  setId(record.id);
-                  setOpen(true);
+                  setId(record.id)
+                  setOpen(true)
                 },
               },
               {
                 key: 'override',
-                label: '覆盖',
+                label: format('pages.sys.preference.override'),
                 primary: true,
                 visible: record.status === 1,
                 onClick: () => {
-                  setOverrideId(record.id);
-                  setOverrideRecord(record);
-                  setOverrideValue(record.value || '');
+                  setOverrideId(record.id)
+                  setOverrideRecord(record)
+                  setOverrideValue(record.value || '')
                 },
               },
               {
                 key: 'delete',
-                label: '删除',
+                label: format('pages.common.delete'),
                 primary: true,
                 danger: true,
-                confirm: { title: '确认删除该偏好？' },
+                confirm: { title: format('pages.sys.preference.deleteConfirm') },
                 onClick: async () => {
-                  if (!record.id) return;
-                  const response = await deleteAdminPreference(record.id);
+                  if (!record.id) return
+                  const response = await deleteAdminPreference(record.id)
                   if (response.code === 200) {
-                    message.success(response.message || '删除成功');
-                    refresh();
-                  } else message.error(response.message || '删除失败');
+                    message.success(response.message || format('pages.sys.preference.deleteSuccess'))
+                    refresh()
+                  } else message.error(response.message || format('pages.sys.preference.deleteFailed'))
                 },
               },
             ]}
           />
         ),
     },
-  ];
+  ]
 
   return (
     <PageContainer className="admin-preference-page">
@@ -265,9 +259,9 @@ const PreferencePage: React.FC = () => {
               <AppstoreOutlined />
             </i>
             <div>
-              <span>偏好总数</span>
+              <span>{format('pages.sys.preference.total')}</span>
               <strong>{statistics.total}</strong>
-              <small>所有偏好记录</small>
+              <small>{format('pages.sys.preference.totalHint')}</small>
             </div>
           </div>
           <div className="pref-stat-card">
@@ -275,9 +269,9 @@ const PreferencePage: React.FC = () => {
               <CheckCircleFilled />
             </i>
             <div>
-              <span>已启用</span>
+              <span>{format('pages.common.enabled')}</span>
               <strong>{statistics.enabled}</strong>
-              <small>启用的偏好会在聊天中生效</small>
+              <small>{format('pages.sys.preference.enabledHint')}</small>
             </div>
           </div>
           <div className="pref-stat-card">
@@ -285,9 +279,9 @@ const PreferencePage: React.FC = () => {
               <ExperimentOutlined />
             </i>
             <div>
-              <span>自动学习</span>
+              <span>{format('pages.sys.preference.source.implicit')}</span>
               <strong>{statistics.implicit}</strong>
-              <small>系统自动提取的偏好</small>
+              <small>{format('pages.sys.preference.implicitHint')}</small>
             </div>
           </div>
           <div className="pref-stat-card">
@@ -295,9 +289,9 @@ const PreferencePage: React.FC = () => {
               <ThunderboltOutlined />
             </i>
             <div>
-              <span>手动维护</span>
+              <span>{format('pages.sys.preference.manual')}</span>
               <strong>{statistics.explicit}</strong>
-              <small>用户主动创建的偏好</small>
+              <small>{format('pages.sys.preference.manualHint')}</small>
             </div>
           </div>
         </div>
@@ -307,25 +301,25 @@ const PreferencePage: React.FC = () => {
           <Input
             allowClear
             prefix={<SearchOutlined />}
-            placeholder="搜索键名或偏好值"
+            placeholder={format('pages.sys.preference.searchPlaceholder')}
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             onPressEnter={refresh}
           />
           <Select
             allowClear
-            placeholder="全部分类"
+            placeholder={format('pages.sys.preference.allCategories')}
             value={category}
-            options={Object.entries(CATEGORY_MAP).map(([v, l]) => ({ label: l, value: v }))}
+            options={Object.entries(categoryMap).map(([v, l]) => ({ label: l, value: v }))}
             onChange={(v) => changeFilter(() => setCategory(v))}
           />
           <Select
             allowClear
-            placeholder="全部状态"
+            placeholder={format('pages.sys.preference.allStatuses')}
             value={status}
             options={[
-              { label: '启用', value: 1 },
-              { label: '禁用', value: 0 },
+              { label: format('pages.common.enabled'), value: 1 },
+              { label: format('pages.common.disabled'), value: 0 },
             ]}
             onChange={(v) => changeFilter(() => setStatus(v))}
           />
@@ -333,7 +327,7 @@ const PreferencePage: React.FC = () => {
             allowClear
             showSearch
             filterOption={false}
-            placeholder="全部用户"
+            placeholder={format('pages.sys.preference.allUsers')}
             value={adminId}
             options={adminOptions}
             onChange={(v) => changeFilter(() => setAdminId(v))}
@@ -347,7 +341,7 @@ const PreferencePage: React.FC = () => {
                 setOpen(true)
               }}
             >
-              新增偏好
+              {format('pages.sys.preference.new')}
             </Button>
           )}
         </div>
@@ -372,7 +366,7 @@ const PreferencePage: React.FC = () => {
           pagination={{
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total) => `共 ${total} 条`,
+            showTotal: (total) => format('pages.sys.preference.totalRecords', { total }),
           }}
         />
       </div>
@@ -387,7 +381,7 @@ const PreferencePage: React.FC = () => {
         }}
       />
       <Modal
-        title="覆盖偏好值"
+        title={format('pages.sys.preference.overrideTitle')}
         open={!!overrideId}
         onOk={handleOverride}
         onCancel={() => {
@@ -395,21 +389,21 @@ const PreferencePage: React.FC = () => {
           setOverrideRecord(undefined)
           setOverrideValue('')
         }}
-        okText="确认覆盖"
-        cancelText="取消"
+        okText={format('pages.sys.preference.confirmOverride')}
+        cancelText={format('pages.sys.preference.cancel')}
         confirmLoading={overrideLoading}
         destroyOnClose
       >
         <div style={{ marginBottom: 8 }}>
-          <span style={{ color: '#666' }}>当前值：</span>
+          <span style={{ color: '#666' }}>{format('pages.sys.preference.currentValue')}:</span>
           <span>{overrideRecord?.value || '-'}</span>
         </div>
         <div>
-          <span style={{ color: '#666', marginRight: 8 }}>新值：</span>
+          <span style={{ color: '#666', marginRight: 8 }}>{format('pages.sys.preference.newValue')}:</span>
           <Input
             value={overrideValue}
             onChange={(e) => setOverrideValue(e.target.value)}
-            placeholder="请输入新的偏好值"
+            placeholder={format('pages.sys.preference.enterNewValue')}
             onPressEnter={handleOverride}
           />
         </div>

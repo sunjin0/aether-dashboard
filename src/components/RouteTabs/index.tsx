@@ -1,6 +1,6 @@
 import { Tabs } from 'antd'
 import type { TabsProps } from 'antd'
-import { history } from '@umijs/max'
+import { history, useIntl } from '@umijs/max'
 import { KeepAlive } from 'react-activation'
 import React, { useEffect, useState } from 'react'
 import './index.less'
@@ -51,23 +51,30 @@ const findMenuName = (menus: MenuItem[], pathname: string): string | undefined =
   return undefined
 }
 
-const getRouteLabel = (pathname: string, menus: MenuItem[]): string => {
-  if (/^\/knowledge\/base\/[^/]+$/.test(pathname)) return '文档管理'
-  if (/^\/knowledge\/document\/[^/]+$/.test(pathname)) return '文档详情'
-  return pathname === '/dashboard' ? '仪表盘' : findMenuName(menus, pathname) || pathname
+const getRouteLabel = (
+  pathname: string,
+  menus: MenuItem[],
+  formatMessage: ReturnType<typeof useIntl>['formatMessage'],
+): string => {
+  if (/^\/knowledge\/base\/[^/]+$/.test(pathname)) return formatMessage({ id: 'components.routeTabs.documentManagement' })
+  if (/^\/knowledge\/document\/[^/]+$/.test(pathname)) return formatMessage({ id: 'components.routeTabs.documentDetails' })
+  return pathname === '/dashboard'
+    ? formatMessage({ id: 'components.routeTabs.dashboard' })
+    : findMenuName(menus, pathname) || pathname
 }
 
-const getTab = (pathname: string, menus: MenuItem[]): RouteTab => ({
+const getTab = (pathname: string, menus: MenuItem[], formatMessage: ReturnType<typeof useIntl>['formatMessage']): RouteTab => ({
   key: pathname,
-  label: getRouteLabel(pathname, menus),
+  label: getRouteLabel(pathname, menus, formatMessage),
   closable: pathname !== '/dashboard',
 })
 
 const RouteTabs = ({ pathname, children }: RouteTabsProps) => {
+  const intl = useIntl()
   const routePath = pathname === '/' ? '/dashboard' : pathname
   const [menus, setMenus] = useState(routeMenus)
   const [menusLoaded, setMenusLoaded] = useState(routeMenusLoaded)
-  const [tabs, setTabs] = useState<RouteTab[]>(() => [getTab(routePath, routeMenus)])
+  const [tabs, setTabs] = useState<RouteTab[]>(() => [getTab(routePath, routeMenus, intl.formatMessage)])
 
   useEffect(() => {
     const updateMenus = () => {
@@ -84,7 +91,7 @@ const RouteTabs = ({ pathname, children }: RouteTabsProps) => {
     setTabs((previousTabs) =>
       previousTabs.some((tab) => tab.key === routePath)
         ? previousTabs
-        : [...previousTabs, getTab(routePath, menus)],
+        : [...previousTabs, getTab(routePath, menus, intl.formatMessage)],
     )
   }, [menus, routePath])
 
@@ -100,7 +107,7 @@ const RouteTabs = ({ pathname, children }: RouteTabsProps) => {
 
   const items: TabsProps['items'] = tabs.map((tab) => ({
     key: tab.key,
-    label: getRouteLabel(tab.key, menus),
+    label: getRouteLabel(tab.key, menus, intl.formatMessage),
     closable: tab.closable,
   }))
 

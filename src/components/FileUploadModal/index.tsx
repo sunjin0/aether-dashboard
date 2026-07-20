@@ -2,6 +2,7 @@
 import { Button, Form, message, Modal, Upload } from 'antd'
 import type { UploadFile } from 'antd/es/upload/interface'
 import React, { useState } from 'react'
+import { useIntl } from '@umijs/max'
 
 export interface UploadActionResult {
   code?: number;
@@ -31,8 +32,8 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
   accept,
   allowedExtensions,
   maxSize = 50 * 1024 * 1024,
-  triggerText = '上传文件',
-  title = '上传文件',
+  triggerText,
+  title,
   width = 760,
   disabled,
   initialValues,
@@ -40,6 +41,7 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
   upload,
   onSuccess,
 }) => {
+  const intl = useIntl()
   const [form] = Form.useForm<UploadExtraValues>()
   const [open, setOpen] = useState(false)
   const [file, setFile] = useState<File>()
@@ -56,11 +58,11 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
   const beforeUpload = (selectedFile: File) => {
     const extension = selectedFile.name.split('.').pop()?.toLowerCase()
     if (!extension || !allowedExtensions.includes(extension)) {
-      message.error(`仅支持 ${allowedExtensions.join('、')} 文件`)
+      message.error(intl.formatMessage({ id: 'components.fileUploadModal.unsupportedType' }, { extensions: allowedExtensions.join(', ') }))
       return Upload.LIST_IGNORE
     }
     if (selectedFile.size > maxSize) {
-      message.error(`文件大小不能超过 ${Math.floor(maxSize / 1024 / 1024)} MB`)
+      message.error(intl.formatMessage({ id: 'components.fileUploadModal.maxSize' }, { maxSize: Math.floor(maxSize / 1024 / 1024) }))
       return Upload.LIST_IGNORE
     }
     setFile(selectedFile)
@@ -75,11 +77,11 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
     try {
       const response = await upload(file, values)
       if (response.code === 200) {
-        message.success(response.message || '文件上传成功')
+        message.success(response.message || intl.formatMessage({ id: 'components.fileUploadModal.uploadSuccess' }))
         onSuccess?.()
         reset()
       } else {
-        message.error(response.message || '文件上传失败')
+        message.error(response.message || intl.formatMessage({ id: 'components.fileUploadModal.uploadFailed' }))
       }
     } finally {
       setUploading(false)
@@ -93,16 +95,16 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
   return (
     <>
       <Button icon={<UploadOutlined />} disabled={disabled} onClick={() => setOpen(true)}>
-        {triggerText}
+        {triggerText || intl.formatMessage({ id: 'components.fileUploadModal.uploadFile' })}
       </Button>
       <Modal
-        title={title}
+        title={title || intl.formatMessage({ id: 'components.fileUploadModal.uploadFile' })}
         open={open}
         width={width}
         onCancel={reset}
         onOk={submit}
-        okText="确认上传"
-        cancelText="取消"
+        okText={intl.formatMessage({ id: 'components.fileUploadModal.confirmUpload' })}
+        cancelText={intl.formatMessage({ id: 'components.fileUploadModal.cancel' })}
         confirmLoading={uploading}
         okButtonProps={{ disabled: !file }}
         destroyOnClose
@@ -123,10 +125,9 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
           <p className="ant-upload-drag-icon">
             <InboxOutlined />
           </p>
-          <p className="ant-upload-text">点击或拖拽文件到此处</p>
+          <p className="ant-upload-text">{intl.formatMessage({ id: 'components.fileUploadModal.dragHint' })}</p>
           <p className="ant-upload-hint">
-            支持 {allowedExtensions.join('、')}，单个文件不超过 {Math.floor(maxSize / 1024 / 1024)}{' '}
-            MB
+            {intl.formatMessage({ id: 'components.fileUploadModal.uploadHint' }, { extensions: allowedExtensions.join(', '), maxSize: Math.floor(maxSize / 1024 / 1024) })}
           </p>
         </Upload.Dragger>
       </Modal>

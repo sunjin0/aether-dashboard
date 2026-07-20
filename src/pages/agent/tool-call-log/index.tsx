@@ -11,26 +11,29 @@ import { AgentToolCallLog, AgentToolCallLogSearchParams } from '@/services/entit
 import JsonDisplay from '@/components/JsonDisplay'
 import MarkdownText from '@/components/MarkdownText'
 import './index.less'
+import { useIntl } from '@umijs/max'
 
 const { Text } = Typography
 
-const renderStatusTag = (status?: number) => {
+const renderStatusTag = (status: number | undefined, format: (id: string) => string) => {
   if (status === 0) {
-    return <Tag color="success">成功</Tag>
+    return <Tag color="success">{format('components.toolCallCard.status.success')}</Tag>
   }
   if (status === 1) {
-    return <Tag color="error">失败</Tag>
+    return <Tag color="error">{format('components.toolCallCard.status.failed')}</Tag>
   }
   if (status === 2) {
-    return <Tag color="warning">超时</Tag>
+    return <Tag color="warning">{format('components.toolCallCard.status.timeout')}</Tag>
   }
   if (status === 3) {
-    return <Tag color="purple">安全拦截</Tag>
+    return <Tag color="purple">{format('components.toolCallCard.status.blocked')}</Tag>
   }
-  return <Tag>未知</Tag>
+  return <Tag>{format('components.toolCallCard.status.unknown')}</Tag>
 }
 
 const AgentToolCallLogPage: React.FC = () => {
+  const intl = useIntl()
+  const format = (id: string) => intl.formatMessage({ id })
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [toolCallLog, setToolCallLog] = useState<AgentToolCallLog>()
   const [detailLoading, setDetailLoading] = useState(false)
@@ -52,7 +55,7 @@ const AgentToolCallLogPage: React.FC = () => {
 
   const openDetail = async (record: AgentToolCallLog) => {
     if (!record.id) {
-      message.error('缺少工具调用日志 ID')
+      message.error(format('pages.agent.toolCallLog.missingId'))
       return
     }
 
@@ -70,12 +73,12 @@ const AgentToolCallLogPage: React.FC = () => {
         setToolCallLog(data)
       } else {
         setToolCallLog(undefined)
-        message.error(msg || '加载工具调用日志详情失败')
+        message.error(msg || format('pages.agent.toolCallLog.loadDetailFailed'))
       }
     } catch {
       if (detailRequestRef.current === requestId) {
         setToolCallLog(undefined)
-        message.error('加载工具调用日志详情失败')
+        message.error(format('pages.agent.toolCallLog.loadDetailFailed'))
       }
     } finally {
       if (detailRequestRef.current === requestId) {
@@ -86,62 +89,62 @@ const AgentToolCallLogPage: React.FC = () => {
 
   const columns: any[] = [
     {
-      title: '运行记录 ID',
+      title: format('pages.agent.toolCallLog.runId'),
       dataIndex: 'runId',
       valueType: 'text',
       ellipsis: true,
     },
     {
-      title: '工具 ID',
+      title: format('pages.agent.toolCallLog.toolId'),
       dataIndex: 'toolId',
       valueType: 'text',
       ellipsis: true,
     },
     {
-      title: 'Agent 定义 ID',
+      title: format('pages.agent.toolCallLog.agentDefinitionId'),
       dataIndex: 'agentDefinitionId',
       valueType: 'text',
       ellipsis: true,
     },
     {
-      title: '请求方法',
+      title: format('pages.agent.toolCallLog.requestMethod'),
       dataIndex: 'requestMethod',
       valueType: 'select',
       request: async () => getOptionList('Agent_Http_Method'),
       width: 110,
     },
     {
-      title: 'HTTP 状态码',
+      title: format('pages.agent.toolCallLog.httpStatus'),
       dataIndex: 'responseStatus',
       valueType: 'digit',
       hideInSearch: true,
       width: 120,
     },
     {
-      title: '执行状态',
+      title: format('pages.agent.toolCallLog.executionStatus'),
       key: 'toolCallStatus',
       dataIndex: 'status',
       valueType: 'select',
       request: async () => getOptionList('Agent_ToolCall_Status'),
-      render: (_: any, record: AgentToolCallLog) => renderStatusTag(record.status),
+      render: (_: any, record: AgentToolCallLog) => renderStatusTag(record.status, format),
       width: 120,
     },
     {
-      title: '耗时(ms)',
+      title: format('pages.agent.toolCallLog.latency'),
       dataIndex: 'latencyMs',
       valueType: 'digit',
       hideInSearch: true,
       width: 110,
     },
     {
-      title: '创建时间',
+      title: format('pages.common.createTime'),
       dataIndex: 'createdAt',
       valueType: 'dateTime',
       hideInSearch: true,
       width: 180,
     },
     {
-      title: '操作',
+      title: format('pages.common.option'),
       valueType: 'option',
       width: 120,
       key: 'option',
@@ -149,7 +152,7 @@ const AgentToolCallLogPage: React.FC = () => {
       render: (_: any, record: AgentToolCallLog) => (
         <TableActionMenu
           items={[
-            { key: 'detail', label: '查看详情', primary: true, onClick: () => openDetail(record) },
+            { key: 'detail', label: format('pages.agent.toolCallLog.viewDetail'), primary: true, onClick: () => openDetail(record) },
           ]}
         />
       ),
@@ -164,7 +167,7 @@ const AgentToolCallLogPage: React.FC = () => {
           try {
             return await getAgentToolCallLogList(normalizeSearchParams(params))
           } catch {
-            message.error('加载工具调用日志列表失败')
+            message.error(format('pages.agent.toolCallLog.loadListFailed'))
             return { data: [], total: 0, success: false }
           }
         }}
@@ -176,7 +179,7 @@ const AgentToolCallLogPage: React.FC = () => {
         scroll={{ x: 1200 }}
       />
       <Drawer
-        title="工具调用日志详情"
+        title={format('pages.agent.toolCallLog.detail')}
         width={820}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
@@ -189,25 +192,25 @@ const AgentToolCallLogPage: React.FC = () => {
                 column={1}
                 dataSource={toolCallLog}
                 columns={[
-                  { title: 'ID', dataIndex: 'id' },
-                  { title: '运行记录 ID', dataIndex: 'runId' },
-                  { title: '工具 ID', dataIndex: 'toolId' },
-                  { title: 'Agent 定义 ID', dataIndex: 'agentDefinitionId' },
-                  { title: '请求方法', dataIndex: 'requestMethod' },
-                  { title: '请求 URL', dataIndex: 'requestUrl' },
-                  { title: 'HTTP 状态码', dataIndex: 'responseStatus' },
+                  { title: format('pages.common.id'), dataIndex: 'id' },
+                  { title: format('pages.agent.toolCallLog.runId'), dataIndex: 'runId' },
+                  { title: format('pages.agent.toolCallLog.toolId'), dataIndex: 'toolId' },
+                  { title: format('pages.agent.toolCallLog.agentDefinitionId'), dataIndex: 'agentDefinitionId' },
+                  { title: format('pages.agent.toolCallLog.requestMethod'), dataIndex: 'requestMethod' },
+                  { title: format('pages.agent.toolCallLog.requestUrl'), dataIndex: 'requestUrl' },
+                  { title: format('pages.agent.toolCallLog.httpStatus'), dataIndex: 'responseStatus' },
                   {
-                    title: '执行状态',
+                    title: format('pages.agent.toolCallLog.executionStatus'),
                     dataIndex: 'status',
-                    render: (_: any, record: AgentToolCallLog) => renderStatusTag(record.status),
+                    render: (_: any, record: AgentToolCallLog) => renderStatusTag(record.status, format),
                   },
-                  { title: '耗时(ms)', dataIndex: 'latencyMs' },
-                  { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime' },
-                  { title: '更新时间', dataIndex: 'updatedAt', valueType: 'dateTime' },
+                  { title: format('pages.agent.toolCallLog.latency'), dataIndex: 'latencyMs' },
+                  { title: format('pages.common.createTime'), dataIndex: 'createdAt', valueType: 'dateTime' },
+                  { title: format('pages.common.updateTime'), dataIndex: 'updatedAt', valueType: 'dateTime' },
                 ]}
               />
               <Card
-                title="请求头"
+                title={format('pages.agent.toolCallLog.requestHeaders')}
                 size="small"
                 style={{ marginTop: 16 }}
                 className="agent-tool-call-log-card"
@@ -215,7 +218,7 @@ const AgentToolCallLogPage: React.FC = () => {
                 <JsonDisplay content={toolCallLog.requestHeaders} />
               </Card>
               <Card
-                title="请求体"
+                title={format('pages.agent.toolCallLog.requestBody')}
                 size="small"
                 style={{ marginTop: 16 }}
                 className="agent-tool-call-log-card"
@@ -223,7 +226,7 @@ const AgentToolCallLogPage: React.FC = () => {
                 <JsonDisplay content={toolCallLog.requestBody} />
               </Card>
               <Card
-                title="响应体"
+                title={format('pages.agent.toolCallLog.responseBody')}
                 size="small"
                 style={{ marginTop: 16 }}
                 className="agent-tool-call-log-card"
@@ -231,7 +234,7 @@ const AgentToolCallLogPage: React.FC = () => {
                 <JsonDisplay content={toolCallLog.responseBody} />
               </Card>
               <Card
-                title="错误信息"
+                title={format('pages.agent.toolCallLog.errorInformation')}
                 size="small"
                 style={{ marginTop: 16 }}
                 className="agent-tool-call-log-card"
@@ -239,12 +242,12 @@ const AgentToolCallLogPage: React.FC = () => {
                 {toolCallLog.errorMsg ? (
                   <MarkdownText content={toolCallLog.errorMsg} error={true} />
                 ) : (
-                  <Text type="secondary">暂无错误信息</Text>
+                  <Text type="secondary">{format('pages.agent.toolCallLog.noErrorInformation')}</Text>
                 )}
               </Card>
             </>
           ) : (
-            <Empty description="暂无工具调用日志详情" />
+            <Empty description={format('pages.agent.toolCallLog.noDetail')} />
           )}
         </Spin>
       </Drawer>

@@ -14,6 +14,7 @@ import {
   ProFormText,
   ProFormTextArea,
 } from '@ant-design/pro-components'
+import { useIntl } from '@umijs/max'
 import { Card, Col, Form, Row } from 'antd'
 import './KnowledgeBaseForm.less'
 
@@ -26,6 +27,7 @@ interface KnowledgeBaseFormProps {
 
 const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen, onSuccess }) => {
   const [form] = Form.useForm()
+  const intl = useIntl()
 
   return (
     <DrawerForm
@@ -46,74 +48,74 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
         return true
       }}
     >
-      <Card title="基础信息" size="small" className="knowledge-base-form-card">
+      <Card title={intl.formatMessage({ id: 'pages.knowledge.base.form.basicInfo' })} size="small" className="knowledge-base-form-card">
         <Row gutter={16}>
           <Col span={12}>
             <ProFormSelect
               name="scope"
-              label="知识库范围"
+              label={intl.formatMessage({ id: 'pages.knowledge.base.form.scope' })}
               initialValue="PLATFORM"
               rules={[{ required: true }]}
               options={[
-                { label: '平台级', value: 'PLATFORM' },
-                { label: 'Agent 专属', value: 'AGENT' },
+                { label: intl.formatMessage({ id: 'pages.knowledge.base.form.scope.platform' }), value: 'PLATFORM' },
+                { label: intl.formatMessage({ id: 'pages.knowledge.base.form.scope.agentOnly' }), value: 'AGENT' },
               ]}
             />
           </Col>
           <Col span={12}>
             <ProFormSelect
               name="visibility"
-              label="可见范围"
+              label={intl.formatMessage({ id: 'pages.knowledge.base.form.visibility' })}
               initialValue="platform"
               options={[
-                { label: '平台可见', value: 'platform' },
-                { label: '仅本人', value: 'private' },
-                { label: '共享', value: 'shared' },
+                { label: intl.formatMessage({ id: 'pages.knowledge.base.form.visibility.platform' }), value: 'platform' },
+                { label: intl.formatMessage({ id: 'pages.knowledge.base.form.visibility.private' }), value: 'private' },
+                { label: intl.formatMessage({ id: 'pages.knowledge.base.form.visibility.shared' }), value: 'shared' },
               ]}
             />
           </Col>
         </Row>
         <ProFormText
           name="name"
-          label="知识库名称"
-          rules={[{ required: true, message: '请输入知识库名称' }]}
+          label={intl.formatMessage({ id: 'pages.knowledge.base.form.name' })}
+          rules={[{ required: true, message: intl.formatMessage({ id: 'pages.knowledge.base.form.enterName' }) }]}
         />
         <ProFormTextArea
           name="description"
-          label="描述"
+          label={intl.formatMessage({ id: 'pages.knowledge.base.form.description' })}
           fieldProps={{ rows: 2, maxLength: 1000, showCount: true }}
         />
       </Card>
 
-      <Card title="检索配置" size="small" className="knowledge-base-form-card">
+      <Card title={intl.formatMessage({ id: 'pages.knowledge.base.form.retrievalConfig' })} size="small" className="knowledge-base-form-card">
         <ProFormSelect
           name="embeddingProviderId"
-          label="Embedding 供应商"
-          rules={[{ required: true, message: '请选择 Embedding 供应商' }]}
+          label={intl.formatMessage({ id: 'pages.knowledge.base.form.embeddingProvider' })}
+          rules={[{ required: true, message: intl.formatMessage({ id: 'pages.knowledge.base.form.selectEmbeddingProvider' }) }]}
           request={async () => (await getEmbeddingProviderOptions()).data || []}
           fieldProps={{ showSearch: true, optionFilterProp: 'label' }}
         />
         <ProFormTextArea
           name="retrievalConfig"
-          label="检索配置"
-          tooltip="保留现有后端配置格式"
+          label={intl.formatMessage({ id: 'pages.knowledge.base.form.retrievalConfig' })}
+          tooltip={intl.formatMessage({ id: 'pages.knowledge.base.form.retrievalConfigTooltip' })}
           fieldProps={{ rows: 3, placeholder: '{ }' }}
         />
       </Card>
 
-      <Card title="审查策略" size="small" className="knowledge-base-form-card">
+      <Card title={intl.formatMessage({ id: 'pages.knowledge.base.form.reviewPolicy' })} size="small" className="knowledge-base-form-card">
         <Row gutter={16}>
           <Col span={12}>
             <ProFormSwitch
               name={['reviewConfig', 'autoAiReview']}
-              label="创建后自动发起 AI 审查"
+              label={intl.formatMessage({ id: 'pages.knowledge.base.form.autoAiReview' })}
               initialValue
             />
           </Col>
           <Col span={12}>
             <ProFormSwitch
               name={['reviewConfig', 'aiReviewRequired']}
-              label="提交前必须完成 AI 审查"
+              label={intl.formatMessage({ id: 'pages.knowledge.base.form.aiReviewRequired' })}
               initialValue
             />
           </Col>
@@ -122,41 +124,41 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
           <Col span={12}>
             <ProFormSwitch
               name={['reviewConfig', 'blockOnCriticalIssues']}
-              label="严重问题阻止提交"
+              label={intl.formatMessage({ id: 'pages.knowledge.base.form.blockOnCriticalIssues' })}
               initialValue
             />
           </Col>
           <Col span={12}>
             <ProFormSwitch
               name={['reviewConfig', 'requireDifferentApprover']}
-              label="提交人与审批人必须不同"
+              label={intl.formatMessage({ id: 'pages.knowledge.base.form.requireDifferentApprover' })}
               initialValue
             />
           </Col>
         </Row>
         <ProFormSelect
           name={['reviewConfig', 'reviewModelProviderId']}
-          label="AI 审查模型供应商"
-          rules={[{ required: true, message: '请选择非 Embedding 模型供应商' }]}
+          label={intl.formatMessage({ id: 'pages.knowledge.base.form.reviewModelProvider' })}
+          rules={[{ required: true, message: intl.formatMessage({ id: 'pages.knowledge.base.form.selectReviewModelProvider' }) }]}
           request={getReviewModelProviderOptions}
           fieldProps={{ showSearch: true, optionFilterProp: 'label' }}
         />
         <ProFormText
           name={['reviewConfig', 'reviewModel']}
-          label="审查模型"
-          placeholder="留空时使用供应商默认模型"
+          label={intl.formatMessage({ id: 'pages.knowledge.base.form.reviewModel' })}
+          placeholder={intl.formatMessage({ id: 'pages.knowledge.base.form.reviewModelPlaceholder' })}
         />
       </Card>
 
-      <Card title="状态" size="small" className="knowledge-base-form-card">
+      <Card title={intl.formatMessage({ id: 'pages.knowledge.base.form.status' })} size="small" className="knowledge-base-form-card">
         <ProFormSelect
           name="status"
-          label="状态"
+          label={intl.formatMessage({ id: 'pages.knowledge.base.form.status' })}
           initialValue={1}
           rules={[{ required: true }]}
           options={[
-            { label: '启用', value: 1 },
-            { label: '禁用', value: 0 },
+            { label: intl.formatMessage({ id: 'pages.knowledge.base.form.status.enabled' }), value: 1 },
+            { label: intl.formatMessage({ id: 'pages.knowledge.base.form.status.disabled' }), value: 0 },
           ]}
         />
       </Card>

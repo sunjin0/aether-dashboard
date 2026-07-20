@@ -1,0 +1,42 @@
+<h2>文档 Diff 界面布局选项</h2>
+<p class="subtitle">选择您喜欢的 diff 显示方式</p>
+
+<div class="options">
+  <div class="option" data-choice="split" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>左右分栏对比</h3>
+      <p>类似 Git diff 的并排视图，左边原文，右边 AI 建议修改</p>
+    </div>
+  </div>
+  
+  <div class="option" data-choice="inline" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>行内高亮对比</h3>
+      <p>在原文中直接高亮显示修改，红色删除，绿色新增</p>
+    </div>
+  </div>
+  
+  <div class="option" data-choice="unified" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>统一 diff 视图</h3>
+      <p>类似传统 diff 格式，显示上下文和修改行</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>预期效果预览</h3>
+  <div class="mockup">
+    <div class="mockup-header">示例：AI 审查问题 diff</div>
+    <div class="mockup-body">
+      <div style="padding: 16px; background: #f5f5f5; border-radius: 4px;">
+        <p><strong>问题：</strong>术语不一致</p>
+        <p><strong>原文摘录：</strong>"用户可以通过系统进行操作"</p>
+        <p><strong>AI 建议：</strong>"用户可通过系统执行操作"</p>
+      </div>
+    </div>
+  </div>
+</div>

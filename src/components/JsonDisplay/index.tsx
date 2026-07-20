@@ -1,5 +1,6 @@
 import React from 'react'
 import { Empty } from 'antd'
+import { useIntl } from '@umijs/max'
 import './index.less'
 
 export interface JsonDisplayProps {
@@ -31,8 +32,9 @@ const syntaxHighlight = (json: string): React.ReactNode[] => {
 }
 
 const JsonDisplay: React.FC<JsonDisplayProps> = ({ content, error, className }) => {
+  const intl = useIntl()
   if (!content) {
-    return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无内容" />
+    return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={intl.formatMessage({ id: 'components.jsonDisplay.empty' })} />
   }
 
   const formatted = formatJson(content)

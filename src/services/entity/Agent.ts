@@ -175,6 +175,52 @@ export interface KnowledgeAiReviewIssue {
   status?: 'pending' | 'rejected' | 'manually_fixed' | 'ignored';
   comment?: string;
 }
+export type AiReviewIssueSeverity = 'critical' | 'high' | 'medium' | 'low' | string;
+export type AiReviewIssueHandleStatus = 'pending' | 'accepted' | 'rejected' | string;
+export interface AiReviewSuggestedPatch {
+  operation: 'replace' | 'insert_before' | 'insert_after' | 'delete' | 'set_heading';
+  target: { original: string };
+  replacement?: string;
+  level?: number;
+  title?: string;
+}
+export interface AiReviewDiffIssue {
+  id: string;
+  blockId?: string;
+  issueType: string;
+  severity: AiReviewIssueSeverity;
+  message: string;
+  originalExcerpt?: string;
+  suggestedPatch?: AiReviewSuggestedPatch;
+  appliedChecksum?: string;
+  handleStatus: AiReviewIssueHandleStatus;
+  baseStartLine?: number;
+  baseEndLine?: number;
+  proposedStartLine?: number;
+  proposedEndLine?: number;
+}
+export interface AiReviewDiff {
+  reviewId: string;
+  documentId: string;
+  documentVersionId: string;
+  contentChecksum: string;
+  reviewStatus: string;
+  stale: boolean;
+  originalContent: string;
+  proposedContent: string;
+  issues: AiReviewDiffIssue[];
+  pendingCount: number;
+  acceptedCount: number;
+  rejectedCount: number;
+  criticalPendingCount: number;
+}
+export interface AiReviewDiffAcceptResult {
+  documentVersionId?: string;
+  contentChecksum?: string;
+  reviewStatus?: string;
+  issueStatus?: string;
+  requiresAiReview?: boolean;
+}
 export interface KnowledgeReviewTask {
   id?: string;
   documentId?: string;

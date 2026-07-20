@@ -166,7 +166,7 @@ const McpServerPage: React.FC = () => {
                 primary: true,
                 loading: loading,
                 onClick: async () => {
-                  await discover(record);
+                  await discover(record)
                 },
               },
               {
@@ -174,8 +174,8 @@ const McpServerPage: React.FC = () => {
                 label: format('pages.agent.tool.edit'),
                 primary: true,
                 onClick: () => {
-                  setId(record.id);
-                  setOpen(true);
+                  setId(record.id)
+                  setOpen(true)
                 },
               },
               {
@@ -185,20 +185,20 @@ const McpServerPage: React.FC = () => {
                 danger: true,
                 confirm: { title: format('pages.agent.mcpServer.deleteConfirm') },
                 onClick: async () => {
-                  if (!record.id) return;
-                  const response = await deleteMcpServer(record.id);
+                  if (!record.id) return
+                  const response = await deleteMcpServer(record.id)
                   if (response.code === 200) {
-                    message.success(response.message || format('pages.agent.tool.deleteSuccess'));
-                    ref.current?.reload();
+                    message.success(response.message || format('pages.agent.tool.deleteSuccess'))
+                    ref.current?.reload()
                   } else
-                    message.error(response.message || format('pages.agent.mcpServer.deleteFailed'));
+                    message.error(response.message || format('pages.agent.mcpServer.deleteFailed'))
                 },
               },
             ]}
           />
         ),
     },
-  ];
+  ]
 
   return (
     <PageContainer>

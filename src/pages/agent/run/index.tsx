@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { ActionType, PageContainer, ProDescriptions, ProTable } from '@ant-design/pro-components'
+import { useIntl } from '@umijs/max'
 import {
   Alert,
   Card,
@@ -35,22 +36,23 @@ import {
 
 const { Text } = Typography
 
-const renderStatusTag = (status?: number) => {
+const renderStatusTag = (status: number | undefined, intl: ReturnType<typeof useIntl>) => {
   if (status === 0) {
-    return <Tag color="success">成功</Tag>
+    return <Tag color="success">{intl.formatMessage({ id: 'pages.agent.run.status.success' })}</Tag>
   }
   if (status === 1) {
-    return <Tag color="error">失败</Tag>
+    return <Tag color="error">{intl.formatMessage({ id: 'pages.agent.run.status.failed' })}</Tag>
   }
   if (status === 2) {
-    return <Tag color="warning">超时</Tag>
+    return <Tag color="warning">{intl.formatMessage({ id: 'pages.agent.run.status.timeout' })}</Tag>
   }
-  return <Tag>未知</Tag>
+  return <Tag>{intl.formatMessage({ id: 'pages.agent.run.status.unknown' })}</Tag>
 }
 
 const { RangePicker } = DatePicker
 
 const AgentRunPage: React.FC = () => {
+  const intl = useIntl()
   const ref = useRef<ActionType>()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [run, setRun] = useState<AgentRun>()
@@ -71,7 +73,7 @@ const AgentRunPage: React.FC = () => {
       if (code === 200) {
         setStatistics(data)
       } else {
-        message.error(msg || '加载统计信息失败')
+        message.error(msg || intl.formatMessage({ id: 'pages.agent.run.loadStatisticsFailed' }))
       }
     } finally {
       setStatisticsLoading(false)
@@ -84,7 +86,7 @@ const AgentRunPage: React.FC = () => {
 
   const openDetail = async (record: AgentRun) => {
     if (!record.id) {
-      message.error('缺少运行记录 ID')
+      message.error(intl.formatMessage({ id: 'pages.agent.run.missingId' }))
       return
     }
 
@@ -96,7 +98,7 @@ const AgentRunPage: React.FC = () => {
         setRun(data)
       } else {
         setRun(undefined)
-        message.error(msg || '加载运行记录详情失败')
+        message.error(msg || intl.formatMessage({ id: 'pages.agent.run.loadDetailFailed' }))
       }
     } finally {
       setDetailLoading(false)
@@ -105,52 +107,52 @@ const AgentRunPage: React.FC = () => {
 
   const columns: any[] = [
     {
-      title: 'Agent 定义 ID',
+      title: intl.formatMessage({ id: 'pages.agent.run.agentId' }),
       dataIndex: 'agentDefinitionId',
       valueType: 'text',
       ellipsis: true,
     },
     {
-      title: '会话 ID',
+      title: intl.formatMessage({ id: 'pages.agent.run.conversationId' }),
       dataIndex: 'conversationId',
       valueType: 'text',
       ellipsis: true,
     },
     {
-      title: '输出消息 ID',
+      title: intl.formatMessage({ id: 'pages.agent.run.messageId' }),
       dataIndex: 'messageId',
       valueType: 'text',
       ellipsis: true,
       hideInSearch: true,
     },
     {
-      title: '模型',
+      title: intl.formatMessage({ id: 'pages.agent.run.model' }),
       dataIndex: 'model',
       valueType: 'text',
       ellipsis: true,
     },
     {
-      title: '状态',
+      title: intl.formatMessage({ id: 'pages.common.status' }),
       key: 'status',
       dataIndex: 'status',
       valueType: 'select',
       request: async () => getOptionList('Agent_Run_Status'),
-      render: (_: any, record: AgentRun) => renderStatusTag(record.status),
+      render: (_: any, record: AgentRun) => renderStatusTag(record.status, intl),
     },
     {
-      title: '总 Token',
+      title: intl.formatMessage({ id: 'pages.agent.run.totalTokens' }),
       dataIndex: 'totalTokens',
       valueType: 'digit',
       hideInSearch: true,
     },
     {
-      title: '耗时(ms)',
+      title: intl.formatMessage({ id: 'pages.agent.run.latency' }),
       dataIndex: 'latencyMs',
       valueType: 'digit',
       hideInSearch: true,
     },
     {
-      title: '时间范围',
+      title: intl.formatMessage({ id: 'pages.agent.run.dateRange' }),
       dataIndex: 'dateRange',
       valueType: 'dateRange',
       hideInTable: true,
@@ -160,13 +162,13 @@ const AgentRunPage: React.FC = () => {
       },
     },
     {
-      title: '创建时间',
+      title: intl.formatMessage({ id: 'pages.common.createTime' }),
       dataIndex: 'createdAt',
       valueType: 'dateTime',
       hideInSearch: true,
     },
     {
-      title: '操作',
+      title: intl.formatMessage({ id: 'pages.common.option' }),
       valueType: 'option',
       width: 120,
       key: 'option',
@@ -174,7 +176,7 @@ const AgentRunPage: React.FC = () => {
       render: (_: any, record: AgentRun) => (
         <TableActionMenu
           items={[
-            { key: 'detail', label: '查看详情', primary: true, onClick: () => openDetail(record) },
+            { key: 'detail', label: intl.formatMessage({ id: 'pages.agent.run.viewDetail' }), primary: true, onClick: () => openDetail(record) },
           ]}
         />
       ),
@@ -183,7 +185,7 @@ const AgentRunPage: React.FC = () => {
 
   return (
     <PageContainer className="agent-run-page">
-      <Card className="agent-run-statistics" title="运行统计" style={{ marginBottom: 16 }}>
+      <Card className="agent-run-statistics" title={intl.formatMessage({ id: 'pages.agent.run.statistics' })} style={{ marginBottom: 16 }}>
         <Spin spinning={statisticsLoading}>
           {statistics ? (
             <div className="agent-run-statistics-grid">
@@ -191,44 +193,44 @@ const AgentRunPage: React.FC = () => {
                 <i className="run-stat-icon run-stat-blue">
                   <ApiOutlined />
                 </i>
-                <Statistic title="总调用次数" value={statistics.totalCalls || 0} />
+                <Statistic title={intl.formatMessage({ id: 'pages.agent.run.totalCalls' })} value={statistics.totalCalls || 0} />
               </div>
               <div className="agent-run-stat-card">
                 <i className="run-stat-icon run-stat-green">
                   <CheckCircleFilled />
                 </i>
-                <Statistic title="成功次数" value={statistics.successCalls || 0} />
+                <Statistic title={intl.formatMessage({ id: 'pages.agent.run.successCalls' })} value={statistics.successCalls || 0} />
               </div>
               <div className="agent-run-stat-card">
                 <i className="run-stat-icon run-stat-red">
                   <CloseCircleFilled />
                 </i>
-                <Statistic title="失败次数" value={statistics.failedCalls || 0} />
+                <Statistic title={intl.formatMessage({ id: 'pages.agent.run.failedCalls' })} value={statistics.failedCalls || 0} />
               </div>
               <div className="agent-run-stat-card">
                 <i className="run-stat-icon run-stat-orange">
                   <ClockCircleOutlined />
                 </i>
-                <Statistic title="超时次数" value={statistics.timeoutCalls || 0} />
+                <Statistic title={intl.formatMessage({ id: 'pages.agent.run.timeoutCalls' })} value={statistics.timeoutCalls || 0} />
               </div>
               <div className="agent-run-stat-card">
                 <i className="run-stat-icon run-stat-purple">
                   <DatabaseOutlined />
                 </i>
-                <Statistic title="总 Token" value={statistics.totalTokens || 0} />
+                <Statistic title={intl.formatMessage({ id: 'pages.agent.run.totalTokens' })} value={statistics.totalTokens || 0} />
               </div>
               <div className="agent-run-stat-card">
                 <i className="run-stat-icon run-stat-cyan">
                   <FieldTimeOutlined />
                 </i>
-                <Statistic title="平均耗时(ms)" value={statistics.avgLatencyMs || 0} />
+                <Statistic title={intl.formatMessage({ id: 'pages.agent.run.averageLatency' })} value={statistics.avgLatencyMs || 0} />
               </div>
               <div className="agent-run-stat-card">
                 <i className="run-stat-icon run-stat-red">
                   <WarningOutlined />
                 </i>
                 <Statistic
-                  title="错误率"
+                  title={intl.formatMessage({ id: 'pages.agent.run.errorRate' })}
                   value={
                     statistics.errorRate ? `${(statistics.errorRate * 100).toFixed(2)}%` : '0%'
                   }
@@ -236,7 +238,7 @@ const AgentRunPage: React.FC = () => {
               </div>
             </div>
           ) : (
-            <Empty description="暂无统计数据" />
+            <Empty description={intl.formatMessage({ id: 'pages.agent.run.noStatistics' })} />
           )}
         </Spin>
       </Card>
@@ -261,7 +263,7 @@ const AgentRunPage: React.FC = () => {
         columns={columns}
       />
       <Drawer
-        title="运行记录详情"
+        title={intl.formatMessage({ id: 'pages.agent.run.detail' })}
         width={760}
         className="agent-run-detail-drawer"
         open={drawerOpen}
@@ -275,36 +277,36 @@ const AgentRunPage: React.FC = () => {
                 column={1}
                 dataSource={run}
                 columns={[
-                  { title: 'ID', dataIndex: 'id' },
-                  { title: 'Agent 定义 ID', dataIndex: 'agentDefinitionId' },
-                  { title: '用户 ID', dataIndex: 'userId' },
-                  { title: '会话 ID', dataIndex: 'conversationId' },
-                  { title: '输出消息 ID', dataIndex: 'messageId' },
-                  { title: '模型供应商 ID', dataIndex: 'modelProviderId' },
-                  { title: '模型', dataIndex: 'model' },
+                  { title: intl.formatMessage({ id: 'pages.common.id' }), dataIndex: 'id' },
+                  { title: intl.formatMessage({ id: 'pages.agent.run.agentId' }), dataIndex: 'agentDefinitionId' },
+                  { title: intl.formatMessage({ id: 'pages.agent.run.userId' }), dataIndex: 'userId' },
+                  { title: intl.formatMessage({ id: 'pages.agent.run.conversationId' }), dataIndex: 'conversationId' },
+                  { title: intl.formatMessage({ id: 'pages.agent.run.messageId' }), dataIndex: 'messageId' },
+                  { title: intl.formatMessage({ id: 'pages.agent.run.modelProviderId' }), dataIndex: 'modelProviderId' },
+                  { title: intl.formatMessage({ id: 'pages.agent.run.model' }), dataIndex: 'model' },
                   {
-                    title: '状态',
+                    title: intl.formatMessage({ id: 'pages.common.status' }),
                     dataIndex: 'status',
-                    render: (_: any, record: AgentRun) => renderStatusTag(record.status),
+                    render: (_: any, record: AgentRun) => renderStatusTag(record.status, intl),
                   },
-                  { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime' },
-                  { title: '更新时间', dataIndex: 'updatedAt', valueType: 'dateTime' },
+                  { title: intl.formatMessage({ id: 'pages.common.createTime' }), dataIndex: 'createdAt', valueType: 'dateTime' },
+                  { title: intl.formatMessage({ id: 'pages.common.updateTime' }), dataIndex: 'updatedAt', valueType: 'dateTime' },
                 ]}
               />
-              <Card title="Token 与耗时" size="small" style={{ marginTop: 16 }}>
+              <Card title={intl.formatMessage({ id: 'pages.agent.run.tokensAndLatency' })} size="small" style={{ marginTop: 16 }}>
                 <ProDescriptions
                   column={2}
                   dataSource={run}
                   columns={[
-                    { title: '输入 Token', dataIndex: 'promptTokens' },
-                    { title: '输出 Token', dataIndex: 'completionTokens' },
-                    { title: '总 Token', dataIndex: 'totalTokens' },
-                    { title: '总耗时(ms)', dataIndex: 'latencyMs' },
+                    { title: intl.formatMessage({ id: 'pages.agent.run.inputTokens' }), dataIndex: 'promptTokens' },
+                    { title: intl.formatMessage({ id: 'pages.agent.run.outputTokens' }), dataIndex: 'completionTokens' },
+                    { title: intl.formatMessage({ id: 'pages.agent.run.totalTokens' }), dataIndex: 'totalTokens' },
+                    { title: intl.formatMessage({ id: 'pages.agent.run.totalLatency' }), dataIndex: 'latencyMs' },
                   ]}
                 />
               </Card>
               <Card
-                title="输入内容摘要"
+                title={intl.formatMessage({ id: 'pages.agent.run.inputSummary' })}
                 size="small"
                 style={{ marginTop: 16 }}
                 className="agent-run-card"
@@ -312,7 +314,7 @@ const AgentRunPage: React.FC = () => {
                 <MarkdownText content={run.inputContent} />
               </Card>
               <Card
-                title="输出内容摘要"
+                title={intl.formatMessage({ id: 'pages.agent.run.outputSummary' })}
                 size="small"
                 style={{ marginTop: 16 }}
                 className="agent-run-card"
@@ -320,7 +322,7 @@ const AgentRunPage: React.FC = () => {
                 <MarkdownText content={run.outputContent} />
               </Card>
               <Card
-                title="错误信息"
+                title={intl.formatMessage({ id: 'pages.agent.run.errorInfo' })}
                 size="small"
                 style={{ marginTop: 16 }}
                 className="agent-run-card"
@@ -328,12 +330,12 @@ const AgentRunPage: React.FC = () => {
                 {run.errorMsg ? (
                   <MarkdownText content={run.errorMsg} error={true} />
                 ) : (
-                  <Text type="secondary">暂无错误信息</Text>
+                  <Text type="secondary">{intl.formatMessage({ id: 'pages.agent.run.noErrorInfo' })}</Text>
                 )}
               </Card>
             </>
           ) : (
-            <Empty description="暂无运行记录详情" />
+            <Empty description={intl.formatMessage({ id: 'pages.agent.run.noDetail' })} />
           )}
         </Spin>
       </Drawer>

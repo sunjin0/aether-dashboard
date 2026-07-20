@@ -44,12 +44,12 @@ const rate = (value?: number) => {
   const result = value || 0
   return result > 0 && result <= 1 ? result * 100 : result
 }
-const timeText = (value?: string | number) => {
+const timeText = (value?: string | number, locale?: string) => {
   if (value === undefined || value === null || value === '') return '-'
   if (typeof value === 'number') {
     const timestamp = value < 100000000000 ? value * 1000 : value
     const date = new Date(timestamp)
-    return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString('zh-CN', { hour12: false })
+    return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString(locale, { hour12: false })
   }
   return value.replace('T', ' ').slice(0, 16)
 }
@@ -73,6 +73,7 @@ const AgentToolPage: React.FC = () => {
     sources: [],
   })
   const write = permissionMap[history.location.pathname]
+  const format = (id: string, values?: Record<string, string | number>) => intl.formatMessage({ id }, values)
   const refresh = () => ref.current?.reloadAndRest?.()
   const [toolTypes, setToolTypes] = useState<any>([])
   useEffect(() => {
@@ -93,7 +94,7 @@ const AgentToolPage: React.FC = () => {
     try {
       const result = await getAgentToolStatistics({ toolType, mcpServerId })
       if (result.code === 200) setStatistics(result.data)
-      else message.error(result.message || '加载工具统计失败')
+      else message.error(result.message || format('pages.agent.tool.loadStatisticsFailed'))
     } finally {
       setStatisticsLoading(false)
     }
@@ -105,7 +106,7 @@ const AgentToolPage: React.FC = () => {
   useEffect(() => {
     getAgentToolFacets().then(({ code, data, message: msg }) => {
       if (code === 200 && data) setFacets(data)
-      else message.error(msg || '加载工具筛选项失败')
+      else message.error(msg || format('pages.agent.tool.loadFacetsFailed'))
     })
   }, [])
 
@@ -117,16 +118,16 @@ const AgentToolPage: React.FC = () => {
     if (!record.id) return
     const result = await deleteAgentToolInfo(record.id)
     if (result.code === 200) {
-      message.success(result.message || '删除成功')
+      message.success(result.message || format('pages.agent.tool.deleteSuccess'))
       refresh()
       loadStatistics()
-    } else message.error(result.message || '删除失败')
+    } else message.error(result.message || format('pages.agent.tool.deleteFailed'))
   }
   const handleStatusChange = async (record: AgentTool) => {
     if (!record.id) return
     const detail = await getAgentToolInfo(record.id)
     if (detail.code !== 200 || !detail.data) {
-      message.error(detail.message || '获取工具详情失败')
+      message.error(detail.message || format('pages.agent.tool.getDetailFailed'))
       return
     }
     const result = await updateAgentToolInfo({
@@ -134,19 +135,19 @@ const AgentToolPage: React.FC = () => {
       status: record.status === 1 ? 0 : 1,
     })
     if (result.code === 200) {
-      message.success(result.message || '操作成功')
+      message.success(result.message || format('pages.agent.tool.operationSuccess'))
       refresh()
       loadStatistics()
-    } else message.error(result.message || '操作失败')
+    } else message.error(result.message || format('pages.agent.tool.operationFailed'))
   }
 
   const columns: any[] = [
     {
-      title: '工具名称',
+      title: format('pages.agent.tool.name'),
       dataIndex: 'name',
       width: 275,
       render: (_: unknown, record: AgentTool) => {
-        const meta = typeMeta(record.toolType);
+        const meta = typeMeta(record.toolType)
         return (
           <div className="tool-name-cell">
             <span className={`tool-icon tool-icon-${record.toolType || 'general'}`}>
@@ -154,43 +155,43 @@ const AgentToolPage: React.FC = () => {
             </span>
             <div>
               <strong>{record.name || '-'}</strong>
-              <small>{record.description || record.code || '暂无工具描述'}</small>
+              <small>{record.description || record.code || format('pages.agent.tool.noDescription')}</small>
             </div>
           </div>
-        );
+        )
       },
     },
     {
-      title: '类型',
+      title: format('pages.common.type'),
       dataIndex: 'toolType',
       width: 115,
       render: (_: unknown, record: AgentTool) => (
         <Tag className="tool-type-tag">
-          {typeMeta(record.toolType)?.label || record.toolType || '通用工具'}
+          {typeMeta(record.toolType)?.label || record.toolType || format('pages.agent.tool.general')}
         </Tag>
       ),
     },
     {
-      title: '集成状态',
+      title: format('pages.agent.tool.integrationStatus'),
       dataIndex: 'status',
       width: 120,
       render: (_: unknown, record: AgentTool) =>
         record.status === 1 ? (
           <span className="status-success">
-            <CheckCircleFilled /> 已集成
+            <CheckCircleFilled /> {format('pages.agent.tool.integrated')}
           </span>
         ) : (
-          <span className="status-disabled">未启用</span>
+          <span className="status-disabled">{format('pages.agent.tool.notIntegrated')}</span>
         ),
     },
     {
-      title: '调用次数',
+      title: format('pages.agent.tool.callCount'),
       dataIndex: 'callCount',
       width: 95,
       render: (_: unknown, record: AgentTool) => (record.callCount || 0).toLocaleString(),
     },
     {
-      title: '成功率',
+      title: format('pages.agent.tool.successRate'),
       dataIndex: 'successRate',
       width: 130,
       render: (_: unknown, record: AgentTool) =>
@@ -209,13 +210,13 @@ const AgentToolPage: React.FC = () => {
         ),
     },
     {
-      title: '更新时间',
+      title: format('pages.common.updateTime'),
       dataIndex: 'updatedAt',
       width: 150,
-      render: (_: unknown, record: AgentTool) => timeText(record.updatedAt || record.createdAt),
+      render: (_: unknown, record: AgentTool) => timeText(record.updatedAt || record.createdAt, intl.locale),
     },
     {
-      title: '操作',
+      title: format('pages.common.option'),
       key: 'option',
       width: 250,
       fixed: 'right',
@@ -225,29 +226,29 @@ const AgentToolPage: React.FC = () => {
             items={[
               {
                 key: 'edit',
-                label: '编辑',
+                label: format('pages.common.edit'),
                 primary: true,
                 onClick: () => {
-                  setId(record.id);
-                  setOpen(true);
+                  setId(record.id)
+                  setOpen(true)
                 },
               },
               {
                 key: 'test',
-                label: '测试',
+                label: format('pages.agent.tool.test'),
                 primary: true,
                 visible: !!record.id,
                 onClick: () => setTestToolId(record.id),
               },
               {
                 key: 'status',
-                label: record.status === 1 ? '禁用' : '启用',
-                confirm: { title: record.status === 1 ? '确认禁用该工具？' : '确认启用该工具？' },
+                label: record.status === 1 ? format('pages.common.disabled') : format('pages.common.enabled'),
+                confirm: { title: format('pages.agent.tool.statusConfirm', { action: record.status === 1 ? format('pages.common.disabled') : format('pages.common.enabled') }) },
                 onClick: () => handleStatusChange(record),
               },
               {
                 key: 'delete',
-                label: '删除',
+                label: format('pages.common.delete'),
                 primary: true,
                 danger: true,
                 confirm: { title: intl.formatMessage({ id: 'pages.agent.tool.deleteConfirm' }) },
@@ -257,12 +258,12 @@ const AgentToolPage: React.FC = () => {
           />
         ),
     },
-  ];
+  ]
 
   return (
     <PageContainer
       className="agent-tool-page"
-      header={{ title: '工具中心', breadcrumb: undefined }}
+      header={{ title: format('pages.agent.tool.center'), breadcrumb: undefined }}
     >
       <Spin spinning={statisticsLoading}>
         <div className="tool-stat-grid">
@@ -271,9 +272,9 @@ const AgentToolPage: React.FC = () => {
               <AppstoreOutlined />
             </i>
             <div>
-              <span>工具总数</span>
+              <span>{format('pages.agent.tool.total')}</span>
               <strong>{statistics?.totalCount || 0}</strong>
-              <small>当前筛选范围内的工具</small>
+              <small>{format('pages.agent.tool.totalHint')}</small>
             </div>
           </div>
           <div className="tool-stat-card">
@@ -281,12 +282,12 @@ const AgentToolPage: React.FC = () => {
               <CheckCircleFilled />
             </i>
             <div>
-              <span>可用工具</span>
+              <span>{format('pages.agent.tool.available')}</span>
               <strong>{statistics?.enabledCount || 0}</strong>
               <small>
                 {statistics?.totalCount
-                  ? `${(((statistics.enabledCount || 0) / statistics.totalCount) * 100).toFixed(0)}% 可用率`
-                  : '暂无工具'}
+                  ? format('pages.agent.tool.availabilityRate', { rate: (((statistics.enabledCount || 0) / statistics.totalCount) * 100).toFixed(0) })
+                  : format('pages.agent.tool.empty')}
               </small>
             </div>
           </div>
@@ -295,9 +296,9 @@ const AgentToolPage: React.FC = () => {
               <ApiOutlined />
             </i>
             <div>
-              <span>已集成服务</span>
+              <span>{format('pages.agent.tool.integratedServices')}</span>
               <strong>{facets.sources.length}</strong>
-              <small>已配置 MCP 服务</small>
+              <small>{format('pages.agent.tool.configuredMcpServices')}</small>
             </div>
           </div>
           <div className="tool-stat-card">
@@ -305,9 +306,9 @@ const AgentToolPage: React.FC = () => {
               <FileTextOutlined />
             </i>
             <div>
-              <span>调用总次数</span>
+              <span>{format('pages.agent.tool.totalCalls')}</span>
               <strong>{(statistics?.callCount || 0).toLocaleString()}</strong>
-              <small>成功率 {rate(statistics?.successRate).toFixed(1)}%</small>
+              <small>{format('pages.agent.tool.successRateValue', { rate: rate(statistics?.successRate).toFixed(1) })}</small>
             </div>
           </div>
         </div>
@@ -315,13 +316,13 @@ const AgentToolPage: React.FC = () => {
       <div className="tool-workspace">
         <aside className="tool-sidebar">
           <section>
-            <h3>工具分类</h3>
+            <h3>{format('pages.agent.tool.categories')}</h3>
             <button
               className={!toolType ? 'selected' : ''}
               onClick={() => changeFilter(() => setToolType(undefined))}
             >
               <AppstoreOutlined />
-              全部工具 <em>{statistics?.totalCount || 0}</em>
+              {format('pages.agent.tool.allTools')} <em>{statistics?.totalCount || 0}</em>
             </button>
             {facets.categories.map((item) => (
               <button
@@ -336,13 +337,13 @@ const AgentToolPage: React.FC = () => {
             ))}
           </section>
           <section>
-            <h3>集成状态</h3>
+            <h3>{format('pages.agent.tool.integrationStatus')}</h3>
             <button
               className={status === undefined ? 'selected' : ''}
               onClick={() => changeFilter(() => setStatus(undefined))}
             >
               <i className="status-dot blue" />
-              全部
+              {format('pages.agent.tool.all')}
             </button>
             {facets.statuses.map((item) => {
               const value = Number(item.value)
@@ -360,13 +361,13 @@ const AgentToolPage: React.FC = () => {
             })}
           </section>
           <section>
-            <h3>来源</h3>
+            <h3>{format('pages.agent.tool.source')}</h3>
             <button
               className={!mcpServerId ? 'selected' : ''}
               onClick={() => changeFilter(() => setMcpServerId(undefined))}
             >
               <GlobalOutlined />
-              全部来源
+              {format('pages.agent.tool.allSources')}
             </button>
             {facets.sources.slice(0, 5).map((source) => (
               <button
@@ -386,24 +387,24 @@ const AgentToolPage: React.FC = () => {
             <Input
               allowClear
               prefix={<SearchOutlined />}
-              placeholder="搜索工具名称、类型或描述"
+              placeholder={format('pages.agent.tool.searchPlaceholder')}
               value={keyword}
               onChange={(event) => setKeyword(event.target.value)}
               onPressEnter={refresh}
             />
             <Select
               value={status}
-              placeholder="全部状态"
+              placeholder={format('pages.agent.tool.allStatuses')}
               allowClear
               options={[
-                { label: '已集成', value: 1 },
-                { label: '未集成', value: 0 },
+                { label: format('pages.agent.tool.integrated'), value: 1 },
+                { label: format('pages.agent.tool.notIntegrated'), value: 0 },
               ]}
               onChange={(value) => changeFilter(() => setStatus(value))}
             />
             <Select
               value={mcpServerId}
-              placeholder="全部来源"
+              placeholder={format('pages.agent.tool.allSources')}
               allowClear
               options={facets.sources.map((source) => ({
                 label: source.label,
@@ -420,7 +421,7 @@ const AgentToolPage: React.FC = () => {
                   setOpen(true)
                 }}
               >
-                添加工具
+                {format('pages.agent.tool.add')}
               </Button>
             )}
           </div>
@@ -445,7 +446,7 @@ const AgentToolPage: React.FC = () => {
             pagination={{
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: (total) => `共 ${total} 条`,
+              showTotal: (total) => format('pages.agent.tool.totalRecords', { total }),
             }}
           />
         </main>

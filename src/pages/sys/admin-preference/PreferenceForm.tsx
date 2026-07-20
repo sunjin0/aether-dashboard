@@ -14,20 +14,7 @@ import {
 import { Form } from 'antd'
 import dayjs from 'dayjs'
 import { getAdminList } from '@/services/sys/AdminController'
-
-const CATEGORY_OPTIONS = [
-  { label: '语言', value: 'language' },
-  { label: '表达风格', value: 'style' },
-  { label: '输出格式', value: 'format' },
-  { label: '技术栈', value: 'tech_stack' },
-  { label: '工具策略', value: 'tool_strategy' },
-]
-
-const SCOPE_OPTIONS = [
-  { label: '全局', value: 'global' },
-  { label: '会话', value: 'session' },
-  { label: '任务类型', value: 'task_type' },
-]
+import { useIntl } from '@umijs/max'
 
 interface PreferenceFormProps {
   id?: string;
@@ -37,7 +24,11 @@ interface PreferenceFormProps {
 }
 
 const PreferenceForm: React.FC<PreferenceFormProps> = ({ id, open, setOpen, onSuccess }) => {
+  const intl = useIntl()
+  const format = (id: string) => intl.formatMessage({ id })
   const [form] = Form.useForm()
+  const categoryOptions = ['language', 'style', 'format', 'tech_stack', 'tool_strategy'].map((value) => ({ label: format(`pages.sys.preference.category.${value}`), value }))
+  const scopeOptions = ['global', 'session', 'task_type'].map((value) => ({ label: format(`pages.sys.preference.scope.${value}`), value }))
 
   return (
     <DrawerForm
@@ -63,8 +54,8 @@ const PreferenceForm: React.FC<PreferenceFormProps> = ({ id, open, setOpen, onSu
     >
       <ProFormSelect
         name="adminId"
-        label="管理员"
-        rules={[{ required: true, message: '请选择管理员' }]}
+        label={format('pages.sys.preference.admin')}
+        rules={[{ required: true, message: format('pages.sys.preference.selectAdmin') }]}
         request={async () => {
           const res = await getAdminList({ current: 1, pageSize: 100 })
           if (res.code === 200 && res.data) {
@@ -77,48 +68,48 @@ const PreferenceForm: React.FC<PreferenceFormProps> = ({ id, open, setOpen, onSu
 
       <ProFormSelect
         name="category"
-        label="分类"
-        rules={[{ required: true, message: '请选择分类' }]}
-        options={CATEGORY_OPTIONS}
+        label={format('pages.sys.preference.category')}
+        rules={[{ required: true, message: format('pages.sys.preference.selectCategory') }]}
+        options={categoryOptions}
         fieldProps={{ showSearch: true }}
       />
       <ProFormText
         name="keyName"
-        label="键名"
-        rules={[{ required: true, message: '请输入键名' }]}
-        placeholder="如 output_length"
+        label={format('pages.sys.preference.keyName')}
+        rules={[{ required: true, message: format('pages.sys.preference.enterKeyName') }]}
+        placeholder={format('pages.sys.preference.keyNamePlaceholder')}
       />
       <ProFormText
         name="value"
-        label="偏好值"
-        rules={[{ required: true, message: '请输入偏好值' }]}
-        placeholder="如 简洁"
+        label={format('pages.sys.preference.value')}
+        rules={[{ required: true, message: format('pages.sys.preference.enterValue') }]}
+        placeholder={format('pages.sys.preference.valuePlaceholder')}
       />
       <ProFormTextArea
         name="description"
-        label="描述"
+        label={format('pages.common.description')}
         fieldProps={{ rows: 3, maxLength: 500, showCount: true }}
       />
       <ProFormSelect
         name="scope"
-        label="作用域"
+        label={format('pages.sys.preference.scope')}
         initialValue="global"
-        options={SCOPE_OPTIONS}
+        options={scopeOptions}
       />
       <Form.Item noStyle shouldUpdate={(prev, cur) => prev.scope !== cur.scope}>
         {({ getFieldValue }) =>
           getFieldValue('scope') === 'task_type' && (
             <ProFormText
               name="scopeDetail"
-              label="任务类型"
-              placeholder="如 code_review、document_generation"
+              label={format('pages.sys.preference.taskType')}
+              placeholder={format('pages.sys.preference.taskTypePlaceholder')}
             />
           )
         }
       </Form.Item>
       <ProFormDigit
         name="priority"
-        label="优先级"
+        label={format('pages.sys.preference.priority')}
         initialValue={50}
         min={0}
         max={100}
@@ -126,8 +117,8 @@ const PreferenceForm: React.FC<PreferenceFormProps> = ({ id, open, setOpen, onSu
       />
       <ProFormDatePicker
         name="expiresAt"
-        label="过期时间"
-        placeholder="留空表示永不过期"
+        label={format('pages.sys.preference.expiresAt')}
+        placeholder={format('pages.sys.preference.expiresAtPlaceholder')}
         fieldProps={{
           showTime: true,
           format: 'YYYY-MM-DD HH:mm:ss',
@@ -135,7 +126,7 @@ const PreferenceForm: React.FC<PreferenceFormProps> = ({ id, open, setOpen, onSu
       />
       <ProFormDigit
         name="decayRate"
-        label="衰减率"
+        label={format('pages.sys.preference.decayRate')}
         initialValue={0}
         min={0}
         max={0.1}
@@ -143,12 +134,12 @@ const PreferenceForm: React.FC<PreferenceFormProps> = ({ id, open, setOpen, onSu
       />
       <ProFormSelect
         name="status"
-        label="状态"
+        label={format('pages.common.status')}
         initialValue={1}
         rules={[{ required: true }]}
         options={[
-          { label: '启用', value: 1 },
-          { label: '禁用', value: 0 },
+          { label: format('pages.common.enabled'), value: 1 },
+          { label: format('pages.common.disabled'), value: 0 },
         ]}
       />
     </DrawerForm>

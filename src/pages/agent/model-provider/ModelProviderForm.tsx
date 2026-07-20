@@ -12,6 +12,7 @@ import {
   updateModelProviderInfo,
 } from '@/services/agent/ModelProviderController'
 import { getOptionList } from '@/services/sys/DictController'
+import { useIntl } from '@umijs/max'
 
 const ModelProviderForm = (props: {
   id?: string;
@@ -20,6 +21,8 @@ const ModelProviderForm = (props: {
   onSuccess: () => void;
 }) => {
   const { id, open, setOpen, onSuccess } = props
+  const intl = useIntl()
+  const format = (id: string) => intl.formatMessage({ id })
   const [form] = Form.useForm()
 
   return (
@@ -49,31 +52,31 @@ const ModelProviderForm = (props: {
       form={form}
     >
       <ProFormText name="id" hidden={true} />
-      <ProFormText name="name" label="供应商名称" rules={[{ required: true }]} />
+      <ProFormText name="name" label={format('pages.agent.modelProvider.name')} rules={[{ required: true }]} />
       <ProFormSelect
         name="type"
-        label="供应商类型"
+        label={format('pages.agent.modelProvider.type')}
         request={async () => getOptionList('Model_Provider_Type')}
         rules={[{ required: true }]}
       />
-      <ProFormText name="apiBaseUrl" label="API 基础地址" rules={[{ required: true }]} />
+      <ProFormText name="apiBaseUrl" label={format('pages.agent.modelProvider.apiBaseUrl')} rules={[{ required: true }]} />
       <ProFormText.Password
         name="apiKey"
         label="API Key"
         required={!id}
         rules={[{ required: !id }]}
         fieldProps={{ autoComplete: 'new-password' }}
-        extra={id ? '留空表示不修改原 API Key' : undefined}
+        extra={id ? format('pages.agent.modelProvider.apiKeyUnchanged') : undefined}
       />
-      <ProFormText name="defaultModel" label="默认模型" rules={[{ required: true }]} />
+      <ProFormText name="defaultModel" label={format('pages.agent.modelProvider.defaultModel')} rules={[{ required: true }]} />
       <ProFormSelect
         name="status"
-        label="状态"
+        label={format('pages.common.status')}
         request={async () => getOptionList('Agent_Status')}
         rules={[{ required: true }]}
       />
-      <ProFormDigit name="sort" label="排序" min={0} fieldProps={{ precision: 0 }} />
-      <ProFormTextArea name="remark" label="备注" />
+      <ProFormDigit name="sort" label={format('pages.common.sort.number')} min={0} fieldProps={{ precision: 0 }} />
+      <ProFormTextArea name="remark" label={format('pages.common.remark')} />
     </DrawerForm>
   )
 }

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { useIntl } from '@umijs/max'
 import { Modal, Input, Button, Space, Typography, Spin, Select, Avatar } from 'antd'
 import { SendOutlined, StopOutlined, RobotOutlined, UserOutlined } from '@ant-design/icons'
 import { streamAgentChat } from '@/services/agent/ChatController'
@@ -27,6 +28,7 @@ const PromptGenerateModal: React.FC<PromptGenerateModalProps> = ({
   onGenerated,
   agentName,
 }) => {
+  const intl = useIntl()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -132,7 +134,7 @@ const PromptGenerateModal: React.FC<PromptGenerateModalProps> = ({
               const newMessages = [...prev]
               newMessages[newMessages.length - 1] = {
                 role: 'assistant',
-                content: `[错误] ${err.message || '生成失败'}`,
+                content: intl.formatMessage({ id: 'pages.components.systemPromptEditor.errorWithMessage' }, { message: err.message || intl.formatMessage({ id: 'pages.components.systemPromptEditor.generateFailed' }) }),
               }
               return newMessages
             })
@@ -149,7 +151,7 @@ const PromptGenerateModal: React.FC<PromptGenerateModalProps> = ({
           const newMessages = [...prev]
           newMessages[newMessages.length - 1] = {
             role: 'assistant',
-            content: '[错误] 生成失败',
+            content: intl.formatMessage({ id: 'pages.components.systemPromptEditor.errorWithMessage' }, { message: intl.formatMessage({ id: 'pages.components.systemPromptEditor.generateFailed' }) }),
           }
           return newMessages
         })
@@ -196,7 +198,7 @@ const PromptGenerateModal: React.FC<PromptGenerateModalProps> = ({
 
   return (
     <Modal
-      title="AI 生成系统提示词"
+      title={intl.formatMessage({ id: 'pages.components.systemPromptEditor.generateTitle' })}
       open={open}
       onCancel={handleClose}
       footer={null}
@@ -205,12 +207,12 @@ const PromptGenerateModal: React.FC<PromptGenerateModalProps> = ({
       className="prompt-generate-modal"
     >
       <div style={{ marginBottom: 16 }}>
-        <Text type="secondary">与 AI 对话，逐步生成和完善你的系统提示词</Text>
+        <Text type="secondary">{intl.formatMessage({ id: 'pages.components.systemPromptEditor.generateDescription' })}</Text>
       </div>
 
       <div style={{ marginBottom: 16 }}>
         <Select
-          placeholder="选择用于生成的 Agent"
+          placeholder={intl.formatMessage({ id: 'pages.components.systemPromptEditor.selectGenerateAgent' })}
           style={{ width: '100%' }}
           value={selectedAgentId}
           onChange={setSelectedAgentId}
@@ -221,7 +223,7 @@ const PromptGenerateModal: React.FC<PromptGenerateModalProps> = ({
             label: `${agent.name} (${agent.code})`,
             value: agent.id,
           }))}
-          notFoundContent={loadingAgents ? <Spin size="small" /> : '暂无可用 Agent'}
+          notFoundContent={loadingAgents ? <Spin size="small" /> : intl.formatMessage({ id: 'pages.components.systemPromptEditor.noAvailableAgents' })}
         />
       </div>
 
@@ -230,7 +232,7 @@ const PromptGenerateModal: React.FC<PromptGenerateModalProps> = ({
           {messages.length === 0 && selectedAgentId && (
             <div className="chat-empty">
               <RobotOutlined style={{ fontSize: 48, color: '#d9d9d9', marginBottom: 16 }} />
-              <Text type="secondary">描述你需要的 AI 助手，开始生成提示词</Text>
+              <Text type="secondary">{intl.formatMessage({ id: 'pages.components.systemPromptEditor.describeAssistant' })}</Text>
             </div>
           )}
 
@@ -268,7 +270,7 @@ const PromptGenerateModal: React.FC<PromptGenerateModalProps> = ({
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={
-                selectedAgentId ? '输入消息... (Enter 发送, Shift+Enter 换行)' : '请先选择 Agent'
+                selectedAgentId ? intl.formatMessage({ id: 'pages.components.systemPromptEditor.inputMessagePlaceholder' }) : intl.formatMessage({ id: 'pages.components.systemPromptEditor.selectAgentFirst' })
               }
               autoSize={{ minRows: 2, maxRows: 6 }}
               disabled={!selectedAgentId || loading}
@@ -276,7 +278,7 @@ const PromptGenerateModal: React.FC<PromptGenerateModalProps> = ({
             <div className="chat-input-actions">
               {loading ? (
                 <Button icon={<StopOutlined />} onClick={handleStop}>
-                  停止
+                  {intl.formatMessage({ id: 'pages.common.stop' })}
                 </Button>
               ) : (
                 <Button
@@ -285,7 +287,7 @@ const PromptGenerateModal: React.FC<PromptGenerateModalProps> = ({
                   onClick={() => sendMessage(input)}
                   disabled={!input.trim() || !selectedAgentId}
                 >
-                  发送
+                  {intl.formatMessage({ id: 'pages.common.send' })}
                 </Button>
               )}
             </div>
@@ -295,9 +297,9 @@ const PromptGenerateModal: React.FC<PromptGenerateModalProps> = ({
 
       <div style={{ marginTop: 16, textAlign: 'right' }}>
         <Space>
-          <Button onClick={handleClose}>取消</Button>
+          <Button onClick={handleClose}>{intl.formatMessage({ id: 'pages.common.cancel' })}</Button>
           <Button type="primary" onClick={handleUse} disabled={!lastAssistantMessage || loading}>
-            使用此提示词
+            {intl.formatMessage({ id: 'pages.components.systemPromptEditor.useThisPrompt' })}
           </Button>
         </Space>
       </div>

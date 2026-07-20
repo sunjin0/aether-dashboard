@@ -6,7 +6,7 @@ import {
 import { KnowledgeBase, KnowledgeBaseSearchParams } from '@/services/entity/Agent'
 import { PlusOutlined } from '@ant-design/icons'
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
-import { history, useAccess } from '@@/exports'
+import { history, useAccess, useIntl } from '@@/exports'
 import { Alert, Button, message, Popconfirm, Tag } from 'antd'
 import React, { useRef, useState } from 'react'
 import { getIndexStatus, getSwitchStatus } from '@/pages/agent/knowledge-base/status'
@@ -18,6 +18,7 @@ const KnowledgeBasePage: React.FC = () => {
   const [id, setId] = useState<string>()
   const permissions = useAccess()
   const write = permissions[history.location.pathname]
+  const intl = useIntl()
 
   const columns: any[] = [
     {
@@ -30,47 +31,47 @@ const KnowledgeBasePage: React.FC = () => {
       hideInSearch: true,
     },
     {
-      title: '范围',
+      title: intl.formatMessage({ id: 'pages.knowledge.base.scope' }),
       dataIndex: 'scope',
       valueType: 'select',
-      valueEnum: { PLATFORM: { text: '平台级' }, AGENT: { text: 'Agent 专属' } },
+      valueEnum: { PLATFORM: { text: intl.formatMessage({ id: 'pages.knowledge.base.scope.platform' }) }, AGENT: { text: intl.formatMessage({ id: 'pages.knowledge.base.scope.agentOnly' }) } },
     },
-    { title: '名称', dataIndex: 'name', ellipsis: true },
+    { title: intl.formatMessage({ id: 'pages.common.name' }), dataIndex: 'name', ellipsis: true },
     {
-      title: '可见范围',
+      title: intl.formatMessage({ id: 'pages.knowledge.base.visibility' }),
       dataIndex: 'visibility',
       valueType: 'select',
       valueEnum: {
-        platform: { text: '平台' },
-        private: { text: '私有' },
-        shared: { text: '共享' },
+        platform: { text: intl.formatMessage({ id: 'pages.knowledge.base.visibility.platform' }) },
+        private: { text: intl.formatMessage({ id: 'pages.knowledge.base.visibility.private' }) },
+        shared: { text: intl.formatMessage({ id: 'pages.knowledge.base.visibility.shared' }) },
       },
     },
-    { title: '描述', dataIndex: 'description', ellipsis: true, hideInSearch: true },
+    { title: intl.formatMessage({ id: 'pages.common.description' }), dataIndex: 'description', ellipsis: true, hideInSearch: true },
     {
-      title: '状态',
+      title: intl.formatMessage({ id: 'pages.common.status' }),
       dataIndex: 'status',
       valueType: 'select',
-      valueEnum: { 0: { text: '禁用' }, 1: { text: '启用' } },
+      valueEnum: { 0: { text: intl.formatMessage({ id: 'pages.knowledge.base.status.disabled' }) }, 1: { text: intl.formatMessage({ id: 'pages.knowledge.base.status.enabled' }) } },
       render: (_: unknown, record: KnowledgeBase) => {
-        const item = getSwitchStatus(record.status);
-        return <Tag color={item.color}>{item.label}</Tag>;
+        const item = getSwitchStatus(record.status)
+        return <Tag color={item.color}>{item.label}</Tag>
       },
     },
     {
-      title: '索引状态',
+      title: intl.formatMessage({ id: 'pages.knowledge.document.indexStatus' }),
       dataIndex: 'indexStatus',
       valueType: 'select',
-      valueEnum: { 0: { text: '未索引' }, 1: { text: '索引中' }, 2: { text: '已索引' } },
+      valueEnum: { 0: { text: intl.formatMessage({ id: 'pages.knowledge.base.indexStatus.notIndexed' }) }, 1: { text: intl.formatMessage({ id: 'pages.knowledge.base.indexStatus.indexing' }) }, 2: { text: intl.formatMessage({ id: 'pages.knowledge.base.indexStatus.indexed' }) } },
       render: (_: unknown, record: KnowledgeBase) => {
-        const item = getIndexStatus(record.indexStatus);
-        return <Tag color={item.color}>{item.label}</Tag>;
+        const item = getIndexStatus(record.indexStatus)
+        return <Tag color={item.color}>{item.label}</Tag>
       },
     },
-    { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime', hideInSearch: true },
-    { title: '更新时间', dataIndex: 'updatedAt', valueType: 'dateTime', hideInSearch: true },
+    { title: intl.formatMessage({ id: 'pages.common.createTime' }), dataIndex: 'createdAt', valueType: 'dateTime', hideInSearch: true },
+    { title: intl.formatMessage({ id: 'pages.common.updateTime' }), dataIndex: 'updatedAt', valueType: 'dateTime', hideInSearch: true },
     {
-      title: '操作',
+      title: intl.formatMessage({ id: 'pages.common.option' }),
       valueType: 'option',
       key: 'option',
       fixed: 'right',
@@ -82,7 +83,7 @@ const KnowledgeBasePage: React.FC = () => {
             items={[
               {
                 key: 'documents',
-                label: '文档管理',
+                label: intl.formatMessage({ id: 'pages.knowledge.base.documents' }),
                 primary: true,
                 onClick: () =>
                   history.push(
@@ -91,25 +92,25 @@ const KnowledgeBasePage: React.FC = () => {
               },
               {
                 key: 'edit',
-                label: '编辑',
+                label: intl.formatMessage({ id: 'pages.knowledge.base.edit' }),
                 primary: true,
                 onClick: () => {
-                  setId(record.id);
-                  setOpen(true);
+                  setId(record.id)
+                  setOpen(true)
                 },
               },
               {
                 key: 'delete',
-                label: '删除',
+                label: intl.formatMessage({ id: 'pages.knowledge.base.delete' }),
                 primary: true,
                 danger: true,
-                confirm: { title: '确认删除该文档？' },
+                confirm: { title: intl.formatMessage({ id: 'pages.knowledge.base.deleteConfirm' }) },
                 onClick: () => {
                   if (record.id != null) {
                     deleteKnowledgeBase(record.id).then(() => {
-                      message.success('删除成功');
-                      ref.current?.reload();
-                    });
+                      message.success(intl.formatMessage({ id: 'pages.knowledge.base.deleteSuccess' }))
+                      ref.current?.reload()
+                    })
                   }
                 },
               },
@@ -117,14 +118,14 @@ const KnowledgeBasePage: React.FC = () => {
           />
         ),
     },
-  ];
+  ]
 
   return (
     <PageContainer>
       <Alert
         showIcon
         type="info"
-        message="已启用且已索引的知识库会自动参与关联 Agent 的回答。文档新增、编辑和重建索引会同步执行 Embedding，可能需要较长时间。"
+        message={intl.formatMessage({ id: 'pages.knowledge.base.indexingInfo' })}
         style={{ marginBottom: 16 }}
       />
       <ProTable<KnowledgeBase>
@@ -144,7 +145,7 @@ const KnowledgeBasePage: React.FC = () => {
                 setOpen(true)
               }}
             >
-              新增知识库
+              {intl.formatMessage({ id: 'pages.knowledge.base.create' })}
             </Button>,
           ]
         }

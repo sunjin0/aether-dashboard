@@ -1,36 +1,20 @@
 import { KnowledgeIndexJob, KnowledgeIndexJobSearchParams } from '@/services/entity/Agent'
 import { getIndexJobList, retryIndexJob } from '@/services/knowledge/IndexJobController'
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
-import { useAccess } from '@@/exports'
+import { useAccess, useIntl } from '@@/exports'
 import { Descriptions, message, Tag, Tooltip } from 'antd'
 import TableActionMenu from '@/components/TableActionMenu'
 import React, { useRef } from 'react'
 
-const statusLabels: Record<string, { text: string; color: string }> = {
-  pending: { text: '等待中', color: 'default' },
-  running: { text: '执行中', color: 'processing' },
-  success: { text: '已完成', color: 'success' },
-  failed: { text: '失败', color: 'error' },
-  cancelled: { text: '已取消', color: 'default' },
-}
-
-/** 后端 KnowledgeIndexJob.jobType 的中文展示文案。 */
-const jobTypeLabels: Record<string, string> = {
-  create: '新建文本',
-  upload: '上传文件',
-  update: '编辑文档',
-  reindex: '重建索引',
-  rollback: '回滚版本',
-  retry: '人工重试',
-}
-
 /** 将任务起止时间转换为可快速识别的耗时文本。 */
-const formatDuration = (startedAt?: number, finishedAt?: number) => {
+const formatDuration = (startedAt?: number, finishedAt?: number, intl?: ReturnType<typeof useIntl>) => {
   if (!startedAt) return '-'
   const duration = (finishedAt || Date.now()) - startedAt
   if (duration < 1000) return `${duration} ms`
-  if (duration < 60_000) return `${(duration / 1000).toFixed(1)} 秒`
-  return `${Math.floor(duration / 60_000)} 分 ${Math.floor((duration % 60_000) / 1000)} 秒`
+  if (duration < 60_000) return intl ? intl.formatMessage({ id: 'pages.knowledge.indexJob.duration.seconds' }, { value: (duration / 1000).toFixed(1) }) : `${(duration / 1000).toFixed(1)} 秒`
+  return intl
+    ? intl.formatMessage({ id: 'pages.knowledge.indexJob.duration.minutes' }, { minutes: Math.floor(duration / 60_000), seconds: Math.floor((duration % 60_000) / 1000) })
+    : `${Math.floor(duration / 60_000)} 分 ${Math.floor((duration % 60_000) / 1000)} 秒`
 }
 
 const IdText: React.FC<{ value?: string }> = ({ value }) => (
@@ -43,9 +27,27 @@ const KnowledgeIndexJobPage: React.FC = () => {
   const actionRef = useRef<ActionType>()
   const access = useAccess()
   const canRetry = access['/knowledge/document'] || access['/knowledge/index-job']
+  const intl = useIntl()
+
+  const statusLabels: Record<string, { text: string; color: string }> = {
+    pending: { text: intl.formatMessage({ id: 'pages.knowledge.indexJob.status.pending' }), color: 'default' },
+    running: { text: intl.formatMessage({ id: 'pages.knowledge.indexJob.status.running' }), color: 'processing' },
+    success: { text: intl.formatMessage({ id: 'pages.knowledge.indexJob.status.success' }), color: 'success' },
+    failed: { text: intl.formatMessage({ id: 'pages.knowledge.indexJob.status.failed' }), color: 'error' },
+    cancelled: { text: intl.formatMessage({ id: 'pages.knowledge.indexJob.status.cancelled' }), color: 'default' },
+  }
+
+  const jobTypeLabels: Record<string, string> = {
+    create: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.create' }),
+    upload: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.upload' }),
+    update: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.update' }),
+    reindex: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.reindex' }),
+    rollback: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.rollback' }),
+    retry: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.retry' }),
+  }
 
   return (
-    <PageContainer title="索引任务">
+    <PageContainer title={intl.formatMessage({ id: 'pages.knowledge.indexJob.title' })}>
       <ProTable<KnowledgeIndexJob>
         actionRef={actionRef}
         polling={3000}
@@ -55,26 +57,26 @@ const KnowledgeIndexJobPage: React.FC = () => {
         expandable={{
           expandedRowRender: (record) => (
             <Descriptions size="small" column={3} bordered>
-              <Descriptions.Item label="任务 ID" span={3}>
+              <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.indexJob.taskId' })} span={3}>
                 {record.id || '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="知识库 ID">
+              <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.indexJob.knowledgeBaseId' })}>
                 {record.knowledgeBaseId || '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="文档 ID">{record.documentId || '-'}</Descriptions.Item>
-              <Descriptions.Item label="文档版本 ID">
+              <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.indexJob.documentId' })}>{record.documentId || '-'}</Descriptions.Item>
+              <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.indexJob.versionId' })}>
                 {record.documentVersionId || '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="创建时间">
-                {record.createdAt ? new Date(record.createdAt).toLocaleString() : '-'}
+              <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.indexJob.createdAt' })}>
+                {record.createdAt ? new Date(record.createdAt).toLocaleString(intl.locale) : '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="开始时间">
-                {record.startedAt ? new Date(record.startedAt).toLocaleString() : '-'}
+              <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.indexJob.startedAt' })}>
+                {record.startedAt ? new Date(record.startedAt).toLocaleString(intl.locale) : '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="完成时间">
-                {record.finishedAt ? new Date(record.finishedAt).toLocaleString() : '-'}
+              <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.indexJob.finishedAt' })}>
+                {record.finishedAt ? new Date(record.finishedAt).toLocaleString(intl.locale) : '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="统计信息" span={3}>
+              <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.indexJob.statistics' })} span={3}>
                 {record.statistics
                   ? typeof record.statistics === 'string'
                     ? record.statistics
@@ -82,7 +84,7 @@ const KnowledgeIndexJobPage: React.FC = () => {
                   : '-'}
               </Descriptions.Item>
               {record.errorMessage && (
-                <Descriptions.Item label="错误信息" span={3}>
+                <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.indexJob.errorInfo' })} span={3}>
                   {record.errorMessage}
                 </Descriptions.Item>
               )}
@@ -91,16 +93,16 @@ const KnowledgeIndexJobPage: React.FC = () => {
         }}
         columns={[
           {
-            title: '任务类型',
+            title: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobTypeColumn' }),
             dataIndex: 'jobType',
             valueType: 'select',
             valueEnum: {
-              create: { text: '新建文本' },
-              upload: { text: '上传文件' },
-              update: { text: '编辑文档' },
-              reindex: { text: '重建索引' },
-              rollback: { text: '回滚版本' },
-              retry: { text: '人工重试' },
+              create: { text: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.create' }) },
+              upload: { text: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.upload' }) },
+              update: { text: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.update' }) },
+              reindex: { text: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.reindex' }) },
+              rollback: { text: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.rollback' }) },
+              retry: { text: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.retry' }) },
             },
             render: (_, record) => (
               <Tag
@@ -117,28 +119,28 @@ const KnowledgeIndexJobPage: React.FC = () => {
             ),
           },
           {
-            title: '知识库 ID',
+            title: intl.formatMessage({ id: 'pages.knowledge.indexJob.knowledgeBaseId' }),
             dataIndex: 'knowledgeBaseId',
             width: 170,
             ellipsis: true,
             render: (_, record) => <IdText value={record.knowledgeBaseId} />,
           },
           {
-            title: '文档 ID',
+            title: intl.formatMessage({ id: 'pages.knowledge.indexJob.documentId' }),
             dataIndex: 'documentId',
             width: 170,
             ellipsis: true,
             render: (_, record) => <IdText value={record.documentId} />,
           },
           {
-            title: '版本 ID',
+            title: intl.formatMessage({ id: 'pages.knowledge.indexJob.versionId' }),
             dataIndex: 'documentVersionId',
             width: 170,
             ellipsis: true,
             render: (_, record) => <IdText value={record.documentVersionId} />,
           },
           {
-            title: '状态',
+            title: intl.formatMessage({ id: 'pages.knowledge.indexJob.statusColumn' }),
             dataIndex: 'status',
             valueType: 'select',
             valueEnum: Object.fromEntries(
@@ -150,40 +152,40 @@ const KnowledgeIndexJobPage: React.FC = () => {
             },
           },
           {
-            title: '重试',
+            title: intl.formatMessage({ id: 'pages.knowledge.indexJob.retryColumn' }),
             width: 100,
             hideInSearch: true,
             render: (_, record) => `${record.retryCount || 0}/${record.maxRetryCount || 0}`,
           },
           {
-            title: '开始时间',
+            title: intl.formatMessage({ id: 'pages.knowledge.indexJob.startedAt' }),
             dataIndex: 'startedAt',
             valueType: 'dateTime',
             width: 170,
             hideInSearch: true,
           },
           {
-            title: '完成时间',
+            title: intl.formatMessage({ id: 'pages.knowledge.indexJob.finishedAt' }),
             dataIndex: 'finishedAt',
             valueType: 'dateTime',
             width: 170,
             hideInSearch: true,
           },
           {
-            title: '耗时',
+            title: intl.formatMessage({ id: 'pages.knowledge.indexJob.durationColumn' }),
             width: 100,
             hideInSearch: true,
-            render: (_, record) => formatDuration(record.startedAt, record.finishedAt),
+            render: (_, record) => formatDuration(record.startedAt, record.finishedAt, intl),
           },
           {
-            title: '错误信息',
+            title: intl.formatMessage({ id: 'pages.knowledge.indexJob.errorInfoColumn' }),
             dataIndex: 'errorMessage',
             width: 220,
             ellipsis: true,
             hideInSearch: true,
           },
           {
-            title: '操作',
+            title: intl.formatMessage({ id: 'pages.common.option' }),
             valueType: 'option',
             width: 100,
             fixed: 'right',
@@ -191,7 +193,7 @@ const KnowledgeIndexJobPage: React.FC = () => {
               canRetry && record.status === 'failed' ? (
                 <TableActionMenu
                   items={[
-                    { key: 'retry', label: '重试', primary: true, confirm: { title: '确认重试该索引任务？' }, onClick: async () => { if (!record.id) return; const result = await retryIndexJob(record.id); if (result.code === 200) { message.success(result.message || '重试任务已入队'); actionRef.current?.reload() } else message.error(result.message || '重试失败') } },
+                    { key: 'retry', label: intl.formatMessage({ id: 'pages.knowledge.indexJob.retry' }), primary: true, confirm: { title: intl.formatMessage({ id: 'pages.knowledge.indexJob.retryConfirm' }) }, onClick: async () => { if (!record.id) return; const result = await retryIndexJob(record.id); if (result.code === 200) { message.success(result.message || intl.formatMessage({ id: 'pages.knowledge.indexJob.retryQueued' })); actionRef.current?.reload() } else message.error(result.message || intl.formatMessage({ id: 'pages.knowledge.indexJob.retryFailed' })) } },
                   ]}
                 />
               ) : null,

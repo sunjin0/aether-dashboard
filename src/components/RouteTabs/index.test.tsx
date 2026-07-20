@@ -5,6 +5,11 @@ import RouteTabs, { resetRouteMenus, setRouteMenus } from '.'
 
 jest.mock('@umijs/max', () => ({
   history: { push: jest.fn() },
+  useIntl: () => ({
+    locale: 'zh-CN',
+    formatMessage: ({ id }: { id: string }) =>
+      id === 'components.routeTabs.dashboard' ? '仪表盘' : id,
+  }),
 }))
 
 jest.mock('antd', () => ({

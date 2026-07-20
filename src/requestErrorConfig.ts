@@ -118,9 +118,6 @@ export const errorConfig: RequestConfig = {
         data.errorCode = data.code
         data.showType = ErrorShowType.NOTIFICATION
       }
-      if (data.message) {
-        message.success({ content: data.message, key: data.message })
-      }
       return response
     },
   ],

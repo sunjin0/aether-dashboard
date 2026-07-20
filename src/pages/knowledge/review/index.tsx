@@ -1,5 +1,5 @@
 import { PageContainer, ProTable } from '@ant-design/pro-components'
-import { history } from '@umijs/max'
+import { history, useIntl } from '@umijs/max'
 import { Tabs, Tag } from 'antd'
 import TableActionMenu from '@/components/TableActionMenu'
 import React, { useRef, useState } from 'react'
@@ -7,26 +7,27 @@ import { ActionType } from '@ant-design/pro-components'
 import { getReviewTaskList } from '@/services/knowledge/ReviewController'
 import { KnowledgeReviewTask, KnowledgeReviewTaskSearchParams } from '@/services/entity/Agent'
 
-const labels: Record<string, { text: string; color: string }> = {
-  pending: { text: '待认领', color: 'warning' },
-  claimed: { text: '审批中', color: 'processing' },
-  approved: { text: '已通过', color: 'success' },
-  rejected: { text: '已拒绝', color: 'error' },
-}
-
-const views = [
-  { key: 'available', label: '可审批' },
-  { key: 'submittedByMe', label: '我提交的' },
-  { key: 'reviewedByMe', label: '我已审批' },
-  { key: 'all', label: '全部' },
-]
-
 const KnowledgeReviewPage: React.FC = () => {
   const [view, setView] = useState<KnowledgeReviewTaskSearchParams['view']>('available')
   const actionRef = useRef<ActionType>()
+  const intl = useIntl()
+
+  const labels: Record<string, { text: string; color: string }> = {
+    pending: { text: intl.formatMessage({ id: 'pages.knowledge.review.status.pending' }), color: 'warning' },
+    claimed: { text: intl.formatMessage({ id: 'pages.knowledge.review.status.claimed' }), color: 'processing' },
+    approved: { text: intl.formatMessage({ id: 'pages.knowledge.review.status.approved' }), color: 'success' },
+    rejected: { text: intl.formatMessage({ id: 'pages.knowledge.review.status.rejected' }), color: 'error' },
+  }
+
+  const views = [
+    { key: 'available', label: intl.formatMessage({ id: 'pages.knowledge.review.view.available' }) },
+    { key: 'submittedByMe', label: intl.formatMessage({ id: 'pages.knowledge.review.view.submittedByMe' }) },
+    { key: 'reviewedByMe', label: intl.formatMessage({ id: 'pages.knowledge.review.view.reviewedByMe' }) },
+    { key: 'all', label: intl.formatMessage({ id: 'pages.knowledge.review.view.all' }) },
+  ]
 
   return (
-    <PageContainer title="审批中心">
+    <PageContainer title={intl.formatMessage({ id: 'pages.knowledge.review.title' })}>
       <Tabs
         activeKey={view}
         items={views}
@@ -41,16 +42,16 @@ const KnowledgeReviewPage: React.FC = () => {
         params={{ view }}
         request={(params) => getReviewTaskList(params)}
         columns={[
-          { title: '文档标题', dataIndex: 'documentTitle' },
+          { title: intl.formatMessage({ id: 'pages.knowledge.review.documentTitle' }), dataIndex: 'documentTitle' },
           {
-            title: '版本',
+            title: intl.formatMessage({ id: 'pages.knowledge.review.version' }),
             dataIndex: 'versionNo',
             hideInSearch: true,
             render: (_, record) => `v${record.versionNo || '-'}`,
           },
-          { title: '提交人', dataIndex: 'submitterName', hideInSearch: true },
+          { title: intl.formatMessage({ id: 'pages.knowledge.review.submitter' }), dataIndex: 'submitterName', hideInSearch: true },
           {
-            title: '状态',
+            title: intl.formatMessage({ id: 'pages.common.status' }),
             dataIndex: 'status',
             valueType: 'select',
             valueEnum: Object.fromEntries(
@@ -62,20 +63,20 @@ const KnowledgeReviewPage: React.FC = () => {
             },
           },
           {
-            title: '提交时间',
+            title: intl.formatMessage({ id: 'pages.knowledge.review.submittedAt' }),
             dataIndex: 'submittedAt',
             valueType: 'dateTime',
             hideInSearch: true,
           },
-          { title: '认领人', dataIndex: 'claimantName', hideInSearch: true },
+          { title: intl.formatMessage({ id: 'pages.knowledge.review.claimant' }), dataIndex: 'claimantName', hideInSearch: true },
           {
-            title: '操作',
+            title: intl.formatMessage({ id: 'pages.common.option' }),
             valueType: 'option',
             width: 100,
             render: (_, record) => (
               <TableActionMenu
                 items={[
-                  { key: 'view', label: '查看', primary: true, onClick: () => history.push(`/knowledge/review/detail?id=${record.id}`) },
+                  { key: 'view', label: intl.formatMessage({ id: 'pages.knowledge.review.viewAction' }), primary: true, onClick: () => history.push(`/knowledge/review/detail?id=${record.id}`) },
                 ]}
               />
             ),

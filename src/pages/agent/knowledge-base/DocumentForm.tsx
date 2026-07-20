@@ -3,6 +3,7 @@ import { addDocument, getDocument, updateDocument } from '@/services/knowledge/D
 import { getKnowledgeBaseList } from '@/services/knowledge/KnowledgeBaseController'
 import { ProFormSelect, ProFormText, ProFormTextArea } from '@ant-design/pro-components'
 import { Form } from 'antd'
+import { useIntl } from '@umijs/max'
 
 interface DocumentFormProps {
   id?: string;
@@ -20,6 +21,8 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
   setOpen,
   onSuccess,
 }) => {
+  const intl = useIntl()
+  const format = (id: string) => intl.formatMessage({ id })
   const [form] = Form.useForm()
 
   return (
@@ -41,8 +44,8 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
       {!knowledgeBaseId && (
         <ProFormSelect
           name="knowledgeBaseId"
-          label="知识库"
-          rules={[{ required: true, message: '请选择知识库' }]}
+          label={format('pages.agent.knowledgeBase.name')}
+          rules={[{ required: true, message: format('pages.agent.knowledgeBase.select') }]}
           request={async () => {
             const response = await getKnowledgeBaseList({ current: 1, pageSize: 1000 })
             return (response.data || [])
@@ -53,19 +56,19 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
       )}
       <ProFormText
         name="title"
-        label="文档标题"
-        rules={[{ required: true, message: '请输入文档标题' }]}
+        label={format('pages.agent.knowledgeBase.documentTitle')}
+        rules={[{ required: true, message: format('pages.agent.knowledgeBase.enterDocumentTitle') }]}
       />
       <ProFormTextArea
         name="content"
-        label="文档内容（纯文本或 Markdown）"
-        rules={[{ required: true, message: '请输入文档内容' }]}
+        label={format('pages.agent.knowledgeBase.documentContent')}
+        rules={[{ required: true, message: format('pages.agent.knowledgeBase.enterDocumentContent') }]}
         fieldProps={{ rows: 14, maxLength: 100000, showCount: true }}
       />
       <ProFormText
         name="sourceUrl"
-        label="来源 URL"
-        rules={[{ type: 'url', message: '请输入有效 URL' }]}
+        label={format('pages.agent.knowledgeBase.sourceUrl')}
+        rules={[{ type: 'url', message: format('pages.agent.knowledgeBase.enterValidUrl') }]}
       />
     </DrawerForm>
   )

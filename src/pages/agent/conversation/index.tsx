@@ -12,7 +12,7 @@ import {
   Statistic,
   Tag,
 } from 'antd'
-import { history, useAccess } from '@@/exports'
+import { history, useAccess, useIntl } from '@@/exports'
 import TableActionMenu from '@/components/TableActionMenu'
 import {
   closeAgentConversation,
@@ -33,14 +33,8 @@ import {
 } from '@/services/entity/Agent'
 import AgentMessageBubble from '@/components/AgentMessageBubble'
 
-// ProDescriptions 不支持 request，保留用于详情展示
-const statusValueEnum = {
-  0: { text: '进行中', status: 'Processing' },
-  1: { text: '关闭', status: 'Default' },
-  2: { text: '归档', status: 'Warning' },
-}
-
 const AgentConversationPage: React.FC = () => {
+  const intl = useIntl()
   const ref = useRef<ActionType>()
   const permissionMap = useAccess()
   const path = history.location.pathname
@@ -67,14 +61,14 @@ const AgentConversationPage: React.FC = () => {
         setConversation(detailResult.data)
       } else {
         setConversation(undefined)
-        message.error(detailResult.message || '加载会话详情失败')
+        message.error(detailResult.message || intl.formatMessage({ id: 'pages.agent.conversation.loadDetailFailed' }))
       }
 
       if (messageResult.code === 200) {
         setMessages(messageResult.data || [])
       } else {
         setMessages([])
-        message.error(messageResult.message || '加载消息列表失败')
+        message.error(messageResult.message || intl.formatMessage({ id: 'pages.agent.conversation.loadMessagesFailed' }))
       }
 
       if (lifecycleResult.code === 200) {
@@ -95,7 +89,7 @@ const AgentConversationPage: React.FC = () => {
 
   const openDetail = async (record: AgentConversation) => {
     if (!record.id) {
-      message.error('缺少会话 ID')
+      message.error(intl.formatMessage({ id: 'pages.agent.conversation.missingId' }))
       return
     }
     setCurrentId(record.id)
@@ -105,19 +99,19 @@ const AgentConversationPage: React.FC = () => {
 
   const handleCloseConversation = async (record: AgentConversation) => {
     if (!record.id) {
-      message.error('缺少会话 ID')
+      message.error(intl.formatMessage({ id: 'pages.agent.conversation.missingId' }))
       return
     }
 
     const { code, message: msg } = await closeAgentConversation(record.id)
     if (code === 200) {
-      message.success(msg || '关闭成功')
+      message.success(msg || intl.formatMessage({ id: 'pages.agent.conversation.closeSuccess' }))
       ref.current?.reload()
       if (record.id === currentId) {
         await loadDetail(record.id)
       }
     } else {
-      message.error(msg || '关闭失败')
+      message.error(msg || intl.formatMessage({ id: 'pages.agent.conversation.closeFailed' }))
     }
   }
 
@@ -125,13 +119,13 @@ const AgentConversationPage: React.FC = () => {
     const minutes = Math.floor(ms / 60000)
     const seconds = Math.floor((ms % 60000) / 1000)
     if (minutes > 0) {
-      return `${minutes} 分钟 ${seconds} 秒`
+      return intl.formatMessage({ id: 'pages.agent.conversation.durationMinutesSeconds' }, { minutes, seconds })
     }
-    return `${seconds} 秒`
+    return intl.formatMessage({ id: 'pages.agent.conversation.durationSeconds' }, { seconds })
   }
 
   const formatTimestamp = (timestamp: number): string => {
-    return new Date(timestamp).toLocaleString('zh-CN')
+    return new Date(timestamp).toLocaleString(intl.locale)
   }
 
   const formatTokens = (tokens: number): string => {
@@ -146,26 +140,26 @@ const AgentConversationPage: React.FC = () => {
 
   const formatLatency = (ms: number): string => {
     if (ms >= 1000) {
-      return `${(ms / 1000).toFixed(1)} 秒`
+      return intl.formatMessage({ id: 'pages.agent.conversation.latencySeconds' }, { seconds: (ms / 1000).toFixed(1) })
     }
-    return `${ms} 毫秒`
+    return intl.formatMessage({ id: 'pages.agent.conversation.latencyMilliseconds' }, { milliseconds: ms })
   }
 
   const lifecycleStatusMap: Record<number, { text: string; color: string }> = {
-    0: { text: '进行中', color: 'processing' },
-    1: { text: '已关闭', color: 'default' },
-    2: { text: '已归档', color: 'warning' },
+    0: { text: intl.formatMessage({ id: 'pages.agent.conversation.status.active' }), color: 'processing' },
+    1: { text: intl.formatMessage({ id: 'pages.agent.conversation.status.closed' }), color: 'default' },
+    2: { text: intl.formatMessage({ id: 'pages.agent.conversation.status.archived' }), color: 'warning' },
   }
 
   const handleDeleteConversation = async (record: AgentConversation) => {
     if (!record.id) {
-      message.error('缺少会话 ID')
+      message.error(intl.formatMessage({ id: 'pages.agent.conversation.missingId' }))
       return
     }
 
     const { code, message: msg } = await deleteAgentConversation(record.id)
     if (code === 200) {
-      message.success(msg || '删除成功')
+      message.success(msg || intl.formatMessage({ id: 'pages.agent.conversation.deleteSuccess' }))
       ref.current?.reload()
       if (record.id === currentId) {
         setDrawerOpen(false)
@@ -174,44 +168,44 @@ const AgentConversationPage: React.FC = () => {
         setMessages([])
       }
     } else {
-      message.error(msg || '删除失败')
+      message.error(msg || intl.formatMessage({ id: 'pages.agent.conversation.deleteFailed' }))
     }
   }
 
   const columns: any[] = [
     {
-      title: '会话标题',
+      title: intl.formatMessage({ id: 'pages.agent.conversation.title' }),
       dataIndex: 'title',
       valueType: 'text',
       ellipsis: true,
     },
     {
-      title: 'Agent ID',
+      title: intl.formatMessage({ id: 'pages.agent.conversation.agentId' }),
       dataIndex: 'agentDefinitionId',
       valueType: 'text',
       ellipsis: true,
     },
     {
-      title: '状态',
+      title: intl.formatMessage({ id: 'pages.common.status' }),
       key: 'agent-conversation-status',
       dataIndex: 'status',
       valueType: 'select',
       request: async () => getOptionList('Agent_Conversation_Status'),
     },
     {
-      title: '创建时间',
+      title: intl.formatMessage({ id: 'pages.common.createTime' }),
       dataIndex: 'createdAt',
       valueType: 'dateTime',
       hideInSearch: true,
     },
     {
-      title: '更新时间',
+      title: intl.formatMessage({ id: 'pages.common.updateTime' }),
       dataIndex: 'updatedAt',
       valueType: 'dateTime',
       hideInSearch: true,
     },
     {
-      title: '操作',
+      title: intl.formatMessage({ id: 'pages.common.option' }),
       valueType: 'option',
       width: 250,
       key: 'option',
@@ -219,29 +213,29 @@ const AgentConversationPage: React.FC = () => {
       render: (_: any, record: AgentConversation) => (
         <TableActionMenu
           items={[
-            { key: 'detail', label: '查看详情', primary: true, onClick: () => openDetail(record) },
+            { key: 'detail', label: intl.formatMessage({ id: 'pages.agent.conversation.viewDetail' }), primary: true, onClick: () => openDetail(record) },
             {
               key: 'close',
-              label: '关闭',
+              label: intl.formatMessage({ id: 'pages.common.close' }),
               primary: true,
               visible: write && record.status === 0,
-              confirm: { title: '确认关闭该会话？' },
+              confirm: { title: intl.formatMessage({ id: 'pages.agent.conversation.closeConfirm' }) },
               onClick: () => handleCloseConversation(record),
             },
             {
               key: 'delete',
-              label: '删除',
+              label: intl.formatMessage({ id: 'pages.common.delete' }),
               primary: true,
               danger: true,
               visible: !!write,
-              confirm: { title: '确认删除该会话？' },
+              confirm: { title: intl.formatMessage({ id: 'pages.agent.conversation.deleteConfirm' }) },
               onClick: () => handleDeleteConversation(record),
             },
           ]}
         />
       ),
     },
-  ];
+  ]
 
   return (
     <PageContainer>
@@ -252,7 +246,7 @@ const AgentConversationPage: React.FC = () => {
         columns={columns}
       />
       <Drawer
-        title="会话详情"
+        title={intl.formatMessage({ id: 'pages.agent.conversation.detail' })}
         width={720}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
@@ -264,92 +258,96 @@ const AgentConversationPage: React.FC = () => {
               column={1}
               dataSource={conversation}
               columns={[
-                { title: 'ID', dataIndex: 'id' },
-                { title: '标题', dataIndex: 'title' },
-                { title: 'Agent ID', dataIndex: 'agentDefinitionId' },
+                { title: intl.formatMessage({ id: 'pages.common.id' }), dataIndex: 'id' },
+                { title: intl.formatMessage({ id: 'pages.agent.conversation.title' }), dataIndex: 'title' },
+                { title: intl.formatMessage({ id: 'pages.agent.conversation.agentId' }), dataIndex: 'agentDefinitionId' },
                 {
-                  title: '状态',
+                  title: intl.formatMessage({ id: 'pages.common.status' }),
                   key: 'con-status',
                   dataIndex: 'status',
-                  valueEnum: statusValueEnum,
+                  valueEnum: {
+                    0: { text: intl.formatMessage({ id: 'pages.agent.conversation.status.active' }), status: 'Processing' },
+                    1: { text: intl.formatMessage({ id: 'pages.agent.conversation.status.closed' }), status: 'Default' },
+                    2: { text: intl.formatMessage({ id: 'pages.agent.conversation.status.archived' }), status: 'Warning' },
+                  },
                 },
-                { title: '创建时间', dataIndex: 'createdAt', valueType: 'dateTime' },
-                { title: '更新时间', dataIndex: 'updatedAt', valueType: 'dateTime' },
+                { title: intl.formatMessage({ id: 'pages.common.createTime' }), dataIndex: 'createdAt', valueType: 'dateTime' },
+                { title: intl.formatMessage({ id: 'pages.common.updateTime' }), dataIndex: 'updatedAt', valueType: 'dateTime' },
               ]}
             />
           ) : (
-            <Empty description="暂无会话详情" />
+            <Empty description={intl.formatMessage({ id: 'pages.agent.conversation.noDetail' })} />
           )}
 
           {lifecycle && (
-            <Card title="会话生命周期" style={{ marginTop: 16 }}>
+            <Card title={intl.formatMessage({ id: 'pages.agent.conversation.lifecycle' })} style={{ marginTop: 16 }}>
               <Descriptions column={2}>
-                <Descriptions.Item label="创建时间">
+                <Descriptions.Item label={intl.formatMessage({ id: 'pages.common.createTime' })}>
                   {formatTimestamp(lifecycle.createdAt)}
                 </Descriptions.Item>
-                <Descriptions.Item label="最后活跃">
+                <Descriptions.Item label={intl.formatMessage({ id: 'pages.agent.conversation.lastActive' })}>
                   {formatTimestamp(lifecycle.lastActiveAt)}
                 </Descriptions.Item>
-                <Descriptions.Item label="状态">
+                <Descriptions.Item label={intl.formatMessage({ id: 'pages.common.status' })}>
                   <Tag color={lifecycleStatusMap[lifecycle.status]?.color}>
                     {lifecycleStatusMap[lifecycle.status]?.text}
                   </Tag>
                 </Descriptions.Item>
-                <Descriptions.Item label="持续时间">
+                <Descriptions.Item label={intl.formatMessage({ id: 'pages.agent.conversation.duration' })}>
                   {formatDuration(lifecycle.durationMs)}
                 </Descriptions.Item>
-                <Descriptions.Item label="用户消息">
-                  {lifecycle.totalUserMessages} 条
+                <Descriptions.Item label={intl.formatMessage({ id: 'pages.agent.conversation.userMessages' })}>
+                  {intl.formatMessage({ id: 'pages.agent.conversation.count' }, { count: lifecycle.totalUserMessages })}
                 </Descriptions.Item>
-                <Descriptions.Item label="助手消息">
-                  {lifecycle.totalAssistantMessages} 条
+                <Descriptions.Item label={intl.formatMessage({ id: 'pages.agent.conversation.assistantMessages' })}>
+                  {intl.formatMessage({ id: 'pages.agent.conversation.count' }, { count: lifecycle.totalAssistantMessages })}
                 </Descriptions.Item>
               </Descriptions>
             </Card>
           )}
 
           {statistics && (
-            <Card title="消息统计" style={{ marginTop: 16 }}>
+            <Card title={intl.formatMessage({ id: 'pages.agent.conversation.statistics' })} style={{ marginTop: 16 }}>
               <Row gutter={[24, 16]}>
                 <Col span={6}>
-                  <Statistic title="总消息数" value={statistics.totalMessages} suffix="条" />
+                  <Statistic title={intl.formatMessage({ id: 'pages.agent.conversation.totalMessages' })} value={statistics.totalMessages} suffix={intl.formatMessage({ id: 'pages.agent.conversation.count' }, { count: '' })} />
                 </Col>
                 <Col span={6}>
-                  <Statistic title="用户消息" value={statistics.userMessages} suffix="条" />
+                  <Statistic title={intl.formatMessage({ id: 'pages.agent.conversation.userMessages' })} value={statistics.userMessages} suffix={intl.formatMessage({ id: 'pages.agent.conversation.count' }, { count: '' })} />
                 </Col>
                 <Col span={6}>
-                  <Statistic title="助手消息" value={statistics.assistantMessages} suffix="条" />
+                  <Statistic title={intl.formatMessage({ id: 'pages.agent.conversation.assistantMessages' })} value={statistics.assistantMessages} suffix={intl.formatMessage({ id: 'pages.agent.conversation.count' }, { count: '' })} />
                 </Col>
                 <Col span={6}>
-                  <Statistic title="工具调用" value={statistics.toolMessages} suffix="条" />
+                  <Statistic title={intl.formatMessage({ id: 'pages.agent.conversation.toolCalls' })} value={statistics.toolMessages} suffix={intl.formatMessage({ id: 'pages.agent.conversation.count' }, { count: '' })} />
                 </Col>
               </Row>
               <Row gutter={[24, 16]} style={{ marginTop: 16 }}>
                 <Col span={6}>
                   <Statistic
-                    title="输入 Token"
+                    title={intl.formatMessage({ id: 'pages.agent.conversation.inputTokens' })}
                     value={formatTokens(statistics.totalPromptTokens)}
                   />
                 </Col>
                 <Col span={6}>
                   <Statistic
-                    title="输出 Token"
+                    title={intl.formatMessage({ id: 'pages.agent.conversation.outputTokens' })}
                     value={formatTokens(statistics.totalCompletionTokens)}
                   />
                 </Col>
                 <Col span={6}>
-                  <Statistic title="总 Token" value={formatTokens(statistics.totalTokens)} />
+                  <Statistic title={intl.formatMessage({ id: 'pages.agent.conversation.totalTokens' })} value={formatTokens(statistics.totalTokens)} />
                 </Col>
                 <Col span={6}>
-                  <Statistic title="平均延迟" value={formatLatency(statistics.avgLatencyMs)} />
+                  <Statistic title={intl.formatMessage({ id: 'pages.agent.conversation.averageLatency' })} value={formatLatency(statistics.avgLatencyMs)} />
                 </Col>
               </Row>
             </Card>
           )}
 
-          <Card title="消息列表" style={{ marginTop: 16 }}>
+          <Card title={intl.formatMessage({ id: 'pages.agent.conversation.messageList' })} style={{ marginTop: 16 }}>
             {!messages.length ? (
-              <Empty description="暂无消息" />
+              <Empty description={intl.formatMessage({ id: 'pages.agent.conversation.noMessages' })} />
             ) : (
               <div className="agent-conversation-message-list">
                 {messages.map((item, index) => (

@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react'
 import { PlusOutlined } from '@ant-design/icons'
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
 import { Button, message, Modal } from 'antd'
-import { FormattedMessage, history, useAccess } from '@@/exports'
+import { FormattedMessage, history, useAccess, useIntl } from '@@/exports'
 import AgentDefinitionForm from '@/pages/agent/definition/AgentDefinitionForm'
 import AgentToolBinding from '@/pages/agent/definition/AgentToolBinding'
 import AgentKnowledgeBaseBinding from '@/pages/agent/definition/AgentKnowledgeBaseBinding'
@@ -24,6 +24,8 @@ const AgentDefinitionPage: React.FC = () => {
   const permissionMap = useAccess()
   const path = history.location.pathname
   const write = permissionMap[path]
+  const intl = useIntl()
+  const format = (id: string, values?: Record<string, string>) => intl.formatMessage({ id }, values)
 
   // 工具绑定相关状态
   const [toolBindingVisible, setToolBindingVisible] = useState(false)
@@ -32,37 +34,37 @@ const AgentDefinitionPage: React.FC = () => {
 
   const handleDelete = async (record: AgentDefinition) => {
     if (!record.id) {
-      message.error('缺少 Agent ID')
+      message.error(format('pages.agent.definition.missingId'))
       return
     }
 
     const { code, message: msg } = await deleteAgentDefinitionInfo(record.id)
     if (code === 200) {
-      message.success(msg || '删除成功')
+      message.success(msg || format('pages.agent.definition.deleteSuccess'))
       ref.current?.reload()
     } else {
-      message.error(msg || '删除失败')
+      message.error(msg || format('pages.agent.definition.deleteFailed'))
     }
   }
 
   const handleCopy = async (record: AgentDefinition) => {
     if (!record.id) {
-      message.error('缺少 Agent ID')
+      message.error(format('pages.agent.definition.missingId'))
       return
     }
 
     const { code, message: msg } = await copyAgentDefinitionInfo(record.id)
     if (code === 200) {
-      message.success(msg || '复制成功')
+      message.success(msg || format('pages.agent.definition.copySuccess'))
       ref.current?.reload()
     } else {
-      message.error(msg || '复制失败')
+      message.error(msg || format('pages.agent.definition.copyFailed'))
     }
   }
 
   const handleStatusChange = async (record: AgentDefinition) => {
     if (!record.id) {
-      message.error('缺少 Agent ID')
+      message.error(format('pages.agent.definition.missingId'))
       return
     }
 
@@ -71,66 +73,66 @@ const AgentDefinitionPage: React.FC = () => {
       status: nextStatus,
     })
     if (code === 200) {
-      message.success(msg || '操作成功')
+      message.success(msg || format('pages.agent.definition.operationSuccess'))
       ref.current?.reload()
     } else {
-      message.error(msg || '操作失败')
+      message.error(msg || format('pages.agent.definition.operationFailed'))
     }
   }
 
   const columns: any[] = [
     {
-      title: 'Agent 名称',
+      title: format('pages.agent.definition.name'),
       dataIndex: 'name',
       valueType: 'text',
       ellipsis: true,
     },
     {
-      title: 'Agent 编码',
+      title: format('pages.agent.definition.code'),
       dataIndex: 'code',
       valueType: 'text',
       ellipsis: true,
     },
     {
-      title: '模型供应商',
+      title: format('pages.agent.definition.modelProvider'),
       dataIndex: 'modelProviderId',
       valueType: 'select',
       request: async () => getModelProviderList(),
       ellipsis: true,
     },
     {
-      title: '模型名称',
+      title: format('pages.agent.definition.model'),
       dataIndex: 'model',
       valueType: 'text',
       ellipsis: true,
     },
     {
-      title: '状态',
+      title: format('pages.common.status'),
       key: 'definitionStatus',
       dataIndex: 'status',
       valueType: 'select',
       request: async () => getOptionList('Agent_Definition_Status'),
     },
     {
-      title: '温度参数',
+      title: format('pages.agent.definition.temperature'),
       dataIndex: 'temperature',
       valueType: 'digit',
       hideInSearch: true,
     },
     {
-      title: '最大 token',
+      title: format('pages.agent.definition.maxTokens'),
       dataIndex: 'maxTokens',
       valueType: 'digit',
       hideInSearch: true,
     },
     {
-      title: '最大轮次',
+      title: format('pages.agent.definition.maxToolRounds'),
       dataIndex: 'maxToolRounds',
       valueType: 'digit',
       hideInSearch: true,
     },
     {
-      title: '访问类型',
+      title: format('pages.agent.definition.accessType'),
       dataIndex: 'accessType',
       valueType: 'select',
       request: async () => getOptionList('Agent_Access_Type'),
@@ -143,13 +145,13 @@ const AgentDefinitionPage: React.FC = () => {
     //   hideInSearch: true,
     // },
     {
-      title: '创建时间',
+      title: format('pages.common.createTime'),
       dataIndex: 'createdAt',
       valueType: 'dateTime',
       hideInSearch: true,
     },
     {
-      title: '操作',
+      title: format('pages.common.option'),
       valueType: 'option',
       width: 250,
       key: 'option',
@@ -158,12 +160,12 @@ const AgentDefinitionPage: React.FC = () => {
         write && (
           <TableActionMenu
             items={[
-              { key: 'edit', label: '编辑', primary: true, onClick: () => { setId(record.id); setOpen(true) } },
-              { key: 'binding', label: '绑定工具', primary: true, onClick: () => { setCurrentAgentId(record.id || ''); setToolBindingVisible(true) } },
-              { key: 'knowledge-base', label: '知识库', onClick: () => { setCurrentAgentId(record.id || ''); setKnowledgeBaseBindingVisible(true) } },
-              { key: 'copy', label: '复制', confirm: { title: '确认复制该 Agent？' }, onClick: () => handleCopy(record) },
-              { key: 'status', label: record.status === 1 ? '禁用' : '启用', confirm: { title: `确认${record.status === 1 ? '禁用' : '启用'}该 Agent？` }, onClick: () => handleStatusChange(record) },
-              { key: 'delete', label: '删除', danger: true, confirm: { title: '确认删除该 Agent？' }, onClick: () => handleDelete(record) },
+              { key: 'edit', label: format('pages.common.edit'), primary: true, onClick: () => { setId(record.id); setOpen(true) } },
+              { key: 'binding', label: format('pages.agent.tool.bind'), primary: true, onClick: () => { setCurrentAgentId(record.id || ''); setToolBindingVisible(true) } },
+              { key: 'knowledge-base', label: format('pages.agent.knowledgeBase.name'), onClick: () => { setCurrentAgentId(record.id || ''); setKnowledgeBaseBindingVisible(true) } },
+              { key: 'copy', label: format('pages.agent.definition.copy'), confirm: { title: format('pages.agent.definition.copyConfirm') }, onClick: () => handleCopy(record) },
+              { key: 'status', label: record.status === 1 ? format('pages.common.disabled') : format('pages.common.enabled'), confirm: { title: format('pages.agent.definition.statusConfirm', { action: record.status === 1 ? format('pages.common.disabled') : format('pages.common.enabled') }) }, onClick: () => handleStatusChange(record) },
+              { key: 'delete', label: format('pages.common.delete'), danger: true, confirm: { title: format('pages.agent.definition.deleteConfirm') }, onClick: () => handleDelete(record) },
             ]}
           />
         ),
@@ -205,7 +207,7 @@ const AgentDefinitionPage: React.FC = () => {
       />
 
       <Modal
-        title="工具绑定管理"
+        title={format('pages.agent.definition.toolBindingManagement')}
         open={toolBindingVisible}
         onCancel={() => {
           setToolBindingVisible(false)
@@ -221,7 +223,7 @@ const AgentDefinitionPage: React.FC = () => {
         />
       </Modal>
       <Modal
-        title="知识库绑定管理"
+        title={format('pages.agent.definition.knowledgeBaseBindingManagement')}
         open={knowledgeBaseBindingVisible}
         onCancel={() => {
           setKnowledgeBaseBindingVisible(false)

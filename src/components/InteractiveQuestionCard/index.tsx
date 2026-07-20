@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react'
 import { Button, Checkbox, Input, Radio, Tabs, Typography } from 'antd'
+import { useIntl } from '@umijs/max'
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -62,10 +63,10 @@ function getChoiceAnswerText(
 }
 
 /** confirm 答案展示文本 */
-function getConfirmAnswerText(answer: QuestionAnswer | undefined): string {
+function getConfirmAnswerText(answer: QuestionAnswer | undefined, confirmLabel: string, cancelLabel: string): string {
   if (!answer) return ''
   if (answer.label) return answer.label
-  return answer.confirmed ? '确认' : '取消'
+  return answer.confirmed ? confirmLabel : cancelLabel
 }
 
 /** 判断答案是否已填写 */
@@ -125,6 +126,7 @@ interface SingleChoiceQuestionProps {
   onChange: (value: string | string[]) => void;
   customValue: string;
   onCustomChange: (value: string) => void;
+  customInputPlaceholder: string;
 }
 
 const SingleChoiceQuestion: React.FC<SingleChoiceQuestionProps> = ({
@@ -134,6 +136,7 @@ const SingleChoiceQuestion: React.FC<SingleChoiceQuestionProps> = ({
   onChange,
   customValue,
   onCustomChange,
+  customInputPlaceholder,
 }) => {
   if (config.multiple) {
     return (
@@ -173,7 +176,7 @@ const SingleChoiceQuestion: React.FC<SingleChoiceQuestionProps> = ({
             }}
             value={customValue}
             onChange={(event) => onCustomChange(event.target.value)}
-            placeholder={config.customInputPlaceholder || '请输入自定义内容'}
+            placeholder={config.customInputPlaceholder || customInputPlaceholder}
             maxLength={200}
             disabled={disabled}
           />
@@ -213,7 +216,7 @@ const SingleChoiceQuestion: React.FC<SingleChoiceQuestionProps> = ({
           }}
           value={customValue}
           onChange={(event) => onCustomChange(event.target.value)}
-          placeholder={config.customInputPlaceholder || '请输入自定义内容'}
+          placeholder={config.customInputPlaceholder || customInputPlaceholder}
           maxLength={200}
           disabled={disabled}
         />
@@ -227,6 +230,8 @@ interface SingleConfirmQuestionProps {
   disabled: boolean;
   value: boolean | null;
   onChange: (value: boolean) => void;
+  confirmLabel: string;
+  cancelLabel: string;
 }
 
 const SingleConfirmQuestion: React.FC<SingleConfirmQuestionProps> = ({
@@ -234,6 +239,8 @@ const SingleConfirmQuestion: React.FC<SingleConfirmQuestionProps> = ({
   disabled,
   value,
   onChange,
+  confirmLabel,
+  cancelLabel,
 }) => {
   return (
     <div className="iq-card-confirm">
@@ -245,7 +252,7 @@ const SingleConfirmQuestion: React.FC<SingleConfirmQuestionProps> = ({
         size="large"
         className="iq-card-confirm-btn"
       >
-        {config.confirmText || '确认'}
+        {config.confirmText || confirmLabel}
       </Button>
       <Button
         danger={value === false}
@@ -256,7 +263,7 @@ const SingleConfirmQuestion: React.FC<SingleConfirmQuestionProps> = ({
         size="large"
         className="iq-card-confirm-btn"
       >
-        {config.cancelText || '取消'}
+        {config.cancelText || cancelLabel}
       </Button>
     </div>
   )
@@ -268,6 +275,7 @@ const AnswerSummary: React.FC<{
   question: QuestionItemConfig;
   groupConfig?: GroupQuestionConfig;
 }> = ({ question, groupConfig }) => {
+  const intl = useIntl()
   const answer = getQuestionAnswer(question.id, question, groupConfig)
   if (!answer) return null
 
@@ -275,7 +283,7 @@ const AnswerSummary: React.FC<{
   if (question.type === 'choice') {
     text = getChoiceAnswerText(answer, question)
   } else {
-    text = getConfirmAnswerText(answer)
+    text = getConfirmAnswerText(answer, intl.formatMessage({ id: 'components.interactiveQuestionCard.confirm' }), intl.formatMessage({ id: 'components.interactiveQuestionCard.cancel' }))
   }
 
   if (!text) return null
@@ -292,24 +300,23 @@ const AnswerSummary: React.FC<{
 
 // ─── 主组件 ────────────────────────────────────────────────────────────────
 
-const statusLabelMap: Record<string, { text: string; className: string }> = {
-  answered: { text: '已回答', className: 'iq-card-status-answered' },
-  cancelled: { text: '已取消', className: 'iq-card-status-cancelled' },
-  expired: { text: '已过期', className: 'iq-card-status-expired' },
-}
-
-const riskLabelMap: Record<string, string> = {
-  low: '低风险',
-  medium: '中风险',
-  high: '高风险',
-}
-
 const ConfirmLayout: React.FC<{
   config: GroupQuestionConfig;
   disabled: boolean;
   status: InteractiveQuestionCardStatus;
   onSubmit?: (answers: Record<string, AskUserAnswer>) => void;
 }> = ({ config, disabled, status, onSubmit }) => {
+  const intl = useIntl()
+  const statusLabelMap: Record<string, { text: string; className: string }> = {
+    answered: { text: intl.formatMessage({ id: 'components.interactiveQuestionCard.status.answered' }), className: 'iq-card-status-answered' },
+    cancelled: { text: intl.formatMessage({ id: 'components.interactiveQuestionCard.status.cancelled' }), className: 'iq-card-status-cancelled' },
+    expired: { text: intl.formatMessage({ id: 'components.interactiveQuestionCard.status.expired' }), className: 'iq-card-status-expired' },
+  }
+  const riskLabelMap: Record<string, string> = {
+    low: intl.formatMessage({ id: 'components.interactiveQuestionCard.risk.low' }),
+    medium: intl.formatMessage({ id: 'components.interactiveQuestionCard.risk.medium' }),
+    high: intl.formatMessage({ id: 'components.interactiveQuestionCard.risk.high' }),
+  }
   const [selected, setSelected] = useState<string | string[]>('')
   const [customValue, setCustomValue] = useState('')
   const approvalQuestion = config.questions[0]
@@ -324,31 +331,31 @@ const ConfirmLayout: React.FC<{
       <div className="iq-card-confirm-layout-header">
         <SafetyCertificateOutlined />
         <div>
-          <Text strong>工具调用确认</Text>
+          <Text strong>{intl.formatMessage({ id: 'components.interactiveQuestionCard.toolCallConfirmation' })}</Text>
           <div className="iq-card-confirm-layout-question">{config.question}</div>
         </div>
       </div>
       <div className="iq-card-confirm-layout-description">{approvalQuestion.question}</div>
       <div className="iq-card-confirm-layout-details">
         <div>
-          <Text type="secondary">工具</Text>
+          <Text type="secondary">{intl.formatMessage({ id: 'components.interactiveQuestionCard.tool' })}</Text>
           <Text code>{config.toolName || '-'}</Text>
         </div>
         <div>
-          <Text type="secondary">风险等级</Text>
+          <Text type="secondary">{intl.formatMessage({ id: 'components.interactiveQuestionCard.riskLevel' })}</Text>
           <span className={`iq-card-risk iq-card-risk-${config.riskLevel || 'low'}`}>
             {riskLabelMap[config.riskLevel || 'low'] || config.riskLevel}
           </span>
         </div>
         {config.riskReason && (
           <div>
-            <Text type="secondary">风险说明</Text>
+            <Text type="secondary">{intl.formatMessage({ id: 'components.interactiveQuestionCard.riskReason' })}</Text>
             <Text>{config.riskReason}</Text>
           </div>
         )}
       </div>
       <div className="iq-card-confirm-layout-arguments">
-        <Text type="secondary">调用参数</Text>
+        <Text type="secondary">{intl.formatMessage({ id: 'components.interactiveQuestionCard.arguments' })}</Text>
         <pre>{JSON.stringify(config.arguments || {}, null, 2)}</pre>
       </div>
       {!disabled &&
@@ -360,7 +367,7 @@ const ConfirmLayout: React.FC<{
               onClick={() => submit({ confirmed: true })}
               className="iq-card-confirm-btn"
             >
-              {approvalQuestion.confirmText || '确认'}
+              {approvalQuestion.confirmText || intl.formatMessage({ id: 'components.interactiveQuestionCard.confirm' })}
             </Button>
             <Button
               danger
@@ -368,13 +375,14 @@ const ConfirmLayout: React.FC<{
               onClick={() => submit({ confirmed: false })}
               className="iq-card-confirm-btn"
             >
-              {approvalQuestion.cancelText || '取消'}
+              {approvalQuestion.cancelText || intl.formatMessage({ id: 'components.interactiveQuestionCard.cancel' })}
             </Button>
           </div>
         ) : (
           <>
             <SingleChoiceQuestion
               config={approvalQuestion}
+              customInputPlaceholder={intl.formatMessage({ id: 'components.interactiveQuestionCard.customInputPlaceholder' })}
               disabled={disabled}
               value={selected}
               onChange={(value) => {
@@ -397,7 +405,7 @@ const ConfirmLayout: React.FC<{
                 submit(getChoiceAnswer(selected, customValue, approvalQuestion.multiple))
               }
             >
-              确认
+              {intl.formatMessage({ id: 'components.interactiveQuestionCard.confirm' })}
             </Button>
           </>
         ))}
@@ -415,6 +423,12 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
   answer: externalAnswer,
   onSubmit,
 }) => {
+  const intl = useIntl()
+  const statusLabelMap: Record<string, { text: string; className: string }> = {
+    answered: { text: intl.formatMessage({ id: 'components.interactiveQuestionCard.status.answered' }), className: 'iq-card-status-answered' },
+    cancelled: { text: intl.formatMessage({ id: 'components.interactiveQuestionCard.status.cancelled' }), className: 'iq-card-status-cancelled' },
+    expired: { text: intl.formatMessage({ id: 'components.interactiveQuestionCard.status.expired' }), className: 'iq-card-status-expired' },
+  }
   const config = useMemo(() => parseQuestionConfig(questionConfig), [questionConfig])
   const disabled = status !== 'pending'
   const isGroup = config.type === 'group'
@@ -469,8 +483,8 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
     return (
       <div className={className}>
         <div className="iq-card-header">
-          <span className="iq-card-type-badge">{qConfig.type === 'choice' ? '选择' : '确认'}</span>
-          {!hasHistory && <span className="iq-card-required-tag">必填</span>}
+          <span className="iq-card-type-badge">{qConfig.type === 'choice' ? intl.formatMessage({ id: 'components.interactiveQuestionCard.choice' }) : intl.formatMessage({ id: 'components.interactiveQuestionCard.confirm' })}</span>
+          {!hasHistory && <span className="iq-card-required-tag">{intl.formatMessage({ id: 'components.interactiveQuestionCard.required' })}</span>}
         </div>
         <div className="iq-card-question">{qConfig.question}</div>
 
@@ -481,6 +495,7 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
             {qConfig.type === 'choice' ? (
               <SingleChoiceQuestion
                 config={qConfig}
+                customInputPlaceholder={intl.formatMessage({ id: 'components.interactiveQuestionCard.customInputPlaceholder' })}
                 disabled={disabled}
                 value={choiceValue}
                 onChange={(val) => {
@@ -496,6 +511,8 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
             ) : (
               <SingleConfirmQuestion
                 config={qConfig}
+                confirmLabel={intl.formatMessage({ id: 'components.interactiveQuestionCard.confirm' })}
+                cancelLabel={intl.formatMessage({ id: 'components.interactiveQuestionCard.cancel' })}
                 disabled={disabled}
                 value={
                   currentAnswer && 'confirmed' in currentAnswer ? currentAnswer.confirmed : null
@@ -509,7 +526,7 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
               disabled={!filled}
               className="iq-card-submit-btn"
             >
-              提交
+              {intl.formatMessage({ id: 'components.interactiveQuestionCard.submit' })}
             </Button>
           </>
         )}
@@ -641,6 +658,7 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
         return (
           <SingleChoiceQuestion
             config={q}
+            customInputPlaceholder={intl.formatMessage({ id: 'components.interactiveQuestionCard.customInputPlaceholder' })}
             disabled={disabled}
             value={value}
             onChange={(val) => {
@@ -660,6 +678,8 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
         return (
           <SingleConfirmQuestion
             config={q}
+            confirmLabel={intl.formatMessage({ id: 'components.interactiveQuestionCard.confirm' })}
+            cancelLabel={intl.formatMessage({ id: 'components.interactiveQuestionCard.cancel' })}
             disabled={disabled}
             value={value}
             onChange={(val) => handleAnswerChange(q.id, { confirmed: val })}
@@ -676,13 +696,15 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
           <span className={`iq-card-tab-num ${filled ? 'iq-card-tab-num-done' : ''}`}>
             {filled ? <CheckOutlined /> : index + 1}
           </span>
-          {`问题 ${index + 1}`}
+          {intl.formatMessage({ id: 'components.interactiveQuestionCard.questionNumber' }, { count: index + 1 })}
         </span>
       ),
       children: (
         <div className="iq-card-tab-content">
           <div className="iq-card-question">
-            <span className="iq-card-question-index">Q{index + 1}</span>
+            <span className="iq-card-question-index">
+              {intl.formatMessage({ id: 'components.interactiveQuestionCard.questionPrefix' }, { number: index + 1 })}
+            </span>
             {q.question}
           </div>
           {renderControl()}
@@ -694,8 +716,8 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
   return (
     <div className={className}>
       <div className="iq-card-header">
-        <span className="iq-card-type-badge iq-card-type-badge-group">多项提问</span>
-        {!isAllHistory && <span className="iq-card-required-tag">必填</span>}
+        <span className="iq-card-type-badge iq-card-type-badge-group">{intl.formatMessage({ id: 'components.interactiveQuestionCard.multipleQuestions' })}</span>
+        {!isAllHistory && <span className="iq-card-required-tag">{intl.formatMessage({ id: 'components.interactiveQuestionCard.required' })}</span>}
       </div>
 
       <div className="iq-card-progress">
@@ -725,7 +747,7 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
           className="iq-card-submit-btn"
           icon={allFilled ? <CheckOutlined /> : undefined}
         >
-          {allFilled ? '确认提交' : `还需回答 ${config.questions.length - answeredCount} 个问题`}
+          {allFilled ? intl.formatMessage({ id: 'components.interactiveQuestionCard.confirmSubmit' }) : intl.formatMessage({ id: 'components.interactiveQuestionCard.remainingQuestions' }, { count: config.questions.length - answeredCount })}
         </Button>
       )}
 

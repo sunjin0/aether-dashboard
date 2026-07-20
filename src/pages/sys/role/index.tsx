@@ -52,8 +52,8 @@ const Role: React.FC = () => {
                 label: intl.formatMessage({ id: 'pages.common.edit' }),
                 primary: true,
                 onClick: () => {
-                  setId(record.id);
-                  setOpen(true);
+                  setId(record.id)
+                  setOpen(true)
                 },
               },
               {
@@ -61,8 +61,8 @@ const Role: React.FC = () => {
                 label: intl.formatMessage({ id: 'pages.sys.auth.role.resource' }),
                 primary: true,
                 onClick: () => {
-                  setId(record.id);
-                  setAuthorizationOpen(true);
+                  setId(record.id)
+                  setAuthorizationOpen(true)
                 },
               },
               {
@@ -72,17 +72,17 @@ const Role: React.FC = () => {
                 danger: true,
                 confirm: { title: intl.formatMessage({ id: 'pages.confirm.delete' }) },
                 onClick: async () => {
-                  const { code, message: msg } = await deleteRoleInfo(record);
-                  if (code === 200) message.success(msg);
-                  else message.error(msg);
-                  ref.current?.reload();
+                  const { code, message: msg } = await deleteRoleInfo(record)
+                  if (code === 200) message.success(msg)
+                  else message.error(msg)
+                  ref.current?.reload()
                 },
               },
             ]}
           />
         ),
     },
-  ];
+  ]
   return (
     <PageContainer>
       <ProTable

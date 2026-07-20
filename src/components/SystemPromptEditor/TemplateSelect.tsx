@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useIntl } from '@umijs/max'
 import { Dropdown, Modal, Input, Button, List, Tag, Space, Typography, message } from 'antd'
 import { BookOutlined, PlusOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons'
 import {
@@ -15,6 +16,7 @@ interface TemplateSelectProps {
 }
 
 const TemplateSelect: React.FC<TemplateSelectProps> = ({ onSelect }) => {
+  const intl = useIntl()
   const [manageOpen, setManageOpen] = useState(false)
   const [templates, setTemplates] = useState<PromptTemplate[]>(getAllTemplates())
   const [addOpen, setAddOpen] = useState(false)
@@ -26,18 +28,18 @@ const TemplateSelect: React.FC<TemplateSelectProps> = ({ onSelect }) => {
 
   const handleSelect = (template: PromptTemplate) => {
     Modal.confirm({
-      title: '使用模板',
-      content: `确定要使用「${template.name}」模板吗？当前内容将被替换。`,
+      title: intl.formatMessage({ id: 'pages.components.systemPromptEditor.useTemplate' }),
+      content: intl.formatMessage({ id: 'pages.components.systemPromptEditor.confirmUseTemplate' }, { templateName: template.name }),
       onOk: () => {
         onSelect(template.content)
-        message.success('已应用模板')
+        message.success(intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateApplied' }))
       },
     })
   }
 
   const handleAdd = () => {
     if (!newName.trim() || !newContent.trim()) {
-      message.warning('请填写完整信息')
+      message.warning(intl.formatMessage({ id: 'pages.components.systemPromptEditor.pleaseFillCompleteInfo' }))
       return
     }
 
@@ -53,17 +55,17 @@ const TemplateSelect: React.FC<TemplateSelectProps> = ({ onSelect }) => {
     setAddOpen(false)
     setNewName('')
     setNewContent('')
-    message.success('模板已保存')
+    message.success(intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateSaved' }))
   }
 
   const handleDelete = (id: string) => {
     Modal.confirm({
-      title: '删除模板',
-      content: '确定要删除这个自定义模板吗？',
+      title: intl.formatMessage({ id: 'pages.components.systemPromptEditor.deleteTemplateTitle' }),
+      content: intl.formatMessage({ id: 'pages.components.systemPromptEditor.confirmDeleteTemplate' }),
       onOk: () => {
         deleteCustomTemplate(id)
         setTemplates(getAllTemplates())
-        message.success('模板已删除')
+        message.success(intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateDeleted' }))
       },
     })
   }
@@ -77,7 +79,7 @@ const TemplateSelect: React.FC<TemplateSelectProps> = ({ onSelect }) => {
     { type: 'divider' as const },
     {
       key: 'manage',
-      label: '管理模板',
+      label: intl.formatMessage({ id: 'pages.components.systemPromptEditor.manageTemplates' }),
       icon: <EditOutlined />,
       onClick: () => setManageOpen(true),
     },
@@ -86,11 +88,11 @@ const TemplateSelect: React.FC<TemplateSelectProps> = ({ onSelect }) => {
   return (
     <>
       <Dropdown menu={{ items: menuItems }} trigger={['click']}>
-        <Button icon={<BookOutlined />}>模板</Button>
+        <Button icon={<BookOutlined />}>{intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateButton' })}</Button>
       </Dropdown>
 
       <Modal
-        title="模板管理"
+        title={intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateManagement' })}
         open={manageOpen}
         onCancel={() => setManageOpen(false)}
         footer={null}
@@ -98,18 +100,18 @@ const TemplateSelect: React.FC<TemplateSelectProps> = ({ onSelect }) => {
       >
         <div style={{ marginBottom: 16 }}>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setAddOpen(true)}>
-            新建自定义模板
+            {intl.formatMessage({ id: 'pages.components.systemPromptEditor.newCustomTemplate' })}
           </Button>
         </div>
 
         <List
           dataSource={customTemplates}
-          locale={{ emptyText: '暂无自定义模板' }}
+          locale={{ emptyText: intl.formatMessage({ id: 'pages.components.systemPromptEditor.noCustomTemplates' }) }}
           renderItem={(item) => (
             <List.Item
               actions={[
                 <Button size="small" onClick={() => handleSelect(item)}>
-                  使用
+                  {intl.formatMessage({ id: 'pages.components.systemPromptEditor.use' })}
                 </Button>,
                 <Button
                   size="small"
@@ -117,7 +119,7 @@ const TemplateSelect: React.FC<TemplateSelectProps> = ({ onSelect }) => {
                   icon={<DeleteOutlined />}
                   onClick={() => handleDelete(item.id)}
                 >
-                  删除
+                  {intl.formatMessage({ id: 'pages.common.delete' })}
                 </Button>,
               ]}
             >
@@ -134,7 +136,7 @@ const TemplateSelect: React.FC<TemplateSelectProps> = ({ onSelect }) => {
         />
 
         <div style={{ marginTop: 24 }}>
-          <Text type="secondary">预设模板 ({presetTemplates.length})</Text>
+          <Text type="secondary">{intl.formatMessage({ id: 'pages.components.systemPromptEditor.presetTemplates' }, { count: presetTemplates.length })}</Text>
           <List
             size="small"
             dataSource={presetTemplates}
@@ -142,7 +144,7 @@ const TemplateSelect: React.FC<TemplateSelectProps> = ({ onSelect }) => {
               <List.Item
                 actions={[
                   <Button size="small" onClick={() => handleSelect(item)}>
-                    使用
+                    {intl.formatMessage({ id: 'pages.components.systemPromptEditor.use' })}
                   </Button>,
                 ]}
               >
@@ -154,28 +156,28 @@ const TemplateSelect: React.FC<TemplateSelectProps> = ({ onSelect }) => {
       </Modal>
 
       <Modal
-        title="新建自定义模板"
+        title={intl.formatMessage({ id: 'pages.components.systemPromptEditor.newCustomTemplate' })}
         open={addOpen}
         onCancel={() => setAddOpen(false)}
         onOk={handleAdd}
-        okText="保存"
-        cancelText="取消"
+        okText={intl.formatMessage({ id: 'pages.common.save' })}
+        cancelText={intl.formatMessage({ id: 'pages.common.cancel' })}
       >
         <Space direction="vertical" style={{ width: '100%' }}>
           <div>
-            <Text>模板名称</Text>
+            <Text>{intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateName' })}</Text>
             <Input
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              placeholder="输入模板名称"
+              placeholder={intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateNamePlaceholder' })}
             />
           </div>
           <div>
-            <Text>模板内容</Text>
+            <Text>{intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateContent' })}</Text>
             <Input.TextArea
               value={newContent}
               onChange={(e) => setNewContent(e.target.value)}
-              placeholder="输入系统提示词内容"
+              placeholder={intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateContentPlaceholder' })}
               autoSize={{ minRows: 8, maxRows: 16 }}
             />
           </div>

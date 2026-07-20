@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Empty, Spin } from 'antd'
+import { useIntl } from '@umijs/max'
 import './index.less'
 
 export interface MarkdownTextProps {
@@ -11,16 +12,17 @@ export interface MarkdownTextProps {
 }
 
 const MarkdownText: React.FC<MarkdownTextProps> = ({ content, error, className, loading }) => {
+  const intl = useIntl()
   if (!content) {
     if (loading) {
       return (
         <div className="markdown-text-loading">
           <Spin />
-          <span>思考中...</span>
+          <span>{intl.formatMessage({ id: 'components.markdownText.thinking' })}</span>
         </div>
       )
     }
-    return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无内容" />
+    return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={intl.formatMessage({ id: 'components.markdownText.empty' })} />
   }
 
   return (

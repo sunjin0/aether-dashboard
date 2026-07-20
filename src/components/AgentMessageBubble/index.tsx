@@ -2,6 +2,7 @@ import React, { useCallback, useRef, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Collapse, message, Tooltip, Typography } from 'antd'
+import { useIntl } from '@umijs/max'
 import {
   CustomerServiceOutlined,
   SettingOutlined,
@@ -28,14 +29,6 @@ export interface AgentMessageBubbleProps {
   onQuestionSubmit?: (answers: Record<string, AskUserAnswer>) => void;
 }
 
-const roleLabelMap: Record<string, string> = {
-  user: '用户',
-  assistant: '助手',
-  system: '系统',
-  tool: '工具',
-  unknown: '未知',
-}
-
 const roleIconMap: Record<string, React.ReactNode> = {
   user: <UserOutlined />,
   assistant: <CustomerServiceOutlined />,
@@ -44,7 +37,7 @@ const roleIconMap: Record<string, React.ReactNode> = {
   unknown: <UserOutlined />,
 }
 
-const getRole = (role?: string) => role || 'unknown'
+const getRole = (role?: string) => (role && roleIconMap[role] ? role : 'unknown')
 
 const getAlign = (message: AgentMessage, align?: 'left' | 'right') => {
   if (align) {
@@ -86,15 +79,19 @@ const remarkCitations = (sources: KnowledgeSource[], messageId?: string) => () =
   visit(tree)
 }
 
-const formatTime = (time?: string | number) => {
-  if (!time) return ''
+const formatTime = (
+  time: string | number | undefined,
+  locale: string,
+  formatYesterday: ReturnType<typeof useIntl>['formatMessage'],
+) => {
+  if (time === undefined) return ''
   try {
     const date = new Date(typeof time === 'number' ? time : time)
     const now = new Date()
     const isToday = date.toDateString() === now.toDateString()
 
     if (isToday) {
-      return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+      return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
     }
 
     const yesterday = new Date(now)
@@ -102,10 +99,13 @@ const formatTime = (time?: string | number) => {
     const isYesterday = date.toDateString() === yesterday.toDateString()
 
     if (isYesterday) {
-      return `昨天 ${date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`
+      return formatYesterday(
+        { id: 'components.agentMessageBubble.yesterday' },
+        { time: date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) },
+      )
     }
 
-    return date.toLocaleDateString('zh-CN', {
+    return date.toLocaleDateString(locale, {
       month: 'numeric',
       day: 'numeric',
       hour: '2-digit',
@@ -116,26 +116,26 @@ const formatTime = (time?: string | number) => {
   }
 }
 
-const getMessageMeta = (message: AgentMessage) => {
+const getMessageMeta = (message: AgentMessage, formatMessage: ReturnType<typeof useIntl>['formatMessage']) => {
   const items: { label: string; value: string | number }[] = []
 
   if (message.model) {
-    items.push({ label: '模型', value: message.model })
+    items.push({ label: formatMessage({ id: 'components.agentMessageBubble.model' }), value: message.model })
   }
   if (message.promptTokens !== undefined && message.promptTokens > 0) {
-    items.push({ label: '输入', value: message.promptTokens })
+    items.push({ label: formatMessage({ id: 'components.agentMessageBubble.inputTokens' }), value: message.promptTokens })
   }
   if (message.completionTokens !== undefined && message.completionTokens > 0) {
-    items.push({ label: '输出', value: message.completionTokens })
+    items.push({ label: formatMessage({ id: 'components.agentMessageBubble.outputTokens' }), value: message.completionTokens })
   }
   if (message.totalTokens !== undefined && message.totalTokens > 0) {
-    items.push({ label: '总计', value: message.totalTokens })
+    items.push({ label: formatMessage({ id: 'components.agentMessageBubble.totalTokens' }), value: message.totalTokens })
   }
   if (message.reasoningTokens !== undefined && message.reasoningTokens > 0) {
-    items.push({ label: '推理', value: message.reasoningTokens })
+    items.push({ label: formatMessage({ id: 'components.agentMessageBubble.reasoningTokens' }), value: message.reasoningTokens })
   }
   if (message.latencyMs !== undefined && message.latencyMs > 0) {
-    items.push({ label: '耗时', value: `${message.latencyMs}ms` })
+    items.push({ label: formatMessage({ id: 'components.agentMessageBubble.latency' }), value: `${message.latencyMs}ms` })
   }
 
   return items
@@ -149,17 +149,18 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
   errorMessage,
   onQuestionSubmit,
 }) => {
+  const intl = useIntl()
   const role = getRole(agentMessage.role)
   const placement = getAlign(agentMessage, align)
-  const metas = getMessageMeta(agentMessage)
+  const metas = getMessageMeta(agentMessage, intl.formatMessage)
   const reasoningContainerRef = useRef<HTMLDivElement>(null)
   const contentContainerRef = useRef<HTMLDivElement>(null)
 
   const statusText =
     status === 'error'
-      ? errorMessage || '生成中断'
+      ? errorMessage || intl.formatMessage({ id: 'components.agentMessageBubble.generationInterrupted' })
       : status === 'stopped'
-        ? '已停止生成'
+        ? intl.formatMessage({ id: 'components.agentMessageBubble.generationStopped' })
         : undefined
 
   const className = [
@@ -176,11 +177,11 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
   const handleCopy = useCallback(async (text: string) => {
     try {
       await navigator.clipboard.writeText(text)
-      message.success('已复制到剪贴板')
+      message.success(intl.formatMessage({ id: 'components.agentMessageBubble.copied' }))
     } catch {
-      message.error('复制失败')
+      message.error(intl.formatMessage({ id: 'components.agentMessageBubble.copyFailed' }))
     }
-  }, [])
+  }, [intl])
 
   const currentReasoning = agentMessage.reasoningContent || agentMessage.reasoningStream || ''
   const currentContent = agentMessage.content || ''
@@ -235,7 +236,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
       if (status === 'streaming') {
         return (
           <Text className="agent-message-bubble-placeholder" type="secondary">
-            生成中...
+            {intl.formatMessage({ id: 'components.agentMessageBubble.generating' })}
           </Text>
         )
       }
@@ -252,7 +253,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
               items={[
                 {
                   key: 'reasoning',
-                  label: '💭 推理过程',
+                  label: intl.formatMessage({ id: 'components.agentMessageBubble.reasoningProcess' }),
                   children: (
                     <div
                       ref={reasoningContainerRef}
@@ -280,7 +281,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
           </div>
         ) : agentMessage.reasoningContent || agentMessage.reasoningStream ? (
           <Text className="agent-message-bubble-warning" type="warning">
-            ⚠️ 模型仅返回推理过程，未返回最终答案
+            {intl.formatMessage({ id: 'components.agentMessageBubble.reasoningOnly' })}
           </Text>
         ) : null}
 
@@ -294,7 +295,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
         {!!agentMessage.sources?.length && (
           <section className="agent-message-bubble-sources">
             <details>
-              <summary>参考来源（{agentMessage.sources.length}）</summary>
+              <summary>{intl.formatMessage({ id: 'components.agentMessageBubble.sources' }, { count: agentMessage.sources.length })}</summary>
               <div className="agent-message-bubble-sources-list">
                 {agentMessage.sources.map((source) => (
                   <article
@@ -303,7 +304,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
                     className="agent-message-bubble-source"
                   >
                     <strong>
-                      【{source.citationIndex}】{source.documentName || '未命名文档'}
+                      【{source.citationIndex}】{source.documentName || intl.formatMessage({ id: 'components.agentMessageBubble.unnamedDocument' })}
                     </strong>
                     {source.sectionPath && <small> · {source.sectionPath}</small>}
                     <p>{source.content}</p>
@@ -323,12 +324,12 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
         <div className="agent-message-bubble-header">
           <div className="agent-message-bubble-role">
             <span style={{ marginRight: 6 }}>{roleIconMap[role]}</span>
-            {roleLabelMap[role]}
+            {intl.formatMessage({ id: `components.agentMessageBubble.role.${role}` })}
           </div>
-          {agentMessage.createdAt && (
+          {agentMessage.createdAt !== undefined && (
             <Tooltip title={agentMessage.createdAt}>
               <span className="agent-message-bubble-time">
-                {formatTime(agentMessage.createdAt)}
+                {formatTime(agentMessage.createdAt, intl.locale, intl.formatMessage)}
               </span>
             </Tooltip>
           )}

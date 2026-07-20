@@ -6,6 +6,7 @@ import React, { useRef, useState } from 'react'
 import { ActionType } from '@ant-design/pro-components'
 import { getReviewTaskList } from '@/services/knowledge/ReviewController'
 import { KnowledgeReviewTask, KnowledgeReviewTaskSearchParams } from '@/services/entity/Agent'
+import { getAdminList } from '@/services/sys/AdminController';
 
 const KnowledgeReviewPage: React.FC = () => {
   const [view, setView] = useState<KnowledgeReviewTaskSearchParams['view']>('available')
@@ -49,7 +50,16 @@ const KnowledgeReviewPage: React.FC = () => {
             hideInSearch: true,
             render: (_, record) => `v${record.versionNo || '-'}`,
           },
-          { title: intl.formatMessage({ id: 'pages.knowledge.review.submitter' }), dataIndex: 'submitterName', hideInSearch: true },
+          {
+            title: intl.formatMessage({ id: 'pages.knowledge.review.submitter' }),
+            dataIndex: 'submitterId',
+            valueType: 'select',
+            request: async () => {
+              const { data } = await getAdminList({ current: 1, pageSize: 1000 })
+              return data.map((item) => ({ label: item.username, value: item.id }))
+            },
+            hideInSearch: true
+          },
           {
             title: intl.formatMessage({ id: 'pages.common.status' }),
             dataIndex: 'status',
@@ -68,7 +78,15 @@ const KnowledgeReviewPage: React.FC = () => {
             valueType: 'dateTime',
             hideInSearch: true,
           },
-          { title: intl.formatMessage({ id: 'pages.knowledge.review.claimant' }), dataIndex: 'claimantName', hideInSearch: true },
+          {
+            title: intl.formatMessage({ id: 'pages.knowledge.review.claimant' }),
+            dataIndex: 'claimantId',
+            valueType: 'select',
+            request: async () => {
+              const { data } = await getAdminList({ current: 1, pageSize: 1000 })
+              return data.map((item) => ({ label: item.username, value: item.id }))
+            },
+          },
           {
             title: intl.formatMessage({ id: 'pages.common.option' }),
             valueType: 'option',

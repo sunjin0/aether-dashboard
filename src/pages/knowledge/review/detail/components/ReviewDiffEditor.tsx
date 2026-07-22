@@ -23,6 +23,25 @@ const ReviewDiffEditor: React.FC<ReviewDiffEditorProps> = ({ diff, activeIssue }
     }
   }, [activeIssue])
 
+  useEffect(() => {
+    if (!editorRef.current) return
+    const decorations = activeIssue?.baseStartLine
+      ? [
+        {
+          range: {
+            startLineNumber: activeIssue.baseStartLine,
+            startColumn: 1,
+            endLineNumber: activeIssue.baseEndLine || activeIssue.baseStartLine,
+            endColumn: 1,
+          },
+          options: { isWholeLine: true, className: 'ai-review-active-line' },
+        },
+      ]
+      : []
+    const collection = editorRef.current.getOriginalEditor().createDecorationsCollection(decorations)
+    return () => collection.clear()
+  }, [activeIssue])
+
   const title = (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
       <span>Content Diff</span>
@@ -38,7 +57,7 @@ const ReviewDiffEditor: React.FC<ReviewDiffEditorProps> = ({ diff, activeIssue }
     <Card
       size="small"
       title={title}
-      bodyStyle={{ padding: 0, height: 560, overflow: 'hidden' }}
+      styles={{ body: { padding: 0, height: 'min(560px, calc(100vh - 310px))', overflow: 'hidden' } }}
       style={{ height: '100%' }}
     >
       <DiffEditor

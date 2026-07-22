@@ -1,6 +1,6 @@
-﻿import { CheckOutlined, CloseOutlined, EyeOutlined, UndoOutlined } from '@ant-design/icons'
+﻿import { CheckOutlined, CloseOutlined, UndoOutlined } from '@ant-design/icons'
 import { useIntl } from '@umijs/max'
-import { Button, Card, Empty, List, Segmented, Space, Tag, Tooltip, Typography } from 'antd'
+import { Button, Card, Empty, List, Segmented, Space, Tag, Typography } from 'antd'
 import React from 'react'
 import { AiReviewDiffIssue } from '@/services/entity/Agent'
 import { severityColor } from '../constants'
@@ -93,16 +93,7 @@ const ReviewIssueList: React.FC<Props> = ({
         >
           {intl.formatMessage({ id: 'pages.knowledge.review.issueList.accept' })}
         </Button>
-      ) : (
-        <Tooltip
-          key="no-patch"
-          title={intl.formatMessage({ id: 'pages.knowledge.review.issueList.noPatchTooltip' })}
-        >
-          <Button size="small" icon={<EyeOutlined />} disabled>
-            {intl.formatMessage({ id: 'pages.knowledge.review.issueList.view' })}
-          </Button>
-        </Tooltip>
-      ),
+      ) : null,
       <Button
         key="reject"
         size="small"
@@ -139,7 +130,7 @@ const ReviewIssueList: React.FC<Props> = ({
           onChange={(value) => onFilter(value as ReviewIssueFilter)}
         />
       }
-      bodyStyle={{ padding: 0, maxHeight: 560, overflow: 'auto' }}
+      styles={{ body: { padding: 0, maxHeight: 'min(560px, calc(100vh - 310px))', overflow: 'auto' } }}
     >
       {issues.length === 0 ? (
         <Empty description={intl.formatMessage({ id: 'pages.knowledge.review.issueList.empty' })} image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ padding: 24 }} />
@@ -159,7 +150,7 @@ const ReviewIssueList: React.FC<Props> = ({
                   borderLeft: isActive ? '3px solid #1677ff' : '3px solid transparent',
                 }}
                 onClick={() => onSelect(issue)}
-                actions={renderActions(issue)}
+                actions={isActive ? renderActions(issue) : undefined}
               >
                 <List.Item.Meta
                   title={

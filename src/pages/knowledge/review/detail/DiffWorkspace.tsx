@@ -11,11 +11,16 @@ import ReplacementEditor from './components/ReplacementEditor'
 import { severityOrder } from './constants'
 import { useAiReviewDiff } from './hooks/useAiReviewDiff'
 import { ReviewIssueFilter } from './types'
+import './DiffWorkspace.less'
 
 interface Props {
   reviewId?: string
   documentVersionId?: string
   versionReviewStatus?: string
+  pageTitle?: React.ReactNode
+  pageSubTitle?: React.ReactNode
+  backPath?: string
+  embedded?: boolean
   onApplied?: () => void
   onReviewStatusChange?: (status?: string) => void
 }
@@ -24,6 +29,10 @@ const DiffWorkspace: React.FC<Props> = ({
   reviewId: reviewIdProp,
   documentVersionId,
   versionReviewStatus,
+  pageTitle,
+  pageSubTitle,
+  backPath = '/knowledge/document',
+  embedded = false,
   onApplied,
   onReviewStatusChange,
 }) => {
@@ -57,7 +66,6 @@ const DiffWorkspace: React.FC<Props> = ({
   const [activeIssue, setActiveIssue] = useState<AiReviewDiffIssue>()
   const [replacementIssue, setReplacementIssue] = useState<AiReviewDiffIssue>()
   const [busy, setBusy] = useState(false)
-  const [applied, setApplied] = useState(false)
   const [justApplied, setJustApplied] = useState(false)
   const status = (diff?.reviewStatus || versionReviewStatus || '').toUpperCase()
   const isDiffAvailable = status === 'AI_REVIEWED'
@@ -84,7 +92,6 @@ const DiffWorkspace: React.FC<Props> = ({
     if (conflict) {
       setActiveIssue(undefined)
       setReplacementIssue(undefined)
-      setApplied(false)
     }
   }, [conflict])
 
@@ -100,7 +107,6 @@ const DiffWorkspace: React.FC<Props> = ({
     setBusy(true)
     try {
       await startAiReview(targetVersionId)
-      setApplied(false)
       setJustApplied(false)
       await refresh()
     } finally {
@@ -209,21 +215,33 @@ const DiffWorkspace: React.FC<Props> = ({
       setBusy(false)
     }
   }
-  console.log('DiffWorkspace', {
-    status,
-    diff,
-    busy,
-    reviewId,
-    documentVersionId,
-    versionReviewStatus,
-  })
   const canSubmit =
     (status === 'AI_REVIEWED' || status === 'DRAFT') &&
     !busy &&
     (diff?.documentVersionId || documentVersionId)
-  console.log('canSubmit', canSubmit)
-
   const stale = !diff || diff.stale || !isDiffAvailable
+  const workspaceAlert = conflict
+    ? {
+      type: 'warning' as const,
+      message: intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.alert.changed' }),
+    }
+    : diff?.stale
+      ? {
+        type: 'warning' as const,
+        message: intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.alert.staleTitle' }),
+        description: intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.alert.staleDesc' }),
+      }
+      : justApplied
+        ? {
+          type: 'success' as const,
+          message: intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.applySuccess' }),
+          action: (
+            <Button size="small" type="primary" onClick={runAiReview}>
+              {intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.state.rerun' })}
+            </Button>
+          ),
+        }
+        : undefined
   const stateContent = () => {
     if (status === 'DRAFT')
       return (
@@ -291,58 +309,21 @@ const DiffWorkspace: React.FC<Props> = ({
   }
   return (
     <PageContainer
-      title={intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.title' })}
-      onBack={() => history.push('/knowledge/document')}
-      extra={
+      title={embedded ? undefined : pageTitle || intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.title' })}
+      subTitle={embedded ? undefined : pageSubTitle}
+      onBack={embedded ? undefined : () => history.push(backPath)}
+      extra={embedded ? undefined : (
         <Button onClick={refresh}>{intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.refresh' })}</Button>
-      }
+      )}
     >
       <Spin spinning={loading && !diff}>
-        {conflict && (
+        {workspaceAlert && (
           <Alert
-            type="warning"
+            {...workspaceAlert}
             showIcon
-            message={intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.alert.changed' })}
             style={{ marginBottom: 12 }}
-          />
-        )}
-        {justApplied && (
-          <Alert
-            type="success"
-            showIcon
-            message={intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.applySuccess' })}
-            style={{ marginBottom: 12 }}
-            closable
+            closable={Boolean(justApplied && !conflict && !diff?.stale)}
             onClose={() => setJustApplied(false)}
-            action={
-              <Button size="small" type="primary" onClick={runAiReview}>
-                {intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.state.rerun' })}
-              </Button>
-            }
-          />
-        )}
-        {applied && (
-          <Alert
-            type="success"
-            showIcon
-            message={intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.alert.appliedSaved' })}
-            style={{ marginBottom: 12 }}
-            closable
-            onClose={() => setApplied(false)}
-            action={
-              <Button size="small" type="primary" onClick={runAiReview}>
-                {intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.state.rerun' })}
-              </Button>
-            }
-          />
-        )}
-        {diff?.stale && (
-          <Alert
-            type="warning"
-            showIcon
-            message={intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.alert.staleTitle' })}
-            description={intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.alert.staleDesc' })}
-            style={{ marginBottom: 12 }}
           />
         )}
         {diff && (
@@ -372,7 +353,7 @@ const DiffWorkspace: React.FC<Props> = ({
               />
             )}
             {diff ? (
-              <Row gutter={[16, 16]}>
+              <Row className="ai-review-workspace" gutter={[16, 16]}>
                 <Col xs={24} lg={16}>
                   <ReviewDiffEditor diff={diff} activeIssue={activeIssue} />
                 </Col>

@@ -230,7 +230,7 @@ export interface KnowledgeReviewTask {
   knowledgeBaseId?: string;
   submitterId?: string;
   submitterName?: string;
-  claimantId?: string;
+  reviewerId?: string;
   claimantName?: string;
   status?: 'pending' | 'claimed' | 'approved' | 'rejected';
   comment?: string;
@@ -248,6 +248,7 @@ export interface KnowledgeReviewTaskDetail extends KnowledgeReviewTask {
     operatorName?: string;
     comment?: string;
     createdAt?: number;
+    operatorId?: string;
   }>;
 }
 export interface KnowledgeReviewTaskSearchParams extends KnowledgeReviewTask {

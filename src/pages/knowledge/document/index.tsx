@@ -24,6 +24,7 @@ import FileUploadModal from '@/components/FileUploadModal'
 import TemporaryUrlPreviewModal from '@/components/TemporaryUrlPreviewModal'
 import TableActionMenu from '@/components/TableActionMenu'
 import DocumentVersionHistoryDrawer from './components/DocumentVersionHistoryDrawer'
+import DocumentReviewDrawer from './DocumentReviewDrawer'
 import { getKnowledgeBaseContext } from './query'
 
 const KnowledgeDocumentPage: React.FC = () => {
@@ -38,6 +39,7 @@ const KnowledgeDocumentPage: React.FC = () => {
   const [formKnowledgeBaseId, setFormKnowledgeBaseId] = useState<string>()
   const [reindexingId, setReindexingId] = useState<string>()
   const [versionDocument, setVersionDocument] = useState<Document>()
+  const [reviewDocumentId, setReviewDocumentId] = useState<string>()
   const access = useAccess()
   const canWrite = access['/knowledge/document']
 
@@ -166,7 +168,7 @@ const KnowledgeDocumentPage: React.FC = () => {
                 key: 'workspace',
                 label: intl.formatMessage({ id: 'pages.knowledge.document.reviewWorkspace' }),
                 primary: true,
-                onClick: () => history.push(`/knowledge/document/detail?id=${record.id}`),
+                onClick: () => setReviewDocumentId(record.id),
               },
               {
                 key: 'edit',
@@ -277,6 +279,12 @@ const KnowledgeDocumentPage: React.FC = () => {
         canWrite={canWrite}
         onClose={() => setVersionDocument(undefined)}
         onRollbackSuccess={reload}
+      />
+      <DocumentReviewDrawer
+        documentId={reviewDocumentId}
+        open={Boolean(reviewDocumentId)}
+        onClose={() => setReviewDocumentId(undefined)}
+        onSuccess={reload}
       />
       {formOpen && (
         <DocumentForm

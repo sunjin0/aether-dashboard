@@ -1,16 +1,18 @@
 import { PageContainer, ProTable } from '@ant-design/pro-components'
-import { history, useIntl } from '@umijs/max'
+import { useIntl } from '@umijs/max'
 import { Tabs, Tag } from 'antd'
 import TableActionMenu from '@/components/TableActionMenu'
 import React, { useRef, useState } from 'react'
 import { ActionType } from '@ant-design/pro-components'
 import { getReviewTaskList } from '@/services/knowledge/ReviewController'
 import { KnowledgeReviewTask, KnowledgeReviewTaskSearchParams } from '@/services/entity/Agent'
-import { getAdminList } from '@/services/sys/AdminController';
+import { getAdminList } from '@/services/sys/AdminController'
+import ReviewTaskDrawer from './ReviewTaskDrawer'
 
 const KnowledgeReviewPage: React.FC = () => {
   const [view, setView] = useState<KnowledgeReviewTaskSearchParams['view']>('available')
   const actionRef = useRef<ActionType>()
+  const [activeTaskId, setActiveTaskId] = useState<string>()
   const intl = useIntl()
 
   const labels: Record<string, { text: string; color: string }> = {
@@ -33,8 +35,8 @@ const KnowledgeReviewPage: React.FC = () => {
         activeKey={view}
         items={views}
         onChange={(key) => {
-          setView(key as KnowledgeReviewTaskSearchParams['view'])
-          actionRef.current?.reload()
+          setView(key as KnowledgeReviewTaskSearchParams['view']);
+          actionRef.current?.reload();
         }}
       />
       <ProTable<KnowledgeReviewTask>
@@ -43,7 +45,10 @@ const KnowledgeReviewPage: React.FC = () => {
         params={{ view }}
         request={(params) => getReviewTaskList(params)}
         columns={[
-          { title: intl.formatMessage({ id: 'pages.knowledge.review.documentTitle' }), dataIndex: 'documentTitle' },
+          {
+            title: intl.formatMessage({ id: 'pages.knowledge.review.documentTitle' }),
+            dataIndex: 'documentTitle',
+          },
           {
             title: intl.formatMessage({ id: 'pages.knowledge.review.version' }),
             dataIndex: 'versionNo',
@@ -55,10 +60,10 @@ const KnowledgeReviewPage: React.FC = () => {
             dataIndex: 'submitterId',
             valueType: 'select',
             request: async () => {
-              const { data } = await getAdminList({ current: 1, pageSize: 1000 })
-              return data.map((item) => ({ label: item.username, value: item.id }))
+              const { data } = await getAdminList({ current: 1, pageSize: 1000 });
+              return data.map((item) => ({ label: item.username, value: item.id }));
             },
-            hideInSearch: true
+            hideInSearch: true,
           },
           {
             title: intl.formatMessage({ id: 'pages.common.status' }),
@@ -68,8 +73,8 @@ const KnowledgeReviewPage: React.FC = () => {
               Object.entries(labels).map(([key, value]) => [key, { text: value.text }]),
             ),
             render: (_, record) => {
-              const item = labels[record.status || 'pending']
-              return <Tag color={item.color}>{item.text}</Tag>
+              const item = labels[record.status || 'pending'];
+              return <Tag color={item.color}>{item.text}</Tag>;
             },
           },
           {
@@ -80,11 +85,11 @@ const KnowledgeReviewPage: React.FC = () => {
           },
           {
             title: intl.formatMessage({ id: 'pages.knowledge.review.claimant' }),
-            dataIndex: 'claimantId',
+            dataIndex: 'reviewerId',
             valueType: 'select',
             request: async () => {
-              const { data } = await getAdminList({ current: 1, pageSize: 1000 })
-              return data.map((item) => ({ label: item.username, value: item.id }))
+              const { data } = await getAdminList({ current: 1, pageSize: 1000 });
+              return data.map((item) => ({ label: item.username, value: item.id }));
             },
           },
           {
@@ -94,15 +99,26 @@ const KnowledgeReviewPage: React.FC = () => {
             render: (_, record) => (
               <TableActionMenu
                 items={[
-                  { key: 'view', label: intl.formatMessage({ id: 'pages.knowledge.review.viewAction' }), primary: true, onClick: () => history.push(`/knowledge/review/detail?id=${record.id}`) },
+                  {
+                    key: 'view',
+                    label: intl.formatMessage({ id: 'pages.knowledge.review.viewAction' }),
+                    primary: true,
+                    onClick: () => setActiveTaskId(record.id),
+                  },
                 ]}
               />
             ),
           },
         ]}
       />
+      <ReviewTaskDrawer
+        taskId={activeTaskId}
+        open={Boolean(activeTaskId)}
+        onClose={() => setActiveTaskId(undefined)}
+        onSuccess={() => actionRef.current?.reload()}
+      />
     </PageContainer>
-  )
+  );
 }
 
 export default KnowledgeReviewPage

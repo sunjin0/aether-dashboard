@@ -191,6 +191,7 @@ export default {
   'components.agentMessageBubble.reasoningProcess': '推理过程',
   'components.agentMessageBubble.reasoningOnly': '模型仅返回推理过程，未返回最终答案',
   'components.agentMessageBubble.sources': '参考来源（{count}）',
+  'components.agentMessageBubble.similarity': '相关度',
   'components.agentMessageBubble.unnamedDocument': '未命名文档',
   'components.agentMessageBubble.yesterday': '昨天 {time}',
   'components.fileUploadModal.uploadFile': '上传文件',
@@ -557,7 +558,8 @@ export default {
   'pages.knowledge.base.delete': '删除',
   'pages.knowledge.base.deleteConfirm': '确认删除该文档？',
   'pages.knowledge.base.deleteSuccess': '删除成功',
-  'pages.knowledge.base.indexingInfo': '已启用且已索引的知识库会自动参与关联 Agent 的回答。文档新增、编辑和重建索引会同步执行 Embedding，可能需要较长时间。',
+  'pages.knowledge.base.indexingInfo':
+    '已启用且已索引的知识库会自动参与关联 Agent 的回答。文档新增、编辑和重建索引会同步执行 Embedding，可能需要较长时间。',
   'pages.knowledge.base.create': '新增知识库',
   'pages.knowledge.base.form.basicInfo': '基础信息',
   'pages.knowledge.base.form.scope': '知识库范围',
@@ -631,7 +633,8 @@ export default {
   'pages.knowledge.document.versionHistory.indexError': '索引错误',
   'pages.knowledge.document.versionHistory.viewChunks': '查看分块',
   'pages.knowledge.document.versionHistory.rollback': '回滚到此版本',
-  'pages.knowledge.document.versionHistory.rollbackConfirm': '确认以该版本创建新的最新版本并重新索引？',
+  'pages.knowledge.document.versionHistory.rollbackConfirm':
+    '确认以该版本创建新的最新版本并重新索引？',
   'pages.knowledge.document.versionHistory.rollbackQueued': '回滚任务已入队',
   'pages.knowledge.document.versionHistory.rollbackFailed': '回滚失败',
   'pages.knowledge.document.chunks.title': '分块详情',
@@ -714,11 +717,13 @@ export default {
   'pages.knowledge.review.diffWorkspace.ignoreSuccess': '已忽略建议',
   'pages.knowledge.review.diffWorkspace.unacceptSuccess': '已撤销接受',
   'pages.knowledge.review.diffWorkspace.batchAcceptSuccess': '批量接受成功',
-  'pages.knowledge.review.diffWorkspace.applySuccess': '已应用已接受修改，可继续处理剩余问题或编辑正文',
+  'pages.knowledge.review.diffWorkspace.applySuccess':
+    '已应用已接受修改，可继续处理剩余问题或编辑正文',
   'pages.knowledge.review.diffWorkspace.submitSuccess': '已提交审批',
   'pages.knowledge.review.diffWorkspace.submitFailed': '提交审批失败',
   'pages.knowledge.review.diffWorkspace.state.draft': '草稿',
-  'pages.knowledge.review.diffWorkspace.state.draftDesc': '已应用修改，可继续编辑或手动重新发起 AI 审查。',
+  'pages.knowledge.review.diffWorkspace.state.draftDesc':
+    '已应用修改，可继续编辑或手动重新发起 AI 审查。',
   'pages.knowledge.review.diffWorkspace.state.reviewing': 'AI 审查中',
   'pages.knowledge.review.diffWorkspace.state.reviewingDesc': '审查完成后刷新页面。',
   'pages.knowledge.review.diffWorkspace.state.refreshStatus': '刷新状态',
@@ -733,24 +738,30 @@ export default {
   'pages.knowledge.review.diffWorkspace.state.failedDesc': '请重新运行审查。',
   'pages.knowledge.review.diffWorkspace.state.rerun': '重新审查',
   'pages.knowledge.review.diffWorkspace.alert.changed': '文档内容已变化，已刷新到最新审查结果',
-  'pages.knowledge.review.diffWorkspace.alert.appliedSaved': '修改已保存为草稿，可继续编辑或手动重新发起 AI 审查',
+  'pages.knowledge.review.diffWorkspace.alert.appliedSaved':
+    '修改已保存为草稿，可继续编辑或手动重新发起 AI 审查',
   'pages.knowledge.review.diffWorkspace.alert.staleTitle': '文档已变更，当前建议已失效',
-  'pages.knowledge.review.diffWorkspace.alert.staleDesc': '保留当前 Diff 仅用于追溯，采纳和忽略操作已禁用。',
+  'pages.knowledge.review.diffWorkspace.alert.staleDesc':
+    '保留当前 Diff 仅用于追溯，采纳和忽略操作已禁用。',
   'pages.knowledge.review.diffWorkspace.alert.noPending': '当前没有待处理的 AI 审查问题。',
   'pages.knowledge.review.replacementEditor.title': '采纳修改建议',
   'pages.knowledge.review.replacementEditor.okText': '确认采纳',
-  'pages.knowledge.review.replacementEditor.placeholder': '可按需调整本条替换文本；留空则采用服务端建议',
+  'pages.knowledge.review.replacementEditor.placeholder':
+    '可按需调整本条替换文本；留空则采用服务端建议',
   'pages.knowledge.review.diffToolbar.submitReview': '提交审批',
   'pages.knowledge.review.diffToolbar.submitConfirmTitle': '提交审批',
-  'pages.knowledge.review.diffToolbar.submitConfirmDesc': '提交后将进入人工审批流程，审批期间文档只读。',
+  'pages.knowledge.review.diffToolbar.submitConfirmDesc':
+    '提交后将进入人工审批流程，审批期间文档只读。',
   'pages.knowledge.review.diffToolbar.submitOkText': '确认提交',
   'pages.knowledge.review.diffToolbar.cancelText': '取消',
   'pages.knowledge.review.diffToolbar.batchAcceptTitle': '批量接受确认',
-  'pages.knowledge.review.diffToolbar.batchAcceptDesc': '将一次性接受 {count} 项非高风险建议，此操作只暂存状态，不会立即写入草稿。',
+  'pages.knowledge.review.diffToolbar.batchAcceptDesc':
+    '将一次性接受 {count} 项非高风险建议，此操作只暂存状态，不会立即写入草稿。',
   'pages.knowledge.review.diffToolbar.batchAcceptOkText': '确认接受',
   'pages.knowledge.review.diffToolbar.batchAcceptButton': '批量接受 {count} 项',
   'pages.knowledge.review.diffToolbar.applyTitle': '应用已接受修改',
-  'pages.knowledge.review.diffToolbar.applyDesc1': '将一次性写入全部已接受建议，文档版本会转为草稿。',
+  'pages.knowledge.review.diffToolbar.applyDesc1':
+    '将一次性写入全部已接受建议，文档版本会转为草稿。',
   'pages.knowledge.review.diffToolbar.applyDesc2': '系统不会自动发起新的 AI 审查。',
   'pages.knowledge.review.diffToolbar.applyOkText': '确认应用',
   'pages.knowledge.review.diffToolbar.applyButton': '应用 {count} 项已接受修改',
@@ -775,10 +786,12 @@ export default {
   'pages.knowledge.review.issueList.status.rejected': '已忽略',
   'pages.knowledge.review.issueList.unaccept': '撤销接受',
   'pages.knowledge.review.issueList.accept': '采纳',
-  'pages.knowledge.review.issueList.noPatchTooltip': '该建议没有可自动应用的补丁，请手动修改文档或忽略该问题。',
+  'pages.knowledge.review.issueList.noPatchTooltip':
+    '该建议没有可自动应用的补丁，请手动修改文档或忽略该问题。',
   'pages.knowledge.review.issueList.view': '查看',
   'pages.knowledge.review.issueList.reject': '忽略',
-  'pages.knowledge.review.issueList.noPatchTip': '该建议没有可自动应用的补丁，请手动修改文档或忽略该问题。',
+  'pages.knowledge.review.issueList.noPatchTip':
+    '该建议没有可自动应用的补丁，请手动修改文档或忽略该问题。',
   'pages.knowledge.review.issueList.empty': '暂无问题',
   'pages.knowledge.review.action.submitted': '提交审核',
   'pages.knowledge.review.action.claimed': '认领审核',
@@ -804,7 +817,8 @@ export default {
 
   // System Prompt Editor - TemplateSelect
   'pages.components.systemPromptEditor.useTemplate': '使用模板',
-  'pages.components.systemPromptEditor.confirmUseTemplate': '确定要使用「{templateName}」模板吗？当前内容将被替换。',
+  'pages.components.systemPromptEditor.confirmUseTemplate':
+    '确定要使用「{templateName}」模板吗？当前内容将被替换。',
   'pages.components.systemPromptEditor.templateApplied': '已应用模板',
   'pages.components.systemPromptEditor.pleaseFillCompleteInfo': '请填写完整信息',
   'pages.components.systemPromptEditor.templateSaved': '模板已保存',
@@ -825,11 +839,13 @@ export default {
 
   // System Prompt Editor - PromptGenerateModal
   'pages.components.systemPromptEditor.generateTitle': 'AI 生成系统提示词',
-  'pages.components.systemPromptEditor.generateDescription': '与 AI 对话，逐步生成和完善你的系统提示词',
+  'pages.components.systemPromptEditor.generateDescription':
+    '与 AI 对话，逐步生成和完善你的系统提示词',
   'pages.components.systemPromptEditor.selectGenerateAgent': '选择用于生成的 Agent',
   'pages.components.systemPromptEditor.noAvailableAgents': '暂无可用 Agent',
   'pages.components.systemPromptEditor.describeAssistant': '描述你需要的 AI 助手，开始生成提示词',
-  'pages.components.systemPromptEditor.inputMessagePlaceholder': '输入消息... (Enter 发送, Shift+Enter 换行)',
+  'pages.components.systemPromptEditor.inputMessagePlaceholder':
+    '输入消息... (Enter 发送, Shift+Enter 换行)',
   'pages.components.systemPromptEditor.selectAgentFirst': '请先选择 Agent',
   'pages.components.systemPromptEditor.useThisPrompt': '使用此提示词',
   'pages.components.systemPromptEditor.errorWithMessage': '[错误] {message}',
@@ -842,9 +858,10 @@ export default {
   'pages.components.systemPromptEditor.optimizeDescription': '与 AI 对话，逐步优化你的系统提示词',
   'pages.components.systemPromptEditor.selectOptimizeAgent': '选择用于优化的 Agent',
   'pages.components.systemPromptEditor.originalPrompt': '原始提示词',
-  'pages.components.systemPromptEditor.clickToStartOptimize': '点击"开始优化"或输入反馈来优化提示词',
+  'pages.components.systemPromptEditor.clickToStartOptimize':
+    '点击"开始优化"或输入反馈来优化提示词',
   'pages.components.systemPromptEditor.optimizeInputPlaceholder': '输入优化反馈... (Enter 发送)',
   'pages.components.systemPromptEditor.startOptimization': '开始优化',
   'pages.components.systemPromptEditor.useOptimizationResult': '使用优化结果',
   'pages.components.systemPromptEditor.optimizeFailed': '优化失败',
-}
+};

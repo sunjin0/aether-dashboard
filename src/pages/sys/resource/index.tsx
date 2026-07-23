@@ -1,25 +1,25 @@
-import React, { useRef, useState } from 'react'
+import React, { useRef, useState } from 'react';
 
-import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
-import { useIntl } from '@umijs/max'
-import { Button, message } from 'antd'
-import TableActionMenu from '@/components/TableActionMenu'
-import ResourceForm from '@/pages/sys/resource/ResourceForm'
-import { FormattedMessage } from '@@/plugin-locale'
-import { PlusOutlined } from '@ant-design/icons'
-import { history, useAccess } from '@@/exports'
-import { getOptionList } from '@/services/sys/DictController'
-import { deleteResourceInfo, getResourceList } from '@/services/sys/ResourceController'
-import { ResourceSearchParams } from '@/services/entity/Sys'
+import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components';
+import { useIntl } from '@umijs/max';
+import { Button, message } from 'antd';
+import TableActionMenu from '@/components/TableActionMenu';
+import ResourceForm from '@/pages/sys/resource/ResourceForm';
+import { FormattedMessage } from '@@/plugin-locale';
+import { PlusOutlined } from '@ant-design/icons';
+import { history, useAccess } from '@@/exports';
+import { getOptionList } from '@/services/sys/DictController';
+import { deleteResourceInfo, getResourceList } from '@/services/sys/ResourceController';
+import { ResourceSearchParams } from '@/services/entity/Sys';
 
 const Resource: React.FC = () => {
-  const [open, setOpen] = useState(false)
-  const [id, setId] = useState(undefined)
-  const ref = useRef<ActionType>()
-  const intl = useIntl()
-  const permissionMap = useAccess()
-  const path = history.location.pathname
-  const write = permissionMap[path]
+  const [open, setOpen] = useState(false);
+  const [id, setId] = useState(undefined);
+  const ref = useRef<ActionType>();
+  const intl = useIntl();
+  const permissionMap = useAccess();
+  const path = history.location.pathname;
+  const write = permissionMap[path];
   const columns: any = [
     {
       title: intl.formatMessage({ id: 'pages.common.name.en' }),
@@ -43,9 +43,9 @@ const Resource: React.FC = () => {
       valueType: 'select',
       request: async () => {
         try {
-          return await getOptionList('Resource_Type', false)
+          return await getOptionList('Resource_Type', false);
         } catch {
-          return []
+          return [];
         }
       },
       key: 'type',
@@ -76,8 +76,8 @@ const Resource: React.FC = () => {
                 label: intl.formatMessage({ id: 'pages.common.edit' }),
                 primary: true,
                 onClick: () => {
-                  setId(record.id)
-                  setOpen(true)
+                  setId(record.id);
+                  setOpen(true);
                 },
               },
               {
@@ -87,17 +87,17 @@ const Resource: React.FC = () => {
                 danger: true,
                 confirm: { title: intl.formatMessage({ id: 'pages.confirm.delete' }) },
                 onClick: async () => {
-                  const { code, message: msg } = await deleteResourceInfo(record)
-                  action?.reload()
-                  if (code === 200) message.success(msg)
-                  else message.error(msg)
+                  const { code, message: msg } = await deleteResourceInfo(record);
+                  action?.reload();
+                  if (code === 200) message.success(msg);
+                  else message.error(msg);
                 },
               },
             ]}
           />
         ),
     },
-  ]
+  ];
   return (
     <PageContainer>
       <ProTable
@@ -105,12 +105,12 @@ const Resource: React.FC = () => {
         rowKey="id"
         request={async (params: ResourceSearchParams) => {
           try {
-            return await getResourceList(params)
+            return await getResourceList(params);
           } catch {
             message.error(
               intl.formatMessage({ id: 'pages.common.load.failed', defaultMessage: '加载失败' }),
-            )
-            return { data: [], total: 0, success: false }
+            );
+            return { data: [], total: 0, success: false };
           }
         }}
         toolBarRender={() =>
@@ -120,8 +120,8 @@ const Resource: React.FC = () => {
               icon={<PlusOutlined />}
               type="primary"
               onClick={() => {
-                setId(undefined)
-                setOpen(true)
+                setId(undefined);
+                setOpen(true);
               }}
             >
               <FormattedMessage id="pages.common.new" />
@@ -135,12 +135,12 @@ const Resource: React.FC = () => {
         open={open}
         setOpen={setOpen}
         onSuccess={() => {
-          setId(undefined)
-          ref.current?.reload()
+          setId(undefined);
+          ref.current?.reload();
         }}
       />
     </PageContainer>
-  )
-}
+  );
+};
 
-export default Resource
+export default Resource;

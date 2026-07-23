@@ -13,6 +13,7 @@
 ### Task 1: Update Service Layer Types and API Functions
 
 **Files:**
+
 - Modify: `src/services/sys/AdminPreferenceController.ts:1-51`
 
 - [ ] **Step 1: Update the AdminPreference interface**
@@ -64,22 +65,21 @@ Append after the `updateAdminPreferenceStatus` function (after line 51):
 
 ```typescript
 export const confirmAdminPreference = async (id: string): Promise<ResponseStructure<void>> =>
-  request(`/api/sys/admin/preference/${id}/feedback`, { method: 'POST' })
+  request(`/api/sys/admin/preference/${id}/feedback`, { method: 'POST' });
 
 export const rejectAdminPreference = async (id: string): Promise<ResponseStructure<void>> =>
-  request(`/api/sys/admin/preference/${id}/feedback`, { method: 'DELETE' })
+  request(`/api/sys/admin/preference/${id}/feedback`, { method: 'DELETE' });
 
 export const overrideAdminPreference = async (
   id: string,
   params: { value: string },
 ): Promise<ResponseStructure<void>> =>
-  request(`/api/sys/admin/preference/${id}/override`, { method: 'PUT', data: params })
+  request(`/api/sys/admin/preference/${id}/override`, { method: 'PUT', data: params });
 ```
 
 - [ ] **Step 4: Verify the file compiles**
 
-Run: `npx tsc --noEmit src/services/sys/AdminPreferenceController.ts`
-Expected: No errors
+Run: `npx tsc --noEmit src/services/sys/AdminPreferenceController.ts` Expected: No errors
 
 ## Self-Review Checklist
 

@@ -1,48 +1,48 @@
-import type { editor } from 'monaco-editor'
-import { DiffEditor } from '@monaco-editor/react'
-import { Card, Typography } from 'antd'
-import React, { useEffect, useRef } from 'react'
-import { ReviewDiffEditorProps } from '../types'
+import type { editor } from 'monaco-editor';
+import { DiffEditor } from '@monaco-editor/react';
+import { Card, Typography } from 'antd';
+import React, { useEffect, useRef } from 'react';
+import { ReviewDiffEditorProps } from '../types';
 
-const { Text } = Typography
+const { Text } = Typography;
 
 const ReviewDiffEditor: React.FC<ReviewDiffEditorProps> = ({ diff, activeIssue }) => {
-  const editorRef = useRef<editor.IStandaloneDiffEditor | null>(null)
+  const editorRef = useRef<editor.IStandaloneDiffEditor | null>(null);
 
   useEffect(() => {
-    if (!activeIssue || !editorRef.current) return
-    const originalEditor = editorRef.current.getOriginalEditor()
-    const modifiedEditor = editorRef.current.getModifiedEditor()
+    if (!activeIssue || !editorRef.current) return;
+    const originalEditor = editorRef.current.getOriginalEditor();
+    const modifiedEditor = editorRef.current.getModifiedEditor();
     if (activeIssue.baseStartLine) {
-      originalEditor.revealLineInCenter(activeIssue.baseStartLine)
-      originalEditor.setPosition({ lineNumber: activeIssue.baseStartLine, column: 1 })
+      originalEditor.revealLineInCenter(activeIssue.baseStartLine);
+      originalEditor.setPosition({ lineNumber: activeIssue.baseStartLine, column: 1 });
     }
     if (activeIssue.proposedStartLine && activeIssue.proposedStartLine > 0) {
-      modifiedEditor.revealLineInCenter(activeIssue.proposedStartLine)
-      modifiedEditor.setPosition({ lineNumber: activeIssue.proposedStartLine, column: 1 })
+      modifiedEditor.revealLineInCenter(activeIssue.proposedStartLine);
+      modifiedEditor.setPosition({ lineNumber: activeIssue.proposedStartLine, column: 1 });
     }
-  }, [activeIssue])
+  }, [activeIssue]);
 
   useEffect(() => {
-    if (!editorRef.current) return
+    if (!editorRef.current) return;
     const decorations = activeIssue?.baseStartLine
       ? [
-        {
-          range: {
-            startLineNumber: activeIssue.baseStartLine,
-            startColumn: 1,
-            endLineNumber: activeIssue.baseEndLine || activeIssue.baseStartLine,
-            endColumn: 1,
+          {
+            range: {
+              startLineNumber: activeIssue.baseStartLine,
+              startColumn: 1,
+              endLineNumber: activeIssue.baseEndLine || activeIssue.baseStartLine,
+              endColumn: 1,
+            },
+            options: { isWholeLine: true, className: 'ai-review-active-line' },
           },
-          options: { isWholeLine: true, className: 'ai-review-active-line' },
-        },
-      ]
-      : []
+        ]
+      : [];
     const collection = editorRef.current
       .getOriginalEditor()
-      .createDecorationsCollection(decorations)
-    return () => collection.clear()
-  }, [activeIssue])
+      .createDecorationsCollection(decorations);
+    return () => collection.clear();
+  }, [activeIssue]);
 
   const title = (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -53,7 +53,7 @@ const ReviewDiffEditor: React.FC<ReviewDiffEditorProps> = ({ diff, activeIssue }
         </Text>
       )}
     </div>
-  )
+  );
 
   return (
     <Card
@@ -68,7 +68,7 @@ const ReviewDiffEditor: React.FC<ReviewDiffEditorProps> = ({ diff, activeIssue }
         original={diff.originalContent}
         modified={diff.proposedContent}
         onMount={(editor) => {
-          editorRef.current = editor
+          editorRef.current = editor;
         }}
         options={{
           readOnly: true,
@@ -83,6 +83,6 @@ const ReviewDiffEditor: React.FC<ReviewDiffEditorProps> = ({ diff, activeIssue }
         }}
       />
     </Card>
-  )
-}
-export default ReviewDiffEditor
+  );
+};
+export default ReviewDiffEditor;

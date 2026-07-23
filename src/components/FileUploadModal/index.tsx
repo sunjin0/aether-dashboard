@@ -1,8 +1,8 @@
-﻿import { InboxOutlined, UploadOutlined } from '@ant-design/icons'
-import { Button, Form, message, Modal, Upload } from 'antd'
-import type { UploadFile } from 'antd/es/upload/interface'
-import React, { useState } from 'react'
-import { useIntl } from '@umijs/max'
+﻿import { InboxOutlined, UploadOutlined } from '@ant-design/icons';
+import { Button, Form, message, Modal, Upload } from 'antd';
+import type { UploadFile } from 'antd/es/upload/interface';
+import React, { useState } from 'react';
+import { useIntl } from '@umijs/max';
 
 export interface UploadActionResult {
   code?: number;
@@ -41,56 +41,71 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
   upload,
   onSuccess,
 }) => {
-  const intl = useIntl()
-  const [form] = Form.useForm<UploadExtraValues>()
-  const [open, setOpen] = useState(false)
-  const [file, setFile] = useState<File>()
-  const [uploading, setUploading] = useState(false)
+  const intl = useIntl();
+  const [form] = Form.useForm<UploadExtraValues>();
+  const [open, setOpen] = useState(false);
+  const [file, setFile] = useState<File>();
+  const [uploading, setUploading] = useState(false);
 
   /** 关闭弹窗时清理文件和扩展字段，避免下次打开沿用旧数据。 */
   const reset = () => {
-    form.resetFields()
-    setFile(undefined)
-    setOpen(false)
-  }
+    form.resetFields();
+    setFile(undefined);
+    setOpen(false);
+  };
 
   /** 仅选择文件，不使用 Upload 组件的默认上传行为。 */
   const beforeUpload = (selectedFile: File) => {
-    const extension = selectedFile.name.split('.').pop()?.toLowerCase()
+    const extension = selectedFile.name.split('.').pop()?.toLowerCase();
     if (!extension || !allowedExtensions.includes(extension)) {
-      message.error(intl.formatMessage({ id: 'components.fileUploadModal.unsupportedType' }, { extensions: allowedExtensions.join(', ') }))
-      return Upload.LIST_IGNORE
+      message.error(
+        intl.formatMessage(
+          { id: 'components.fileUploadModal.unsupportedType' },
+          { extensions: allowedExtensions.join(', ') },
+        ),
+      );
+      return Upload.LIST_IGNORE;
     }
     if (selectedFile.size > maxSize) {
-      message.error(intl.formatMessage({ id: 'components.fileUploadModal.maxSize' }, { maxSize: Math.floor(maxSize / 1024 / 1024) }))
-      return Upload.LIST_IGNORE
+      message.error(
+        intl.formatMessage(
+          { id: 'components.fileUploadModal.maxSize' },
+          { maxSize: Math.floor(maxSize / 1024 / 1024) },
+        ),
+      );
+      return Upload.LIST_IGNORE;
     }
-    setFile(selectedFile)
-    return false
-  }
+    setFile(selectedFile);
+    return false;
+  };
 
   /** 校验扩展字段后，将文件和字段值统一交给业务接口。 */
   const submit = async () => {
-    if (!file) return
-    const values = await form.validateFields()
-    setUploading(true)
+    if (!file) return;
+    const values = await form.validateFields();
+    setUploading(true);
     try {
-      const response = await upload(file, values)
+      const response = await upload(file, values);
       if (response.code === 200) {
-        message.success(response.message || intl.formatMessage({ id: 'components.fileUploadModal.uploadSuccess' }))
-        onSuccess?.()
-        reset()
+        message.success(
+          response.message ||
+            intl.formatMessage({ id: 'components.fileUploadModal.uploadSuccess' }),
+        );
+        onSuccess?.();
+        reset();
       } else {
-        message.error(response.message || intl.formatMessage({ id: 'components.fileUploadModal.uploadFailed' }))
+        message.error(
+          response.message || intl.formatMessage({ id: 'components.fileUploadModal.uploadFailed' }),
+        );
       }
     } finally {
-      setUploading(false)
+      setUploading(false);
     }
-  }
+  };
 
   const fileList: UploadFile[] = file
     ? [{ uid: file.name, name: file.name, status: 'done', size: file.size }]
-    : []
+    : [];
 
   return (
     <>
@@ -118,21 +133,29 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
           fileList={fileList}
           beforeUpload={beforeUpload}
           onRemove={() => {
-            setFile(undefined)
-            return true
+            setFile(undefined);
+            return true;
           }}
         >
           <p className="ant-upload-drag-icon">
             <InboxOutlined />
           </p>
-          <p className="ant-upload-text">{intl.formatMessage({ id: 'components.fileUploadModal.dragHint' })}</p>
+          <p className="ant-upload-text">
+            {intl.formatMessage({ id: 'components.fileUploadModal.dragHint' })}
+          </p>
           <p className="ant-upload-hint">
-            {intl.formatMessage({ id: 'components.fileUploadModal.uploadHint' }, { extensions: allowedExtensions.join(', '), maxSize: Math.floor(maxSize / 1024 / 1024) })}
+            {intl.formatMessage(
+              { id: 'components.fileUploadModal.uploadHint' },
+              {
+                extensions: allowedExtensions.join(', '),
+                maxSize: Math.floor(maxSize / 1024 / 1024),
+              },
+            )}
           </p>
         </Upload.Dragger>
       </Modal>
     </>
-  )
-}
+  );
+};
 
-export default FileUploadModal
+export default FileUploadModal;

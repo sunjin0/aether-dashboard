@@ -1,6 +1,6 @@
-import { request } from '@umijs/max'
-import { Email, EmailSearchParams } from '@/services/entity/Msg'
-import { ResponseStructure } from '@/services/entity/Common'
+import { request } from '@umijs/max';
+import { Email, EmailSearchParams } from '@/services/entity/Msg';
+import { ResponseStructure } from '@/services/entity/Common';
 
 /**
  * @description 获取邮件列表
@@ -12,8 +12,8 @@ export const getEmailList = async (
   return request('/api/msg/email/list', {
     method: 'POST',
     data: params,
-  })
-}
+  });
+};
 /**
  * @description 删除邮件信息
  * @since 2025-07-17
@@ -26,5 +26,5 @@ export const deleteEmailInfo = async (
     params: {
       id: params.id,
     },
-  })
-}
+  });
+};

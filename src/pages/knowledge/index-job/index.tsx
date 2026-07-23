@@ -1,41 +1,69 @@
-import { KnowledgeIndexJob, KnowledgeIndexJobSearchParams } from '@/services/entity/Agent'
-import { getIndexJobList, retryIndexJob } from '@/services/knowledge/IndexJobController'
-import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
-import { useAccess, useIntl } from '@@/exports'
-import { Descriptions, message, Tag, Tooltip } from 'antd'
-import TableActionMenu from '@/components/TableActionMenu'
-import React, { useRef } from 'react'
+import { KnowledgeIndexJob, KnowledgeIndexJobSearchParams } from '@/services/entity/Agent';
+import { getIndexJobList, retryIndexJob } from '@/services/knowledge/IndexJobController';
+import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components';
+import { useAccess, useIntl } from '@@/exports';
+import { Descriptions, message, Tag, Tooltip } from 'antd';
+import TableActionMenu from '@/components/TableActionMenu';
+import React, { useRef } from 'react';
 
 /** 将任务起止时间转换为可快速识别的耗时文本。 */
-const formatDuration = (startedAt?: number, finishedAt?: number, intl?: ReturnType<typeof useIntl>) => {
-  if (!startedAt) return '-'
-  const duration = (finishedAt || Date.now()) - startedAt
-  if (duration < 1000) return `${duration} ms`
-  if (duration < 60_000) return intl ? intl.formatMessage({ id: 'pages.knowledge.indexJob.duration.seconds' }, { value: (duration / 1000).toFixed(1) }) : `${(duration / 1000).toFixed(1)} 秒`
+const formatDuration = (
+  startedAt?: number,
+  finishedAt?: number,
+  intl?: ReturnType<typeof useIntl>,
+) => {
+  if (!startedAt) return '-';
+  const duration = (finishedAt || Date.now()) - startedAt;
+  if (duration < 1000) return `${duration} ms`;
+  if (duration < 60_000)
+    return intl
+      ? intl.formatMessage(
+          { id: 'pages.knowledge.indexJob.duration.seconds' },
+          { value: (duration / 1000).toFixed(1) },
+        )
+      : `${(duration / 1000).toFixed(1)} 秒`;
   return intl
-    ? intl.formatMessage({ id: 'pages.knowledge.indexJob.duration.minutes' }, { minutes: Math.floor(duration / 60_000), seconds: Math.floor((duration % 60_000) / 1000) })
-    : `${Math.floor(duration / 60_000)} 分 ${Math.floor((duration % 60_000) / 1000)} 秒`
-}
+    ? intl.formatMessage(
+        { id: 'pages.knowledge.indexJob.duration.minutes' },
+        { minutes: Math.floor(duration / 60_000), seconds: Math.floor((duration % 60_000) / 1000) },
+      )
+    : `${Math.floor(duration / 60_000)} 分 ${Math.floor((duration % 60_000) / 1000)} 秒`;
+};
 
 const IdText: React.FC<{ value?: string }> = ({ value }) => (
   <Tooltip title={value}>
     <span>{value || '-'}</span>
   </Tooltip>
-)
+);
 
 const KnowledgeIndexJobPage: React.FC = () => {
-  const actionRef = useRef<ActionType>()
-  const access = useAccess()
-  const canRetry = access['/knowledge/document'] || access['/knowledge/index-job']
-  const intl = useIntl()
+  const actionRef = useRef<ActionType>();
+  const access = useAccess();
+  const canRetry = access['/knowledge/document'] || access['/knowledge/index-job'];
+  const intl = useIntl();
 
   const statusLabels: Record<string, { text: string; color: string }> = {
-    pending: { text: intl.formatMessage({ id: 'pages.knowledge.indexJob.status.pending' }), color: 'default' },
-    running: { text: intl.formatMessage({ id: 'pages.knowledge.indexJob.status.running' }), color: 'processing' },
-    success: { text: intl.formatMessage({ id: 'pages.knowledge.indexJob.status.success' }), color: 'success' },
-    failed: { text: intl.formatMessage({ id: 'pages.knowledge.indexJob.status.failed' }), color: 'error' },
-    cancelled: { text: intl.formatMessage({ id: 'pages.knowledge.indexJob.status.cancelled' }), color: 'default' },
-  }
+    pending: {
+      text: intl.formatMessage({ id: 'pages.knowledge.indexJob.status.pending' }),
+      color: 'default',
+    },
+    running: {
+      text: intl.formatMessage({ id: 'pages.knowledge.indexJob.status.running' }),
+      color: 'processing',
+    },
+    success: {
+      text: intl.formatMessage({ id: 'pages.knowledge.indexJob.status.success' }),
+      color: 'success',
+    },
+    failed: {
+      text: intl.formatMessage({ id: 'pages.knowledge.indexJob.status.failed' }),
+      color: 'error',
+    },
+    cancelled: {
+      text: intl.formatMessage({ id: 'pages.knowledge.indexJob.status.cancelled' }),
+      color: 'default',
+    },
+  };
 
   const jobTypeLabels: Record<string, string> = {
     create: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.create' }),
@@ -44,7 +72,7 @@ const KnowledgeIndexJobPage: React.FC = () => {
     reindex: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.reindex' }),
     rollback: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.rollback' }),
     retry: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.retry' }),
-  }
+  };
 
   return (
     <PageContainer title={intl.formatMessage({ id: 'pages.knowledge.indexJob.title' })}>
@@ -57,26 +85,46 @@ const KnowledgeIndexJobPage: React.FC = () => {
         expandable={{
           expandedRowRender: (record) => (
             <Descriptions size="small" column={3} bordered>
-              <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.indexJob.taskId' })} span={3}>
+              <Descriptions.Item
+                label={intl.formatMessage({ id: 'pages.knowledge.indexJob.taskId' })}
+                span={3}
+              >
                 {record.id || '-'}
               </Descriptions.Item>
-              <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.indexJob.knowledgeBaseId' })}>
+              <Descriptions.Item
+                label={intl.formatMessage({ id: 'pages.knowledge.indexJob.knowledgeBaseId' })}
+              >
                 {record.knowledgeBaseId || '-'}
               </Descriptions.Item>
-              <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.indexJob.documentId' })}>{record.documentId || '-'}</Descriptions.Item>
-              <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.indexJob.versionId' })}>
+              <Descriptions.Item
+                label={intl.formatMessage({ id: 'pages.knowledge.indexJob.documentId' })}
+              >
+                {record.documentId || '-'}
+              </Descriptions.Item>
+              <Descriptions.Item
+                label={intl.formatMessage({ id: 'pages.knowledge.indexJob.versionId' })}
+              >
                 {record.documentVersionId || '-'}
               </Descriptions.Item>
-              <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.indexJob.createdAt' })}>
+              <Descriptions.Item
+                label={intl.formatMessage({ id: 'pages.knowledge.indexJob.createdAt' })}
+              >
                 {record.createdAt ? new Date(record.createdAt).toLocaleString(intl.locale) : '-'}
               </Descriptions.Item>
-              <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.indexJob.startedAt' })}>
+              <Descriptions.Item
+                label={intl.formatMessage({ id: 'pages.knowledge.indexJob.startedAt' })}
+              >
                 {record.startedAt ? new Date(record.startedAt).toLocaleString(intl.locale) : '-'}
               </Descriptions.Item>
-              <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.indexJob.finishedAt' })}>
+              <Descriptions.Item
+                label={intl.formatMessage({ id: 'pages.knowledge.indexJob.finishedAt' })}
+              >
                 {record.finishedAt ? new Date(record.finishedAt).toLocaleString(intl.locale) : '-'}
               </Descriptions.Item>
-              <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.indexJob.statistics' })} span={3}>
+              <Descriptions.Item
+                label={intl.formatMessage({ id: 'pages.knowledge.indexJob.statistics' })}
+                span={3}
+              >
                 {record.statistics
                   ? typeof record.statistics === 'string'
                     ? record.statistics
@@ -84,7 +132,10 @@ const KnowledgeIndexJobPage: React.FC = () => {
                   : '-'}
               </Descriptions.Item>
               {record.errorMessage && (
-                <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.indexJob.errorInfo' })} span={3}>
+                <Descriptions.Item
+                  label={intl.formatMessage({ id: 'pages.knowledge.indexJob.errorInfo' })}
+                  span={3}
+                >
                   {record.errorMessage}
                 </Descriptions.Item>
               )}
@@ -97,11 +148,21 @@ const KnowledgeIndexJobPage: React.FC = () => {
             dataIndex: 'jobType',
             valueType: 'select',
             valueEnum: {
-              create: { text: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.create' }) },
-              upload: { text: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.upload' }) },
-              update: { text: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.update' }) },
-              reindex: { text: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.reindex' }) },
-              rollback: { text: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.rollback' }) },
+              create: {
+                text: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.create' }),
+              },
+              upload: {
+                text: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.upload' }),
+              },
+              update: {
+                text: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.update' }),
+              },
+              reindex: {
+                text: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.reindex' }),
+              },
+              rollback: {
+                text: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.rollback' }),
+              },
               retry: { text: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.retry' }) },
             },
             render: (_, record) => (
@@ -147,8 +208,8 @@ const KnowledgeIndexJobPage: React.FC = () => {
               Object.entries(statusLabels).map(([key, value]) => [key, { text: value.text }]),
             ),
             render: (_, record) => {
-              const status = statusLabels[record.status || 'pending']
-              return <Tag color={status.color}>{status.text}</Tag>
+              const status = statusLabels[record.status || 'pending'];
+              return <Tag color={status.color}>{status.text}</Tag>;
             },
           },
           {
@@ -193,7 +254,29 @@ const KnowledgeIndexJobPage: React.FC = () => {
               canRetry && record.status === 'failed' ? (
                 <TableActionMenu
                   items={[
-                    { key: 'retry', label: intl.formatMessage({ id: 'pages.knowledge.indexJob.retry' }), primary: true, confirm: { title: intl.formatMessage({ id: 'pages.knowledge.indexJob.retryConfirm' }) }, onClick: async () => { if (!record.id) return; const result = await retryIndexJob(record.id); if (result.code === 200) { message.success(result.message || intl.formatMessage({ id: 'pages.knowledge.indexJob.retryQueued' })); actionRef.current?.reload() } else message.error(result.message || intl.formatMessage({ id: 'pages.knowledge.indexJob.retryFailed' })) } },
+                    {
+                      key: 'retry',
+                      label: intl.formatMessage({ id: 'pages.knowledge.indexJob.retry' }),
+                      primary: true,
+                      confirm: {
+                        title: intl.formatMessage({ id: 'pages.knowledge.indexJob.retryConfirm' }),
+                      },
+                      onClick: async () => {
+                        if (!record.id) return;
+                        const result = await retryIndexJob(record.id);
+                        if (result.code === 200) {
+                          message.success(
+                            result.message ||
+                              intl.formatMessage({ id: 'pages.knowledge.indexJob.retryQueued' }),
+                          );
+                          actionRef.current?.reload();
+                        } else
+                          message.error(
+                            result.message ||
+                              intl.formatMessage({ id: 'pages.knowledge.indexJob.retryFailed' }),
+                          );
+                      },
+                    },
                   ]}
                 />
               ) : null,
@@ -201,7 +284,7 @@ const KnowledgeIndexJobPage: React.FC = () => {
         ]}
       />
     </PageContainer>
-  )
-}
+  );
+};
 
-export default KnowledgeIndexJobPage
+export default KnowledgeIndexJobPage;

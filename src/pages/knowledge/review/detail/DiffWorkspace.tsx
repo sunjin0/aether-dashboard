@@ -1,18 +1,18 @@
-import { PageContainer } from '@ant-design/pro-components'
-import { history, useIntl, useLocation } from '@umijs/max'
-import { Alert, Button, Col, Empty, message, Result, Row, Spin } from 'antd'
-import React, { useEffect, useMemo, useState } from 'react'
-import type { AiReviewDiffIssue } from '@/services/entity/Agent'
-import { startAiReview, submitReview } from '@/services/knowledge/ReviewController'
-import ReviewDiffEditor from './components/ReviewDiffEditor'
-import ReviewDiffToolbar from './components/ReviewDiffToolbar'
-import ReviewIssueList from './components/ReviewIssueList'
-import ReplacementEditor from './components/ReplacementEditor'
-import { severityOrder } from './constants'
-import { useAiReviewDiff } from './hooks/useAiReviewDiff'
-import { countUnappliedAcceptedIssues } from './reviewState'
-import { ReviewIssueFilter } from './types'
-import './DiffWorkspace.less'
+import { PageContainer } from '@ant-design/pro-components';
+import { history, useIntl, useLocation } from '@umijs/max';
+import { Alert, Button, Col, Empty, message, Result, Row, Spin } from 'antd';
+import React, { useEffect, useMemo, useState } from 'react';
+import type { AiReviewDiffIssue } from '@/services/entity/Agent';
+import { startAiReview, submitReview } from '@/services/knowledge/ReviewController';
+import ReviewDiffEditor from './components/ReviewDiffEditor';
+import ReviewDiffToolbar from './components/ReviewDiffToolbar';
+import ReviewIssueList from './components/ReviewIssueList';
+import ReplacementEditor from './components/ReplacementEditor';
+import { severityOrder } from './constants';
+import { useAiReviewDiff } from './hooks/useAiReviewDiff';
+import { countUnappliedAcceptedIssues } from './reviewState';
+import { ReviewIssueFilter } from './types';
+import './DiffWorkspace.less';
 
 interface Props {
   reviewId?: string;
@@ -37,37 +37,37 @@ const DiffWorkspace: React.FC<Props> = ({
   onApplied,
   onReviewStatusChange,
 }) => {
-  const intl = useIntl()
+  const intl = useIntl();
   const errorText = (error: unknown) => {
     const value = error as {
       response?: { status?: number; data?: { message?: string; code?: number } };
       status?: number;
       message?: string;
-    }
-    const statusCode = value?.response?.status || value?.status
+    };
+    const statusCode = value?.response?.status || value?.status;
     if (statusCode === 409)
-      return intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.error.conflict' })
+      return intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.error.conflict' });
     if (statusCode === 404)
-      return intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.error.notFound' })
+      return intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.error.notFound' });
     if (statusCode === 400)
-      return intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.error.badRequest' })
+      return intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.error.badRequest' });
     return (
       value?.message ||
       intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.error.unknown' })
-    )
-  }
-  const location = useLocation()
-  const reviewId = reviewIdProp || new URLSearchParams(location.search).get('id') || ''
+    );
+  };
+  const location = useLocation();
+  const reviewId = reviewIdProp || new URLSearchParams(location.search).get('id') || '';
   const { diff, loading, conflict, refresh, accept, reject, unaccept, acceptBatch, applyAccepted } =
-    useAiReviewDiff(reviewId)
-  const [filter, setFilter] = useState<ReviewIssueFilter>('all')
-  const [activeIssue, setActiveIssue] = useState<AiReviewDiffIssue>()
-  const [replacementIssue, setReplacementIssue] = useState<AiReviewDiffIssue>()
-  const [busy, setBusy] = useState(false)
-  const [justApplied, setJustApplied] = useState(false)
-  const status = (diff?.reviewStatus || versionReviewStatus || '').toUpperCase()
-  const isDiffAvailable = status === 'AI_REVIEWED'
-  const isReadOnly = ['SUBMITTED', 'APPROVED', 'REJECTED'].includes(status)
+    useAiReviewDiff(reviewId);
+  const [filter, setFilter] = useState<ReviewIssueFilter>('all');
+  const [activeIssue, setActiveIssue] = useState<AiReviewDiffIssue>();
+  const [replacementIssue, setReplacementIssue] = useState<AiReviewDiffIssue>();
+  const [busy, setBusy] = useState(false);
+  const [justApplied, setJustApplied] = useState(false);
+  const status = (diff?.reviewStatus || versionReviewStatus || '').toUpperCase();
+  const isDiffAvailable = status === 'AI_REVIEWED';
+  const isReadOnly = ['SUBMITTED', 'APPROVED', 'REJECTED'].includes(status);
   const issues = useMemo(
     () =>
       (diff?.issues || [])
@@ -84,97 +84,97 @@ const DiffWorkspace: React.FC<Props> = ({
             (a.baseStartLine || 0) - (b.baseStartLine || 0),
         ),
     [diff?.issues, filter],
-  )
+  );
 
   useEffect(() => {
     if (conflict) {
-      setActiveIssue(undefined)
-      setReplacementIssue(undefined)
+      setActiveIssue(undefined);
+      setReplacementIssue(undefined);
     }
-  }, [conflict])
+  }, [conflict]);
 
   useEffect(() => {
     if (onReviewStatusChange) {
-      onReviewStatusChange(diff?.reviewStatus || versionReviewStatus)
+      onReviewStatusChange(diff?.reviewStatus || versionReviewStatus);
     }
-  }, [diff?.reviewStatus, versionReviewStatus, onReviewStatusChange])
+  }, [diff?.reviewStatus, versionReviewStatus, onReviewStatusChange]);
 
   useEffect(() => {
-    const current = issues.find((issue) => issue.id === activeIssue?.id)
+    const current = issues.find((issue) => issue.id === activeIssue?.id);
     if (current) {
-      if (current !== activeIssue) setActiveIssue(current)
-      return
+      if (current !== activeIssue) setActiveIssue(current);
+      return;
     }
-    setActiveIssue(issues.find((issue) => issue.handleStatus === 'pending') || issues[0])
-  }, [issues, activeIssue])
+    setActiveIssue(issues.find((issue) => issue.handleStatus === 'pending') || issues[0]);
+  }, [issues, activeIssue]);
 
   const selectNextPendingIssue = (currentId: string) => {
-    const currentIndex = issues.findIndex((issue) => issue.id === currentId)
-    const followingIssues = [...issues.slice(currentIndex + 1), ...issues.slice(0, currentIndex)]
+    const currentIndex = issues.findIndex((issue) => issue.id === currentId);
+    const followingIssues = [...issues.slice(currentIndex + 1), ...issues.slice(0, currentIndex)];
     setActiveIssue(
       followingIssues.find((issue) => issue.handleStatus === 'pending') || followingIssues[0],
-    )
-  }
+    );
+  };
 
   const runAiReview = async () => {
-    const targetVersionId = diff?.documentVersionId || documentVersionId
-    if (!targetVersionId) return
-    setBusy(true)
+    const targetVersionId = diff?.documentVersionId || documentVersionId;
+    if (!targetVersionId) return;
+    setBusy(true);
     try {
-      await startAiReview(targetVersionId)
-      setJustApplied(false)
-      await refresh()
+      await startAiReview(targetVersionId);
+      setJustApplied(false);
+      await refresh();
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
-  }
+  };
 
   const acceptOne = async (issue: AiReviewDiffIssue, replacement?: string) => {
-    setBusy(true)
+    setBusy(true);
     try {
-      await accept(issue, replacement)
-      setJustApplied(false)
+      await accept(issue, replacement);
+      setJustApplied(false);
       message.success(
         intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.acceptSuccess' }),
-      )
-      selectNextPendingIssue(issue.id)
+      );
+      selectNextPendingIssue(issue.id);
     } catch (error) {
-      message.error(errorText(error))
+      message.error(errorText(error));
     } finally {
-      setBusy(false)
-      setReplacementIssue(undefined)
+      setBusy(false);
+      setReplacementIssue(undefined);
     }
-  }
+  };
 
   const ignoreOne = async (issue: AiReviewDiffIssue) => {
-    setBusy(true)
+    setBusy(true);
     try {
-      await reject(issue)
+      await reject(issue);
       message.success(
         intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.ignoreSuccess' }),
-      )
-      selectNextPendingIssue(issue.id)
+      );
+      selectNextPendingIssue(issue.id);
     } catch (error) {
-      message.error(errorText(error))
+      message.error(errorText(error));
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
-  }
+  };
 
   const unacceptOne = async (issue: AiReviewDiffIssue) => {
-    setBusy(true)
+    setBusy(true);
     try {
-      await unaccept(issue)
-      setJustApplied(false)
+      await unaccept(issue);
+      setJustApplied(false);
       message.success(
         intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.unacceptSuccess' }),
-      )
+      );
     } catch (error) {
-      message.error(errorText(error))
+      message.error(errorText(error));
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
-  }
+  };
 
   const batchAcceptableIssues = useMemo(
     () =>
@@ -183,107 +183,107 @@ const DiffWorkspace: React.FC<Props> = ({
           issue.handleStatus === 'pending' && issue.suggestedPatch && issue.severity !== 'critical',
       ),
     [diff?.issues],
-  )
+  );
 
   const batchAccept = async () => {
-    if (batchAcceptableIssues.length === 0) return
-    setBusy(true)
+    if (batchAcceptableIssues.length === 0) return;
+    setBusy(true);
     try {
-      await acceptBatch(batchAcceptableIssues.map((issue) => issue.id))
-      setJustApplied(false)
+      await acceptBatch(batchAcceptableIssues.map((issue) => issue.id));
+      setJustApplied(false);
       message.success(
         intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.batchAcceptSuccess' }),
-      )
+      );
     } catch (error) {
-      message.error(errorText(error))
+      message.error(errorText(error));
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
-  }
+  };
 
   const applyAcceptedChanges = async () => {
-    if ((diff?.acceptedCount || 0) === 0) return
-    setBusy(true)
+    if ((diff?.acceptedCount || 0) === 0) return;
+    setBusy(true);
     try {
-      const result = await applyAccepted()
-      setJustApplied(true)
+      const result = await applyAccepted();
+      setJustApplied(true);
       message.success(
         intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.applySuccess' }),
-      )
+      );
       if (result?.reviewStatus) {
-        onReviewStatusChange?.(result.reviewStatus)
+        onReviewStatusChange?.(result.reviewStatus);
       }
-      onApplied?.()
+      onApplied?.();
     } catch (error) {
-      message.error(errorText(error))
+      message.error(errorText(error));
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
-  }
+  };
 
   const submit = async () => {
-    const targetVersionId = diff?.documentVersionId || documentVersionId
-    if (!targetVersionId) return
-    setBusy(true)
+    const targetVersionId = diff?.documentVersionId || documentVersionId;
+    if (!targetVersionId) return;
+    setBusy(true);
     try {
-      const response = await submitReview(targetVersionId)
+      const response = await submitReview(targetVersionId);
       if (response.code === 200) {
         message.success(
           intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.submitSuccess' }),
-        )
+        );
         if (response.data) {
           history.push(
             `/knowledge/reviews/${response.data}?returnTo=${encodeURIComponent(backPath)}`,
-          )
+          );
         } else {
-          history.push('/knowledge/reviews')
+          history.push('/knowledge/reviews');
         }
       } else {
         message.error(
           response.message ||
             intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.submitFailed' }),
-        )
+        );
       }
     } catch (error) {
-      message.error(errorText(error))
+      message.error(errorText(error));
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
-  }
+  };
   const canSubmit =
     (status === 'AI_REVIEWED' || status === 'DRAFT') &&
     !busy &&
-    (diff?.documentVersionId || documentVersionId)
-  const unappliedAcceptedCount = countUnappliedAcceptedIssues(diff?.issues)
-  const stale = !diff || diff.stale || !isDiffAvailable
+    (diff?.documentVersionId || documentVersionId);
+  const unappliedAcceptedCount = countUnappliedAcceptedIssues(diff?.issues);
+  const stale = !diff || diff.stale || !isDiffAvailable;
   const workspaceAlert = conflict
     ? {
-      type: 'warning' as const,
-      message: intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.alert.changed' }),
-    }
+        type: 'warning' as const,
+        message: intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.alert.changed' }),
+      }
     : diff?.stale
       ? {
-        type: 'warning' as const,
-        message: intl.formatMessage({
-          id: 'pages.knowledge.review.diffWorkspace.alert.staleTitle',
-        }),
-        description: intl.formatMessage({
-          id: 'pages.knowledge.review.diffWorkspace.alert.staleDesc',
-        }),
-      }
+          type: 'warning' as const,
+          message: intl.formatMessage({
+            id: 'pages.knowledge.review.diffWorkspace.alert.staleTitle',
+          }),
+          description: intl.formatMessage({
+            id: 'pages.knowledge.review.diffWorkspace.alert.staleDesc',
+          }),
+        }
       : justApplied
         ? {
-          type: 'success' as const,
-          message: intl.formatMessage({
-            id: 'pages.knowledge.review.diffWorkspace.applySuccess',
-          }),
-          action: (
-            <Button size="small" type="primary" onClick={runAiReview}>
-              {intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.state.rerun' })}
-            </Button>
-          ),
-        }
-        : undefined
+            type: 'success' as const,
+            message: intl.formatMessage({
+              id: 'pages.knowledge.review.diffWorkspace.applySuccess',
+            }),
+            action: (
+              <Button size="small" type="primary" onClick={runAiReview}>
+                {intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.state.rerun' })}
+              </Button>
+            ),
+          }
+        : undefined;
   const stateContent = () => {
     if (status === 'DRAFT')
       return (
@@ -299,7 +299,7 @@ const DiffWorkspace: React.FC<Props> = ({
             </Button>
           }
         />
-      )
+      );
     if (status === 'AI_REVIEWING')
       return (
         <Result
@@ -316,7 +316,7 @@ const DiffWorkspace: React.FC<Props> = ({
             </Button>
           }
         />
-      )
+      );
     if (status === 'SUBMITTED')
       return (
         <Result
@@ -326,7 +326,7 @@ const DiffWorkspace: React.FC<Props> = ({
             id: 'pages.knowledge.review.diffWorkspace.state.submittedDesc',
           })}
         />
-      )
+      );
     if (status === 'APPROVED')
       return (
         <Result
@@ -336,7 +336,7 @@ const DiffWorkspace: React.FC<Props> = ({
             id: 'pages.knowledge.review.diffWorkspace.state.approvedDesc',
           })}
         />
-      )
+      );
     if (status === 'REJECTED')
       return (
         <Result
@@ -346,7 +346,7 @@ const DiffWorkspace: React.FC<Props> = ({
             id: 'pages.knowledge.review.diffWorkspace.state.rejectedDesc',
           })}
         />
-      )
+      );
     if (!diff)
       return (
         <Empty
@@ -354,7 +354,7 @@ const DiffWorkspace: React.FC<Props> = ({
             id: 'pages.knowledge.review.diffWorkspace.state.noResult',
           })}
         />
-      )
+      );
     return (
       <Result
         status="error"
@@ -368,8 +368,8 @@ const DiffWorkspace: React.FC<Props> = ({
           </Button>
         }
       />
-    )
-  }
+    );
+  };
   return (
     <PageContainer
       title={
@@ -406,9 +406,7 @@ const DiffWorkspace: React.FC<Props> = ({
             onRerun={runAiReview}
             onBatchAccept={batchAcceptableIssues.length > 0 ? batchAccept : undefined}
             onApplyAccepted={
-              unappliedAcceptedCount > 0 && !diff.stale
-                ? applyAcceptedChanges
-                : undefined
+              unappliedAcceptedCount > 0 && !diff.stale ? applyAcceptedChanges : undefined
             }
             onSubmit={canSubmit ? submit : undefined}
           />
@@ -437,13 +435,13 @@ const DiffWorkspace: React.FC<Props> = ({
                     issues={issues}
                     filter={filter}
                     activeId={activeIssue?.id}
-                    disabled={ isReadOnly}
+                    disabled={isReadOnly}
                     busyId={busy ? replacementIssue?.id : undefined}
                     onFilter={setFilter}
                     onSelect={setActiveIssue}
                     onAccept={(issue) => {
                       if (issue.suggestedPatch && issue.handleStatus === 'pending') {
-                        setReplacementIssue(issue)
+                        setReplacementIssue(issue);
                       }
                     }}
                     onReject={ignoreOne}
@@ -465,6 +463,6 @@ const DiffWorkspace: React.FC<Props> = ({
         onConfirm={(replacement) => replacementIssue && acceptOne(replacementIssue, replacement)}
       />
     </PageContainer>
-  )
-}
-export default DiffWorkspace
+  );
+};
+export default DiffWorkspace;

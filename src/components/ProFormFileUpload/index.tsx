@@ -1,18 +1,16 @@
-import { PlusOutlined, UploadOutlined } from '@ant-design/icons'
-import { ProFormUploadButton } from '@ant-design/pro-components'
-import { Form, message } from 'antd'
-import type { ButtonProps, FormItemProps, UploadFile, UploadProps } from 'antd'
-import React, { useEffect, useState } from 'react'
-import { useIntl } from '@umijs/max'
-import {
-  createFilePreviewUrl,
-  downloadFile,
-  uploadFile,
-} from '@/services/file/FileController'
-import type { FileUploadResult } from '@/services/file/FileController'
+import { PlusOutlined, UploadOutlined } from '@ant-design/icons';
+import { ProFormUploadButton } from '@ant-design/pro-components';
+import { Form, message } from 'antd';
+import type { ButtonProps, FormItemProps, UploadFile, UploadProps } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { useIntl } from '@umijs/max';
+import { createFilePreviewUrl, downloadFile, uploadFile } from '@/services/file/FileController';
+import type { FileUploadResult } from '@/services/file/FileController';
 
-export interface ProFormFileUploadProps
-  extends Pick<FormItemProps, 'name' | 'label' | 'rules' | 'required' | 'tooltip' | 'extra'> {
+export interface ProFormFileUploadProps extends Pick<
+  FormItemProps,
+  'name' | 'label' | 'rules' | 'required' | 'tooltip' | 'extra'
+> {
   mode?: 'card' | 'title';
   accept?: string;
   allowedExtensions?: string[];
@@ -32,9 +30,9 @@ export interface ProFormFileUploadProps
 type FileUploadControlProps = Omit<
   ProFormFileUploadProps,
   'name' | 'label' | 'rules' | 'required' | 'tooltip' | 'extra' | 'formItemProps'
->
+>;
 
-const isDirectUrl = (value: string) => /^(https?:|data:|blob:)/i.test(value)
+const isDirectUrl = (value: string) => /^(https?:|data:|blob:)/i.test(value);
 
 const FileUploadControl: React.FC<FileUploadControlProps> = ({
   mode = 'title',
@@ -51,87 +49,106 @@ const FileUploadControl: React.FC<FileUploadControlProps> = ({
   onSuccess,
   onError,
 }) => {
-  const intl = useIntl()
-  const [fileList, setFileList] = useState<UploadFile[]>([])
+  const intl = useIntl();
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
 
   useEffect(() => {
     if (!value) {
-      setFileList([])
-      return
+      setFileList([]);
+      return;
     }
 
-    const fileName = value.split('/').pop() || 'file'
-    let disposed = false
-    let blobUrl: string | undefined
+    const fileName = value.split('/').pop() || 'file';
+    let disposed = false;
+    let blobUrl: string | undefined;
     const preview = isDirectUrl(value)
       ? Promise.resolve(value)
-      : createFilePreviewUrl({ objectKey: value, fileName })
+      : createFilePreviewUrl({ objectKey: value, fileName });
 
     preview
       .then((url) => {
-        if (!isDirectUrl(value)) blobUrl = url
+        if (!isDirectUrl(value)) blobUrl = url;
         if (!disposed) {
-          setFileList([{ uid: value, name: fileName, status: 'done', url }])
+          setFileList([{ uid: value, name: fileName, status: 'done', url }]);
         }
       })
       .catch((error: unknown) => {
-        if (!disposed) setFileList([{ uid: value, name: fileName, status: 'done' }])
-        onError?.(error)
-      })
+        if (!disposed) setFileList([{ uid: value, name: fileName, status: 'done' }]);
+        onError?.(error);
+      });
 
     return () => {
-      disposed = true
-      if (blobUrl) URL.revokeObjectURL(blobUrl)
-    }
-  }, [onError, value])
+      disposed = true;
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    };
+  }, [onError, value]);
 
   const validateFile = (file: File) => {
-    const extension = file.name.split('.').pop()?.toLowerCase()
+    const extension = file.name.split('.').pop()?.toLowerCase();
     if (allowedExtensions.length > 0 && (!extension || !allowedExtensions.includes(extension))) {
-      message.error(intl.formatMessage({ id: 'components.proFormFileUpload.unsupportedType' }, { extensions: allowedExtensions.join(', ') }))
-      return false
+      message.error(
+        intl.formatMessage(
+          { id: 'components.proFormFileUpload.unsupportedType' },
+          { extensions: allowedExtensions.join(', ') },
+        ),
+      );
+      return false;
     }
     if (file.size > maxSize) {
-      message.error(intl.formatMessage({ id: 'components.proFormFileUpload.maxSize' }, { maxSize: Math.floor(maxSize / 1024 / 1024) }))
-      return false
+      message.error(
+        intl.formatMessage(
+          { id: 'components.proFormFileUpload.maxSize' },
+          { maxSize: Math.floor(maxSize / 1024 / 1024) },
+        ),
+      );
+      return false;
     }
-    return true
-  }
+    return true;
+  };
 
   const customRequest: NonNullable<UploadProps['customRequest']> = async (options) => {
-    const selectedFile = options.file as File
+    const selectedFile = options.file as File;
     if (!validateFile(selectedFile)) {
-      options.onError?.(new Error(intl.formatMessage({ id: 'components.proFormFileUpload.validationFailed' })))
-      return
+      options.onError?.(
+        new Error(intl.formatMessage({ id: 'components.proFormFileUpload.validationFailed' })),
+      );
+      return;
     }
 
     try {
-      const response = await uploadFile(selectedFile)
+      const response = await uploadFile(selectedFile);
       if (response.code !== 200 || !response.data?.objectKey) {
-        throw new Error(response.message || intl.formatMessage({ id: 'components.proFormFileUpload.uploadFailed' }))
+        throw new Error(
+          response.message ||
+            intl.formatMessage({ id: 'components.proFormFileUpload.uploadFailed' }),
+        );
       }
 
-      const result = response.data
-      onChange?.(result.objectKey)
-      onSuccess?.(result)
-      options.onSuccess?.(response)
+      const result = response.data;
+      onChange?.(result.objectKey);
+      onSuccess?.(result);
+      options.onSuccess?.(response);
     } catch (error) {
-      onError?.(error)
-      options.onError?.(error instanceof Error ? error : new Error(intl.formatMessage({ id: 'components.proFormFileUpload.uploadFailed' })))
+      onError?.(error);
+      options.onError?.(
+        error instanceof Error
+          ? error
+          : new Error(intl.formatMessage({ id: 'components.proFormFileUpload.uploadFailed' })),
+      );
     }
-  }
+  };
 
   const handleDownload = async (file: UploadFile) => {
-    if (!value) return
+    if (!value) return;
     if (isDirectUrl(value)) {
-      const link = document.createElement('a')
-      link.href = value
-      link.download = file.name || 'file'
-      link.click()
-      return
+      const link = document.createElement('a');
+      link.href = value;
+      link.download = file.name || 'file';
+      link.click();
+      return;
     }
-    await downloadFile({ objectKey: value, fileName: file.name })
-  }
+    await downloadFile({ objectKey: value, fileName: file.name });
+  };
 
   return (
     <ProFormUploadButton
@@ -139,7 +156,15 @@ const FileUploadControl: React.FC<FileUploadControlProps> = ({
       max={max}
       listType={mode === 'card' ? 'picture-card' : 'text'}
       icon={mode === 'card' ? <PlusOutlined /> : <UploadOutlined />}
-      title={title ?? intl.formatMessage({ id: mode === 'card' ? 'components.proFormFileUpload.uploadFile' : 'components.proFormFileUpload.selectFile' })}
+      title={
+        title ??
+        intl.formatMessage({
+          id:
+            mode === 'card'
+              ? 'components.proFormFileUpload.uploadFile'
+              : 'components.proFormFileUpload.selectFile',
+        })
+      }
       disabled={disabled}
       buttonProps={buttonProps}
       fieldProps={{
@@ -154,20 +179,20 @@ const FileUploadControl: React.FC<FileUploadControlProps> = ({
           ...(typeof fieldProps?.showUploadList === 'object' ? fieldProps.showUploadList : {}),
         },
         onDownload: async (file) => {
-          fieldProps?.onDownload?.(file)
-          await handleDownload(file)
+          fieldProps?.onDownload?.(file);
+          await handleDownload(file);
         },
         onRemove: async (file) => {
-          const canRemove = await fieldProps?.onRemove?.(file)
-          if (canRemove === false) return false
-          setFileList([])
-          onChange?.(undefined)
-          return true
+          const canRemove = await fieldProps?.onRemove?.(file);
+          if (canRemove === false) return false;
+          setFileList([]);
+          onChange?.(undefined);
+          return true;
         },
       }}
     />
-  )
-}
+  );
+};
 
 const ProFormFileUpload: React.FC<ProFormFileUploadProps> = ({
   name,
@@ -190,6 +215,6 @@ const ProFormFileUpload: React.FC<ProFormFileUploadProps> = ({
   >
     <FileUploadControl {...controlProps} />
   </Form.Item>
-)
+);
 
-export default ProFormFileUpload
+export default ProFormFileUpload;

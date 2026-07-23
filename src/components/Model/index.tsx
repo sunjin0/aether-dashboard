@@ -1,5 +1,5 @@
-import { Button, Modal, ModalProps } from 'antd'
-import React, { useState } from 'react'
+import { Button, Modal, ModalProps } from 'antd';
+import React, { useState } from 'react';
 
 interface Props extends ModalProps {
   buttonText: string;
@@ -7,8 +7,8 @@ interface Props extends ModalProps {
 }
 
 const Model = (props: Props) => {
-  const { width, title, buttonText, text } = props
-  const [open, setOpen] = useState(false)
+  const { width, title, buttonText, text } = props;
+  const [open, setOpen] = useState(false);
   return (
     <div>
       <Button type={'link'} onClick={() => setOpen(true)}>
@@ -19,7 +19,7 @@ const Model = (props: Props) => {
         open={open}
         onOk={() => {}}
         onCancel={() => {
-          setOpen(false)
+          setOpen(false);
         }}
         width={width}
         footer={null}
@@ -27,6 +27,6 @@ const Model = (props: Props) => {
         <div dangerouslySetInnerHTML={{ __html: text }} />
       </Modal>
     </div>
-  )
-}
-export default Model
+  );
+};
+export default Model;

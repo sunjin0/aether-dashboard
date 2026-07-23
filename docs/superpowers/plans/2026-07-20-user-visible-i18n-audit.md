@@ -23,6 +23,7 @@
 ### Task 1: Establish Locale Keys And Test Pattern
 
 **Files:**
+
 - Modify: `src/locales/zh-CN.ts`
 - Modify: `src/locales/en-US.ts`
 - Test: `src/components/AgentMessageBubble/index.test.tsx`
@@ -50,6 +51,7 @@ Expected: PASS after Task 2 changes are complete.
 ### Task 2: Internationalize Shared Components
 
 **Files:**
+
 - Modify: `src/components/AgentMessageBubble/index.tsx`
 - Modify: `src/components/FileUploadModal/index.tsx`
 - Modify: `src/components/InteractiveQuestionCard/index.tsx`
@@ -83,6 +85,7 @@ Expected: PASS.
 ### Task 3: Internationalize System, Member, And Agent Pages
 
 **Files:**
+
 - Modify: `src/pages/user/member/MemberForm.tsx`
 - Modify: `src/pages/user/member/index.tsx`
 - Modify: `src/pages/sys/admin/index.tsx`
@@ -117,6 +120,7 @@ Expected: PASS.
 ### Task 4: Internationalize Knowledge Pages
 
 **Files:**
+
 - Modify: `src/pages/knowledge/base/KnowledgeBaseForm.tsx`
 - Modify: `src/pages/knowledge/base/index.tsx`
 - Modify: `src/pages/knowledge/document/index.tsx`
@@ -143,6 +147,7 @@ Expected: PASS with no type errors.
 ### Task 5: Internationalize Prompt-Editor UI And Final Audit
 
 **Files:**
+
 - Modify: `src/components/SystemPromptEditor/index.tsx`
 - Modify: `src/components/SystemPromptEditor/TemplateSelect.tsx`
 - Modify: `src/components/SystemPromptEditor/OptimizerButton.tsx`

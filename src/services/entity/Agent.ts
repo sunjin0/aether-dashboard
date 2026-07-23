@@ -510,6 +510,7 @@ export interface AgentStreamDoneData {
 
 export interface KnowledgeSource {
   citationIndex: number;
+  similarity?: number;
   documentName?: string;
   sectionPath?: string;
   content: string;

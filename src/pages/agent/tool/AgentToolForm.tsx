@@ -1,21 +1,21 @@
-import DrawerForm from '@/components/DrawerForm'
+import DrawerForm from '@/components/DrawerForm';
 import {
   addAgentToolInfo,
   getAgentToolInfo,
   updateAgentToolInfo,
-} from '@/services/agent/ToolController'
-import { getMcpServerList } from '@/services/agent/McpServerController'
-import { getOptionList } from '@/services/sys/DictController'
+} from '@/services/agent/ToolController';
+import { getMcpServerList } from '@/services/agent/McpServerController';
+import { getOptionList } from '@/services/sys/DictController';
 import {
   ProFormDigit,
   ProFormSelect,
   ProFormText,
   ProFormTextArea,
-} from '@ant-design/pro-components'
-import { Form, Segmented } from 'antd'
-import { useIntl } from '@umijs/max'
-import JsonDisplay from '@/components/JsonDisplay'
-import React, { useState } from 'react'
+} from '@ant-design/pro-components';
+import { Form, Segmented } from 'antd';
+import { useIntl } from '@umijs/max';
+import JsonDisplay from '@/components/JsonDisplay';
+import React, { useState } from 'react';
 
 const AgentToolForm = (props: {
   id?: string;
@@ -23,34 +23,34 @@ const AgentToolForm = (props: {
   setOpen?: (open: boolean) => void;
   onSuccess: () => void;
 }) => {
-  const { id, open, setOpen, onSuccess } = props
-  const intl = useIntl()
-  const [form] = Form.useForm()
-  const schema = Form.useWatch('mcpInputSchema', { form, preserve: true })
-  const [schemaMode, setSchemaMode] = useState<'edit' | 'preview'>('edit')
+  const { id, open, setOpen, onSuccess } = props;
+  const intl = useIntl();
+  const [form] = Form.useForm();
+  const schema = Form.useWatch('mcpInputSchema', { form, preserve: true });
+  const [schemaMode, setSchemaMode] = useState<'edit' | 'preview'>('edit');
   const format = (key: string, values?: Record<string, string>) =>
-    intl.formatMessage({ id: key }, values)
+    intl.formatMessage({ id: key }, values);
   const validateJson = async (_: unknown, value?: string) => {
-    if (!value?.trim()) return Promise.resolve()
+    if (!value?.trim()) return Promise.resolve();
     try {
-      JSON.parse(value)
-      return Promise.resolve()
+      JSON.parse(value);
+      return Promise.resolve();
     } catch {
       return Promise.reject(
         new Error(
           format('pages.agent.tool.invalidJson', { label: format('pages.agent.tool.inputSchema') }),
         ),
-      )
+      );
     }
-  }
+  };
   const formatSchema = (value?: string) => {
-    if (!value?.trim()) return
+    if (!value?.trim()) return;
     try {
-      form.setFieldValue('mcpInputSchema', JSON.stringify(JSON.parse(value), null, 2))
+      form.setFieldValue('mcpInputSchema', JSON.stringify(JSON.parse(value), null, 2));
     } catch {
       // Keep invalid JSON unchanged so the form validator can show the error.
     }
-  }
+  };
 
   return (
     <DrawerForm
@@ -60,11 +60,11 @@ const AgentToolForm = (props: {
       request={getAgentToolInfo}
       form={form}
       onSuccess={async (values) => {
-        const payload = { ...values, status: Number(values.status) }
-        if (id) await updateAgentToolInfo(payload)
-        else await addAgentToolInfo(payload)
-        onSuccess()
-        return true
+        const payload = { ...values, status: Number(values.status) };
+        if (id) await updateAgentToolInfo(payload);
+        else await addAgentToolInfo(payload);
+        onSuccess();
+        return true;
       }}
     >
       <ProFormText name="id" hidden />
@@ -90,10 +90,10 @@ const AgentToolForm = (props: {
         label={format('pages.agent.tool.mcpServer')}
         rules={[{ required: true }]}
         request={async () => {
-          const { code, data } = await getMcpServerList({ current: 1, pageSize: 1000, status: 1 })
+          const { code, data } = await getMcpServerList({ current: 1, pageSize: 1000, status: 1 });
           return code === 200
             ? (data || []).map((item) => ({ label: `${item.name} (${item.code})`, value: item.id }))
-            : []
+            : [];
         }}
       />
       <ProFormText
@@ -139,7 +139,7 @@ const AgentToolForm = (props: {
       />
       <ProFormTextArea name="remark" label={format('pages.common.remark')} />
     </DrawerForm>
-  )
-}
+  );
+};
 
-export default AgentToolForm
+export default AgentToolForm;

@@ -1,13 +1,13 @@
-import { DrawerForm } from '@ant-design/pro-components'
-import React, { useEffect, useState } from 'react'
-import { Props } from '@/components'
-import { Button } from 'antd'
-import { useIntl } from '@umijs/max'
+import { DrawerForm } from '@ant-design/pro-components';
+import React, { useEffect, useState } from 'react';
+import { Props } from '@/components';
+import { Button } from 'antd';
+import { useIntl } from '@umijs/max';
 
 export default (props: Props) => {
-  const { id, onSuccess, open, setOpen, children, form, request, readonly } = props
-  const [loading, setLoading] = useState(false)
-  const intl = useIntl()
+  const { id, onSuccess, open, setOpen, children, form, request, readonly } = props;
+  const [loading, setLoading] = useState(false);
+  const intl = useIntl();
   return (
     <DrawerForm
       params={id ? id : undefined}
@@ -17,17 +17,17 @@ export default (props: Props) => {
             data: {},
             success: true,
             code: 200,
-          }
-        const res = await request(params)
-        form.setFieldsValue(res.data)
-        return res
+          };
+        const res = await request(params);
+        form.setFieldsValue(res.data);
+        return res;
       }}
       loading={loading}
       open={open}
       readonly={readonly}
       onOpenChange={(open) => {
         if (setOpen) {
-          setOpen(open)
+          setOpen(open);
         }
       }}
       form={form}
@@ -38,7 +38,7 @@ export default (props: Props) => {
       submitter={{
         render: (props, dom) => {
           if (!readonly) {
-            return dom
+            return dom;
           }
           return [
             //关闭
@@ -46,25 +46,25 @@ export default (props: Props) => {
               key="cancel"
               onClick={() => {
                 if (setOpen) {
-                  setOpen(false)
+                  setOpen(false);
                 }
               }}
             >
               {intl.formatMessage({ id: 'pages.common.close' })}
             </Button>,
-          ]
+          ];
         },
       }}
       onFinish={async (values) => {
         try {
-          setLoading(true)
-          return onSuccess(values)
+          setLoading(true);
+          return onSuccess(values);
         } finally {
-          setLoading(false)
+          setLoading(false);
         }
       }}
     >
       {children}
     </DrawerForm>
-  )
-}
+  );
+};

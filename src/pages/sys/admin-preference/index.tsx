@@ -1,4 +1,4 @@
-import PreferenceForm from '@/pages/sys/admin-preference/PreferenceForm'
+import PreferenceForm from '@/pages/sys/admin-preference/PreferenceForm';
 import {
   AdminPreference,
   AdminPreferenceSearchParams,
@@ -6,8 +6,8 @@ import {
   getAdminPreferenceList,
   getAdminPreferenceStatistics,
   overrideAdminPreference,
-} from '@/services/sys/AdminPreferenceController'
-import { getAdminList } from '@/services/sys/AdminController'
+} from '@/services/sys/AdminPreferenceController';
+import { getAdminList } from '@/services/sys/AdminController';
 import {
   AppstoreOutlined,
   CheckCircleFilled,
@@ -15,105 +15,130 @@ import {
   PlusOutlined,
   SearchOutlined,
   ThunderboltOutlined,
-} from '@ant-design/icons'
-import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
-import { history, useAccess, useIntl } from '@@/exports'
-import { Button, Input, message, Modal, Select, Spin, Tag } from 'antd'
-import React, { useEffect, useRef, useState } from 'react'
-import { getSwitchStatus } from '@/pages/agent/knowledge-base/status'
-import dayjs from 'dayjs'
-import TableActionMenu from '@/components/TableActionMenu'
-import './index.less'
+} from '@ant-design/icons';
+import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components';
+import { history, useAccess, useIntl } from '@@/exports';
+import { Button, Input, message, Modal, Select, Spin, Tag } from 'antd';
+import React, { useEffect, useRef, useState } from 'react';
+import { getSwitchStatus } from '@/pages/agent/knowledge-base/status';
+import dayjs from 'dayjs';
+import TableActionMenu from '@/components/TableActionMenu';
+import './index.less';
 
 interface PrefStatistics {
-  total: number
-  enabled: number
-  implicit: number
-  explicit: number
+  total: number;
+  enabled: number;
+  implicit: number;
+  explicit: number;
 }
 
 const PreferencePage: React.FC = () => {
-  const intl = useIntl()
-  const format = (id: string, values?: Record<string, string | number>) => intl.formatMessage({ id }, values)
-  const categoryMap = Object.fromEntries(['language', 'style', 'format', 'tech_stack', 'tool_strategy'].map((value) => [value, format(`pages.sys.preference.category.${value}`)]))
+  const intl = useIntl();
+  const format = (id: string, values?: Record<string, string | number>) =>
+    intl.formatMessage({ id }, values);
+  const categoryMap = Object.fromEntries(
+    ['language', 'style', 'format', 'tech_stack', 'tool_strategy'].map((value) => [
+      value,
+      format(`pages.sys.preference.category.${value}`),
+    ]),
+  );
   const sourceMap: Record<string, { label: string; color: string; className: string }> = {
-    explicit: { label: format('pages.sys.preference.source.explicit'), color: 'blue', className: 'pref-source-explicit' },
-    implicit: { label: format('pages.sys.preference.source.implicit'), color: 'orange', className: 'pref-source-implicit' },
-    manual_override: { label: format('pages.sys.preference.source.manualOverride'), color: 'purple', className: 'pref-source-override' },
-  }
-  const ref = useRef<ActionType>()
-  const [open, setOpen] = useState(false)
-  const [id, setId] = useState<string>()
-  const [overrideId, setOverrideId] = useState<string>()
-  const [overrideRecord, setOverrideRecord] = useState<AdminPreference>()
-  const [overrideValue, setOverrideValue] = useState('')
-  const [overrideLoading, setOverrideLoading] = useState(false)
-  const permissions = useAccess()
-  const write = permissions[history.location.pathname]
+    explicit: {
+      label: format('pages.sys.preference.source.explicit'),
+      color: 'blue',
+      className: 'pref-source-explicit',
+    },
+    implicit: {
+      label: format('pages.sys.preference.source.implicit'),
+      color: 'orange',
+      className: 'pref-source-implicit',
+    },
+    manual_override: {
+      label: format('pages.sys.preference.source.manualOverride'),
+      color: 'purple',
+      className: 'pref-source-override',
+    },
+  };
+  const ref = useRef<ActionType>();
+  const [open, setOpen] = useState(false);
+  const [id, setId] = useState<string>();
+  const [overrideId, setOverrideId] = useState<string>();
+  const [overrideRecord, setOverrideRecord] = useState<AdminPreference>();
+  const [overrideValue, setOverrideValue] = useState('');
+  const [overrideLoading, setOverrideLoading] = useState(false);
+  const permissions = useAccess();
+  const write = permissions[history.location.pathname];
 
-  const [keyword, setKeyword] = useState('')
-  const [category, setCategory] = useState<string>()
-  const [status, setStatus] = useState<number>()
-  const [adminId, setAdminId] = useState<string>()
-  const [adminOptions, setAdminOptions] = useState<{ label: string; value: string }[]>([])
-  const [statistics, setStatistics] = useState<PrefStatistics>({ total: 0, enabled: 0, implicit: 0, explicit: 0 })
-  const [statisticsLoading, setStatisticsLoading] = useState(false)
+  const [keyword, setKeyword] = useState('');
+  const [category, setCategory] = useState<string>();
+  const [status, setStatus] = useState<number>();
+  const [adminId, setAdminId] = useState<string>();
+  const [adminOptions, setAdminOptions] = useState<{ label: string; value: string }[]>([]);
+  const [statistics, setStatistics] = useState<PrefStatistics>({
+    total: 0,
+    enabled: 0,
+    implicit: 0,
+    explicit: 0,
+  });
+  const [statisticsLoading, setStatisticsLoading] = useState(false);
 
-  const refresh = () => ref.current?.reloadAndRest?.()
+  const refresh = () => ref.current?.reloadAndRest?.();
 
   useEffect(() => {
     getAdminList({ current: 1, pageSize: 100 }).then((res) => {
       if (res.code === 200 && res.data) {
-        setAdminOptions(res.data.map((a) => ({ label: a.username || String(a.id), value: String(a.id) })))
+        setAdminOptions(
+          res.data.map((a) => ({ label: a.username || String(a.id), value: String(a.id) })),
+        );
       }
-    })
-  }, [])
+    });
+  }, []);
 
   const loadStatistics = async () => {
-    setStatisticsLoading(true)
+    setStatisticsLoading(true);
     try {
-      const res = await getAdminPreferenceStatistics()
+      const res = await getAdminPreferenceStatistics();
       if (res.code === 200 && res.data) {
         setStatistics({
           total: res.data.total || 0,
           enabled: res.data.enabled || 0,
           implicit: res.data.implicit || 0,
           explicit: res.data.explicit || 0,
-        })
+        });
       }
     } finally {
-      setStatisticsLoading(false)
+      setStatisticsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    loadStatistics()
-  }, [])
+    loadStatistics();
+  }, []);
 
   const changeFilter = (callback: () => void) => {
-    callback()
-    window.setTimeout(refresh, 0)
-  }
+    callback();
+    window.setTimeout(refresh, 0);
+  };
 
   const handleOverride = async () => {
     if (!overrideId || !overrideValue.trim()) {
-      message.warning(format('pages.sys.preference.enterNewValue'))
-      return
+      message.warning(format('pages.sys.preference.enterNewValue'));
+      return;
     }
-    setOverrideLoading(true)
+    setOverrideLoading(true);
     try {
-      const response = await overrideAdminPreference(overrideId, { value: overrideValue.trim() })
+      const response = await overrideAdminPreference(overrideId, { value: overrideValue.trim() });
       if (response.code === 200) {
-        message.success(response.message || format('pages.sys.preference.overrideSuccess'))
-        setOverrideId(undefined)
-        setOverrideRecord(undefined)
-        setOverrideValue('')
-        refresh()
-      } else message.error(response.message || format('pages.sys.preference.operationFailed'))
+        message.success(response.message || format('pages.sys.preference.overrideSuccess'));
+        setOverrideId(undefined);
+        setOverrideRecord(undefined);
+        setOverrideValue('');
+        refresh();
+      } else message.error(response.message || format('pages.sys.preference.operationFailed'));
     } finally {
-      setOverrideLoading(false)
+      setOverrideLoading(false);
     }
-  }
+  };
 
   const columns: any[] = [
     {
@@ -150,8 +175,8 @@ const PreferencePage: React.FC = () => {
       dataIndex: 'source',
       width: 100,
       render: (_: unknown, record: AdminPreference) => {
-        const source = sourceMap[record.source || 'explicit']
-        return <Tag className={`pref-source-tag ${source.className}`}>{source.label}</Tag>
+        const source = sourceMap[record.source || 'explicit'];
+        return <Tag className={`pref-source-tag ${source.className}`}>{source.label}</Tag>;
       },
     },
     {
@@ -160,14 +185,14 @@ const PreferencePage: React.FC = () => {
       width: 90,
       sorter: true,
       render: (_: unknown, record: AdminPreference) => {
-        const val = record.confidence ?? 0
+        const val = record.confidence ?? 0;
         const cls =
           val >= 0.7
             ? 'pref-confidence-high'
             : val >= 0.3
               ? 'pref-confidence-mid'
-              : 'pref-confidence-low'
-        return <span className={cls}>{(val * 100).toFixed(0)}%</span>
+              : 'pref-confidence-low';
+        return <span className={cls}>{(val * 100).toFixed(0)}%</span>;
       },
     },
     {
@@ -196,8 +221,8 @@ const PreferencePage: React.FC = () => {
       dataIndex: 'status',
       width: 80,
       render: (_: unknown, record: AdminPreference) => {
-        const item = getSwitchStatus(record.status)
-        return <Tag color={item.color}>{item.label}</Tag>
+        const item = getSwitchStatus(record.status);
+        return <Tag color={item.color}>{item.label}</Tag>;
       },
     },
     {
@@ -214,8 +239,8 @@ const PreferencePage: React.FC = () => {
                 label: format('pages.common.edit'),
                 primary: true,
                 onClick: () => {
-                  setId(record.id)
-                  setOpen(true)
+                  setId(record.id);
+                  setOpen(true);
                 },
               },
               {
@@ -224,9 +249,9 @@ const PreferencePage: React.FC = () => {
                 primary: true,
                 visible: record.status === 1,
                 onClick: () => {
-                  setOverrideId(record.id)
-                  setOverrideRecord(record)
-                  setOverrideValue(record.value || '')
+                  setOverrideId(record.id);
+                  setOverrideRecord(record);
+                  setOverrideValue(record.value || '');
                 },
               },
               {
@@ -236,19 +261,22 @@ const PreferencePage: React.FC = () => {
                 danger: true,
                 confirm: { title: format('pages.sys.preference.deleteConfirm') },
                 onClick: async () => {
-                  if (!record.id) return
-                  const response = await deleteAdminPreference(record.id)
+                  if (!record.id) return;
+                  const response = await deleteAdminPreference(record.id);
                   if (response.code === 200) {
-                    message.success(response.message || format('pages.sys.preference.deleteSuccess'))
-                    refresh()
-                  } else message.error(response.message || format('pages.sys.preference.deleteFailed'))
+                    message.success(
+                      response.message || format('pages.sys.preference.deleteSuccess'),
+                    );
+                    refresh();
+                  } else
+                    message.error(response.message || format('pages.sys.preference.deleteFailed'));
                 },
               },
             ]}
           />
         ),
     },
-  ]
+  ];
 
   return (
     <PageContainer className="admin-preference-page">
@@ -337,8 +365,8 @@ const PreferencePage: React.FC = () => {
               type="primary"
               icon={<PlusOutlined />}
               onClick={() => {
-                setId(undefined)
-                setOpen(true)
+                setId(undefined);
+                setOpen(true);
               }}
             >
               {format('pages.sys.preference.new')}
@@ -375,9 +403,9 @@ const PreferencePage: React.FC = () => {
         open={open}
         setOpen={setOpen}
         onSuccess={() => {
-          setId(undefined)
-          refresh()
-          loadStatistics()
+          setId(undefined);
+          refresh();
+          loadStatistics();
         }}
       />
       <Modal
@@ -385,9 +413,9 @@ const PreferencePage: React.FC = () => {
         open={!!overrideId}
         onOk={handleOverride}
         onCancel={() => {
-          setOverrideId(undefined)
-          setOverrideRecord(undefined)
-          setOverrideValue('')
+          setOverrideId(undefined);
+          setOverrideRecord(undefined);
+          setOverrideValue('');
         }}
         okText={format('pages.sys.preference.confirmOverride')}
         cancelText={format('pages.sys.preference.cancel')}
@@ -399,7 +427,9 @@ const PreferencePage: React.FC = () => {
           <span>{overrideRecord?.value || '-'}</span>
         </div>
         <div>
-          <span style={{ color: '#666', marginRight: 8 }}>{format('pages.sys.preference.newValue')}:</span>
+          <span style={{ color: '#666', marginRight: 8 }}>
+            {format('pages.sys.preference.newValue')}:
+          </span>
           <Input
             value={overrideValue}
             onChange={(e) => setOverrideValue(e.target.value)}
@@ -409,7 +439,7 @@ const PreferencePage: React.FC = () => {
         </div>
       </Modal>
     </PageContainer>
-  )
-}
+  );
+};
 
-export default PreferencePage
+export default PreferencePage;

@@ -1,61 +1,61 @@
-import { getAgentToolInfo, testAgentTool } from '@/services/agent/ToolController'
-import { AgentToolTestResult } from '@/services/entity/Agent'
-import { useIntl } from '@umijs/max'
-import { Button, Form, Input, message, Modal, Space, Typography } from 'antd'
-import { useEffect, useState } from 'react'
+import { getAgentToolInfo, testAgentTool } from '@/services/agent/ToolController';
+import { AgentToolTestResult } from '@/services/entity/Agent';
+import { useIntl } from '@umijs/max';
+import { Button, Form, Input, message, Modal, Space, Typography } from 'antd';
+import { useEffect, useState } from 'react';
 
-const formatJson = (value: unknown) => JSON.stringify(value, null, 2)
+const formatJson = (value: unknown) => JSON.stringify(value, null, 2);
 
 const AgentToolTestModal = (props: { toolId?: string; open: boolean; onClose: () => void }) => {
-  const { toolId, open, onClose } = props
-  const intl = useIntl()
+  const { toolId, open, onClose } = props;
+  const intl = useIntl();
   const format = (id: string, values?: Record<string, string | number>) =>
-    intl.formatMessage({ id }, values)
-  const [form] = Form.useForm()
-  const [schema, setSchema] = useState('{}')
-  const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<AgentToolTestResult>()
+    intl.formatMessage({ id }, values);
+  const [form] = Form.useForm();
+  const [schema, setSchema] = useState('{}');
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<AgentToolTestResult>();
 
   useEffect(() => {
     if (!open || !toolId) {
-      return
+      return;
     }
 
     getAgentToolInfo(toolId).then(({ code, data, message: msg }) => {
       if (code !== 200 || !data) {
-        message.error(msg || format('pages.agent.tool.getDetailFailed'))
-        return
+        message.error(msg || format('pages.agent.tool.getDetailFailed'));
+        return;
       }
-      setSchema(data.mcpInputSchema || '{}')
-      form.setFieldsValue({ arguments: '{}' })
-      setResult(undefined)
-    })
-  }, [form, open, toolId])
+      setSchema(data.mcpInputSchema || '{}');
+      form.setFieldsValue({ arguments: '{}' });
+      setResult(undefined);
+    });
+  }, [form, open, toolId]);
 
   const handleTest = async () => {
     try {
-      const values = await form.validateFields()
-      const argumentsValue = JSON.parse(values.arguments)
+      const values = await form.validateFields();
+      const argumentsValue = JSON.parse(values.arguments);
       if (!argumentsValue || Array.isArray(argumentsValue) || typeof argumentsValue !== 'object') {
-        message.error(format('pages.agent.tool.argumentsObject'))
-        return
+        message.error(format('pages.agent.tool.argumentsObject'));
+        return;
       }
       if (!toolId) {
-        return
+        return;
       }
-      setLoading(true)
-      const { code, data, message: msg } = await testAgentTool(toolId, argumentsValue)
+      setLoading(true);
+      const { code, data, message: msg } = await testAgentTool(toolId, argumentsValue);
       if (code === 200) {
-        setResult(data)
+        setResult(data);
       } else {
-        message.error(msg || format('pages.agent.tool.testFailed'))
+        message.error(msg || format('pages.agent.tool.testFailed'));
       }
     } catch {
-      message.error(format('pages.agent.tool.invalidArguments'))
+      message.error(format('pages.agent.tool.invalidArguments'));
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Modal
@@ -114,7 +114,7 @@ const AgentToolTestModal = (props: { toolId?: string; open: boolean; onClose: ()
         </Space>
       )}
     </Modal>
-  )
-}
+  );
+};
 
-export default AgentToolTestModal
+export default AgentToolTestModal;

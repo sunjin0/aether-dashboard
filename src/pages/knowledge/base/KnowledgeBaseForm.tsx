@@ -1,22 +1,22 @@
-import DrawerForm from '@/components/DrawerForm'
+import DrawerForm from '@/components/DrawerForm';
 import {
   addKnowledgeBase,
   getKnowledgeBase,
   updateKnowledgeBase,
-} from '@/services/knowledge/KnowledgeBaseController'
+} from '@/services/knowledge/KnowledgeBaseController';
 import {
   getEmbeddingProviderOptions,
   getReviewModelProviderOptions,
-} from '@/services/agent/ModelProviderController'
+} from '@/services/agent/ModelProviderController';
 import {
   ProFormSelect,
   ProFormSwitch,
   ProFormText,
   ProFormTextArea,
-} from '@ant-design/pro-components'
-import { useIntl } from '@umijs/max'
-import { Card, Col, Form, Row } from 'antd'
-import './KnowledgeBaseForm.less'
+} from '@ant-design/pro-components';
+import { useIntl } from '@umijs/max';
+import { Card, Col, Form, Row } from 'antd';
+import './KnowledgeBaseForm.less';
 
 interface KnowledgeBaseFormProps {
   id?: string;
@@ -26,8 +26,8 @@ interface KnowledgeBaseFormProps {
 }
 
 const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen, onSuccess }) => {
-  const [form] = Form.useForm()
-  const intl = useIntl()
+  const [form] = Form.useForm();
+  const intl = useIntl();
 
   return (
     <DrawerForm
@@ -41,14 +41,18 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
           ...values,
           status: Number(values.status),
           reviewConfig: JSON.stringify(values.reviewConfig),
-        }
-        if (id) await updateKnowledgeBase({ ...payload, id })
-        else await addKnowledgeBase(payload)
-        onSuccess()
-        return true
+        };
+        if (id) await updateKnowledgeBase({ ...payload, id });
+        else await addKnowledgeBase(payload);
+        onSuccess();
+        return true;
       }}
     >
-      <Card title={intl.formatMessage({ id: 'pages.knowledge.base.form.basicInfo' })} size="small" className="knowledge-base-form-card">
+      <Card
+        title={intl.formatMessage({ id: 'pages.knowledge.base.form.basicInfo' })}
+        size="small"
+        className="knowledge-base-form-card"
+      >
         <Row gutter={16}>
           <Col span={12}>
             <ProFormSelect
@@ -57,8 +61,14 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
               initialValue="PLATFORM"
               rules={[{ required: true }]}
               options={[
-                { label: intl.formatMessage({ id: 'pages.knowledge.base.form.scope.platform' }), value: 'PLATFORM' },
-                { label: intl.formatMessage({ id: 'pages.knowledge.base.form.scope.agentOnly' }), value: 'AGENT' },
+                {
+                  label: intl.formatMessage({ id: 'pages.knowledge.base.form.scope.platform' }),
+                  value: 'PLATFORM',
+                },
+                {
+                  label: intl.formatMessage({ id: 'pages.knowledge.base.form.scope.agentOnly' }),
+                  value: 'AGENT',
+                },
               ]}
             />
           </Col>
@@ -68,9 +78,20 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
               label={intl.formatMessage({ id: 'pages.knowledge.base.form.visibility' })}
               initialValue="platform"
               options={[
-                { label: intl.formatMessage({ id: 'pages.knowledge.base.form.visibility.platform' }), value: 'platform' },
-                { label: intl.formatMessage({ id: 'pages.knowledge.base.form.visibility.private' }), value: 'private' },
-                { label: intl.formatMessage({ id: 'pages.knowledge.base.form.visibility.shared' }), value: 'shared' },
+                {
+                  label: intl.formatMessage({
+                    id: 'pages.knowledge.base.form.visibility.platform',
+                  }),
+                  value: 'platform',
+                },
+                {
+                  label: intl.formatMessage({ id: 'pages.knowledge.base.form.visibility.private' }),
+                  value: 'private',
+                },
+                {
+                  label: intl.formatMessage({ id: 'pages.knowledge.base.form.visibility.shared' }),
+                  value: 'shared',
+                },
               ]}
             />
           </Col>
@@ -78,7 +99,12 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
         <ProFormText
           name="name"
           label={intl.formatMessage({ id: 'pages.knowledge.base.form.name' })}
-          rules={[{ required: true, message: intl.formatMessage({ id: 'pages.knowledge.base.form.enterName' }) }]}
+          rules={[
+            {
+              required: true,
+              message: intl.formatMessage({ id: 'pages.knowledge.base.form.enterName' }),
+            },
+          ]}
         />
         <ProFormTextArea
           name="description"
@@ -87,11 +113,22 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
         />
       </Card>
 
-      <Card title={intl.formatMessage({ id: 'pages.knowledge.base.form.retrievalConfig' })} size="small" className="knowledge-base-form-card">
+      <Card
+        title={intl.formatMessage({ id: 'pages.knowledge.base.form.retrievalConfig' })}
+        size="small"
+        className="knowledge-base-form-card"
+      >
         <ProFormSelect
           name="embeddingProviderId"
           label={intl.formatMessage({ id: 'pages.knowledge.base.form.embeddingProvider' })}
-          rules={[{ required: true, message: intl.formatMessage({ id: 'pages.knowledge.base.form.selectEmbeddingProvider' }) }]}
+          rules={[
+            {
+              required: true,
+              message: intl.formatMessage({
+                id: 'pages.knowledge.base.form.selectEmbeddingProvider',
+              }),
+            },
+          ]}
           request={async () => (await getEmbeddingProviderOptions()).data || []}
           fieldProps={{ showSearch: true, optionFilterProp: 'label' }}
         />
@@ -103,7 +140,11 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
         />
       </Card>
 
-      <Card title={intl.formatMessage({ id: 'pages.knowledge.base.form.reviewPolicy' })} size="small" className="knowledge-base-form-card">
+      <Card
+        title={intl.formatMessage({ id: 'pages.knowledge.base.form.reviewPolicy' })}
+        size="small"
+        className="knowledge-base-form-card"
+      >
         <Row gutter={16}>
           <Col span={12}>
             <ProFormSwitch
@@ -131,7 +172,9 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
           <Col span={12}>
             <ProFormSwitch
               name={['reviewConfig', 'requireDifferentApprover']}
-              label={intl.formatMessage({ id: 'pages.knowledge.base.form.requireDifferentApprover' })}
+              label={intl.formatMessage({
+                id: 'pages.knowledge.base.form.requireDifferentApprover',
+              })}
               initialValue
             />
           </Col>
@@ -139,31 +182,50 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
         <ProFormSelect
           name={['reviewConfig', 'reviewModelProviderId']}
           label={intl.formatMessage({ id: 'pages.knowledge.base.form.reviewModelProvider' })}
-          rules={[{ required: true, message: intl.formatMessage({ id: 'pages.knowledge.base.form.selectReviewModelProvider' }) }]}
+          rules={[
+            {
+              required: true,
+              message: intl.formatMessage({
+                id: 'pages.knowledge.base.form.selectReviewModelProvider',
+              }),
+            },
+          ]}
           request={getReviewModelProviderOptions}
           fieldProps={{ showSearch: true, optionFilterProp: 'label' }}
         />
         <ProFormText
           name={['reviewConfig', 'reviewModel']}
           label={intl.formatMessage({ id: 'pages.knowledge.base.form.reviewModel' })}
-          placeholder={intl.formatMessage({ id: 'pages.knowledge.base.form.reviewModelPlaceholder' })}
+          placeholder={intl.formatMessage({
+            id: 'pages.knowledge.base.form.reviewModelPlaceholder',
+          })}
         />
       </Card>
 
-      <Card title={intl.formatMessage({ id: 'pages.knowledge.base.form.status' })} size="small" className="knowledge-base-form-card">
+      <Card
+        title={intl.formatMessage({ id: 'pages.knowledge.base.form.status' })}
+        size="small"
+        className="knowledge-base-form-card"
+      >
         <ProFormSelect
           name="status"
           label={intl.formatMessage({ id: 'pages.knowledge.base.form.status' })}
           initialValue={1}
           rules={[{ required: true }]}
           options={[
-            { label: intl.formatMessage({ id: 'pages.knowledge.base.form.status.enabled' }), value: 1 },
-            { label: intl.formatMessage({ id: 'pages.knowledge.base.form.status.disabled' }), value: 0 },
+            {
+              label: intl.formatMessage({ id: 'pages.knowledge.base.form.status.enabled' }),
+              value: 1,
+            },
+            {
+              label: intl.formatMessage({ id: 'pages.knowledge.base.form.status.disabled' }),
+              value: 0,
+            },
           ]}
         />
       </Card>
     </DrawerForm>
-  )
-}
+  );
+};
 
-export default KnowledgeBaseForm
+export default KnowledgeBaseForm;

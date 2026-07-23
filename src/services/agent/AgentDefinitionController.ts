@@ -1,5 +1,5 @@
-import { request } from '@umijs/max'
-import { Option, ResponseStructure } from '@/services/entity/Common'
+import { request } from '@umijs/max';
+import { Option, ResponseStructure } from '@/services/entity/Common';
 import {
   AgentDefinition,
   AgentDefinitionSearchParams,
@@ -7,7 +7,7 @@ import {
   AgentToolBinding,
   BindToolRequest,
   UpdateToolPriorityRequest,
-} from '@/services/entity/Agent'
+} from '@/services/entity/Agent';
 
 /**
  * @description 获取 Agent 定义列表
@@ -18,8 +18,8 @@ export const getAgentDefinitionList = async (
   return request('/api/agent/definition/list', {
     method: 'POST',
     data: params,
-  })
-}
+  });
+};
 
 /**
  * @description 获取 Agent 定义详情
@@ -29,8 +29,8 @@ export const getAgentDefinitionInfo = async (
 ): Promise<ResponseStructure<AgentDefinition>> => {
   return request(`/api/agent/definition/${id}`, {
     method: 'GET',
-  })
-}
+  });
+};
 
 /**
  * @description 新增 Agent 定义
@@ -41,8 +41,8 @@ export const addAgentDefinitionInfo = async (
   return request('/api/agent/definition', {
     method: 'POST',
     data: params,
-  })
-}
+  });
+};
 
 /**
  * @description 修改 Agent 定义
@@ -53,8 +53,8 @@ export const updateAgentDefinitionInfo = async (
   return request(`/api/agent/definition/${params.id}`, {
     method: 'PUT',
     data: params,
-  })
-}
+  });
+};
 
 /**
  * @description 删除 Agent 定义
@@ -64,8 +64,8 @@ export const deleteAgentDefinitionInfo = async (
 ): Promise<ResponseStructure<AgentDefinition>> => {
   return request(`/api/agent/definition/${id}`, {
     method: 'DELETE',
-  })
-}
+  });
+};
 
 /**
  * @description 启用/禁用 Agent 定义
@@ -77,8 +77,8 @@ export const updateAgentDefinitionStatus = async (
   return request(`/api/agent/definition/${id}/status`, {
     method: 'PUT',
     data: params,
-  })
-}
+  });
+};
 
 /**
  * @description 复制 Agent 定义
@@ -88,8 +88,8 @@ export const copyAgentDefinitionInfo = async (
 ): Promise<ResponseStructure<AgentDefinition>> => {
   return request(`/api/agent/definition/${id}/copy`, {
     method: 'POST',
-  })
-}
+  });
+};
 
 /**
  * @description 查询 Agent 绑定的工具列表
@@ -99,8 +99,8 @@ export const getAgentBoundTools = async (
 ): Promise<ResponseStructure<AgentToolBinding[]>> => {
   return request(`/api/agent/definition/${agentId}/tools`, {
     method: 'GET',
-  })
-}
+  });
+};
 
 /**
  * @description 绑定工具到 Agent
@@ -112,8 +112,8 @@ export const bindToolToAgent = async (
   return request(`/api/agent/definition/${agentId}/tools`, {
     method: 'POST',
     data: params,
-  })
-}
+  });
+};
 
 /**
  * @description 从 Agent 解绑工具
@@ -124,8 +124,8 @@ export const unbindToolFromAgent = async (
 ): Promise<ResponseStructure<void>> => {
   return request(`/api/agent/definition/${agentId}/tools/${toolId}`, {
     method: 'DELETE',
-  })
-}
+  });
+};
 
 /**
  * @description 调整 Agent 工具优先级
@@ -138,8 +138,8 @@ export const updateToolPriority = async (
   return request(`/api/agent/definition/${agentId}/tools/${toolId}/priority`, {
     method: 'PUT',
     data: params,
-  })
-}
+  });
+};
 /**
  * @description 获取模型供应商列表
  */
@@ -149,6 +149,6 @@ export const getModelProviderList = async (): Promise<Option[]> => {
     {
       method: 'GET',
     },
-  )
-  return data
-}
+  );
+  return data;
+};

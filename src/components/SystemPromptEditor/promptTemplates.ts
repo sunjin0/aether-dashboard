@@ -243,35 +243,35 @@ export const presetTemplates: PromptTemplate[] = [
 - 解释执行逻辑
 - 提供优化建议`,
   },
-]
+];
 
-const STORAGE_KEY = 'agent_prompt_templates'
+const STORAGE_KEY = 'agent_prompt_templates';
 
 export const getCustomTemplates = (): PromptTemplate[] => {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    return stored ? JSON.parse(stored) : []
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
   } catch {
-    return []
+    return [];
   }
-}
+};
 
 export const saveCustomTemplate = (template: PromptTemplate): void => {
-  const templates = getCustomTemplates()
-  const existing = templates.findIndex((t) => t.id === template.id)
+  const templates = getCustomTemplates();
+  const existing = templates.findIndex((t) => t.id === template.id);
   if (existing >= 0) {
-    templates[existing] = template
+    templates[existing] = template;
   } else {
-    templates.push(template)
+    templates.push(template);
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(templates))
-}
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(templates));
+};
 
 export const deleteCustomTemplate = (id: string): void => {
-  const templates = getCustomTemplates().filter((t) => t.id !== id)
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(templates))
-}
+  const templates = getCustomTemplates().filter((t) => t.id !== id);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(templates));
+};
 
 export const getAllTemplates = (): PromptTemplate[] => {
-  return [...presetTemplates, ...getCustomTemplates()]
-}
+  return [...presetTemplates, ...getCustomTemplates()];
+};

@@ -1,14 +1,14 @@
-import React, { useRef, useState } from 'react'
+import React, { useRef, useState } from 'react';
 
-import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
-import { request, useIntl, history } from '@umijs/max'
-import { message, Tag } from 'antd'
-import TableActionMenu from '@/components/TableActionMenu'
-import { useAccess } from '@@/exports'
-import Model from '@/components/Model'
-import { getOptionList } from '@/services/sys/DictController'
-import { deleteEmailInfo, getEmailList } from '@/services/msg/EmailController'
-import { EmailSearchParams } from '@/services/entity/Msg'
+import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components';
+import { request, useIntl, history } from '@umijs/max';
+import { message, Tag } from 'antd';
+import TableActionMenu from '@/components/TableActionMenu';
+import { useAccess } from '@@/exports';
+import Model from '@/components/Model';
+import { getOptionList } from '@/services/sys/DictController';
+import { deleteEmailInfo, getEmailList } from '@/services/msg/EmailController';
+import { EmailSearchParams } from '@/services/entity/Msg';
 
 /**
  *
@@ -16,11 +16,11 @@ import { EmailSearchParams } from '@/services/entity/Msg'
  *@since 2023/7/20
  */
 const Email: React.FC = () => {
-  const intl = useIntl()
-  const ref = useRef<ActionType>()
-  const permissionMap = useAccess()
-  const path = history.location.pathname
-  const write = permissionMap[path]
+  const intl = useIntl();
+  const ref = useRef<ActionType>();
+  const permissionMap = useAccess();
+  const path = history.location.pathname;
+  const write = permissionMap[path];
   const columns: any[] = [
     {
       title: intl.formatMessage({ id: 'pages.common.id' }),
@@ -61,7 +61,7 @@ const Email: React.FC = () => {
               ? intl.formatMessage({ id: 'pages.common.unusable' })
               : intl.formatMessage({ id: 'pages.common.used' })}
           </Tag>
-        )
+        );
       },
       hideInSearch: true,
     },
@@ -99,17 +99,17 @@ const Email: React.FC = () => {
                 danger: true,
                 confirm: { title: intl.formatMessage({ id: 'pages.confirm.delete' }) },
                 onClick: async () => {
-                  const { code, message: msg } = await deleteEmailInfo(record)
-                  if (code === 200) message.success(msg)
-                  else message.error(msg)
-                  action?.reload()
+                  const { code, message: msg } = await deleteEmailInfo(record);
+                  if (code === 200) message.success(msg);
+                  else message.error(msg);
+                  action?.reload();
                 },
               },
             ]}
           />
         ),
     },
-  ]
+  ];
   return (
     <PageContainer>
       <ProTable
@@ -119,7 +119,7 @@ const Email: React.FC = () => {
         request={async (params: EmailSearchParams) => getEmailList(params)}
       />
     </PageContainer>
-  )
-}
+  );
+};
 
-export default Email
+export default Email;

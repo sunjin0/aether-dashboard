@@ -451,35 +451,116 @@
   margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
 
-  summary {
-    color: #1677ff;
-    font-size: 13px;
-    cursor: pointer;
-  }
+.@{bubble-prefix}-sources-header {
+  color: rgba(15, 23, 42, 0.55);
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .@{bubble-prefix}-sources-list {
-  display: grid;
-  gap: 8px;
-  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .@{bubble-prefix}-source {
-  padding: 8px 10px;
-  border-radius: 8px;
-  background: rgba(22, 119, 255, 0.04);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: #f0f5ff;
+  border: 1px solid rgba(22, 119, 255, 0.12);
+  cursor: pointer;
+  transition: all 0.2s;
 
-  small {
-    color: rgba(15, 23, 42, 0.55);
-    font-size: 12px;
+  &:hover {
+    background: #e6f4ff;
+    border-color: rgba(22, 119, 255, 0.3);
+  }
+}
+
+.@{bubble-prefix}-source-index {
+  color: #1677ff;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.@{bubble-prefix}-source-name {
+  color: rgba(15, 23, 42, 0.88);
+  font-size: 12px;
+  font-weight: 500;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.@{bubble-prefix}-source-similarity {
+  flex-shrink: 0;
+  color: rgba(22, 119, 255, 0.7);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.@{bubble-prefix}-source-popover {
+  max-width: 480px;
+
+  .ant-popover-inner {
+    border-radius: 12px;
+    padding: 0;
   }
 
-  p {
-    margin: 4px 0 0;
-    color: rgba(15, 23, 42, 0.78);
+  .ant-popover-title {
+    padding: 12px 16px 8px;
+    border-bottom: none;
     font-size: 13px;
-    line-height: 1.6;
-    white-space: pre-wrap;
   }
+
+  .ant-popover-inner-content {
+    padding: 0 16px 12px;
+  }
+}
+
+.@{bubble-prefix}-source-popover-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  .@{bubble-prefix}-source-similarity {
+    margin-left: auto;
+    padding: 1px 8px;
+    border-radius: 10px;
+    background: rgba(22, 119, 255, 0.08);
+    color: #1677ff;
+    font-size: 11px;
+    font-weight: 500;
+  }
+}
+
+.@{bubble-prefix}-source-popover-content {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.@{bubble-prefix}-source-popover-section {
+  color: rgba(15, 23, 42, 0.45);
+  font-size: 12px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.@{bubble-prefix}-source-popover-text {
+  color: rgba(15, 23, 42, 0.78);
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
 }

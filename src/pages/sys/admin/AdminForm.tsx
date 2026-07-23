@@ -1,15 +1,15 @@
-import DrawerForm from '@/components/DrawerForm'
-import { request, useIntl } from '@umijs/max'
-import { Form } from 'antd'
-import { ProFormSelect, ProFormText } from '@ant-design/pro-components'
+import DrawerForm from '@/components/DrawerForm';
+import { request, useIntl } from '@umijs/max';
+import { Form } from 'antd';
+import { ProFormSelect, ProFormText } from '@ant-design/pro-components';
 import {
   addAdminInfo,
   getAdminInfo,
   getRoleOptions,
   updateAdminInfo,
-} from '@/services/sys/AdminController'
-import { getOptionList } from '@/services/sys/DictController'
-import ProFormFileUpload from '@/components/ProFormFileUpload'
+} from '@/services/sys/AdminController';
+import { getOptionList } from '@/services/sys/DictController';
+import ProFormFileUpload from '@/components/ProFormFileUpload';
 
 const AdminForm = (props: {
   id: any;
@@ -17,9 +17,9 @@ const AdminForm = (props: {
   setOpen?: (open: boolean) => void;
   onSuccess: () => void;
 }) => {
-  const { id, open, setOpen, onSuccess } = props
-  const intl = useIntl()
-  const [form] = Form.useForm()
+  const { id, open, setOpen, onSuccess } = props;
+  const intl = useIntl();
+  const [form] = Form.useForm();
   return (
     <DrawerForm
       open={open}
@@ -29,15 +29,15 @@ const AdminForm = (props: {
       onSuccess={async (values) => {
         if (!values.avatar) {
           values.avatar =
-            'https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png'
+            'https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png';
         }
         if (id) {
-          await updateAdminInfo(values)
+          await updateAdminInfo(values);
         } else {
-          await addAdminInfo(values)
+          await addAdminInfo(values);
         }
-        onSuccess()
-        return true
+        onSuccess();
+        return true;
       }}
       form={form}
     >
@@ -93,6 +93,6 @@ const AdminForm = (props: {
         rules={[{ required: !id, min: 6, max: 10 }]}
       />
     </DrawerForm>
-  )
-}
-export default AdminForm
+  );
+};
+export default AdminForm;

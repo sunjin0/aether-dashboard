@@ -1,14 +1,14 @@
-import React from 'react'
-import DrawerForm from '@/components/DrawerForm'
-import { request, useIntl } from '@umijs/max'
-import { Form } from 'antd'
-import { ProFormSelect, ProFormText, ProFormTextArea } from '@ant-design/pro-components'
+import React from 'react';
+import DrawerForm from '@/components/DrawerForm';
+import { request, useIntl } from '@umijs/max';
+import { Form } from 'antd';
+import { ProFormSelect, ProFormText, ProFormTextArea } from '@ant-design/pro-components';
 import {
   addDictInfo,
   getDictInfo,
   getSelectList,
   updateDictInfo,
-} from '@/services/sys/DictController'
+} from '@/services/sys/DictController';
 
 const DictForm = (props: {
   id: any;
@@ -16,9 +16,9 @@ const DictForm = (props: {
   setOpen?: (open: boolean) => void;
   onSuccess: () => void;
 }) => {
-  const { id, open, setOpen, onSuccess } = props
-  const [form] = Form.useForm()
-  const intl = useIntl()
+  const { id, open, setOpen, onSuccess } = props;
+  const [form] = Form.useForm();
+  const intl = useIntl();
   return (
     <DrawerForm
       request={async (params) => getDictInfo(params)}
@@ -27,12 +27,12 @@ const DictForm = (props: {
       setOpen={setOpen}
       onSuccess={async (values: any) => {
         if (id) {
-          await updateDictInfo(values)
+          await updateDictInfo(values);
         } else {
-          await addDictInfo(values)
+          await addDictInfo(values);
         }
-        onSuccess()
-        return true
+        onSuccess();
+        return true;
       }}
       form={form}
     >
@@ -67,6 +67,6 @@ const DictForm = (props: {
       />
       <ProFormTextArea name="remark" label={intl.formatMessage({ id: 'pages.common.remark' })} />
     </DrawerForm>
-  )
-}
-export default DictForm
+  );
+};
+export default DictForm;

@@ -6,14 +6,14 @@
 
 **Architecture:** Update the service layer types and API functions first, then update the form component, then update the list page with new columns/filters/actions, and finally update tests.
 
-**Tech Stack:** React, TypeScript, Ant Design Pro (ProTable, ProForm*), @umijs/max request
+**Tech Stack:** React, TypeScript, Ant Design Pro (ProTable, ProForm\*), @umijs/max request
 
 ---
 
 ## File Structure
 
 | File | Role |
-|------|------|
+| --- | --- |
 | `src/services/sys/AdminPreferenceController.ts` | API service + TypeScript interfaces (modify) |
 | `src/pages/sys/admin-preference/PreferenceForm.tsx` | Create/edit drawer form (modify) |
 | `src/pages/sys/admin-preference/index.tsx` | List page component (modify) |
@@ -24,6 +24,7 @@
 ### Task 1: Update Service Layer Types and API Functions
 
 **Files:**
+
 - Modify: `src/services/sys/AdminPreferenceController.ts:1-51`
 
 - [ ] **Step 1: Update the AdminPreference interface**
@@ -75,28 +76,28 @@ Append after the `updateAdminPreferenceStatus` function (after line 51):
 
 ```typescript
 export const confirmAdminPreference = async (id: string): Promise<ResponseStructure<void>> =>
-  request(`/api/sys/admin/preference/${id}/feedback`, { method: 'POST' })
+  request(`/api/sys/admin/preference/${id}/feedback`, { method: 'POST' });
 
 export const rejectAdminPreference = async (id: string): Promise<ResponseStructure<void>> =>
-  request(`/api/sys/admin/preference/${id}/feedback`, { method: 'DELETE' })
+  request(`/api/sys/admin/preference/${id}/feedback`, { method: 'DELETE' });
 
 export const overrideAdminPreference = async (
   id: string,
   params: { value: string },
 ): Promise<ResponseStructure<void>> =>
-  request(`/api/sys/admin/preference/${id}/override`, { method: 'PUT', data: params })
+  request(`/api/sys/admin/preference/${id}/override`, { method: 'PUT', data: params });
 ```
 
 - [ ] **Step 4: Verify the file compiles**
 
-Run: `npx tsc --noEmit src/services/sys/AdminPreferenceController.ts`
-Expected: No errors
+Run: `npx tsc --noEmit src/services/sys/AdminPreferenceController.ts` Expected: No errors
 
 ---
 
 ### Task 2: Update PreferenceForm Component
 
 **Files:**
+
 - Modify: `src/pages/sys/admin-preference/PreferenceForm.tsx:1-76`
 
 - [ ] **Step 1: Replace imports and add constants**
@@ -104,20 +105,20 @@ Expected: No errors
 Replace lines 1-14 with:
 
 ```typescript
-import DrawerForm from '@/components/DrawerForm'
+import DrawerForm from '@/components/DrawerForm';
 import {
   addAdminPreference,
   getAdminPreference,
   updateAdminPreference,
-} from '@/services/sys/AdminPreferenceController'
+} from '@/services/sys/AdminPreferenceController';
 import {
   ProFormDigit,
   ProFormSelect,
   ProFormText,
   ProFormTextArea,
-} from '@ant-design/pro-components'
-import { Form } from 'antd'
-import dayjs from 'dayjs'
+} from '@ant-design/pro-components';
+import { Form } from 'antd';
+import dayjs from 'dayjs';
 
 const CATEGORY_OPTIONS = [
   { label: '语言', value: 'language' },
@@ -125,13 +126,13 @@ const CATEGORY_OPTIONS = [
   { label: '输出格式', value: 'format' },
   { label: '技术栈', value: 'tech_stack' },
   { label: '工具策略', value: 'tool_strategy' },
-]
+];
 
 const SCOPE_OPTIONS = [
   { label: '全局', value: 'global' },
   { label: '会话', value: 'session' },
   { label: '任务类型', value: 'task_type' },
-]
+];
 ```
 
 - [ ] **Step 2: Replace the form body**
@@ -249,14 +250,14 @@ Replace lines 33-38 with:
 
 - [ ] **Step 4: Verify the file compiles**
 
-Run: `npx tsc --noEmit src/pages/sys/admin-preference/PreferenceForm.tsx`
-Expected: No errors
+Run: `npx tsc --noEmit src/pages/sys/admin-preference/PreferenceForm.tsx` Expected: No errors
 
 ---
 
 ### Task 3: Update List Page Columns and Filters
 
 **Files:**
+
 - Modify: `src/pages/sys/admin-preference/index.tsx:1-151`
 
 - [ ] **Step 1: Replace imports**
@@ -264,7 +265,7 @@ Expected: No errors
 Replace lines 1-15 with:
 
 ```typescript
-import PreferenceForm from '@/pages/sys/admin-preference/PreferenceForm'
+import PreferenceForm from '@/pages/sys/admin-preference/PreferenceForm';
 import {
   AdminPreference,
   AdminPreferenceSearchParams,
@@ -274,14 +275,14 @@ import {
   rejectAdminPreference,
   overrideAdminPreference,
   updateAdminPreferenceStatus,
-} from '@/services/sys/AdminPreferenceController'
-import { PlusOutlined } from '@ant-design/icons'
-import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
-import { history, useAccess } from '@@/exports'
-import { Alert, Button, Input, message, Popconfirm, Tag } from 'antd'
-import React, { useRef, useState } from 'react'
-import { getSwitchStatus } from '@/pages/agent/knowledge-base/status'
-import dayjs from 'dayjs'
+} from '@/services/sys/AdminPreferenceController';
+import { PlusOutlined } from '@ant-design/icons';
+import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components';
+import { history, useAccess } from '@@/exports';
+import { Alert, Button, Input, message, Popconfirm, Tag } from 'antd';
+import React, { useRef, useState } from 'react';
+import { getSwitchStatus } from '@/pages/agent/knowledge-base/status';
+import dayjs from 'dayjs';
 
 const CATEGORY_MAP: Record<string, string> = {
   language: '语言',
@@ -289,19 +290,19 @@ const CATEGORY_MAP: Record<string, string> = {
   format: '输出格式',
   tech_stack: '技术栈',
   tool_strategy: '工具策略',
-}
+};
 
 const SCOPE_MAP: Record<string, string> = {
   global: '全局',
   session: '会话',
   task_type: '任务类型',
-}
+};
 
 const SOURCE_MAP: Record<string, { label: string; color: string }> = {
   explicit: { label: '手动', color: 'blue' },
   implicit: { label: '自动学习', color: 'orange' },
   manual_override: { label: '手动覆盖', color: 'purple' },
-}
+};
 ```
 
 - [ ] **Step 2: Add override modal state and helper**
@@ -309,8 +310,8 @@ const SOURCE_MAP: Record<string, { label: string; color: string }> = {
 After line 20 (`const [id, setId] = useState<string>()`), add:
 
 ```typescript
-  const [overrideId, setOverrideId] = useState<string>()
-  const [overrideValue, setOverrideValue] = useState('')
+const [overrideId, setOverrideId] = useState<string>();
+const [overrideValue, setOverrideValue] = useState('');
 ```
 
 - [ ] **Step 3: Add confirm/reject/override handler functions**
@@ -318,37 +319,37 @@ After line 20 (`const [id, setId] = useState<string>()`), add:
 After the `updateStatus` function (after line 33), add:
 
 ```typescript
-  const handleConfirm = async (record: AdminPreference) => {
-    if (!record.id) return
-    const response = await confirmAdminPreference(record.id)
-    if (response.code === 200) {
-      message.success(response.message || '确认成功')
-      ref.current?.reload()
-    } else message.error(response.message || '操作失败')
-  }
+const handleConfirm = async (record: AdminPreference) => {
+  if (!record.id) return;
+  const response = await confirmAdminPreference(record.id);
+  if (response.code === 200) {
+    message.success(response.message || '确认成功');
+    ref.current?.reload();
+  } else message.error(response.message || '操作失败');
+};
 
-  const handleReject = async (record: AdminPreference) => {
-    if (!record.id) return
-    const response = await rejectAdminPreference(record.id)
-    if (response.code === 200) {
-      message.success(response.message || '已拒绝')
-      ref.current?.reload()
-    } else message.error(response.message || '操作失败')
-  }
+const handleReject = async (record: AdminPreference) => {
+  if (!record.id) return;
+  const response = await rejectAdminPreference(record.id);
+  if (response.code === 200) {
+    message.success(response.message || '已拒绝');
+    ref.current?.reload();
+  } else message.error(response.message || '操作失败');
+};
 
-  const handleOverride = async () => {
-    if (!overrideId || !overrideValue.trim()) {
-      message.warning('请输入新值')
-      return
-    }
-    const response = await overrideAdminPreference(overrideId, { value: overrideValue.trim() })
-    if (response.code === 200) {
-      message.success(response.message || '覆盖成功')
-      setOverrideId(undefined)
-      setOverrideValue('')
-      ref.current?.reload()
-    } else message.error(response.message || '操作失败')
+const handleOverride = async () => {
+  if (!overrideId || !overrideValue.trim()) {
+    message.warning('请输入新值');
+    return;
   }
+  const response = await overrideAdminPreference(overrideId, { value: overrideValue.trim() });
+  if (response.code === 200) {
+    message.success(response.message || '覆盖成功');
+    setOverrideId(undefined);
+    setOverrideValue('');
+    ref.current?.reload();
+  } else message.error(response.message || '操作失败');
+};
 ```
 
 - [ ] **Step 4: Replace the columns array**
@@ -604,14 +605,14 @@ Replace lines 109-148 with:
 
 - [ ] **Step 6: Verify the file compiles**
 
-Run: `npx tsc --noEmit src/pages/sys/admin-preference/index.tsx`
-Expected: No errors
+Run: `npx tsc --noEmit src/pages/sys/admin-preference/index.tsx` Expected: No errors
 
 ---
 
 ### Task 4: Update Unit Tests
 
 **Files:**
+
 - Modify: `src/services/sys/AdminPreferenceController.test.ts:1-57`
 
 - [ ] **Step 1: Update imports and add new functions**
@@ -619,7 +620,7 @@ Expected: No errors
 Replace lines 1-9 with:
 
 ```typescript
-import { request } from '@umijs/max'
+import { request } from '@umijs/max';
 import {
   addAdminPreference,
   confirmAdminPreference,
@@ -630,7 +631,7 @@ import {
   rejectAdminPreference,
   updateAdminPreference,
   updateAdminPreferenceStatus,
-} from './AdminPreferenceController'
+} from './AdminPreferenceController';
 ```
 
 - [ ] **Step 2: Update the test case**
@@ -638,56 +639,86 @@ import {
 Replace lines 22-56 with:
 
 ```typescript
-  it('uses documented user preference endpoints', async () => {
-    await getAdminPreferenceList({ current: 1, pageSize: 20, category: 'style', keyName: 'output_length' })
-    await getAdminPreference('preference-1')
-    await addAdminPreference({ category: 'style', keyName: 'output_length', value: '简洁', status: 1 })
-    await updateAdminPreference({ id: 'preference-1', category: 'style', keyName: 'output_length', value: '详细' })
-    await updateAdminPreferenceStatus('preference-1', { status: 0 })
-    await confirmAdminPreference('preference-1')
-    await rejectAdminPreference('preference-1')
-    await overrideAdminPreference('preference-1', { value: '详细' })
-    await deleteAdminPreference('preference-1')
+it('uses documented user preference endpoints', async () => {
+  await getAdminPreferenceList({
+    current: 1,
+    pageSize: 20,
+    category: 'style',
+    keyName: 'output_length',
+  });
+  await getAdminPreference('preference-1');
+  await addAdminPreference({
+    category: 'style',
+    keyName: 'output_length',
+    value: '简洁',
+    status: 1,
+  });
+  await updateAdminPreference({
+    id: 'preference-1',
+    category: 'style',
+    keyName: 'output_length',
+    value: '详细',
+  });
+  await updateAdminPreferenceStatus('preference-1', { status: 0 });
+  await confirmAdminPreference('preference-1');
+  await rejectAdminPreference('preference-1');
+  await overrideAdminPreference('preference-1', { value: '详细' });
+  await deleteAdminPreference('preference-1');
 
-    expect(mockedRequest).toHaveBeenNthCalledWith(1, '/api/sys/admin/preference/list', {
-      method: 'POST',
-      data: { current: 1, pageSize: 20, category: 'style', keyName: 'output_length' },
-    })
-    expect(mockedRequest).toHaveBeenNthCalledWith(2, '/api/sys/admin/preference/preference-1', {
-      method: 'GET',
-    })
-    expect(mockedRequest).toHaveBeenNthCalledWith(3, '/api/sys/admin/preference', {
-      method: 'POST',
-      data: { category: 'style', keyName: 'output_length', value: '简洁', status: 1 },
-    })
-    expect(mockedRequest).toHaveBeenNthCalledWith(4, '/api/sys/admin/preference/preference-1', {
-      method: 'PUT',
-      data: { id: 'preference-1', category: 'style', keyName: 'output_length', value: '详细' },
-    })
-    expect(mockedRequest).toHaveBeenNthCalledWith(5, '/api/sys/admin/preference/preference-1/status', {
+  expect(mockedRequest).toHaveBeenNthCalledWith(1, '/api/sys/admin/preference/list', {
+    method: 'POST',
+    data: { current: 1, pageSize: 20, category: 'style', keyName: 'output_length' },
+  });
+  expect(mockedRequest).toHaveBeenNthCalledWith(2, '/api/sys/admin/preference/preference-1', {
+    method: 'GET',
+  });
+  expect(mockedRequest).toHaveBeenNthCalledWith(3, '/api/sys/admin/preference', {
+    method: 'POST',
+    data: { category: 'style', keyName: 'output_length', value: '简洁', status: 1 },
+  });
+  expect(mockedRequest).toHaveBeenNthCalledWith(4, '/api/sys/admin/preference/preference-1', {
+    method: 'PUT',
+    data: { id: 'preference-1', category: 'style', keyName: 'output_length', value: '详细' },
+  });
+  expect(mockedRequest).toHaveBeenNthCalledWith(
+    5,
+    '/api/sys/admin/preference/preference-1/status',
+    {
       method: 'PUT',
       data: { status: 0 },
-    })
-    expect(mockedRequest).toHaveBeenNthCalledWith(6, '/api/sys/admin/preference/preference-1/feedback', {
+    },
+  );
+  expect(mockedRequest).toHaveBeenNthCalledWith(
+    6,
+    '/api/sys/admin/preference/preference-1/feedback',
+    {
       method: 'POST',
-    })
-    expect(mockedRequest).toHaveBeenNthCalledWith(7, '/api/sys/admin/preference/preference-1/feedback', {
+    },
+  );
+  expect(mockedRequest).toHaveBeenNthCalledWith(
+    7,
+    '/api/sys/admin/preference/preference-1/feedback',
+    {
       method: 'DELETE',
-    })
-    expect(mockedRequest).toHaveBeenNthCalledWith(8, '/api/sys/admin/preference/preference-1/override', {
+    },
+  );
+  expect(mockedRequest).toHaveBeenNthCalledWith(
+    8,
+    '/api/sys/admin/preference/preference-1/override',
+    {
       method: 'PUT',
       data: { value: '详细' },
-    })
-    expect(mockedRequest).toHaveBeenNthCalledWith(9, '/api/sys/admin/preference/preference-1', {
-      method: 'DELETE',
-    })
-  })
+    },
+  );
+  expect(mockedRequest).toHaveBeenNthCalledWith(9, '/api/sys/admin/preference/preference-1', {
+    method: 'DELETE',
+  });
+});
 ```
 
 - [ ] **Step 3: Run tests**
 
-Run: `npm run test -- --testPathPattern=AdminPreferenceController`
-Expected: All tests pass
+Run: `npm run test -- --testPathPattern=AdminPreferenceController` Expected: All tests pass
 
 ---
 
@@ -695,15 +726,12 @@ Expected: All tests pass
 
 - [ ] **Step 1: Run lint**
 
-Run: `npm run lint`
-Expected: No errors
+Run: `npm run lint` Expected: No errors
 
 - [ ] **Step 2: Run type check**
 
-Run: `npm run tsc`
-Expected: No errors
+Run: `npm run tsc` Expected: No errors
 
 - [ ] **Step 3: Run all tests**
 
-Run: `npm run test`
-Expected: All tests pass
+Run: `npm run test` Expected: All tests pass

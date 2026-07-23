@@ -1,60 +1,61 @@
-import React, { useRef, useState } from 'react'
-import { PlusOutlined } from '@ant-design/icons'
-import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
-import { Button, message } from 'antd'
-import { FormattedMessage, history, useAccess, useIntl } from '@@/exports'
-import ModelProviderForm from '@/pages/agent/model-provider/ModelProviderForm'
+import React, { useRef, useState } from 'react';
+import { PlusOutlined } from '@ant-design/icons';
+import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components';
+import { Button, message } from 'antd';
+import { FormattedMessage, history, useAccess, useIntl } from '@@/exports';
+import ModelProviderForm from '@/pages/agent/model-provider/ModelProviderForm';
 import {
   deleteModelProviderInfo,
   getModelProviderList,
   updateModelProviderStatus,
-} from '@/services/agent/ModelProviderController'
-import { getOptionList } from '@/services/sys/DictController'
-import { ModelProvider, ModelProviderSearchParams } from '@/services/entity/Agent'
-import TableActionMenu from '@/components/TableActionMenu'
+} from '@/services/agent/ModelProviderController';
+import { getOptionList } from '@/services/sys/DictController';
+import { ModelProvider, ModelProviderSearchParams } from '@/services/entity/Agent';
+import TableActionMenu from '@/components/TableActionMenu';
 
 const ModelProviderPage: React.FC = () => {
-  const [open, setOpen] = useState(false)
-  const [id, setId] = useState<string | undefined>(undefined)
-  const ref = useRef<ActionType>()
-  const permissionMap = useAccess()
-  const path = history.location.pathname
-  const write = permissionMap[path]
-  const intl = useIntl()
-  const format = (id: string, values?: Record<string, string>) => intl.formatMessage({ id }, values)
+  const [open, setOpen] = useState(false);
+  const [id, setId] = useState<string | undefined>(undefined);
+  const ref = useRef<ActionType>();
+  const permissionMap = useAccess();
+  const path = history.location.pathname;
+  const write = permissionMap[path];
+  const intl = useIntl();
+  const format = (id: string, values?: Record<string, string>) =>
+    intl.formatMessage({ id }, values);
 
   const handleDelete = async (record: ModelProvider) => {
     if (!record.id) {
-      message.error(format('pages.agent.modelProvider.missingId'))
-      return
+      message.error(format('pages.agent.modelProvider.missingId'));
+      return;
     }
 
-    const { code, message: msg } = await deleteModelProviderInfo(record.id)
+    const { code, message: msg } = await deleteModelProviderInfo(record.id);
     if (code === 200) {
-      message.success(msg || format('pages.agent.modelProvider.deleteSuccess'))
-      ref.current?.reload()
+      message.success(msg || format('pages.agent.modelProvider.deleteSuccess'));
+      ref.current?.reload();
     } else {
-      message.error(msg || format('pages.agent.modelProvider.deleteFailed'))
+      message.error(msg || format('pages.agent.modelProvider.deleteFailed'));
     }
-  }
+  };
 
   const handleStatusChange = async (record: ModelProvider) => {
     if (!record.id) {
-      message.error(format('pages.agent.modelProvider.missingId'))
-      return
+      message.error(format('pages.agent.modelProvider.missingId'));
+      return;
     }
 
-    const nextStatus = record.status === 1 ? 0 : 1
+    const nextStatus = record.status === 1 ? 0 : 1;
     const { code, message: msg } = await updateModelProviderStatus(record.id, {
       status: nextStatus,
-    })
+    });
     if (code === 200) {
-      message.success(msg || format('pages.agent.modelProvider.operationSuccess'))
-      ref.current?.reload()
+      message.success(msg || format('pages.agent.modelProvider.operationSuccess'));
+      ref.current?.reload();
     } else {
-      message.error(msg || format('pages.agent.modelProvider.operationFailed'))
+      message.error(msg || format('pages.agent.modelProvider.operationFailed'));
     }
-  }
+  };
 
   const columns: any[] = [
     {
@@ -123,13 +124,16 @@ const ModelProviderPage: React.FC = () => {
                 label: format('pages.common.edit'),
                 primary: true,
                 onClick: () => {
-                  setId(record.id)
-                  setOpen(true)
+                  setId(record.id);
+                  setOpen(true);
                 },
               },
               {
                 key: 'status',
-                label: record.status === 1 ? format('pages.common.disabled') : format('pages.common.enabled'),
+                label:
+                  record.status === 1
+                    ? format('pages.common.disabled')
+                    : format('pages.common.enabled'),
                 primary: true,
                 confirm: { title: format('pages.agent.modelProvider.statusConfirm') },
                 onClick: () => handleStatusChange(record),
@@ -146,7 +150,7 @@ const ModelProviderPage: React.FC = () => {
           />
         ),
     },
-  ]
+  ];
 
   return (
     <PageContainer>
@@ -167,8 +171,8 @@ const ModelProviderPage: React.FC = () => {
               icon={<PlusOutlined />}
               type="primary"
               onClick={() => {
-                setId(undefined)
-                setOpen(true)
+                setId(undefined);
+                setOpen(true);
               }}
             >
               <FormattedMessage id="pages.common.new" />
@@ -182,12 +186,12 @@ const ModelProviderPage: React.FC = () => {
         open={open}
         setOpen={setOpen}
         onSuccess={() => {
-          setId(undefined)
-          ref.current?.reload()
+          setId(undefined);
+          ref.current?.reload();
         }}
       />
     </PageContainer>
-  )
-}
+  );
+};
 
-export default ModelProviderPage
+export default ModelProviderPage;

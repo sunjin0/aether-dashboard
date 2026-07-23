@@ -1,31 +1,31 @@
-import { PageContainer, ProTable } from '@ant-design/pro-components'
-import { history, useIntl, useLocation } from '@umijs/max'
-import { Tabs, Tag } from 'antd'
-import TableActionMenu from '@/components/TableActionMenu'
-import React, { useMemo, useRef, useState } from 'react'
-import { ActionType } from '@ant-design/pro-components'
-import { getReviewTaskList } from '@/services/knowledge/ReviewController'
-import { KnowledgeReviewTask, KnowledgeReviewTaskSearchParams } from '@/services/entity/Agent'
-import { getAdminList } from '@/services/sys/AdminController'
+import { PageContainer, ProTable } from '@ant-design/pro-components';
+import { history, useIntl, useLocation } from '@umijs/max';
+import { Tabs, Tag } from 'antd';
+import TableActionMenu from '@/components/TableActionMenu';
+import React, { useMemo, useRef, useState } from 'react';
+import { ActionType } from '@ant-design/pro-components';
+import { getReviewTaskList } from '@/services/knowledge/ReviewController';
+import { KnowledgeReviewTask, KnowledgeReviewTaskSearchParams } from '@/services/entity/Agent';
+import { getAdminList } from '@/services/sys/AdminController';
 
 const reviewViews: NonNullable<KnowledgeReviewTaskSearchParams['view']>[] = [
   'available',
   'submittedByMe',
   'reviewedByMe',
   'all',
-]
+];
 
 const KnowledgeReviewPage: React.FC = () => {
-  const location = useLocation()
+  const location = useLocation();
   const initialView = useMemo(() => {
-    const value = new URLSearchParams(location.search).get('view')
+    const value = new URLSearchParams(location.search).get('view');
     return reviewViews.includes(value as NonNullable<KnowledgeReviewTaskSearchParams['view']>)
       ? (value as KnowledgeReviewTaskSearchParams['view'])
-      : 'available'
-  }, [location.search])
-  const [view, setView] = useState<KnowledgeReviewTaskSearchParams['view']>(initialView)
-  const actionRef = useRef<ActionType>()
-  const intl = useIntl()
+      : 'available';
+  }, [location.search]);
+  const [view, setView] = useState<KnowledgeReviewTaskSearchParams['view']>(initialView);
+  const actionRef = useRef<ActionType>();
+  const intl = useIntl();
 
   const labels: Record<string, { text: string; color: string }> = {
     pending: {
@@ -44,7 +44,7 @@ const KnowledgeReviewPage: React.FC = () => {
       text: intl.formatMessage({ id: 'pages.knowledge.review.status.rejected' }),
       color: 'error',
     },
-  }
+  };
 
   const views = [
     {
@@ -60,7 +60,7 @@ const KnowledgeReviewPage: React.FC = () => {
       label: intl.formatMessage({ id: 'pages.knowledge.review.view.reviewedByMe' }),
     },
     { key: 'all', label: intl.formatMessage({ id: 'pages.knowledge.review.view.all' }) },
-  ]
+  ];
 
   return (
     <PageContainer title={intl.formatMessage({ id: 'pages.knowledge.review.title' })}>
@@ -68,10 +68,10 @@ const KnowledgeReviewPage: React.FC = () => {
         activeKey={view}
         items={views}
         onChange={(key) => {
-          const nextView = key as KnowledgeReviewTaskSearchParams['view']
-          setView(nextView)
-          history.replace(`/knowledge/reviews?view=${nextView}`)
-          actionRef.current?.reload()
+          const nextView = key as KnowledgeReviewTaskSearchParams['view'];
+          setView(nextView);
+          history.replace(`/knowledge/reviews?view=${nextView}`);
+          actionRef.current?.reload();
         }}
       />
       <ProTable<KnowledgeReviewTask>
@@ -95,8 +95,8 @@ const KnowledgeReviewPage: React.FC = () => {
             dataIndex: 'submitterId',
             valueType: 'select',
             request: async () => {
-              const { data } = await getAdminList({ current: 1, pageSize: 1000 })
-              return data.map((item) => ({ label: item.username, value: item.id }))
+              const { data } = await getAdminList({ current: 1, pageSize: 1000 });
+              return data.map((item) => ({ label: item.username, value: item.id }));
             },
             hideInSearch: true,
           },
@@ -108,8 +108,8 @@ const KnowledgeReviewPage: React.FC = () => {
               Object.entries(labels).map(([key, value]) => [key, { text: value.text }]),
             ),
             render: (_, record) => {
-              const item = labels[record.status || 'pending']
-              return <Tag color={item.color}>{item.text}</Tag>
+              const item = labels[record.status || 'pending'];
+              return <Tag color={item.color}>{item.text}</Tag>;
             },
           },
           {
@@ -123,8 +123,8 @@ const KnowledgeReviewPage: React.FC = () => {
             dataIndex: 'reviewerId',
             valueType: 'select',
             request: async () => {
-              const { data } = await getAdminList({ current: 1, pageSize: 1000 })
-              return data.map((item) => ({ label: item.username, value: item.id }))
+              const { data } = await getAdminList({ current: 1, pageSize: 1000 });
+              return data.map((item) => ({ label: item.username, value: item.id }));
             },
           },
           {
@@ -139,10 +139,10 @@ const KnowledgeReviewPage: React.FC = () => {
                     label: intl.formatMessage({ id: 'pages.knowledge.review.viewAction' }),
                     primary: true,
                     onClick: () => {
-                      const returnTo = `/knowledge/reviews?view=${view}`
+                      const returnTo = `/knowledge/reviews?view=${view}`;
                       history.push(
                         `/knowledge/reviews/${record.id}?returnTo=${encodeURIComponent(returnTo)}`,
-                      )
+                      );
                     },
                   },
                 ]}
@@ -152,7 +152,7 @@ const KnowledgeReviewPage: React.FC = () => {
         ]}
       />
     </PageContainer>
-  )
-}
+  );
+};
 
-export default KnowledgeReviewPage
+export default KnowledgeReviewPage;

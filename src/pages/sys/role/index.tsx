@@ -1,25 +1,25 @@
-import React, { useRef, useState } from 'react'
+import React, { useRef, useState } from 'react';
 
-import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
-import { Button, message } from 'antd'
-import { useIntl } from '@umijs/max'
-import RoleForm from '@/pages/sys/role/RoleForm'
-import { PlusOutlined } from '@ant-design/icons'
-import { FormattedMessage, history, useAccess } from '@@/exports'
-import AuthorizationForm from '@/pages/sys/role/AuthorizationForm'
-import { deleteRoleInfo, getRoleList } from '@/services/sys/RoleController'
-import { RoleSearchParams } from '@/services/entity/Sys'
-import TableActionMenu from '@/components/TableActionMenu'
+import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components';
+import { Button, message } from 'antd';
+import { useIntl } from '@umijs/max';
+import RoleForm from '@/pages/sys/role/RoleForm';
+import { PlusOutlined } from '@ant-design/icons';
+import { FormattedMessage, history, useAccess } from '@@/exports';
+import AuthorizationForm from '@/pages/sys/role/AuthorizationForm';
+import { deleteRoleInfo, getRoleList } from '@/services/sys/RoleController';
+import { RoleSearchParams } from '@/services/entity/Sys';
+import TableActionMenu from '@/components/TableActionMenu';
 
 const Role: React.FC = () => {
-  const intl = useIntl()
-  const [open, setOpen] = useState(false)
-  const [authorizationOpen, setAuthorizationOpen] = useState(false)
-  const [id, setId] = useState(undefined)
-  const ref = useRef<ActionType>()
-  const permissionMap = useAccess()
-  const path = history.location.pathname
-  const write = permissionMap[path]
+  const intl = useIntl();
+  const [open, setOpen] = useState(false);
+  const [authorizationOpen, setAuthorizationOpen] = useState(false);
+  const [id, setId] = useState(undefined);
+  const ref = useRef<ActionType>();
+  const permissionMap = useAccess();
+  const path = history.location.pathname;
+  const write = permissionMap[path];
   const columns: any[] = [
     {
       title: intl.formatMessage({ id: 'pages.common.name' }),
@@ -52,8 +52,8 @@ const Role: React.FC = () => {
                 label: intl.formatMessage({ id: 'pages.common.edit' }),
                 primary: true,
                 onClick: () => {
-                  setId(record.id)
-                  setOpen(true)
+                  setId(record.id);
+                  setOpen(true);
                 },
               },
               {
@@ -61,8 +61,8 @@ const Role: React.FC = () => {
                 label: intl.formatMessage({ id: 'pages.sys.auth.role.resource' }),
                 primary: true,
                 onClick: () => {
-                  setId(record.id)
-                  setAuthorizationOpen(true)
+                  setId(record.id);
+                  setAuthorizationOpen(true);
                 },
               },
               {
@@ -72,17 +72,17 @@ const Role: React.FC = () => {
                 danger: true,
                 confirm: { title: intl.formatMessage({ id: 'pages.confirm.delete' }) },
                 onClick: async () => {
-                  const { code, message: msg } = await deleteRoleInfo(record)
-                  if (code === 200) message.success(msg)
-                  else message.error(msg)
-                  ref.current?.reload()
+                  const { code, message: msg } = await deleteRoleInfo(record);
+                  if (code === 200) message.success(msg);
+                  else message.error(msg);
+                  ref.current?.reload();
                 },
               },
             ]}
           />
         ),
     },
-  ]
+  ];
   return (
     <PageContainer>
       <ProTable
@@ -93,8 +93,8 @@ const Role: React.FC = () => {
               icon={<PlusOutlined />}
               type="primary"
               onClick={() => {
-                setId(undefined)
-                setOpen(true)
+                setId(undefined);
+                setOpen(true);
               }}
             >
               <FormattedMessage id="pages.common.new" />
@@ -111,23 +111,23 @@ const Role: React.FC = () => {
         open={open}
         setOpen={setOpen}
         onSuccess={() => {
-          setId(undefined)
-          ref.current?.reload()
+          setId(undefined);
+          ref.current?.reload();
         }}
       />
       <AuthorizationForm
         id={id}
         open={authorizationOpen}
         setOpen={(open) => {
-          if (!open) setId(undefined)
-          setAuthorizationOpen(open)
+          if (!open) setId(undefined);
+          setAuthorizationOpen(open);
         }}
         onSuccess={() => {
-          setId(undefined)
+          setId(undefined);
         }}
       />
     </PageContainer>
-  )
-}
+  );
+};
 
-export default Role
+export default Role;

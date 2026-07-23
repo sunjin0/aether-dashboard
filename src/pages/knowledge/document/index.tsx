@@ -1,14 +1,14 @@
-﻿import DocumentForm from '@/pages/agent/knowledge-base/DocumentForm'
-import { getDocumentStatus, getIndexStatus } from '@/pages/agent/knowledge-base/status'
-import { Document, DocumentSearchParams } from '@/services/entity/Agent'
+﻿import DocumentForm from '@/pages/agent/knowledge-base/DocumentForm';
+import { getDocumentStatus, getIndexStatus } from '@/pages/agent/knowledge-base/status';
+import { Document, DocumentSearchParams } from '@/services/entity/Agent';
 import {
   deleteDocument,
   getDocumentPreviewUrl,
   getDocumentList,
   reindexDocument,
   uploadDocument,
-} from '@/services/knowledge/DocumentController'
-import { getKnowledgeBaseList } from '@/services/knowledge/KnowledgeBaseController'
+} from '@/services/knowledge/DocumentController';
+import { getKnowledgeBaseList } from '@/services/knowledge/KnowledgeBaseController';
 import {
   ActionType,
   PageContainer,
@@ -16,52 +16,52 @@ import {
   ProFormSelect,
   ProFormText,
   ProTable,
-} from '@ant-design/pro-components'
-import { history, useAccess, useIntl, useLocation } from '@@/exports'
-import { Button, message, Tag } from 'antd'
-import React, { useRef, useState } from 'react'
-import FileUploadModal from '@/components/FileUploadModal'
-import TemporaryUrlPreviewModal from '@/components/TemporaryUrlPreviewModal'
-import TableActionMenu from '@/components/TableActionMenu'
-import DocumentVersionHistoryDrawer from './components/DocumentVersionHistoryDrawer'
-import { getKnowledgeBaseContext } from './query'
+} from '@ant-design/pro-components';
+import { history, useAccess, useIntl, useLocation } from '@@/exports';
+import { Button, message, Tag } from 'antd';
+import React, { useRef, useState } from 'react';
+import FileUploadModal from '@/components/FileUploadModal';
+import TemporaryUrlPreviewModal from '@/components/TemporaryUrlPreviewModal';
+import TableActionMenu from '@/components/TableActionMenu';
+import DocumentVersionHistoryDrawer from './components/DocumentVersionHistoryDrawer';
+import { getKnowledgeBaseContext } from './query';
 
 const KnowledgeDocumentPage: React.FC = () => {
-  const actionRef = useRef<ActionType>()
-  const formRef = useRef<ProFormInstance>()
-  const location = useLocation()
-  const intl = useIntl()
-  const knowledgeBase = getKnowledgeBaseContext(location.search)
-  const [formOpen, setFormOpen] = useState(false)
-  const [documentId, setDocumentId] = useState<string>()
+  const actionRef = useRef<ActionType>();
+  const formRef = useRef<ProFormInstance>();
+  const location = useLocation();
+  const intl = useIntl();
+  const knowledgeBase = getKnowledgeBaseContext(location.search);
+  const [formOpen, setFormOpen] = useState(false);
+  const [documentId, setDocumentId] = useState<string>();
   // 编辑时使用记录自身的知识库，避免“全部文档”查询下缺少筛选上下文。
-  const [formKnowledgeBaseId, setFormKnowledgeBaseId] = useState<string>()
-  const [reindexingId, setReindexingId] = useState<string>()
-  const [versionDocument, setVersionDocument] = useState<Document>()
-  const access = useAccess()
-  const canWrite = access['/knowledge/document']
+  const [formKnowledgeBaseId, setFormKnowledgeBaseId] = useState<string>();
+  const [reindexingId, setReindexingId] = useState<string>();
+  const [versionDocument, setVersionDocument] = useState<Document>();
+  const access = useAccess();
+  const canWrite = access['/knowledge/document'];
 
-  const reload = () => actionRef.current?.reload()
+  const reload = () => actionRef.current?.reload();
 
   const reindex = async (record: Document) => {
-    if (!record.id) return
-    setReindexingId(record.id)
+    if (!record.id) return;
+    setReindexingId(record.id);
     try {
-      const response = await reindexDocument(record.id)
+      const response = await reindexDocument(record.id);
       if (response.code === 200) {
         message.success(
           response.message || intl.formatMessage({ id: 'pages.knowledge.document.reindexQueued' }),
-        )
-        reload()
+        );
+        reload();
       } else {
         message.error(
           response.message || intl.formatMessage({ id: 'pages.knowledge.document.reindexFailed' }),
-        )
+        );
       }
     } finally {
-      setReindexingId(undefined)
+      setReindexingId(undefined);
     }
-  }
+  };
 
   const columns: any[] = [
     {
@@ -78,16 +78,16 @@ const KnowledgeDocumentPage: React.FC = () => {
       dataIndex: 'knowledgeBaseId',
       valueType: 'select',
       request: async () => {
-        const response = await getKnowledgeBaseList({ current: 1, pageSize: 1000 })
+        const response = await getKnowledgeBaseList({ current: 1, pageSize: 1000 });
         return (response.data || [])
           .filter((item) => item.id)
-          .map((item) => ({ label: item.name || item.id, value: item.id }))
+          .map((item) => ({ label: item.name || item.id, value: item.id }));
       },
       fieldProps: {
         showSearch: true,
         optionFilterProp: 'label',
         onChange: (value: string) => {
-          formRef.current?.submit()
+          formRef.current?.submit();
         },
       },
     },
@@ -150,14 +150,14 @@ const KnowledgeDocumentPage: React.FC = () => {
         3: { text: intl.formatMessage({ id: 'pages.knowledge.document.indexStatus.failed' }) },
       },
       render: (_: unknown, record: Document) => {
-        const item = getIndexStatus(record.indexStatus)
+        const item = getIndexStatus(record.indexStatus);
         return (
           <Tag color={record.indexStatus === 3 ? 'error' : item.color}>
             {record.indexStatus === 3
               ? intl.formatMessage({ id: 'pages.knowledge.document.indexStatus.failed' })
               : item.label}
           </Tag>
-        )
+        );
       },
     },
     {
@@ -165,8 +165,8 @@ const KnowledgeDocumentPage: React.FC = () => {
       dataIndex: 'status',
       hideInSearch: true,
       render: (_: unknown, record: Document) => {
-        const item = getDocumentStatus(record.status)
-        return <Tag color={item.color}>{item.label}</Tag>
+        const item = getDocumentStatus(record.status);
+        return <Tag color={item.color}>{item.label}</Tag>;
       },
     },
     {
@@ -188,10 +188,10 @@ const KnowledgeDocumentPage: React.FC = () => {
       fixed: 'right',
       width: 300,
       render: (_: unknown, record: Document) => {
-        if (!canWrite || !record.id) return []
-        const editable = record.reviewStatus === 'DRAFT' || record.reviewStatus === 'AI_REVIEWED'
-        const canReindex = record.reviewStatus === 'APPROVED' || record.indexStatus === 3
-        const canDelete = !['AI_REVIEWING', 'SUBMITTED'].includes(record.reviewStatus || '')
+        if (!canWrite || !record.id) return [];
+        const editable = record.reviewStatus === 'DRAFT' || record.reviewStatus === 'AI_REVIEWED';
+        const canReindex = record.reviewStatus === 'APPROVED' || record.indexStatus === 3;
+        const canDelete = !['AI_REVIEWING', 'SUBMITTED'].includes(record.reviewStatus || '');
         return [
           record.originalFileName ? (
             <TemporaryUrlPreviewModal
@@ -213,10 +213,10 @@ const KnowledgeDocumentPage: React.FC = () => {
                 label: intl.formatMessage({ id: 'pages.knowledge.document.reviewWorkspace' }),
                 primary: true,
                 onClick: () => {
-                  const returnTo = `${location.pathname}${location.search}`
+                  const returnTo = `${location.pathname}${location.search}`;
                   history.push(
                     `/knowledge/document/${record.id}/review?returnTo=${encodeURIComponent(returnTo)}`,
-                  )
+                  );
                 },
               },
               {
@@ -224,9 +224,9 @@ const KnowledgeDocumentPage: React.FC = () => {
                 label: intl.formatMessage({ id: 'pages.knowledge.document.edit' }),
                 visible: editable,
                 onClick: () => {
-                  setDocumentId(record.id)
-                  setFormKnowledgeBaseId(record.knowledgeBaseId)
-                  setFormOpen(true)
+                  setDocumentId(record.id);
+                  setFormKnowledgeBaseId(record.knowledgeBaseId);
+                  setFormOpen(true);
                 },
               },
               {
@@ -250,26 +250,26 @@ const KnowledgeDocumentPage: React.FC = () => {
                   title: intl.formatMessage({ id: 'pages.knowledge.document.deleteConfirm' }),
                 },
                 onClick: async () => {
-                  const response = await deleteDocument(record.id!)
+                  const response = await deleteDocument(record.id!);
                   if (response.code === 200) {
                     message.success(
                       response.message ||
                         intl.formatMessage({ id: 'pages.knowledge.document.deleteSuccess' }),
-                    )
-                    reload()
+                    );
+                    reload();
                   } else
                     message.error(
                       response.message ||
                         intl.formatMessage({ id: 'pages.knowledge.document.deleteFailed' }),
-                    )
+                    );
                 },
               },
             ]}
           />,
-        ]
+        ];
       },
     },
-  ]
+  ];
 
   return (
     <PageContainer
@@ -291,64 +291,64 @@ const KnowledgeDocumentPage: React.FC = () => {
         toolBarRender={() =>
           canWrite
             ? [
-              <FileUploadModal
-                key="upload"
-                accept=".txt,.md,.pdf,.docx"
-                allowedExtensions={['txt', 'md', 'pdf', 'docx']}
-                title={intl.formatMessage({ id: 'pages.knowledge.document.uploadTitle' })}
-                extraFields={
-                  <>
-                    <ProFormSelect
-                      name="selectedKnowledgeBaseId"
-                      label={intl.formatMessage({ id: 'pages.knowledge.document.knowledgeBase' })}
-                      placeholder={intl.formatMessage({
-                        id: 'pages.knowledge.document.selectKnowledgeBase',
-                      })}
-                      rules={[
-                        {
-                          required: true,
-                          message: intl.formatMessage({
-                            id: 'pages.knowledge.document.selectKnowledgeBase',
-                          }),
-                        },
-                      ]}
-                      request={async () => {
-                        const response = await getKnowledgeBaseList({
-                          current: 1,
-                          pageSize: 1000,
-                        })
-                        return (response.data || [])
-                          .filter((item) => item.id)
-                          .map((item) => ({ label: item.name || item.id, value: item.id }))
-                      }}
-                    />
-                    <ProFormText
-                      name="title"
-                      label={intl.formatMessage({ id: 'pages.knowledge.document.documentTitle' })}
-                      placeholder={intl.formatMessage({
-                        id: 'pages.knowledge.document.enterTitle',
-                      })}
-                      rules={[
-                        {
-                          required: true,
-                          message: intl.formatMessage({
-                            id: 'pages.knowledge.document.enterTitle',
-                          }),
-                        },
-                      ]}
-                    />
-                  </>
-                }
-                upload={(file, values) =>
-                  uploadDocument(
+                <FileUploadModal
+                  key="upload"
+                  accept=".txt,.md,.pdf,.docx"
+                  allowedExtensions={['txt', 'md', 'pdf', 'docx']}
+                  title={intl.formatMessage({ id: 'pages.knowledge.document.uploadTitle' })}
+                  extraFields={
+                    <>
+                      <ProFormSelect
+                        name="selectedKnowledgeBaseId"
+                        label={intl.formatMessage({ id: 'pages.knowledge.document.knowledgeBase' })}
+                        placeholder={intl.formatMessage({
+                          id: 'pages.knowledge.document.selectKnowledgeBase',
+                        })}
+                        rules={[
+                          {
+                            required: true,
+                            message: intl.formatMessage({
+                              id: 'pages.knowledge.document.selectKnowledgeBase',
+                            }),
+                          },
+                        ]}
+                        request={async () => {
+                          const response = await getKnowledgeBaseList({
+                            current: 1,
+                            pageSize: 1000,
+                          });
+                          return (response.data || [])
+                            .filter((item) => item.id)
+                            .map((item) => ({ label: item.name || item.id, value: item.id }));
+                        }}
+                      />
+                      <ProFormText
+                        name="title"
+                        label={intl.formatMessage({ id: 'pages.knowledge.document.documentTitle' })}
+                        placeholder={intl.formatMessage({
+                          id: 'pages.knowledge.document.enterTitle',
+                        })}
+                        rules={[
+                          {
+                            required: true,
+                            message: intl.formatMessage({
+                              id: 'pages.knowledge.document.enterTitle',
+                            }),
+                          },
+                        ]}
+                      />
+                    </>
+                  }
+                  upload={(file, values) =>
+                    uploadDocument(
                       values.selectedKnowledgeBaseId as string,
                       file,
                       values.title as string,
-                  )
-                }
-                onSuccess={reload}
-              />,
-            ]
+                    )
+                  }
+                  onSuccess={reload}
+                />,
+              ]
             : []
         }
       />
@@ -367,14 +367,14 @@ const KnowledgeDocumentPage: React.FC = () => {
           open={formOpen}
           setOpen={setFormOpen}
           onSuccess={() => {
-            setDocumentId(undefined)
-            setFormKnowledgeBaseId(undefined)
-            reload()
+            setDocumentId(undefined);
+            setFormKnowledgeBaseId(undefined);
+            reload();
           }}
         />
       )}
     </PageContainer>
-  )
-}
+  );
+};
 
-export default KnowledgeDocumentPage
+export default KnowledgeDocumentPage;

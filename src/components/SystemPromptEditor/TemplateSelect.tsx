@@ -1,46 +1,53 @@
-import React, { useState } from 'react'
-import { useIntl } from '@umijs/max'
-import { Dropdown, Modal, Input, Button, List, Tag, Space, Typography, message } from 'antd'
-import { BookOutlined, PlusOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons'
+import React, { useState } from 'react';
+import { useIntl } from '@umijs/max';
+import { Dropdown, Modal, Input, Button, List, Tag, Space, Typography, message } from 'antd';
+import { BookOutlined, PlusOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import {
   PromptTemplate,
   getAllTemplates,
   saveCustomTemplate,
   deleteCustomTemplate,
-} from './promptTemplates'
+} from './promptTemplates';
 
-const { Text } = Typography
+const { Text } = Typography;
 
 interface TemplateSelectProps {
   onSelect: (content: string) => void;
 }
 
 const TemplateSelect: React.FC<TemplateSelectProps> = ({ onSelect }) => {
-  const intl = useIntl()
-  const [manageOpen, setManageOpen] = useState(false)
-  const [templates, setTemplates] = useState<PromptTemplate[]>(getAllTemplates())
-  const [addOpen, setAddOpen] = useState(false)
-  const [newName, setNewName] = useState('')
-  const [newContent, setNewContent] = useState('')
+  const intl = useIntl();
+  const [manageOpen, setManageOpen] = useState(false);
+  const [templates, setTemplates] = useState<PromptTemplate[]>(getAllTemplates());
+  const [addOpen, setAddOpen] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newContent, setNewContent] = useState('');
 
-  const presetTemplates = templates.filter((t) => t.category === 'preset')
-  const customTemplates = templates.filter((t) => t.category === 'custom')
+  const presetTemplates = templates.filter((t) => t.category === 'preset');
+  const customTemplates = templates.filter((t) => t.category === 'custom');
 
   const handleSelect = (template: PromptTemplate) => {
     Modal.confirm({
       title: intl.formatMessage({ id: 'pages.components.systemPromptEditor.useTemplate' }),
-      content: intl.formatMessage({ id: 'pages.components.systemPromptEditor.confirmUseTemplate' }, { templateName: template.name }),
+      content: intl.formatMessage(
+        { id: 'pages.components.systemPromptEditor.confirmUseTemplate' },
+        { templateName: template.name },
+      ),
       onOk: () => {
-        onSelect(template.content)
-        message.success(intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateApplied' }))
+        onSelect(template.content);
+        message.success(
+          intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateApplied' }),
+        );
       },
-    })
-  }
+    });
+  };
 
   const handleAdd = () => {
     if (!newName.trim() || !newContent.trim()) {
-      message.warning(intl.formatMessage({ id: 'pages.components.systemPromptEditor.pleaseFillCompleteInfo' }))
-      return
+      message.warning(
+        intl.formatMessage({ id: 'pages.components.systemPromptEditor.pleaseFillCompleteInfo' }),
+      );
+      return;
     }
 
     const template: PromptTemplate = {
@@ -48,27 +55,33 @@ const TemplateSelect: React.FC<TemplateSelectProps> = ({ onSelect }) => {
       name: newName,
       category: 'custom',
       content: newContent,
-    }
+    };
 
-    saveCustomTemplate(template)
-    setTemplates(getAllTemplates())
-    setAddOpen(false)
-    setNewName('')
-    setNewContent('')
-    message.success(intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateSaved' }))
-  }
+    saveCustomTemplate(template);
+    setTemplates(getAllTemplates());
+    setAddOpen(false);
+    setNewName('');
+    setNewContent('');
+    message.success(
+      intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateSaved' }),
+    );
+  };
 
   const handleDelete = (id: string) => {
     Modal.confirm({
       title: intl.formatMessage({ id: 'pages.components.systemPromptEditor.deleteTemplateTitle' }),
-      content: intl.formatMessage({ id: 'pages.components.systemPromptEditor.confirmDeleteTemplate' }),
+      content: intl.formatMessage({
+        id: 'pages.components.systemPromptEditor.confirmDeleteTemplate',
+      }),
       onOk: () => {
-        deleteCustomTemplate(id)
-        setTemplates(getAllTemplates())
-        message.success(intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateDeleted' }))
+        deleteCustomTemplate(id);
+        setTemplates(getAllTemplates());
+        message.success(
+          intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateDeleted' }),
+        );
       },
-    })
-  }
+    });
+  };
 
   const menuItems = [
     ...presetTemplates.map((t) => ({
@@ -83,12 +96,14 @@ const TemplateSelect: React.FC<TemplateSelectProps> = ({ onSelect }) => {
       icon: <EditOutlined />,
       onClick: () => setManageOpen(true),
     },
-  ]
+  ];
 
   return (
     <>
       <Dropdown menu={{ items: menuItems }} trigger={['click']}>
-        <Button icon={<BookOutlined />}>{intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateButton' })}</Button>
+        <Button icon={<BookOutlined />}>
+          {intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateButton' })}
+        </Button>
       </Dropdown>
 
       <Modal
@@ -106,7 +121,11 @@ const TemplateSelect: React.FC<TemplateSelectProps> = ({ onSelect }) => {
 
         <List
           dataSource={customTemplates}
-          locale={{ emptyText: intl.formatMessage({ id: 'pages.components.systemPromptEditor.noCustomTemplates' }) }}
+          locale={{
+            emptyText: intl.formatMessage({
+              id: 'pages.components.systemPromptEditor.noCustomTemplates',
+            }),
+          }}
           renderItem={(item) => (
             <List.Item
               actions={[
@@ -136,7 +155,12 @@ const TemplateSelect: React.FC<TemplateSelectProps> = ({ onSelect }) => {
         />
 
         <div style={{ marginTop: 24 }}>
-          <Text type="secondary">{intl.formatMessage({ id: 'pages.components.systemPromptEditor.presetTemplates' }, { count: presetTemplates.length })}</Text>
+          <Text type="secondary">
+            {intl.formatMessage(
+              { id: 'pages.components.systemPromptEditor.presetTemplates' },
+              { count: presetTemplates.length },
+            )}
+          </Text>
           <List
             size="small"
             dataSource={presetTemplates}
@@ -165,26 +189,34 @@ const TemplateSelect: React.FC<TemplateSelectProps> = ({ onSelect }) => {
       >
         <Space direction="vertical" style={{ width: '100%' }}>
           <div>
-            <Text>{intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateName' })}</Text>
+            <Text>
+              {intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateName' })}
+            </Text>
             <Input
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              placeholder={intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateNamePlaceholder' })}
+              placeholder={intl.formatMessage({
+                id: 'pages.components.systemPromptEditor.templateNamePlaceholder',
+              })}
             />
           </div>
           <div>
-            <Text>{intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateContent' })}</Text>
+            <Text>
+              {intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateContent' })}
+            </Text>
             <Input.TextArea
               value={newContent}
               onChange={(e) => setNewContent(e.target.value)}
-              placeholder={intl.formatMessage({ id: 'pages.components.systemPromptEditor.templateContentPlaceholder' })}
+              placeholder={intl.formatMessage({
+                id: 'pages.components.systemPromptEditor.templateContentPlaceholder',
+              })}
               autoSize={{ minRows: 8, maxRows: 16 }}
             />
           </div>
         </Space>
       </Modal>
     </>
-  )
-}
+  );
+};
 
-export default TemplateSelect
+export default TemplateSelect;

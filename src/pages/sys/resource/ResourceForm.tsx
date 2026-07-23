@@ -1,21 +1,21 @@
-import React, { useState } from 'react'
-import DrawerForm from '@/components/DrawerForm'
-import { useIntl } from '@umijs/max'
-import { Form, message } from 'antd'
+import React, { useState } from 'react';
+import DrawerForm from '@/components/DrawerForm';
+import { useIntl } from '@umijs/max';
+import { Form, message } from 'antd';
 import {
   ProFormRadio,
   ProFormSelect,
   ProFormText,
   ProFormTextArea,
-} from '@ant-design/pro-components'
-import { ProFormDependency } from '@ant-design/pro-form'
+} from '@ant-design/pro-components';
+import { ProFormDependency } from '@ant-design/pro-form';
 import {
   addResourceInfo,
   getResourceInfo,
   getResourceOptions,
   updateResourceInfo,
-} from '@/services/sys/ResourceController'
-import { ResourceSearchParams } from '@/services/entity/Sys'
+} from '@/services/sys/ResourceController';
+import { ResourceSearchParams } from '@/services/entity/Sys';
 
 const ResourceForm = (props: {
   id: any;
@@ -23,50 +23,50 @@ const ResourceForm = (props: {
   setOpen?: (open: boolean) => void;
   onSuccess: () => void;
 }) => {
-  const { id, open, setOpen, onSuccess } = props
-  const [form] = Form.useForm()
-  const intl = useIntl()
-  const [readOnly, setReadOnly] = useState(false)
+  const { id, open, setOpen, onSuccess } = props;
+  const [form] = Form.useForm();
+  const intl = useIntl();
+  const [readOnly, setReadOnly] = useState(false);
   return (
     <DrawerForm
       readonly={readOnly}
       id={id}
       request={async (params: ResourceSearchParams) => {
         try {
-          const res = await getResourceInfo(params)
+          const res = await getResourceInfo(params);
           if (res.data?.type !== 'Resource_Type_Route') {
-            setReadOnly(true)
+            setReadOnly(true);
           }
-          return res
+          return res;
         } catch {
           message.error(
             intl.formatMessage({ id: 'pages.common.load.failed', defaultMessage: '加载失败' }),
-          )
+          );
           return {
             data: {},
             success: false,
             code: 500,
-          }
+          };
         }
       }}
       open={open}
       setOpen={(open) => {
         if (open!) {
-          setReadOnly(false)
+          setReadOnly(false);
         }
         if (setOpen) {
-          setOpen(open)
+          setOpen(open);
         }
       }}
       onSuccess={async (values: any) => {
-        values.type = 'Resource_Type_Route'
+        values.type = 'Resource_Type_Route';
         if (id) {
-          await updateResourceInfo(values)
+          await updateResourceInfo(values);
         } else {
-          await addResourceInfo(values)
+          await addResourceInfo(values);
         }
-        onSuccess()
-        return true
+        onSuccess();
+        return true;
       }}
       form={form}
     >
@@ -79,9 +79,9 @@ const ResourceForm = (props: {
         rules={[{ required: true }]}
         request={async () => {
           try {
-            return await getResourceOptions()
+            return await getResourceOptions();
           } catch {
-            return []
+            return [];
           }
         }}
       />
@@ -126,7 +126,7 @@ const ResourceForm = (props: {
               required={leaf}
               rules={[{ required: leaf }]}
             />
-          )
+          );
         }}
       </ProFormDependency>
       <ProFormText name="icon" label={intl.formatMessage({ id: 'pages.sys.resource.menu.icon' })} />
@@ -140,6 +140,6 @@ const ResourceForm = (props: {
         label={intl.formatMessage({ id: 'pages.common.description' })}
       />
     </DrawerForm>
-  )
-}
-export default ResourceForm
+  );
+};
+export default ResourceForm;

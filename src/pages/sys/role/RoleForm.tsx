@@ -1,10 +1,10 @@
-import React from 'react'
-import DrawerForm from '@/components/DrawerForm'
-import { request, useIntl } from '@umijs/max'
-import { Form } from 'antd'
-import { ProFormText, ProFormTextArea } from '@ant-design/pro-components'
-import { addRoleInfo, getRoleInfo, updateRoleInfo } from '@/services/sys/RoleController'
-import { RoleSearchParams } from '@/services/entity/Sys'
+import React from 'react';
+import DrawerForm from '@/components/DrawerForm';
+import { request, useIntl } from '@umijs/max';
+import { Form } from 'antd';
+import { ProFormText, ProFormTextArea } from '@ant-design/pro-components';
+import { addRoleInfo, getRoleInfo, updateRoleInfo } from '@/services/sys/RoleController';
+import { RoleSearchParams } from '@/services/entity/Sys';
 
 const RoleForm = (props: {
   id: any;
@@ -12,9 +12,9 @@ const RoleForm = (props: {
   setOpen?: (open: boolean) => void;
   onSuccess: () => void;
 }) => {
-  const { id, open, setOpen, onSuccess } = props
-  const [form] = Form.useForm()
-  const intl = useIntl()
+  const { id, open, setOpen, onSuccess } = props;
+  const [form] = Form.useForm();
+  const intl = useIntl();
   return (
     <DrawerForm
       request={async (params: RoleSearchParams) => getRoleInfo(params)}
@@ -23,12 +23,12 @@ const RoleForm = (props: {
       setOpen={setOpen}
       onSuccess={async (values: any) => {
         if (id) {
-          await updateRoleInfo(values)
+          await updateRoleInfo(values);
         } else {
-          await addRoleInfo(values)
+          await addRoleInfo(values);
         }
-        onSuccess()
-        return true
+        onSuccess();
+        return true;
       }}
       form={form}
     >
@@ -52,6 +52,6 @@ const RoleForm = (props: {
         }}
       />
     </DrawerForm>
-  )
-}
-export default RoleForm
+  );
+};
+export default RoleForm;

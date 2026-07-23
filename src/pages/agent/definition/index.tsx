@@ -1,84 +1,85 @@
-import React, { useRef, useState } from 'react'
-import { PlusOutlined } from '@ant-design/icons'
-import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
-import { Button, message, Modal } from 'antd'
-import { FormattedMessage, history, useAccess, useIntl } from '@@/exports'
-import AgentDefinitionForm from '@/pages/agent/definition/AgentDefinitionForm'
-import AgentToolBinding from '@/pages/agent/definition/AgentToolBinding'
-import AgentKnowledgeBaseBinding from '@/pages/agent/definition/AgentKnowledgeBaseBinding'
+import React, { useRef, useState } from 'react';
+import { PlusOutlined } from '@ant-design/icons';
+import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components';
+import { Button, message, Modal } from 'antd';
+import { FormattedMessage, history, useAccess, useIntl } from '@@/exports';
+import AgentDefinitionForm from '@/pages/agent/definition/AgentDefinitionForm';
+import AgentToolBinding from '@/pages/agent/definition/AgentToolBinding';
+import AgentKnowledgeBaseBinding from '@/pages/agent/definition/AgentKnowledgeBaseBinding';
 import {
   copyAgentDefinitionInfo,
   deleteAgentDefinitionInfo,
   getAgentDefinitionList,
   updateAgentDefinitionStatus,
   getModelProviderList,
-} from '@/services/agent/AgentDefinitionController'
-import { getOptionList } from '@/services/sys/DictController'
-import { AgentDefinition, AgentDefinitionSearchParams } from '@/services/entity/Agent'
-import TableActionMenu from '@/components/TableActionMenu'
+} from '@/services/agent/AgentDefinitionController';
+import { getOptionList } from '@/services/sys/DictController';
+import { AgentDefinition, AgentDefinitionSearchParams } from '@/services/entity/Agent';
+import TableActionMenu from '@/components/TableActionMenu';
 
 const AgentDefinitionPage: React.FC = () => {
-  const [open, setOpen] = useState(false)
-  const [id, setId] = useState<string | undefined>(undefined)
-  const ref = useRef<ActionType>()
-  const permissionMap = useAccess()
-  const path = history.location.pathname
-  const write = permissionMap[path]
-  const intl = useIntl()
-  const format = (id: string, values?: Record<string, string>) => intl.formatMessage({ id }, values)
+  const [open, setOpen] = useState(false);
+  const [id, setId] = useState<string | undefined>(undefined);
+  const ref = useRef<ActionType>();
+  const permissionMap = useAccess();
+  const path = history.location.pathname;
+  const write = permissionMap[path];
+  const intl = useIntl();
+  const format = (id: string, values?: Record<string, string>) =>
+    intl.formatMessage({ id }, values);
 
   // 工具绑定相关状态
-  const [toolBindingVisible, setToolBindingVisible] = useState(false)
-  const [currentAgentId, setCurrentAgentId] = useState<string>('')
-  const [knowledgeBaseBindingVisible, setKnowledgeBaseBindingVisible] = useState(false)
+  const [toolBindingVisible, setToolBindingVisible] = useState(false);
+  const [currentAgentId, setCurrentAgentId] = useState<string>('');
+  const [knowledgeBaseBindingVisible, setKnowledgeBaseBindingVisible] = useState(false);
 
   const handleDelete = async (record: AgentDefinition) => {
     if (!record.id) {
-      message.error(format('pages.agent.definition.missingId'))
-      return
+      message.error(format('pages.agent.definition.missingId'));
+      return;
     }
 
-    const { code, message: msg } = await deleteAgentDefinitionInfo(record.id)
+    const { code, message: msg } = await deleteAgentDefinitionInfo(record.id);
     if (code === 200) {
-      message.success(msg || format('pages.agent.definition.deleteSuccess'))
-      ref.current?.reload()
+      message.success(msg || format('pages.agent.definition.deleteSuccess'));
+      ref.current?.reload();
     } else {
-      message.error(msg || format('pages.agent.definition.deleteFailed'))
+      message.error(msg || format('pages.agent.definition.deleteFailed'));
     }
-  }
+  };
 
   const handleCopy = async (record: AgentDefinition) => {
     if (!record.id) {
-      message.error(format('pages.agent.definition.missingId'))
-      return
+      message.error(format('pages.agent.definition.missingId'));
+      return;
     }
 
-    const { code, message: msg } = await copyAgentDefinitionInfo(record.id)
+    const { code, message: msg } = await copyAgentDefinitionInfo(record.id);
     if (code === 200) {
-      message.success(msg || format('pages.agent.definition.copySuccess'))
-      ref.current?.reload()
+      message.success(msg || format('pages.agent.definition.copySuccess'));
+      ref.current?.reload();
     } else {
-      message.error(msg || format('pages.agent.definition.copyFailed'))
+      message.error(msg || format('pages.agent.definition.copyFailed'));
     }
-  }
+  };
 
   const handleStatusChange = async (record: AgentDefinition) => {
     if (!record.id) {
-      message.error(format('pages.agent.definition.missingId'))
-      return
+      message.error(format('pages.agent.definition.missingId'));
+      return;
     }
 
-    const nextStatus = record.status === 1 ? 2 : 1
+    const nextStatus = record.status === 1 ? 2 : 1;
     const { code, message: msg } = await updateAgentDefinitionStatus(record.id, {
       status: nextStatus,
-    })
+    });
     if (code === 200) {
-      message.success(msg || format('pages.agent.definition.operationSuccess'))
-      ref.current?.reload()
+      message.success(msg || format('pages.agent.definition.operationSuccess'));
+      ref.current?.reload();
     } else {
-      message.error(msg || format('pages.agent.definition.operationFailed'))
+      message.error(msg || format('pages.agent.definition.operationFailed'));
     }
-  }
+  };
 
   const columns: any[] = [
     {
@@ -160,17 +161,66 @@ const AgentDefinitionPage: React.FC = () => {
         write && (
           <TableActionMenu
             items={[
-              { key: 'edit', label: format('pages.common.edit'), primary: true, onClick: () => { setId(record.id); setOpen(true) } },
-              { key: 'binding', label: format('pages.agent.tool.bind'), primary: true, onClick: () => { setCurrentAgentId(record.id || ''); setToolBindingVisible(true) } },
-              { key: 'knowledge-base', label: format('pages.agent.knowledgeBase.name'), onClick: () => { setCurrentAgentId(record.id || ''); setKnowledgeBaseBindingVisible(true) } },
-              { key: 'copy', label: format('pages.agent.definition.copy'), confirm: { title: format('pages.agent.definition.copyConfirm') }, onClick: () => handleCopy(record) },
-              { key: 'status', label: record.status === 1 ? format('pages.common.disabled') : format('pages.common.enabled'), confirm: { title: format('pages.agent.definition.statusConfirm', { action: record.status === 1 ? format('pages.common.disabled') : format('pages.common.enabled') }) }, onClick: () => handleStatusChange(record) },
-              { key: 'delete', label: format('pages.common.delete'), danger: true, confirm: { title: format('pages.agent.definition.deleteConfirm') }, onClick: () => handleDelete(record) },
+              {
+                key: 'edit',
+                label: format('pages.common.edit'),
+                primary: true,
+                onClick: () => {
+                  setId(record.id);
+                  setOpen(true);
+                },
+              },
+              {
+                key: 'binding',
+                label: format('pages.agent.tool.bind'),
+                primary: true,
+                onClick: () => {
+                  setCurrentAgentId(record.id || '');
+                  setToolBindingVisible(true);
+                },
+              },
+              {
+                key: 'knowledge-base',
+                label: format('pages.agent.knowledgeBase.name'),
+                onClick: () => {
+                  setCurrentAgentId(record.id || '');
+                  setKnowledgeBaseBindingVisible(true);
+                },
+              },
+              {
+                key: 'copy',
+                label: format('pages.agent.definition.copy'),
+                confirm: { title: format('pages.agent.definition.copyConfirm') },
+                onClick: () => handleCopy(record),
+              },
+              {
+                key: 'status',
+                label:
+                  record.status === 1
+                    ? format('pages.common.disabled')
+                    : format('pages.common.enabled'),
+                confirm: {
+                  title: format('pages.agent.definition.statusConfirm', {
+                    action:
+                      record.status === 1
+                        ? format('pages.common.disabled')
+                        : format('pages.common.enabled'),
+                  }),
+                },
+                onClick: () => handleStatusChange(record),
+              },
+              {
+                key: 'delete',
+                label: format('pages.common.delete'),
+                danger: true,
+                confirm: { title: format('pages.agent.definition.deleteConfirm') },
+                onClick: () => handleDelete(record),
+              },
             ]}
           />
         ),
     },
-  ]
+  ];
 
   return (
     <PageContainer>
@@ -186,8 +236,8 @@ const AgentDefinitionPage: React.FC = () => {
               icon={<PlusOutlined />}
               type="primary"
               onClick={() => {
-                setId(undefined)
-                setOpen(true)
+                setId(undefined);
+                setOpen(true);
               }}
             >
               <FormattedMessage id="pages.common.new" />
@@ -201,8 +251,8 @@ const AgentDefinitionPage: React.FC = () => {
         open={open}
         setOpen={setOpen}
         onSuccess={() => {
-          setId(undefined)
-          ref.current?.reload()
+          setId(undefined);
+          ref.current?.reload();
         }}
       />
 
@@ -210,8 +260,8 @@ const AgentDefinitionPage: React.FC = () => {
         title={format('pages.agent.definition.toolBindingManagement')}
         open={toolBindingVisible}
         onCancel={() => {
-          setToolBindingVisible(false)
-          setCurrentAgentId('')
+          setToolBindingVisible(false);
+          setCurrentAgentId('');
         }}
         footer={null}
         width={900}
@@ -226,8 +276,8 @@ const AgentDefinitionPage: React.FC = () => {
         title={format('pages.agent.definition.knowledgeBaseBindingManagement')}
         open={knowledgeBaseBindingVisible}
         onCancel={() => {
-          setKnowledgeBaseBindingVisible(false)
-          setCurrentAgentId('')
+          setKnowledgeBaseBindingVisible(false);
+          setCurrentAgentId('');
         }}
         footer={null}
         width={900}
@@ -240,7 +290,7 @@ const AgentDefinitionPage: React.FC = () => {
         />
       </Modal>
     </PageContainer>
-  )
-}
+  );
+};
 
-export default AgentDefinitionPage
+export default AgentDefinitionPage;

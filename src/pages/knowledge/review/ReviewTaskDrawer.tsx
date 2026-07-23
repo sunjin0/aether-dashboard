@@ -1,6 +1,6 @@
-import { DrawerForm, PageContainer } from '@ant-design/pro-components'
-import { Editor } from '@monaco-editor/react'
-import { useIntl, useModel } from '@umijs/max'
+import { DrawerForm, PageContainer } from '@ant-design/pro-components';
+import { Editor } from '@monaco-editor/react';
+import { useIntl, useModel } from '@umijs/max';
 import {
   Alert,
   Button,
@@ -18,19 +18,19 @@ import {
   Tabs,
   Timeline,
   Typography,
-} from 'antd'
-import dayjs from 'dayjs'
-import React, { useEffect, useState } from 'react'
-import { KnowledgeReviewTaskDetail } from '@/services/entity/Agent'
-import { updateDocumentDraft } from '@/services/knowledge/DocumentController'
+} from 'antd';
+import dayjs from 'dayjs';
+import React, { useEffect, useState } from 'react';
+import { KnowledgeReviewTaskDetail } from '@/services/entity/Agent';
+import { updateDocumentDraft } from '@/services/knowledge/DocumentController';
 import {
   approveReviewTask,
   claimReviewTask,
   getReviewTask,
   rejectReviewTask,
-} from '@/services/knowledge/ReviewController'
-import { getAdminList } from '@/services/sys/AdminController'
-import { Admin } from '@/services/entity/Sys'
+} from '@/services/knowledge/ReviewController';
+import { getAdminList } from '@/services/sys/AdminController';
+import { Admin } from '@/services/entity/Sys';
 
 interface Props {
   taskId?: string;
@@ -47,20 +47,20 @@ const ReviewTaskDrawer: React.FC<Props> = ({
   onSuccess,
   presentation = 'drawer',
 }) => {
-  const intl = useIntl()
-  const { initialState } = useModel('@@initialState')
-  const [data, setData] = useState<KnowledgeReviewTaskDetail>()
-  const [comment, setComment] = useState('')
-  const [versionContent, setVersionContent] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [acting, setActing] = useState(false)
-  const [claimedByCurrentUser, setClaimedByCurrentUser] = useState(false)
-  const [userList, setUserList] = useState<Admin[]>([])
+  const intl = useIntl();
+  const { initialState } = useModel('@@initialState');
+  const [data, setData] = useState<KnowledgeReviewTaskDetail>();
+  const [comment, setComment] = useState('');
+  const [versionContent, setVersionContent] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [acting, setActing] = useState(false);
+  const [claimedByCurrentUser, setClaimedByCurrentUser] = useState(false);
+  const [userList, setUserList] = useState<Admin[]>([]);
   const canDecide =
     data?.status === 'claimed' &&
     (claimedByCurrentUser ||
-      String(data.reviewerId || '') === String(initialState?.currentUser?.id || ''))
-  const hasUnsavedChanges = versionContent !== (data?.version?.content || '')
+      String(data.reviewerId || '') === String(initialState?.currentUser?.id || ''));
+  const hasUnsavedChanges = versionContent !== (data?.version?.content || '');
 
   const actionText: Record<string, string> = {
     SUBMITTED: intl.formatMessage({ id: 'pages.knowledge.review.action.submitted' }),
@@ -74,92 +74,92 @@ const ReviewTaskDrawer: React.FC<Props> = ({
       id: 'pages.knowledge.review.action.aiReviewCompleted',
     }),
     AI_REVIEW_FAILED: intl.formatMessage({ id: 'pages.knowledge.review.action.aiReviewFailed' }),
-  }
+  };
 
   const load = async () => {
-    if (!taskId) return
-    setLoading(true)
+    if (!taskId) return;
+    setLoading(true);
     try {
-      setData((await getReviewTask(taskId)).data)
+      setData((await getReviewTask(taskId)).data);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    if (!open || !taskId) return
-    let cancelled = false
-    setClaimedByCurrentUser(false)
-    setComment('')
+    if (!open || !taskId) return;
+    let cancelled = false;
+    setClaimedByCurrentUser(false);
+    setComment('');
     getAdminList({ current: 1, pageSize: 1000 }).then((res) => {
-      if (!cancelled) setUserList(res.data)
-    })
+      if (!cancelled) setUserList(res.data);
+    });
     const loadTask = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
-        const response = await getReviewTask(taskId)
+        const response = await getReviewTask(taskId);
         if (!cancelled) {
-          setData(response.data)
-          setVersionContent(response.data?.version?.content || '')
+          setData(response.data);
+          setVersionContent(response.data?.version?.content || '');
         }
       } finally {
-        if (!cancelled) setLoading(false)
+        if (!cancelled) setLoading(false);
       }
-    }
-    loadTask()
+    };
+    loadTask();
     return () => {
-      cancelled = true
-    }
-  }, [open, taskId])
+      cancelled = true;
+    };
+  }, [open, taskId]);
 
   const saveDraft = async (silent = false) => {
-    if (!hasUnsavedChanges) return true
-    if (!data?.version?.id || !data.version.contentChecksum) return false
+    if (!hasUnsavedChanges) return true;
+    if (!data?.version?.id || !data.version.contentChecksum) return false;
     const updatedVersion = await updateDocumentDraft(
       data.version.id,
       versionContent,
       data.version.contentChecksum,
-    )
-    if (!updatedVersion.data) return false
-    setData((current) => (current ? { ...current, version: updatedVersion.data } : current))
-    if (!silent) message.success('修改已保存')
-    return true
-  }
+    );
+    if (!updatedVersion.data) return false;
+    setData((current) => (current ? { ...current, version: updatedVersion.data } : current));
+    if (!silent) message.success('修改已保存');
+    return true;
+  };
 
   const act = async (kind: 'claim' | 'approve' | 'reject') => {
-    if (!taskId) return
+    if (!taskId) return;
     if (kind === 'reject' && !comment.trim()) {
       message.warning(
         intl.formatMessage({ id: 'pages.knowledge.review.detail.rejectionReasonRequired' }),
-      )
-      return
+      );
+      return;
     }
-    setActing(true)
+    setActing(true);
     try {
-      if (kind === 'approve' && !(await saveDraft(true))) return
+      if (kind === 'approve' && !(await saveDraft(true))) return;
       const response =
         kind === 'claim'
           ? await claimReviewTask(taskId)
           : kind === 'approve'
             ? await approveReviewTask(taskId, comment)
-            : await rejectReviewTask(taskId, comment)
+            : await rejectReviewTask(taskId, comment);
       if (response.code === 200) {
-        message.success(intl.formatMessage({ id: 'pages.knowledge.review.detail.actionSuccess' }))
-        onSuccess()
+        message.success(intl.formatMessage({ id: 'pages.knowledge.review.detail.actionSuccess' }));
+        onSuccess();
         if (kind === 'claim') {
-          setClaimedByCurrentUser(true)
-          setData((current) => (current ? { ...current, status: 'claimed' } : current))
-        } else if (kind === 'approve') onClose()
-        else load()
+          setClaimedByCurrentUser(true);
+          setData((current) => (current ? { ...current, status: 'claimed' } : current));
+        } else if (kind === 'approve') onClose();
+        else load();
       }
     } finally {
-      setActing(false)
+      setActing(false);
     }
-  }
+  };
 
   const renderActionLog = (item: NonNullable<KnowledgeReviewTaskDetail['actionLogs']>[number]) => {
-    const action = item.action ? actionText[item.action] || item.action : '-'
-    const time = item.createdAt ? dayjs(item.createdAt).format('YYYY-MM-DD HH:mm') : '-'
+    const action = item.action ? actionText[item.action] || item.action : '-';
+    const time = item.createdAt ? dayjs(item.createdAt).format('YYYY-MM-DD HH:mm') : '-';
     return (
       <Space direction="vertical" size={2}>
         <Space size="small" wrap>
@@ -172,11 +172,11 @@ const ReviewTaskDrawer: React.FC<Props> = ({
             .join(' · ') || '-'}
         </Typography.Text>
       </Space>
-    )
-  }
+    );
+  };
 
   const title =
-    data?.documentTitle || intl.formatMessage({ id: 'pages.knowledge.review.detail.title' })
+    data?.documentTitle || intl.formatMessage({ id: 'pages.knowledge.review.detail.title' });
   const issueList = (
     <List
       size="small"
@@ -191,9 +191,7 @@ const ReviewTaskDrawer: React.FC<Props> = ({
           <List.Item.Meta
             title={
               <Space>
-                <Tag color={item.severity === 'critical' ? 'red' : 'orange'}>
-                  {item.severity}
-                </Tag>
+                <Tag color={item.severity === 'critical' ? 'red' : 'orange'}>{item.severity}</Tag>
                 {item.title}
               </Space>
             }
@@ -202,12 +200,12 @@ const ReviewTaskDrawer: React.FC<Props> = ({
         </List.Item>
       )}
     />
-  )
+  );
   const actionTimeline = (
     <Timeline
       items={(data?.actionLogs || []).map((item) => ({ children: renderActionLog(item) }))}
     />
-  )
+  );
   const content = (
     <Spin spinning={loading}>
       <Space direction="vertical" size="middle" style={{ width: '100%' }}>
@@ -292,13 +290,13 @@ const ReviewTaskDrawer: React.FC<Props> = ({
         {actionTimeline}
       </Space>
     </Spin>
-  )
+  );
 
   if (presentation === 'page') {
     const handleBack = () => {
       if (!hasUnsavedChanges) {
-        onClose()
-        return
+        onClose();
+        return;
       }
       Modal.confirm({
         title: '存在未保存的修改',
@@ -307,14 +305,14 @@ const ReviewTaskDrawer: React.FC<Props> = ({
         okButtonProps: { danger: true },
         cancelText: '继续编辑',
         onOk: onClose,
-      })
-    }
+      });
+    };
     const statusColor: Record<string, string> = {
       pending: 'warning',
       claimed: 'processing',
       approved: 'success',
       rejected: 'error',
-    }
+    };
     return (
       <PageContainer
         title={title}
@@ -437,11 +435,11 @@ const ReviewTaskDrawer: React.FC<Props> = ({
                           disabled={!hasUnsavedChanges}
                           loading={acting}
                           onClick={async () => {
-                            setActing(true)
+                            setActing(true);
                             try {
-                              await saveDraft()
+                              await saveDraft();
                             } finally {
-                              setActing(false)
+                              setActing(false);
                             }
                           }}
                         >
@@ -473,7 +471,7 @@ const ReviewTaskDrawer: React.FC<Props> = ({
           </Row>
         </Spin>
       </PageContainer>
-    )
+    );
   }
 
   return (
@@ -485,7 +483,7 @@ const ReviewTaskDrawer: React.FC<Props> = ({
     >
       {content}
     </DrawerForm>
-  )
-}
+  );
+};
 
-export default ReviewTaskDrawer
+export default ReviewTaskDrawer;

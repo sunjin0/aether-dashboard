@@ -1,5 +1,5 @@
-import { request } from '@umijs/max'
-import { ResponseStructure } from '@/services/entity/Common'
+import { request } from '@umijs/max';
+import { ResponseStructure } from '@/services/entity/Common';
 /**
  * 查询参数
  * @since 2025-07-23 10:46:11
@@ -37,8 +37,8 @@ export const getMemberList = async (
   return await request('/api/user/member/list', {
     method: 'POST',
     data: params,
-  })
-}
+  });
+};
 /**
  * 查询信息
  * @param params 查询参数
@@ -51,9 +51,9 @@ export const getMemberInfo = async (
   const { data } = await request('/api/user/member/info', {
     method: 'get',
     params: { id: params },
-  })
-  return data
-}
+  });
+  return data;
+};
 /**
  * 新增信息
  * @param params 新增参数
@@ -64,8 +64,8 @@ export const addMemberInfo = async (params: Member) => {
   return request('/api/user/member/add', {
     method: 'post',
     data: params,
-  })
-}
+  });
+};
 /**
  * 修改信息
  * @param params 修改参数
@@ -76,8 +76,8 @@ export const updateMemberInfo = async (params: Member) => {
   return request('/api/user/member/update', {
     method: 'post',
     data: params,
-  })
-}
+  });
+};
 /**
  * 删除信息
  * @param params 删除参数
@@ -88,5 +88,5 @@ export const deleteMemberInfo = async (params: MemberSearchParams) => {
   return request('/api/user/member/delete', {
     method: 'get',
     params: { id: params.id },
-  })
-}
+  });
+};

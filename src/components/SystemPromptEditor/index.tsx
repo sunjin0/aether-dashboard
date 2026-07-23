@@ -1,14 +1,14 @@
-import React, { useState, useCallback, useMemo } from 'react'
-import { useIntl } from '@umijs/max'
-import { Input, Button, Tabs } from 'antd'
-import { RocketOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons'
-import MarkdownText from '@/components/MarkdownText'
-import PromptGenerateModal from './PromptGenerateModal'
-import TemplateSelect from './TemplateSelect'
-import OptimizerButton from './OptimizerButton'
-import './index.less'
+import React, { useState, useCallback, useMemo } from 'react';
+import { useIntl } from '@umijs/max';
+import { Input, Button, Tabs } from 'antd';
+import { RocketOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
+import MarkdownText from '@/components/MarkdownText';
+import PromptGenerateModal from './PromptGenerateModal';
+import TemplateSelect from './TemplateSelect';
+import OptimizerButton from './OptimizerButton';
+import './index.less';
 
-const { TextArea } = Input
+const { TextArea } = Input;
 
 interface SystemPromptEditorProps {
   value?: string;
@@ -19,11 +19,11 @@ interface SystemPromptEditorProps {
 }
 
 const estimateTokens = (text: string): number => {
-  if (!text) return 0
-  const chineseChars = (text.match(/[\u4e00-\u9fa5]/g) || []).length
-  const otherChars = text.length - chineseChars
-  return Math.ceil(chineseChars * 1.5 + otherChars / 4)
-}
+  if (!text) return 0;
+  const chineseChars = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
+  const otherChars = text.length - chineseChars;
+  return Math.ceil(chineseChars * 1.5 + otherChars / 4);
+};
 
 const SystemPromptEditor: React.FC<SystemPromptEditorProps> = ({
   value = '',
@@ -32,44 +32,46 @@ const SystemPromptEditor: React.FC<SystemPromptEditorProps> = ({
   placeholder: placeholderProp,
   disabled,
 }) => {
-  const intl = useIntl()
-  const [generateOpen, setGenerateOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState<string>('edit')
-  const placeholder = placeholderProp ?? intl.formatMessage({ id: 'pages.components.systemPromptEditor.placeholder' })
+  const intl = useIntl();
+  const [generateOpen, setGenerateOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>('edit');
+  const placeholder =
+    placeholderProp ??
+    intl.formatMessage({ id: 'pages.components.systemPromptEditor.placeholder' });
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      onChange?.(e.target.value)
+      onChange?.(e.target.value);
     },
     [onChange],
-  )
+  );
 
   const handleGenerated = useCallback(
     (prompt: string) => {
-      onChange?.(prompt)
+      onChange?.(prompt);
     },
     [onChange],
-  )
+  );
 
   const handleTemplateSelect = useCallback(
     (content: string) => {
-      onChange?.(content)
+      onChange?.(content);
     },
     [onChange],
-  )
+  );
 
   const handleOptimized = useCallback(
     (optimized: string) => {
-      onChange?.(optimized)
+      onChange?.(optimized);
     },
     [onChange],
-  )
+  );
 
   const stats = useMemo(() => {
-    const chars = value?.length || 0
-    const tokens = estimateTokens(value || '')
-    return { chars, tokens }
-  }, [value])
+    const chars = value?.length || 0;
+    const tokens = estimateTokens(value || '');
+    return { chars, tokens };
+  }, [value]);
 
   return (
     <div className="system-prompt-editor-wrapper">
@@ -131,8 +133,18 @@ const SystemPromptEditor: React.FC<SystemPromptEditorProps> = ({
       </div>
 
       <div className="system-prompt-editor-status">
-        <span>{intl.formatMessage({ id: 'pages.components.systemPromptEditor.characters' }, { count: stats.chars })}</span>
-        <span>{intl.formatMessage({ id: 'pages.components.systemPromptEditor.tokens' }, { count: stats.tokens })}</span>
+        <span>
+          {intl.formatMessage(
+            { id: 'pages.components.systemPromptEditor.characters' },
+            { count: stats.chars },
+          )}
+        </span>
+        <span>
+          {intl.formatMessage(
+            { id: 'pages.components.systemPromptEditor.tokens' },
+            { count: stats.tokens },
+          )}
+        </span>
       </div>
 
       <PromptGenerateModal
@@ -142,7 +154,7 @@ const SystemPromptEditor: React.FC<SystemPromptEditorProps> = ({
         agentName={agentName}
       />
     </div>
-  )
-}
+  );
+};
 
-export default SystemPromptEditor
+export default SystemPromptEditor;

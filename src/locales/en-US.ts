@@ -194,8 +194,10 @@ export default {
   'components.agentMessageBubble.copyFailed': 'Copy failed',
   'components.agentMessageBubble.generating': 'Generating...',
   'components.agentMessageBubble.reasoningProcess': 'Reasoning process',
-  'components.agentMessageBubble.reasoningOnly': 'The model returned reasoning only, without a final answer',
+  'components.agentMessageBubble.reasoningOnly':
+    'The model returned reasoning only, without a final answer',
   'components.agentMessageBubble.sources': 'Sources ({count})',
+  'components.agentMessageBubble.similarity': 'Similarity',
   'components.agentMessageBubble.unnamedDocument': 'Untitled document',
   'components.agentMessageBubble.yesterday': 'Yesterday at {time}',
   'components.fileUploadModal.uploadFile': 'Upload file',
@@ -206,7 +208,8 @@ export default {
   'components.fileUploadModal.confirmUpload': 'Upload',
   'components.fileUploadModal.cancel': 'Cancel',
   'components.fileUploadModal.dragHint': 'Click or drag a file here',
-  'components.fileUploadModal.uploadHint': 'Supports {extensions}; each file must not exceed {maxSize} MB',
+  'components.fileUploadModal.uploadHint':
+    'Supports {extensions}; each file must not exceed {maxSize} MB',
   'components.jsonDisplay.empty': 'No content',
   'components.markdownText.thinking': 'Thinking...',
   'components.markdownText.empty': 'No content',
@@ -277,7 +280,8 @@ export default {
   'pages.agent.definition.name': 'Agent Name',
   'pages.agent.definition.code': 'Agent Code',
   'pages.agent.definition.systemPrompt': 'System Prompt',
-  'pages.agent.definition.systemPromptPlaceholder': 'Enter a system prompt, or use AI generation/templates...',
+  'pages.agent.definition.systemPromptPlaceholder':
+    'Enter a system prompt, or use AI generation/templates...',
   'pages.agent.definition.modelProvider': 'Model Provider',
   'pages.agent.definition.model': 'Model Name',
   'pages.agent.definition.temperature': 'Temperature',
@@ -562,7 +566,8 @@ export default {
   'pages.knowledge.base.delete': 'Delete',
   'pages.knowledge.base.deleteConfirm': 'Delete this knowledge base?',
   'pages.knowledge.base.deleteSuccess': 'Deleted successfully',
-  'pages.knowledge.base.indexingInfo': 'Enabled and indexed knowledge bases will automatically participate in related Agent responses. Adding, editing, and rebuilding indexes will trigger embedding synchronously and may take a while.',
+  'pages.knowledge.base.indexingInfo':
+    'Enabled and indexed knowledge bases will automatically participate in related Agent responses. Adding, editing, and rebuilding indexes will trigger embedding synchronously and may take a while.',
   'pages.knowledge.base.create': 'New Knowledge Base',
   'pages.knowledge.base.form.basicInfo': 'Basic Information',
   'pages.knowledge.base.form.scope': 'Knowledge Base Scope',
@@ -578,16 +583,19 @@ export default {
   'pages.knowledge.base.form.retrievalConfig': 'Retrieval Configuration',
   'pages.knowledge.base.form.embeddingProvider': 'Embedding Provider',
   'pages.knowledge.base.form.selectEmbeddingProvider': 'Please select an embedding provider',
-  'pages.knowledge.base.form.retrievalConfigTooltip': 'Keep the existing backend configuration format',
+  'pages.knowledge.base.form.retrievalConfigTooltip':
+    'Keep the existing backend configuration format',
   'pages.knowledge.base.form.reviewPolicy': 'Review Policy',
   'pages.knowledge.base.form.autoAiReview': 'Auto-initiate AI review after creation',
   'pages.knowledge.base.form.aiReviewRequired': 'AI review must be completed before submission',
   'pages.knowledge.base.form.blockOnCriticalIssues': 'Block submission on critical issues',
   'pages.knowledge.base.form.requireDifferentApprover': 'Submitter and approver must be different',
   'pages.knowledge.base.form.reviewModelProvider': 'AI Review Model Provider',
-  'pages.knowledge.base.form.selectReviewModelProvider': 'Please select a non-Embedding model provider',
+  'pages.knowledge.base.form.selectReviewModelProvider':
+    'Please select a non-Embedding model provider',
   'pages.knowledge.base.form.reviewModel': 'Review Model',
-  'pages.knowledge.base.form.reviewModelPlaceholder': 'Leave empty to use the provider default model',
+  'pages.knowledge.base.form.reviewModelPlaceholder':
+    'Leave empty to use the provider default model',
   'pages.knowledge.base.form.status': 'Status',
   'pages.knowledge.base.form.status.enabled': 'Enabled',
   'pages.knowledge.base.form.status.disabled': 'Disabled',
@@ -614,7 +622,8 @@ export default {
   'pages.knowledge.document.indexStatus.failed': 'Failed',
   'pages.knowledge.document.processingStatus': 'Processing Status',
   'pages.knowledge.document.indexError': 'Index Error',
-  'pages.knowledge.document.reindexQueued': 'Reindex job queued. The document will be available for chat once complete.',
+  'pages.knowledge.document.reindexQueued':
+    'Reindex job queued. The document will be available for chat once complete.',
   'pages.knowledge.document.reindexFailed': 'Reindex failed',
   'pages.knowledge.document.filePreview': 'File Preview',
   'pages.knowledge.document.preview': 'Preview',
@@ -636,7 +645,8 @@ export default {
   'pages.knowledge.document.versionHistory.indexError': 'Index Error',
   'pages.knowledge.document.versionHistory.viewChunks': 'View Chunks',
   'pages.knowledge.document.versionHistory.rollback': 'Rollback to this version',
-  'pages.knowledge.document.versionHistory.rollbackConfirm': 'Rollback to this version and re-index?',
+  'pages.knowledge.document.versionHistory.rollbackConfirm':
+    'Rollback to this version and re-index?',
   'pages.knowledge.document.versionHistory.rollbackQueued': 'Rollback job queued',
   'pages.knowledge.document.versionHistory.rollbackFailed': 'Rollback failed',
   'pages.knowledge.document.chunks.title': 'Chunk Details',
@@ -711,52 +721,70 @@ export default {
   'pages.knowledge.review.diffWorkspace.title': 'AI Review Diff',
   'pages.knowledge.review.diffWorkspace.back': 'Back to Documents',
   'pages.knowledge.review.diffWorkspace.refresh': 'Refresh',
-  'pages.knowledge.review.diffWorkspace.error.conflict': 'Document or review status has changed, reloaded latest data',
-  'pages.knowledge.review.diffWorkspace.error.notFound': 'Review record or document version not found',
-  'pages.knowledge.review.diffWorkspace.error.badRequest': 'Incomplete request parameters, please refresh and retry',
+  'pages.knowledge.review.diffWorkspace.error.conflict':
+    'Document or review status has changed, reloaded latest data',
+  'pages.knowledge.review.diffWorkspace.error.notFound':
+    'Review record or document version not found',
+  'pages.knowledge.review.diffWorkspace.error.badRequest':
+    'Incomplete request parameters, please refresh and retry',
   'pages.knowledge.review.diffWorkspace.error.unknown': 'Operation incomplete, please retry later',
   'pages.knowledge.review.diffWorkspace.acceptSuccess': 'Suggestion accepted',
   'pages.knowledge.review.diffWorkspace.ignoreSuccess': 'Suggestion ignored',
   'pages.knowledge.review.diffWorkspace.unacceptSuccess': 'Acceptance undone',
   'pages.knowledge.review.diffWorkspace.batchAcceptSuccess': 'Batch accepted successfully',
-  'pages.knowledge.review.diffWorkspace.applySuccess': 'Accepted changes applied, continue processing remaining issues or edit content',
+  'pages.knowledge.review.diffWorkspace.applySuccess':
+    'Accepted changes applied, continue processing remaining issues or edit content',
   'pages.knowledge.review.diffWorkspace.submitSuccess': 'Submitted for approval',
   'pages.knowledge.review.diffWorkspace.submitFailed': 'Failed to submit for approval',
   'pages.knowledge.review.diffWorkspace.state.draft': 'Draft',
-  'pages.knowledge.review.diffWorkspace.state.draftDesc': 'Changes applied, you may continue editing or re-run AI review.',
+  'pages.knowledge.review.diffWorkspace.state.draftDesc':
+    'Changes applied, you may continue editing or re-run AI review.',
   'pages.knowledge.review.diffWorkspace.state.reviewing': 'AI Reviewing',
-  'pages.knowledge.review.diffWorkspace.state.reviewingDesc': 'Review in progress, refresh the page when done.',
+  'pages.knowledge.review.diffWorkspace.state.reviewingDesc':
+    'Review in progress, refresh the page when done.',
   'pages.knowledge.review.diffWorkspace.state.refreshStatus': 'Refresh Status',
   'pages.knowledge.review.diffWorkspace.state.submitted': 'Pending Approval',
-  'pages.knowledge.review.diffWorkspace.state.submittedDesc': 'Document is read-only during approval.',
+  'pages.knowledge.review.diffWorkspace.state.submittedDesc':
+    'Document is read-only during approval.',
   'pages.knowledge.review.diffWorkspace.state.approved': 'Approved',
-  'pages.knowledge.review.diffWorkspace.state.approvedDesc': 'Use the publish or index entry point.',
+  'pages.knowledge.review.diffWorkspace.state.approvedDesc':
+    'Use the publish or index entry point.',
   'pages.knowledge.review.diffWorkspace.state.rejected': 'Rejected',
-  'pages.knowledge.review.diffWorkspace.state.rejectedDesc': 'Please modify the document and restart the review process.',
+  'pages.knowledge.review.diffWorkspace.state.rejectedDesc':
+    'Please modify the document and restart the review process.',
   'pages.knowledge.review.diffWorkspace.state.noResult': 'No AI review results available',
   'pages.knowledge.review.diffWorkspace.state.failed': 'AI Review Failed',
   'pages.knowledge.review.diffWorkspace.state.failedDesc': 'Please re-run the review.',
   'pages.knowledge.review.diffWorkspace.state.rerun': 'Re-run Review',
-  'pages.knowledge.review.diffWorkspace.alert.changed': 'Document content has changed, reloaded to latest review result',
-  'pages.knowledge.review.diffWorkspace.alert.appliedSaved': 'Changes saved as draft, you may continue editing or re-run AI review',
-  'pages.knowledge.review.diffWorkspace.alert.staleTitle': 'Document has changed, suggestions are stale',
-  'pages.knowledge.review.diffWorkspace.alert.staleDesc': 'Current diff kept for reference only; accept and reject actions are disabled.',
+  'pages.knowledge.review.diffWorkspace.alert.changed':
+    'Document content has changed, reloaded to latest review result',
+  'pages.knowledge.review.diffWorkspace.alert.appliedSaved':
+    'Changes saved as draft, you may continue editing or re-run AI review',
+  'pages.knowledge.review.diffWorkspace.alert.staleTitle':
+    'Document has changed, suggestions are stale',
+  'pages.knowledge.review.diffWorkspace.alert.staleDesc':
+    'Current diff kept for reference only; accept and reject actions are disabled.',
   'pages.knowledge.review.diffWorkspace.alert.noPending': 'No pending AI review issues.',
   'pages.knowledge.review.replacementEditor.title': 'Accept Suggestion',
   'pages.knowledge.review.replacementEditor.okText': 'Confirm Accept',
-  'pages.knowledge.review.replacementEditor.placeholder': 'Adjust the replacement text as needed; leave empty to use the server suggestion',
+  'pages.knowledge.review.replacementEditor.placeholder':
+    'Adjust the replacement text as needed; leave empty to use the server suggestion',
   'pages.knowledge.review.diffToolbar.submitReview': 'Submit for Approval',
   'pages.knowledge.review.diffToolbar.submitConfirmTitle': 'Submit for Approval',
-  'pages.knowledge.review.diffToolbar.submitConfirmDesc': 'The document will enter the approval workflow and become read-only during review.',
+  'pages.knowledge.review.diffToolbar.submitConfirmDesc':
+    'The document will enter the approval workflow and become read-only during review.',
   'pages.knowledge.review.diffToolbar.submitOkText': 'Confirm Submit',
   'pages.knowledge.review.diffToolbar.cancelText': 'Cancel',
   'pages.knowledge.review.diffToolbar.batchAcceptTitle': 'Batch Accept',
-  'pages.knowledge.review.diffToolbar.batchAcceptDesc': 'Batch accept {count} non-critical suggestions. This only saves the status, it will not immediately write to the draft.',
+  'pages.knowledge.review.diffToolbar.batchAcceptDesc':
+    'Batch accept {count} non-critical suggestions. This only saves the status, it will not immediately write to the draft.',
   'pages.knowledge.review.diffToolbar.batchAcceptOkText': 'Confirm Accept',
   'pages.knowledge.review.diffToolbar.batchAcceptButton': 'Batch Accept {count}',
   'pages.knowledge.review.diffToolbar.applyTitle': 'Apply Accepted Changes',
-  'pages.knowledge.review.diffToolbar.applyDesc1': 'All accepted suggestions will be written at once. The document version will be converted to draft.',
-  'pages.knowledge.review.diffToolbar.applyDesc2': 'The system will not automatically start a new AI review.',
+  'pages.knowledge.review.diffToolbar.applyDesc1':
+    'All accepted suggestions will be written at once. The document version will be converted to draft.',
+  'pages.knowledge.review.diffToolbar.applyDesc2':
+    'The system will not automatically start a new AI review.',
   'pages.knowledge.review.diffToolbar.applyOkText': 'Confirm Apply',
   'pages.knowledge.review.diffToolbar.applyButton': 'Apply {count} accepted change(s)',
   'pages.knowledge.review.diffToolbar.rerunButton': 'Run AI review again',
@@ -780,10 +808,12 @@ export default {
   'pages.knowledge.review.issueList.status.rejected': 'Ignored',
   'pages.knowledge.review.issueList.unaccept': 'Undo Accept',
   'pages.knowledge.review.issueList.accept': 'Accept',
-  'pages.knowledge.review.issueList.noPatchTooltip': 'This suggestion has no auto-applicable patch. Please manually modify the document or ignore it.',
+  'pages.knowledge.review.issueList.noPatchTooltip':
+    'This suggestion has no auto-applicable patch. Please manually modify the document or ignore it.',
   'pages.knowledge.review.issueList.view': 'View',
   'pages.knowledge.review.issueList.reject': 'Ignore',
-  'pages.knowledge.review.issueList.noPatchTip': 'This suggestion has no auto-applicable patch. Please manually modify the document or ignore it.',
+  'pages.knowledge.review.issueList.noPatchTip':
+    'This suggestion has no auto-applicable patch. Please manually modify the document or ignore it.',
   'pages.knowledge.review.issueList.empty': 'No issues found',
   'pages.knowledge.review.action.submitted': 'Submitted',
   'pages.knowledge.review.action.claimed': 'Claimed',
@@ -809,12 +839,15 @@ export default {
 
   // System Prompt Editor - TemplateSelect
   'pages.components.systemPromptEditor.useTemplate': 'Use Template',
-  'pages.components.systemPromptEditor.confirmUseTemplate': 'Are you sure you want to use the "{templateName}" template? The current content will be replaced.',
+  'pages.components.systemPromptEditor.confirmUseTemplate':
+    'Are you sure you want to use the "{templateName}" template? The current content will be replaced.',
   'pages.components.systemPromptEditor.templateApplied': 'Template applied',
-  'pages.components.systemPromptEditor.pleaseFillCompleteInfo': 'Please fill in the complete information',
+  'pages.components.systemPromptEditor.pleaseFillCompleteInfo':
+    'Please fill in the complete information',
   'pages.components.systemPromptEditor.templateSaved': 'Template saved',
   'pages.components.systemPromptEditor.deleteTemplateTitle': 'Delete Template',
-  'pages.components.systemPromptEditor.confirmDeleteTemplate': 'Are you sure you want to delete this custom template?',
+  'pages.components.systemPromptEditor.confirmDeleteTemplate':
+    'Are you sure you want to delete this custom template?',
   'pages.components.systemPromptEditor.templateDeleted': 'Template deleted',
   'pages.components.systemPromptEditor.manageTemplates': 'Manage Templates',
   'pages.components.systemPromptEditor.templateButton': 'Template',
@@ -830,11 +863,14 @@ export default {
 
   // System Prompt Editor - PromptGenerateModal
   'pages.components.systemPromptEditor.generateTitle': 'AI Generate System Prompt',
-  'pages.components.systemPromptEditor.generateDescription': 'Chat with AI to gradually generate and refine your system prompt',
+  'pages.components.systemPromptEditor.generateDescription':
+    'Chat with AI to gradually generate and refine your system prompt',
   'pages.components.systemPromptEditor.selectGenerateAgent': 'Select agent for generation',
   'pages.components.systemPromptEditor.noAvailableAgents': 'No available agents',
-  'pages.components.systemPromptEditor.describeAssistant': 'Describe the AI assistant you need to start generating prompts',
-  'pages.components.systemPromptEditor.inputMessagePlaceholder': 'Enter message... (Enter to send, Shift+Enter for new line)',
+  'pages.components.systemPromptEditor.describeAssistant':
+    'Describe the AI assistant you need to start generating prompts',
+  'pages.components.systemPromptEditor.inputMessagePlaceholder':
+    'Enter message... (Enter to send, Shift+Enter for new line)',
   'pages.components.systemPromptEditor.selectAgentFirst': 'Please select an agent first',
   'pages.components.systemPromptEditor.useThisPrompt': 'Use this prompt',
   'pages.components.systemPromptEditor.errorWithMessage': '[Error] {message}',
@@ -844,12 +880,15 @@ export default {
   'pages.components.systemPromptEditor.enterPromptFirst': 'Please enter a prompt first',
   'pages.components.systemPromptEditor.optimize': 'Optimize',
   'pages.components.systemPromptEditor.optimizeTitle': 'Optimize System Prompt',
-  'pages.components.systemPromptEditor.optimizeDescription': 'Chat with AI to gradually optimize your system prompt',
+  'pages.components.systemPromptEditor.optimizeDescription':
+    'Chat with AI to gradually optimize your system prompt',
   'pages.components.systemPromptEditor.selectOptimizeAgent': 'Select agent for optimization',
   'pages.components.systemPromptEditor.originalPrompt': 'Original Prompt',
-  'pages.components.systemPromptEditor.clickToStartOptimize': 'Click "Start Optimization" or input feedback to optimize the prompt',
-  'pages.components.systemPromptEditor.optimizeInputPlaceholder': 'Enter optimization feedback... (Enter to send)',
+  'pages.components.systemPromptEditor.clickToStartOptimize':
+    'Click "Start Optimization" or input feedback to optimize the prompt',
+  'pages.components.systemPromptEditor.optimizeInputPlaceholder':
+    'Enter optimization feedback... (Enter to send)',
   'pages.components.systemPromptEditor.startOptimization': 'Start Optimization',
   'pages.components.systemPromptEditor.useOptimizationResult': 'Use optimization result',
   'pages.components.systemPromptEditor.optimizeFailed': 'Optimization failed',
-}
+};

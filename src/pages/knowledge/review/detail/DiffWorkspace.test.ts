@@ -1,4 +1,4 @@
-import { countUnappliedAcceptedIssues } from './reviewState'
+import { countUnappliedAcceptedIssues } from './reviewState';
 
 describe('countUnappliedAcceptedIssues', () => {
   it('只统计已接受但尚未应用到文档的建议', () => {
@@ -11,8 +11,8 @@ describe('countUnappliedAcceptedIssues', () => {
           appliedChecksum: 'checksum',
         },
       ]),
-    ).toBe(1)
-  })
+    ).toBe(1);
+  });
 
   it('已接受的建议全部应用后允许继续提交审批', () => {
     expect(
@@ -22,6 +22,6 @@ describe('countUnappliedAcceptedIssues', () => {
           appliedChecksum: 'checksum',
         },
       ]),
-    ).toBe(0)
-  })
-})
+    ).toBe(0);
+  });
+});

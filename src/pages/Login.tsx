@@ -1,63 +1,63 @@
-import { ArrowLeftOutlined, LockOutlined, MobileOutlined, UserOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined, LockOutlined, MobileOutlined, UserOutlined } from '@ant-design/icons';
 import {
   LoginForm,
   ProConfigProvider,
   ProFormCaptcha,
   ProFormText,
-} from '@ant-design/pro-components'
-import { Button, message, theme } from 'antd'
-import React, { useState } from 'react'
-import { flushSync } from 'react-dom'
-import { history, request, useIntl, useModel } from '@umijs/max'
-import { Footer } from '@/components'
-import { login, verify } from '@/services/sys/LoginController'
-import './Login.less'
+} from '@ant-design/pro-components';
+import { Button, message, theme } from 'antd';
+import React, { useState } from 'react';
+import { flushSync } from 'react-dom';
+import { history, request, useIntl, useModel } from '@umijs/max';
+import { Footer } from '@/components';
+import { login, verify } from '@/services/sys/LoginController';
+import './Login.less';
 
 export default () => {
-  const { token } = theme.useToken()
-  const [verified, setVerified] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [account, setAccount] = useState('')
-  const { initialState, setInitialState } = useModel('@@initialState')
+  const { token } = theme.useToken();
+  const [verified, setVerified] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [account, setAccount] = useState('');
+  const { initialState, setInitialState } = useModel('@@initialState');
 
-  const intl = useIntl()
-  const isEmailStep = verified
-  const formatMessage = (id: string) => intl.formatMessage({ id })
+  const intl = useIntl();
+  const isEmailStep = verified;
+  const formatMessage = (id: string) => intl.formatMessage({ id });
 
   const getRedirectPath = () => {
-    const redirect = new URLSearchParams(history.location.search).get('redirect')
+    const redirect = new URLSearchParams(history.location.search).get('redirect');
     return redirect && redirect.startsWith('/') && !redirect.startsWith('//')
       ? redirect
-      : '/dashboard'
-  }
+      : '/dashboard';
+  };
 
   const handleFinish = async (values: Record<string, string>) => {
-    setSubmitting(true)
+    setSubmitting(true);
     try {
       if (isEmailStep) {
-        const { data, message: msg } = await login(values)
-        localStorage.setItem('token', data.token)
-        localStorage.setItem('refreshToken', data.refreshToken)
-        message.success(msg)
+        const { data, message: msg } = await login(values);
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        message.success(msg);
         if (initialState?.fetchUserInfo) {
-          const currentUser = await initialState.fetchUserInfo()
+          const currentUser = await initialState.fetchUserInfo();
           flushSync(() => {
-            setInitialState({ ...initialState, currentUser })
-          })
+            setInitialState({ ...initialState, currentUser });
+          });
         }
-        history.push(getRedirectPath())
-        return true
+        history.push(getRedirectPath());
+        return true;
       }
 
-      const { data, message: msg } = await verify(values)
-      message.success(msg)
-      setAccount(values.account)
-      setVerified(data as boolean)
-      return true
+      const { data, message: msg } = await verify(values);
+      message.success(msg);
+      setAccount(values.account);
+      setVerified(data as boolean);
+      return true;
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   return (
     <ProConfigProvider hashed={false}>
@@ -144,33 +144,33 @@ export default () => {
                       statusRender: (value) => {
                         const getStatus = () => {
                           if (value && value.length > 12) {
-                            return 'ok'
+                            return 'ok';
                           }
                           if (value && value.length > 6) {
-                            return 'pass'
+                            return 'pass';
                           }
-                          return 'poor'
-                        }
-                        const status = getStatus()
+                          return 'poor';
+                        };
+                        const status = getStatus();
                         if (status === 'pass') {
                           return (
                             <div style={{ color: token.colorWarning }}>
                               {intl.formatMessage({ id: 'user.login.strength.medium' })}
                             </div>
-                          )
+                          );
                         }
                         if (status === 'ok') {
                           return (
                             <div style={{ color: token.colorSuccess }}>
                               {intl.formatMessage({ id: 'user.login.strength.strong' })}
                             </div>
-                          )
+                          );
                         }
                         return (
                           <div style={{ color: token.colorError }}>
                             {intl.formatMessage({ id: 'user.login.strength.low' })}
                           </div>
-                        )
+                        );
                       },
                     }}
                     placeholder={intl.formatMessage({ id: 'user.login.password.placeholder' })}
@@ -181,9 +181,9 @@ export default () => {
                           if (!value || value.length < 6 || value.length > 20) {
                             return Promise.reject(
                               new Error(intl.formatMessage({ id: 'user.login.password.length' })),
-                            )
+                            );
                           } else {
-                            return Promise.resolve()
+                            return Promise.resolve();
                           }
                         },
                       },
@@ -230,9 +230,9 @@ export default () => {
                     placeholder={intl.formatMessage({ id: 'user.login.captcha.placeholder' })}
                     captchaTextRender={(timing, count) => {
                       if (timing) {
-                        return `${count} ${intl.formatMessage({ id: 'user.login.captcha.msg' })}`
+                        return `${count} ${intl.formatMessage({ id: 'user.login.captcha.msg' })}`;
                       }
-                      return intl.formatMessage({ id: 'user.login.captcha.get' })
+                      return intl.formatMessage({ id: 'user.login.captcha.get' });
                     }}
                     name="verificationCode"
                     rules={[
@@ -250,8 +250,8 @@ export default () => {
                           email: email,
                         },
                         method: 'POST',
-                      })
-                      message.success(result.message)
+                      });
+                      message.success(result.message);
                     }}
                   />
                 </>
@@ -267,5 +267,5 @@ export default () => {
         </div>
       </section>
     </ProConfigProvider>
-  )
-}
+  );
+};

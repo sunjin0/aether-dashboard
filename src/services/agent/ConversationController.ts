@@ -1,5 +1,5 @@
-import { request } from '@umijs/max'
-import { ResponseStructure } from '@/services/entity/Common'
+import { request } from '@umijs/max';
+import { ResponseStructure } from '@/services/entity/Common';
 import {
   AgentConversation,
   AgentConversationSearchParams,
@@ -7,7 +7,7 @@ import {
   AgentMessageSearchParams,
   ConversationLifecycle,
   MessageStatistics,
-} from '@/services/entity/Agent'
+} from '@/services/entity/Agent';
 
 /**
  * @description 获取 Agent 会话列表
@@ -18,8 +18,8 @@ export const getAgentConversationList = async (
   return request('/api/agent/conversation/list', {
     method: 'POST',
     data: params,
-  })
-}
+  });
+};
 
 /**
  * @description 获取 Agent 会话详情
@@ -29,8 +29,8 @@ export const getAgentConversationInfo = async (
 ): Promise<ResponseStructure<AgentConversation>> => {
   return request(`/api/agent/conversation/${id}`, {
     method: 'GET',
-  })
-}
+  });
+};
 
 /**
  * @description 获取 Agent 会话消息列表
@@ -42,8 +42,8 @@ export const getAgentConversationMessages = async (
   return request(`/api/agent/conversation/${id}/messages`, {
     method: 'GET',
     params,
-  })
-}
+  });
+};
 
 /**
  * @description 关闭 Agent 会话
@@ -53,8 +53,8 @@ export const closeAgentConversation = async (
 ): Promise<ResponseStructure<AgentConversation>> => {
   return request(`/api/agent/conversation/${id}/close`, {
     method: 'PUT',
-  })
-}
+  });
+};
 
 /**
  * @description 删除 Agent 会话
@@ -64,8 +64,8 @@ export const deleteAgentConversation = async (
 ): Promise<ResponseStructure<AgentConversation>> => {
   return request(`/api/agent/conversation/${id}`, {
     method: 'DELETE',
-  })
-}
+  });
+};
 
 /**
  * @description 获取会话生命周期信息
@@ -75,8 +75,8 @@ export const getConversationLifecycle = async (
 ): Promise<ResponseStructure<ConversationLifecycle>> => {
   return request(`/api/agent/conversation/${id}/lifecycle`, {
     method: 'GET',
-  })
-}
+  });
+};
 
 /**
  * @description 获取会话消息统计
@@ -86,5 +86,5 @@ export const getConversationStatistics = async (
 ): Promise<ResponseStructure<MessageStatistics>> => {
   return request(`/api/agent/conversation/${id}/statistics`, {
     method: 'GET',
-  })
-}
+  });
+};

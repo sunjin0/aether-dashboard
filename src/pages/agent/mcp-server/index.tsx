@@ -1,17 +1,17 @@
-import McpServerForm from '@/pages/agent/mcp-server/McpServerForm'
+import McpServerForm from '@/pages/agent/mcp-server/McpServerForm';
 import {
   deleteMcpServer,
   discoverMcpServerTools,
   getMcpServerList,
   importMcpServerTools,
   updateMcpServer,
-} from '@/services/agent/McpServerController'
-import { getAgentToolList } from '@/services/agent/ToolController'
-import { getOptionList } from '@/services/sys/DictController'
-import { McpServer, McpServerSearchParams, McpTool } from '@/services/entity/Agent'
-import { PlusOutlined } from '@ant-design/icons'
-import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
-import { FormattedMessage, history, useAccess, useIntl } from '@@/exports'
+} from '@/services/agent/McpServerController';
+import { getAgentToolList } from '@/services/agent/ToolController';
+import { getOptionList } from '@/services/sys/DictController';
+import { McpServer, McpServerSearchParams, McpTool } from '@/services/entity/Agent';
+import { PlusOutlined } from '@ant-design/icons';
+import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components';
+import { FormattedMessage, history, useAccess, useIntl } from '@@/exports';
 import {
   Button,
   Checkbox,
@@ -23,92 +23,92 @@ import {
   Space,
   Tag,
   Typography,
-} from 'antd'
-import React, { useRef, useState } from 'react'
-import JsonDisplay from '@/components/JsonDisplay'
-import TableActionMenu from '@/components/TableActionMenu'
+} from 'antd';
+import React, { useRef, useState } from 'react';
+import JsonDisplay from '@/components/JsonDisplay';
+import TableActionMenu from '@/components/TableActionMenu';
 
 const McpServerPage: React.FC = () => {
-  const intl = useIntl()
-  const ref = useRef<ActionType>()
-  const [open, setOpen] = useState(false)
-  const [id, setId] = useState<string>()
-  const [discoverServer, setDiscoverServer] = useState<McpServer>()
-  const [tools, setTools] = useState<McpTool[]>([])
-  const [selectedTools, setSelectedTools] = useState<React.Key[]>([])
-  const [importedToolNames, setImportedToolNames] = useState<string[]>([])
-  const [schemaTool, setSchemaTool] = useState<McpTool>()
-  const [toolKeyword, setToolKeyword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const permissions = useAccess()
-  const write = permissions[history.location.pathname]
-  const format = (key: string) => intl.formatMessage({ id: key })
+  const intl = useIntl();
+  const ref = useRef<ActionType>();
+  const [open, setOpen] = useState(false);
+  const [id, setId] = useState<string>();
+  const [discoverServer, setDiscoverServer] = useState<McpServer>();
+  const [tools, setTools] = useState<McpTool[]>([]);
+  const [selectedTools, setSelectedTools] = useState<React.Key[]>([]);
+  const [importedToolNames, setImportedToolNames] = useState<string[]>([]);
+  const [schemaTool, setSchemaTool] = useState<McpTool>();
+  const [toolKeyword, setToolKeyword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const permissions = useAccess();
+  const write = permissions[history.location.pathname];
+  const format = (key: string) => intl.formatMessage({ id: key });
 
   const discover = async (server: McpServer) => {
-    if (!server.id) return
-    setLoading(true)
+    if (!server.id) return;
+    setLoading(true);
     try {
       const [{ code, data, message: msg }, imported] = await Promise.all([
         discoverMcpServerTools(server.id),
         getAgentToolList({ current: 1, pageSize: 1000, mcpServerId: server.id }),
-      ])
-      if (code !== 200) return message.error(msg || format('pages.agent.mcpServer.discoverFailed'))
-      setTools(data || [])
-      setImportedToolNames((imported.data || []).flatMap((tool) => tool.mcpToolName || []))
-      setSelectedTools([])
-      setToolKeyword('')
-      setDiscoverServer(server)
+      ]);
+      if (code !== 200) return message.error(msg || format('pages.agent.mcpServer.discoverFailed'));
+      setTools(data || []);
+      setImportedToolNames((imported.data || []).flatMap((tool) => tool.mcpToolName || []));
+      setSelectedTools([]);
+      setToolKeyword('');
+      setDiscoverServer(server);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const visibleTools = tools.filter((tool) => {
-    const keyword = toolKeyword.trim().toLowerCase()
-    return !keyword || `${tool.name} ${tool.description || ''}`.toLowerCase().includes(keyword)
-  })
+    const keyword = toolKeyword.trim().toLowerCase();
+    return !keyword || `${tool.name} ${tool.description || ''}`.toLowerCase().includes(keyword);
+  });
 
   const toggleTool = (tool: McpTool, checked: boolean) => {
     setSelectedTools((current) =>
       checked ? [...current, tool.name] : current.filter((name) => name !== tool.name),
-    )
-  }
+    );
+  };
 
   const selectableToolNames = visibleTools
     .filter((tool) => !importedToolNames.includes(tool.name))
-    .map((tool) => tool.name)
+    .map((tool) => tool.name);
   const allVisibleSelected =
     selectableToolNames.length > 0 &&
-    selectableToolNames.every((name) => selectedTools.includes(name))
+    selectableToolNames.every((name) => selectedTools.includes(name));
   const toggleAllVisibleTools = (checked: boolean) => {
     setSelectedTools((current) => {
-      const visibleNames = new Set(selectableToolNames)
+      const visibleNames = new Set(selectableToolNames);
       return checked
         ? Array.from(new Set([...current, ...selectableToolNames]))
-        : current.filter((name) => !visibleNames.has(name as string))
-    })
-  }
+        : current.filter((name) => !visibleNames.has(name as string));
+    });
+  };
 
   const importTools = async () => {
-    if (!discoverServer?.id) return
+    if (!discoverServer?.id) return;
     if (!selectedTools.length) {
-      message.warning(format('pages.agent.mcpServer.selectTools'))
-      return
+      message.warning(format('pages.agent.mcpServer.selectTools'));
+      return;
     }
-    setLoading(true)
+    setLoading(true);
     try {
       const { code, message: msg } = await importMcpServerTools(
         discoverServer.id,
         selectedTools as string[],
-      )
+      );
       if (code === 200) {
-        message.success(msg || format('pages.agent.mcpServer.importSuccess'))
-        setDiscoverServer(undefined)
-      } else message.error(msg || format('pages.agent.mcpServer.importFailed'))
+        message.success(msg || format('pages.agent.mcpServer.importSuccess'));
+        setDiscoverServer(undefined);
+      } else message.error(msg || format('pages.agent.mcpServer.importFailed'));
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const columns: any[] = [
     { title: format('pages.agent.mcpServer.name'), dataIndex: 'name', ellipsis: true },
@@ -166,7 +166,7 @@ const McpServerPage: React.FC = () => {
                 primary: true,
                 loading: loading,
                 onClick: async () => {
-                  await discover(record)
+                  await discover(record);
                 },
               },
               {
@@ -174,8 +174,8 @@ const McpServerPage: React.FC = () => {
                 label: format('pages.agent.tool.edit'),
                 primary: true,
                 onClick: () => {
-                  setId(record.id)
-                  setOpen(true)
+                  setId(record.id);
+                  setOpen(true);
                 },
               },
               {
@@ -185,20 +185,20 @@ const McpServerPage: React.FC = () => {
                 danger: true,
                 confirm: { title: format('pages.agent.mcpServer.deleteConfirm') },
                 onClick: async () => {
-                  if (!record.id) return
-                  const response = await deleteMcpServer(record.id)
+                  if (!record.id) return;
+                  const response = await deleteMcpServer(record.id);
                   if (response.code === 200) {
-                    message.success(response.message || format('pages.agent.tool.deleteSuccess'))
-                    ref.current?.reload()
+                    message.success(response.message || format('pages.agent.tool.deleteSuccess'));
+                    ref.current?.reload();
                   } else
-                    message.error(response.message || format('pages.agent.mcpServer.deleteFailed'))
+                    message.error(response.message || format('pages.agent.mcpServer.deleteFailed'));
                 },
               },
             ]}
           />
         ),
     },
-  ]
+  ];
 
   return (
     <PageContainer>
@@ -214,8 +214,8 @@ const McpServerPage: React.FC = () => {
               icon={<PlusOutlined />}
               type="primary"
               onClick={() => {
-                setId(undefined)
-                setOpen(true)
+                setId(undefined);
+                setOpen(true);
               }}
             >
               <FormattedMessage id="pages.common.new" />
@@ -228,8 +228,8 @@ const McpServerPage: React.FC = () => {
         open={open}
         setOpen={setOpen}
         onSuccess={() => {
-          setId(undefined)
-          ref.current?.reload()
+          setId(undefined);
+          ref.current?.reload();
         }}
       />
       <Modal
@@ -289,8 +289,8 @@ const McpServerPage: React.FC = () => {
               }}
             >
               {visibleTools.map((tool) => {
-                const imported = importedToolNames.includes(tool.name)
-                const selected = selectedTools.includes(tool.name)
+                const imported = importedToolNames.includes(tool.name);
+                const selected = selectedTools.includes(tool.name);
                 return (
                   <div
                     key={tool.name}
@@ -302,8 +302,8 @@ const McpServerPage: React.FC = () => {
                     onClick={() => !imported && toggleTool(tool, !selected)}
                     onKeyDown={(event) => {
                       if (!imported && (event.key === 'Enter' || event.key === ' ')) {
-                        event.preventDefault()
-                        toggleTool(tool, !selected)
+                        event.preventDefault();
+                        toggleTool(tool, !selected);
                       }
                     }}
                     style={{
@@ -339,8 +339,8 @@ const McpServerPage: React.FC = () => {
                           type="link"
                           style={{ padding: 0, textAlign: 'left' }}
                           onClick={(event) => {
-                            event.stopPropagation()
-                            setSchemaTool(tool)
+                            event.stopPropagation();
+                            setSchemaTool(tool);
                           }}
                         >
                           {format('pages.agent.mcpServer.viewSchema')}
@@ -348,7 +348,7 @@ const McpServerPage: React.FC = () => {
                       </Space>
                     </Space>
                   </div>
-                )
+                );
               })}
             </div>
           ) : (
@@ -386,7 +386,7 @@ const McpServerPage: React.FC = () => {
         </Space>
       </Drawer>
     </PageContainer>
-  )
-}
+  );
+};
 
-export default McpServerPage
+export default McpServerPage;

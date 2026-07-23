@@ -2,7 +2,7 @@ import { PageContainer } from '@ant-design/pro-components'
 import { history, useIntl, useLocation } from '@umijs/max'
 import { Alert, Button, Col, Empty, message, Result, Row, Spin } from 'antd'
 import React, { useEffect, useMemo, useState } from 'react'
-import { AiReviewDiffIssue } from '@/services/entity/Agent'
+import type { AiReviewDiffIssue } from '@/services/entity/Agent'
 import { startAiReview, submitReview } from '@/services/knowledge/ReviewController'
 import ReviewDiffEditor from './components/ReviewDiffEditor'
 import ReviewDiffToolbar from './components/ReviewDiffToolbar'
@@ -10,19 +10,20 @@ import ReviewIssueList from './components/ReviewIssueList'
 import ReplacementEditor from './components/ReplacementEditor'
 import { severityOrder } from './constants'
 import { useAiReviewDiff } from './hooks/useAiReviewDiff'
+import { countUnappliedAcceptedIssues } from './reviewState'
 import { ReviewIssueFilter } from './types'
 import './DiffWorkspace.less'
 
 interface Props {
-  reviewId?: string
-  documentVersionId?: string
-  versionReviewStatus?: string
-  pageTitle?: React.ReactNode
-  pageSubTitle?: React.ReactNode
-  backPath?: string
-  embedded?: boolean
-  onApplied?: () => void
-  onReviewStatusChange?: (status?: string) => void
+  reviewId?: string;
+  documentVersionId?: string;
+  versionReviewStatus?: string;
+  pageTitle?: React.ReactNode;
+  pageSubTitle?: React.ReactNode;
+  backPath?: string;
+  embedded?: boolean;
+  onApplied?: () => void;
+  onReviewStatusChange?: (status?: string) => void;
 }
 
 const DiffWorkspace: React.FC<Props> = ({
@@ -39,29 +40,26 @@ const DiffWorkspace: React.FC<Props> = ({
   const intl = useIntl()
   const errorText = (error: unknown) => {
     const value = error as {
-        response?: { status?: number; data?: { message?: string; code?: number } }
-        status?: number
-        message?: string
-      }
+      response?: { status?: number; data?: { message?: string; code?: number } };
+      status?: number;
+      message?: string;
+    }
     const statusCode = value?.response?.status || value?.status
-    if (statusCode === 409) return intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.error.conflict' })
-    if (statusCode === 404) return intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.error.notFound' })
-    if (statusCode === 400) return intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.error.badRequest' })
-    return value?.message || intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.error.unknown' })
+    if (statusCode === 409)
+      return intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.error.conflict' })
+    if (statusCode === 404)
+      return intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.error.notFound' })
+    if (statusCode === 400)
+      return intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.error.badRequest' })
+    return (
+      value?.message ||
+      intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.error.unknown' })
+    )
   }
   const location = useLocation()
   const reviewId = reviewIdProp || new URLSearchParams(location.search).get('id') || ''
-  const {
-    diff,
-    loading,
-    conflict,
-    refresh,
-    accept,
-    reject,
-    unaccept,
-    acceptBatch,
-    applyAccepted,
-  } = useAiReviewDiff(reviewId)
+  const { diff, loading, conflict, refresh, accept, reject, unaccept, acceptBatch, applyAccepted } =
+    useAiReviewDiff(reviewId)
   const [filter, setFilter] = useState<ReviewIssueFilter>('all')
   const [activeIssue, setActiveIssue] = useState<AiReviewDiffIssue>()
   const [replacementIssue, setReplacementIssue] = useState<AiReviewDiffIssue>()
@@ -101,6 +99,23 @@ const DiffWorkspace: React.FC<Props> = ({
     }
   }, [diff?.reviewStatus, versionReviewStatus, onReviewStatusChange])
 
+  useEffect(() => {
+    const current = issues.find((issue) => issue.id === activeIssue?.id)
+    if (current) {
+      if (current !== activeIssue) setActiveIssue(current)
+      return
+    }
+    setActiveIssue(issues.find((issue) => issue.handleStatus === 'pending') || issues[0])
+  }, [issues, activeIssue])
+
+  const selectNextPendingIssue = (currentId: string) => {
+    const currentIndex = issues.findIndex((issue) => issue.id === currentId)
+    const followingIssues = [...issues.slice(currentIndex + 1), ...issues.slice(0, currentIndex)]
+    setActiveIssue(
+      followingIssues.find((issue) => issue.handleStatus === 'pending') || followingIssues[0],
+    )
+  }
+
   const runAiReview = async () => {
     const targetVersionId = diff?.documentVersionId || documentVersionId
     if (!targetVersionId) return
@@ -118,7 +133,11 @@ const DiffWorkspace: React.FC<Props> = ({
     setBusy(true)
     try {
       await accept(issue, replacement)
-      message.success(intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.acceptSuccess' }))
+      setJustApplied(false)
+      message.success(
+        intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.acceptSuccess' }),
+      )
+      selectNextPendingIssue(issue.id)
     } catch (error) {
       message.error(errorText(error))
     } finally {
@@ -131,7 +150,10 @@ const DiffWorkspace: React.FC<Props> = ({
     setBusy(true)
     try {
       await reject(issue)
-      message.success(intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.ignoreSuccess' }))
+      message.success(
+        intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.ignoreSuccess' }),
+      )
+      selectNextPendingIssue(issue.id)
     } catch (error) {
       message.error(errorText(error))
     } finally {
@@ -143,7 +165,10 @@ const DiffWorkspace: React.FC<Props> = ({
     setBusy(true)
     try {
       await unaccept(issue)
-      message.success(intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.unacceptSuccess' }))
+      setJustApplied(false)
+      message.success(
+        intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.unacceptSuccess' }),
+      )
     } catch (error) {
       message.error(errorText(error))
     } finally {
@@ -155,9 +180,7 @@ const DiffWorkspace: React.FC<Props> = ({
     () =>
       (diff?.issues || []).filter(
         (issue) =>
-          issue.handleStatus === 'pending' &&
-          issue.suggestedPatch &&
-          issue.severity !== 'critical',
+          issue.handleStatus === 'pending' && issue.suggestedPatch && issue.severity !== 'critical',
       ),
     [diff?.issues],
   )
@@ -167,7 +190,10 @@ const DiffWorkspace: React.FC<Props> = ({
     setBusy(true)
     try {
       await acceptBatch(batchAcceptableIssues.map((issue) => issue.id))
-      message.success(intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.batchAcceptSuccess' }))
+      setJustApplied(false)
+      message.success(
+        intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.batchAcceptSuccess' }),
+      )
     } catch (error) {
       message.error(errorText(error))
     } finally {
@@ -181,7 +207,9 @@ const DiffWorkspace: React.FC<Props> = ({
     try {
       const result = await applyAccepted()
       setJustApplied(true)
-      message.success(intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.applySuccess' }))
+      message.success(
+        intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.applySuccess' }),
+      )
       if (result?.reviewStatus) {
         onReviewStatusChange?.(result.reviewStatus)
       }
@@ -200,14 +228,21 @@ const DiffWorkspace: React.FC<Props> = ({
     try {
       const response = await submitReview(targetVersionId)
       if (response.code === 200) {
-        message.success(intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.submitSuccess' }))
+        message.success(
+          intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.submitSuccess' }),
+        )
         if (response.data) {
-          history.push(`/knowledge/review/detail?id=${response.data}`)
+          history.push(
+            `/knowledge/reviews/${response.data}?returnTo=${encodeURIComponent(backPath)}`,
+          )
         } else {
           history.push('/knowledge/reviews')
         }
       } else {
-        message.error(response.message || intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.submitFailed' }))
+        message.error(
+          response.message ||
+            intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.submitFailed' }),
+        )
       }
     } catch (error) {
       message.error(errorText(error))
@@ -219,6 +254,7 @@ const DiffWorkspace: React.FC<Props> = ({
     (status === 'AI_REVIEWED' || status === 'DRAFT') &&
     !busy &&
     (diff?.documentVersionId || documentVersionId)
+  const unappliedAcceptedCount = countUnappliedAcceptedIssues(diff?.issues)
   const stale = !diff || diff.stale || !isDiffAvailable
   const workspaceAlert = conflict
     ? {
@@ -228,13 +264,19 @@ const DiffWorkspace: React.FC<Props> = ({
     : diff?.stale
       ? {
         type: 'warning' as const,
-        message: intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.alert.staleTitle' }),
-        description: intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.alert.staleDesc' }),
+        message: intl.formatMessage({
+          id: 'pages.knowledge.review.diffWorkspace.alert.staleTitle',
+        }),
+        description: intl.formatMessage({
+          id: 'pages.knowledge.review.diffWorkspace.alert.staleDesc',
+        }),
       }
       : justApplied
         ? {
           type: 'success' as const,
-          message: intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.applySuccess' }),
+          message: intl.formatMessage({
+            id: 'pages.knowledge.review.diffWorkspace.applySuccess',
+          }),
           action: (
             <Button size="small" type="primary" onClick={runAiReview}>
               {intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.state.rerun' })}
@@ -248,7 +290,9 @@ const DiffWorkspace: React.FC<Props> = ({
         <Result
           status="info"
           title={intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.state.draft' })}
-          subTitle={intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.state.draftDesc' })}
+          subTitle={intl.formatMessage({
+            id: 'pages.knowledge.review.diffWorkspace.state.draftDesc',
+          })}
           extra={
             <Button type="primary" onClick={() => history.push('/knowledge/document')}>
               {intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.back' })}
@@ -261,10 +305,14 @@ const DiffWorkspace: React.FC<Props> = ({
         <Result
           status="info"
           title={intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.state.reviewing' })}
-          subTitle={intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.state.reviewingDesc' })}
+          subTitle={intl.formatMessage({
+            id: 'pages.knowledge.review.diffWorkspace.state.reviewingDesc',
+          })}
           extra={
             <Button loading={loading} onClick={refresh}>
-              {intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.state.refreshStatus' })}
+              {intl.formatMessage({
+                id: 'pages.knowledge.review.diffWorkspace.state.refreshStatus',
+              })}
             </Button>
           }
         />
@@ -274,7 +322,9 @@ const DiffWorkspace: React.FC<Props> = ({
         <Result
           status="info"
           title={intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.state.submitted' })}
-          subTitle={intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.state.submittedDesc' })}
+          subTitle={intl.formatMessage({
+            id: 'pages.knowledge.review.diffWorkspace.state.submittedDesc',
+          })}
         />
       )
     if (status === 'APPROVED')
@@ -282,7 +332,9 @@ const DiffWorkspace: React.FC<Props> = ({
         <Result
           status="success"
           title={intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.state.approved' })}
-          subTitle={intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.state.approvedDesc' })}
+          subTitle={intl.formatMessage({
+            id: 'pages.knowledge.review.diffWorkspace.state.approvedDesc',
+          })}
         />
       )
     if (status === 'REJECTED')
@@ -290,15 +342,26 @@ const DiffWorkspace: React.FC<Props> = ({
         <Result
           status="error"
           title={intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.state.rejected' })}
-          subTitle={intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.state.rejectedDesc' })}
+          subTitle={intl.formatMessage({
+            id: 'pages.knowledge.review.diffWorkspace.state.rejectedDesc',
+          })}
         />
       )
-    if (!diff) return <Empty description={intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.state.noResult' })} />
+    if (!diff)
+      return (
+        <Empty
+          description={intl.formatMessage({
+            id: 'pages.knowledge.review.diffWorkspace.state.noResult',
+          })}
+        />
+      )
     return (
       <Result
         status="error"
         title={intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.state.failed' })}
-        subTitle={intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.state.failedDesc' })}
+        subTitle={intl.formatMessage({
+          id: 'pages.knowledge.review.diffWorkspace.state.failedDesc',
+        })}
         extra={
           <Button type="primary" loading={busy} onClick={runAiReview}>
             {intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.state.rerun' })}
@@ -309,12 +372,20 @@ const DiffWorkspace: React.FC<Props> = ({
   }
   return (
     <PageContainer
-      title={embedded ? undefined : pageTitle || intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.title' })}
+      title={
+        embedded
+          ? undefined
+          : pageTitle || intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.title' })
+      }
       subTitle={embedded ? undefined : pageSubTitle}
       onBack={embedded ? undefined : () => history.push(backPath)}
-      extra={embedded ? undefined : (
-        <Button onClick={refresh}>{intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.refresh' })}</Button>
-      )}
+      extra={
+        embedded ? undefined : (
+          <Button onClick={refresh}>
+            {intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.refresh' })}
+          </Button>
+        )
+      }
     >
       <Spin spinning={loading && !diff}>
         {workspaceAlert && (
@@ -331,11 +402,13 @@ const DiffWorkspace: React.FC<Props> = ({
             diff={diff}
             busy={busy}
             batchCount={batchAcceptableIssues.length}
-            acceptedCount={diff.acceptedCount}
+            acceptedCount={unappliedAcceptedCount}
             onRerun={runAiReview}
             onBatchAccept={batchAcceptableIssues.length > 0 ? batchAccept : undefined}
             onApplyAccepted={
-              diff.acceptedCount > 0 && !diff.stale && !justApplied ? applyAcceptedChanges : undefined
+              unappliedAcceptedCount > 0 && !diff.stale
+                ? applyAcceptedChanges
+                : undefined
             }
             onSubmit={canSubmit ? submit : undefined}
           />
@@ -348,7 +421,9 @@ const DiffWorkspace: React.FC<Props> = ({
               <Alert
                 type="success"
                 showIcon
-                message={intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.alert.noPending' })}
+                message={intl.formatMessage({
+                  id: 'pages.knowledge.review.diffWorkspace.alert.noPending',
+                })}
                 style={{ marginBottom: 12 }}
               />
             )}
@@ -362,7 +437,7 @@ const DiffWorkspace: React.FC<Props> = ({
                     issues={issues}
                     filter={filter}
                     activeId={activeIssue?.id}
-                    disabled={stale || busy || isReadOnly}
+                    disabled={ isReadOnly}
                     busyId={busy ? replacementIssue?.id : undefined}
                     onFilter={setFilter}
                     onSelect={setActiveIssue}

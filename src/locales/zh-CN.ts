@@ -213,6 +213,8 @@ export default {
   'components.proFormFileUpload.selectFile': '选择文件',
   'components.routeTabs.documentManagement': '文档管理',
   'components.routeTabs.documentDetails': '文档详情',
+  'components.routeTabs.aiReviewWorkspace': 'AI 审阅工作台',
+  'components.routeTabs.humanReview': '人工审批',
   'components.routeTabs.dashboard': '仪表盘',
   'components.tableActionMenu.more': '更多',
   'components.temporaryUrlPreviewModal.filePreview': '文件预览',

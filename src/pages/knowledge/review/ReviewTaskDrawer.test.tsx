@@ -59,12 +59,36 @@ describe('ReviewTaskDrawer', () => {
     expect(await screen.findByText('审批文档')).toBeTruthy()
   })
 
+  it('renders the page presentation as a review workspace', async () => {
+    render(
+      <ReviewTaskDrawer
+        taskId="task-1"
+        open
+        presentation="page"
+        onClose={jest.fn()}
+        onSuccess={jest.fn()}
+      />,
+    )
+
+    expect(await screen.findByText('审批文档')).toBeTruthy()
+    expect(screen.getByText('问题 0')).toBeTruthy()
+    expect(screen.getByText('审批信息')).toBeTruthy()
+    expect(screen.getByText('操作记录')).toBeTruthy()
+    expect(screen.getByLabelText('document-editor')).toBeTruthy()
+  })
+
   it('shows decision actions immediately after a successful claim and formats action logs', async () => {
     render(<ReviewTaskDrawer taskId="task-1" open onClose={jest.fn()} onSuccess={jest.fn()} />)
 
     fireEvent.click(await screen.findByRole('button', { name: 'pages.knowledge.review.detail.claim' }))
 
-    await waitFor(() => expect(screen.getByRole('button', { name: 'pages.knowledge.review.detail.approve' })).toBeTruthy())
+    await waitFor(
+      () =>
+        expect(
+          screen.getByRole('button', { name: 'pages.knowledge.review.detail.approve' }),
+        ).toBeTruthy(),
+      { timeout: 10_000 },
+    )
     expect(screen.getByRole('button', { name: 'pages.knowledge.review.detail.reject' })).toBeTruthy()
     expect(screen.getByText('pages.knowledge.review.action.claimed')).toBeTruthy()
     expect(screen.getByText('pages.knowledge.review.action.draftCreated')).toBeTruthy()

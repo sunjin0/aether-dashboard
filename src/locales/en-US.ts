@@ -218,6 +218,8 @@ export default {
   'components.proFormFileUpload.selectFile': 'Select file',
   'components.routeTabs.documentManagement': 'Document management',
   'components.routeTabs.documentDetails': 'Document details',
+  'components.routeTabs.aiReviewWorkspace': 'AI review workspace',
+  'components.routeTabs.humanReview': 'Human review',
   'components.routeTabs.dashboard': 'Dashboard',
   'components.tableActionMenu.more': 'More',
   'components.temporaryUrlPreviewModal.filePreview': 'File preview',

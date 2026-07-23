@@ -8,7 +8,11 @@ jest.mock('@umijs/max', () => ({
   useIntl: () => ({
     locale: 'zh-CN',
     formatMessage: ({ id }: { id: string }) =>
-      id === 'components.routeTabs.dashboard' ? '仪表盘' : id,
+      ({
+        'components.routeTabs.dashboard': '仪表盘',
+        'components.routeTabs.aiReviewWorkspace': 'AI 审阅工作台',
+        'components.routeTabs.humanReview': '人工审批',
+      })[id] || id,
   }),
 }))
 
@@ -96,6 +100,27 @@ describe('RouteTabs', () => {
     )
 
     expect(screen.getByRole('button', { name: '仪表盘' })).toBeTruthy()
+  })
+
+  it('uses names for hidden dynamic review routes', async () => {
+    const { rerender } = render(
+      <RouteTabs pathname="/knowledge/document/document-1/review">
+        <div>AI review</div>
+      </RouteTabs>,
+    )
+
+    setRouteMenus(menus)
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'AI 审阅工作台' })).toBeTruthy()
+    })
+
+    rerender(
+      <RouteTabs pathname="/knowledge/reviews/task-1">
+        <div>Human review</div>
+      </RouteTabs>,
+    )
+
+    expect(screen.getByRole('button', { name: '人工审批' })).toBeTruthy()
   })
 
   it('does not create a tab for the root route before its dashboard redirect', () => {

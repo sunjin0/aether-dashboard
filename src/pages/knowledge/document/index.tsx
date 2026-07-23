@@ -24,7 +24,6 @@ import FileUploadModal from '@/components/FileUploadModal'
 import TemporaryUrlPreviewModal from '@/components/TemporaryUrlPreviewModal'
 import TableActionMenu from '@/components/TableActionMenu'
 import DocumentVersionHistoryDrawer from './components/DocumentVersionHistoryDrawer'
-import DocumentReviewDrawer from './DocumentReviewDrawer'
 import { getKnowledgeBaseContext } from './query'
 
 const KnowledgeDocumentPage: React.FC = () => {
@@ -39,7 +38,6 @@ const KnowledgeDocumentPage: React.FC = () => {
   const [formKnowledgeBaseId, setFormKnowledgeBaseId] = useState<string>()
   const [reindexingId, setReindexingId] = useState<string>()
   const [versionDocument, setVersionDocument] = useState<Document>()
-  const [reviewDocumentId, setReviewDocumentId] = useState<string>()
   const access = useAccess()
   const canWrite = access['/knowledge/document']
 
@@ -51,10 +49,14 @@ const KnowledgeDocumentPage: React.FC = () => {
     try {
       const response = await reindexDocument(record.id)
       if (response.code === 200) {
-        message.success(response.message || intl.formatMessage({ id: 'pages.knowledge.document.reindexQueued' }))
+        message.success(
+          response.message || intl.formatMessage({ id: 'pages.knowledge.document.reindexQueued' }),
+        )
         reload()
       } else {
-        message.error(response.message || intl.formatMessage({ id: 'pages.knowledge.document.reindexFailed' }))
+        message.error(
+          response.message || intl.formatMessage({ id: 'pages.knowledge.document.reindexFailed' }),
+        )
       }
     } finally {
       setReindexingId(undefined)
@@ -89,8 +91,17 @@ const KnowledgeDocumentPage: React.FC = () => {
         },
       },
     },
-    { title: intl.formatMessage({ id: 'pages.knowledge.document.documentTitle' }), dataIndex: 'title', ellipsis: true },
-    { title: intl.formatMessage({ id: 'pages.knowledge.document.file' }), dataIndex: 'originalFileName', ellipsis: true, hideInSearch: true },
+    {
+      title: intl.formatMessage({ id: 'pages.knowledge.document.documentTitle' }),
+      dataIndex: 'title',
+      ellipsis: true,
+    },
+    {
+      title: intl.formatMessage({ id: 'pages.knowledge.document.file' }),
+      dataIndex: 'originalFileName',
+      ellipsis: true,
+      hideInSearch: true,
+    },
     {
       title: intl.formatMessage({ id: 'pages.knowledge.document.publishedVersion' }),
       dataIndex: 'currentPublishedVersionNo',
@@ -103,14 +114,31 @@ const KnowledgeDocumentPage: React.FC = () => {
       valueType: 'select',
       valueEnum: {
         DRAFT: { text: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.draft' }) },
-        AI_REVIEWING: { text: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.aiReviewing' }) },
-        AI_REVIEWED: { text: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.recommendationsPending' }) },
-        SUBMITTED: { text: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.humanReviewing' }) },
-        APPROVED: { text: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.approved' }) },
-        REJECTED: { text: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.rejected' }) },
+        AI_REVIEWING: {
+          text: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.aiReviewing' }),
+        },
+        AI_REVIEWED: {
+          text: intl.formatMessage({
+            id: 'pages.knowledge.document.reviewStatus.recommendationsPending',
+          }),
+        },
+        SUBMITTED: {
+          text: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.humanReviewing' }),
+        },
+        APPROVED: {
+          text: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.approved' }),
+        },
+        REJECTED: {
+          text: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.rejected' }),
+        },
       },
     },
-    { title: intl.formatMessage({ id: 'pages.knowledge.document.chunkCount' }), dataIndex: 'chunkCount', valueType: 'digit', hideInSearch: true },
+    {
+      title: intl.formatMessage({ id: 'pages.knowledge.document.chunkCount' }),
+      dataIndex: 'chunkCount',
+      valueType: 'digit',
+      hideInSearch: true,
+    },
     {
       title: intl.formatMessage({ id: 'pages.knowledge.document.indexStatus' }),
       dataIndex: 'indexStatus',
@@ -125,7 +153,9 @@ const KnowledgeDocumentPage: React.FC = () => {
         const item = getIndexStatus(record.indexStatus)
         return (
           <Tag color={record.indexStatus === 3 ? 'error' : item.color}>
-            {record.indexStatus === 3 ? intl.formatMessage({ id: 'pages.knowledge.document.indexStatus.failed' }) : item.label}
+            {record.indexStatus === 3
+              ? intl.formatMessage({ id: 'pages.knowledge.document.indexStatus.failed' })
+              : item.label}
           </Tag>
         )
       },
@@ -139,8 +169,18 @@ const KnowledgeDocumentPage: React.FC = () => {
         return <Tag color={item.color}>{item.label}</Tag>
       },
     },
-    { title: intl.formatMessage({ id: 'pages.knowledge.document.indexError' }), dataIndex: 'indexErrorMessage', hideInSearch: true, ellipsis: true },
-    { title: intl.formatMessage({ id: 'pages.common.updateTime' }), dataIndex: 'updatedAt', valueType: 'dateTime', hideInSearch: true },
+    {
+      title: intl.formatMessage({ id: 'pages.knowledge.document.indexError' }),
+      dataIndex: 'indexErrorMessage',
+      hideInSearch: true,
+      ellipsis: true,
+    },
+    {
+      title: intl.formatMessage({ id: 'pages.common.updateTime' }),
+      dataIndex: 'updatedAt',
+      valueType: 'dateTime',
+      hideInSearch: true,
+    },
     {
       title: intl.formatMessage({ id: 'pages.common.option' }),
       valueType: 'option',
@@ -156,7 +196,11 @@ const KnowledgeDocumentPage: React.FC = () => {
           record.originalFileName ? (
             <TemporaryUrlPreviewModal
               key="preview"
-              title={record.originalFileName || record.title || intl.formatMessage({ id: 'pages.knowledge.document.filePreview' })}
+              title={
+                record.originalFileName ||
+                record.title ||
+                intl.formatMessage({ id: 'pages.knowledge.document.filePreview' })
+              }
               getUrl={() => getDocumentPreviewUrl(record.id!)}
               triggerText={intl.formatMessage({ id: 'pages.knowledge.document.preview' })}
             />
@@ -168,7 +212,12 @@ const KnowledgeDocumentPage: React.FC = () => {
                 key: 'workspace',
                 label: intl.formatMessage({ id: 'pages.knowledge.document.reviewWorkspace' }),
                 primary: true,
-                onClick: () => setReviewDocumentId(record.id),
+                onClick: () => {
+                  const returnTo = `${location.pathname}${location.search}`
+                  history.push(
+                    `/knowledge/document/${record.id}/review?returnTo=${encodeURIComponent(returnTo)}`,
+                  )
+                },
               },
               {
                 key: 'edit',
@@ -197,13 +246,22 @@ const KnowledgeDocumentPage: React.FC = () => {
                 label: intl.formatMessage({ id: 'pages.common.delete' }),
                 danger: true,
                 visible: canDelete,
-                confirm: { title: intl.formatMessage({ id: 'pages.knowledge.document.deleteConfirm' }) },
+                confirm: {
+                  title: intl.formatMessage({ id: 'pages.knowledge.document.deleteConfirm' }),
+                },
                 onClick: async () => {
                   const response = await deleteDocument(record.id!)
                   if (response.code === 200) {
-                    message.success(response.message || intl.formatMessage({ id: 'pages.knowledge.document.deleteSuccess' }))
+                    message.success(
+                      response.message ||
+                        intl.formatMessage({ id: 'pages.knowledge.document.deleteSuccess' }),
+                    )
                     reload()
-                  } else message.error(response.message || intl.formatMessage({ id: 'pages.knowledge.document.deleteFailed' }))
+                  } else
+                    message.error(
+                      response.message ||
+                        intl.formatMessage({ id: 'pages.knowledge.document.deleteFailed' }),
+                    )
                 },
               },
             ]}
@@ -216,7 +274,11 @@ const KnowledgeDocumentPage: React.FC = () => {
   return (
     <PageContainer
       title={intl.formatMessage({ id: 'pages.knowledge.document.title' })}
-      extra={<Button onClick={() => history.push('/knowledge/base')}>{intl.formatMessage({ id: 'pages.knowledge.document.knowledgeBaseManagement' })}</Button>}
+      extra={
+        <Button onClick={() => history.push('/knowledge/base')}>
+          {intl.formatMessage({ id: 'pages.knowledge.document.knowledgeBaseManagement' })}
+        </Button>
+      }
     >
       <ProTable<Document>
         actionRef={actionRef}
@@ -239,8 +301,17 @@ const KnowledgeDocumentPage: React.FC = () => {
                     <ProFormSelect
                       name="selectedKnowledgeBaseId"
                       label={intl.formatMessage({ id: 'pages.knowledge.document.knowledgeBase' })}
-                      placeholder={intl.formatMessage({ id: 'pages.knowledge.document.selectKnowledgeBase' })}
-                      rules={[{ required: true, message: intl.formatMessage({ id: 'pages.knowledge.document.selectKnowledgeBase' }) }]}
+                      placeholder={intl.formatMessage({
+                        id: 'pages.knowledge.document.selectKnowledgeBase',
+                      })}
+                      rules={[
+                        {
+                          required: true,
+                          message: intl.formatMessage({
+                            id: 'pages.knowledge.document.selectKnowledgeBase',
+                          }),
+                        },
+                      ]}
                       request={async () => {
                         const response = await getKnowledgeBaseList({
                           current: 1,
@@ -254,8 +325,17 @@ const KnowledgeDocumentPage: React.FC = () => {
                     <ProFormText
                       name="title"
                       label={intl.formatMessage({ id: 'pages.knowledge.document.documentTitle' })}
-                      placeholder={intl.formatMessage({ id: 'pages.knowledge.document.enterTitle' })}
-                      rules={[{ required: true, message: intl.formatMessage({ id: 'pages.knowledge.document.enterTitle' }) }]}
+                      placeholder={intl.formatMessage({
+                        id: 'pages.knowledge.document.enterTitle',
+                      })}
+                      rules={[
+                        {
+                          required: true,
+                          message: intl.formatMessage({
+                            id: 'pages.knowledge.document.enterTitle',
+                          }),
+                        },
+                      ]}
                     />
                   </>
                 }
@@ -280,12 +360,6 @@ const KnowledgeDocumentPage: React.FC = () => {
         onClose={() => setVersionDocument(undefined)}
         onRollbackSuccess={reload}
       />
-      <DocumentReviewDrawer
-        documentId={reviewDocumentId}
-        open={Boolean(reviewDocumentId)}
-        onClose={() => setReviewDocumentId(undefined)}
-        onSuccess={reload}
-      />
       {formOpen && (
         <DocumentForm
           id={documentId}
@@ -304,4 +378,3 @@ const KnowledgeDocumentPage: React.FC = () => {
 }
 
 export default KnowledgeDocumentPage
-

@@ -6,19 +6,30 @@ import {
   SendOutlined,
 } from '@ant-design/icons'
 import { useIntl } from '@umijs/max'
-import { Button, Col, Divider, Popconfirm, Row, Space, Statistic, Tag, Tooltip, Typography } from 'antd'
+import {
+  Button,
+  Col,
+  Divider,
+  Popconfirm,
+  Row,
+  Space,
+  Statistic,
+  Tag,
+  Tooltip,
+  Typography,
+} from 'antd'
 import React from 'react'
 import { AiReviewDiff } from '@/services/entity/Agent'
 
 interface Props {
-  diff: AiReviewDiff
-  busy?: boolean
-  batchCount?: number
-  acceptedCount?: number
-  onRerun: () => void
-  onBatchAccept?: () => void
-  onApplyAccepted?: () => void
-  onSubmit?: () => void
+  diff: AiReviewDiff;
+  busy?: boolean;
+  batchCount?: number;
+  acceptedCount?: number;
+  onRerun: () => void;
+  onBatchAccept?: () => void;
+  onApplyAccepted?: () => void;
+  onSubmit?: () => void;
 }
 
 const ReviewDiffToolbar: React.FC<Props> = ({
@@ -66,19 +77,31 @@ const ReviewDiffToolbar: React.FC<Props> = ({
             {statusLabelMap[status] || `AI review ${status}`}
           </Tag>
           <Statistic
-            title={<Typography.Text type="secondary">{intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.pending' })}</Typography.Text>}
+            title={
+              <Typography.Text type="secondary">
+                {intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.pending' })}
+              </Typography.Text>
+            }
             value={diff.pendingCount}
             prefix={<BarChartOutlined />}
             valueStyle={{ fontSize: 16, fontWeight: 600 }}
           />
           <Statistic
-            title={<Typography.Text type="secondary">{intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.critical' })}</Typography.Text>}
+            title={
+              <Typography.Text type="secondary">
+                {intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.critical' })}
+              </Typography.Text>
+            }
             value={diff.criticalPendingCount}
             valueStyle={{ fontSize: 16, fontWeight: 600, color: '#cf1322' }}
           />
           {acceptedCount > 0 && (
             <Statistic
-              title={<Typography.Text type="secondary">{intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.accepted' })}</Typography.Text>}
+              title={
+                <Typography.Text type="secondary">
+                  {intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.accepted' })}
+                </Typography.Text>
+              }
               value={acceptedCount}
               valueStyle={{ fontSize: 16, fontWeight: 600, color: '#52c41a' }}
             />
@@ -99,47 +122,76 @@ const ReviewDiffToolbar: React.FC<Props> = ({
               }
               onConfirm={onApplyAccepted}
               okText={intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.applyOkText' })}
-              cancelText={intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.cancelText' })}
+              cancelText={intl.formatMessage({
+                id: 'pages.knowledge.review.diffToolbar.cancelText',
+              })}
             >
-              <Button icon={<FileDoneOutlined />} loading={busy} disabled={busy}>
-                {intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.applyButton' }, { count: acceptedCount })}
+              <Button type="primary" icon={<FileDoneOutlined />} loading={busy} disabled={busy}>
+                保存 {acceptedCount} 项修改
               </Button>
             </Popconfirm>
           )}
           {batchCount > 0 && onBatchAccept && (
             <Popconfirm
-              title={intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.batchAcceptTitle' })}
-              description={intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.batchAcceptDesc' }, { count: batchCount })}
+              title={intl.formatMessage({
+                id: 'pages.knowledge.review.diffToolbar.batchAcceptTitle',
+              })}
+              description={intl.formatMessage(
+                { id: 'pages.knowledge.review.diffToolbar.batchAcceptDesc' },
+                { count: batchCount },
+              )}
               onConfirm={onBatchAccept}
-              okText={intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.batchAcceptOkText' })}
-              cancelText={intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.cancelText' })}
+              okText={intl.formatMessage({
+                id: 'pages.knowledge.review.diffToolbar.batchAcceptOkText',
+              })}
+              cancelText={intl.formatMessage({
+                id: 'pages.knowledge.review.diffToolbar.cancelText',
+              })}
             >
               <Button icon={<CheckCircleOutlined />} loading={busy} disabled={busy}>
-                {intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.batchAcceptButton' }, { count: batchCount })}
+                {intl.formatMessage(
+                  { id: 'pages.knowledge.review.diffToolbar.batchAcceptButton' },
+                  { count: batchCount },
+                )}
               </Button>
             </Popconfirm>
           )}
           {(onApplyAccepted || onBatchAccept) && onSubmit && <Divider type="vertical" />}
           {onSubmit && (
             <Popconfirm
-              title={intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.submitConfirmTitle' })}
-              description={intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.submitConfirmDesc' })}
+              title={intl.formatMessage({
+                id: 'pages.knowledge.review.diffToolbar.submitConfirmTitle',
+              })}
+              description={intl.formatMessage({
+                id: 'pages.knowledge.review.diffToolbar.submitConfirmDesc',
+              })}
               onConfirm={onSubmit}
               okText={intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.submitOkText' })}
-              cancelText={intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.cancelText' })}
+              cancelText={intl.formatMessage({
+                id: 'pages.knowledge.review.diffToolbar.cancelText',
+              })}
             >
               <Button
-                type="primary"
+                type={acceptedCount > 0 ? 'default' : 'primary'}
                 icon={<SendOutlined />}
                 loading={busy}
-                disabled={busy}
+                // disabled={busy || acceptedCount > 0}
               >
                 {intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.submitReview' })}
               </Button>
             </Popconfirm>
           )}
-          <Tooltip title={intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.rerunButton' })}>
-            <Button aria-label={intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.rerunButton' })} icon={<ReloadOutlined />} loading={busy} onClick={onRerun} />
+          <Tooltip
+            title={intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.rerunButton' })}
+          >
+            <Button
+              aria-label={intl.formatMessage({
+                id: 'pages.knowledge.review.diffToolbar.rerunButton',
+              })}
+              icon={<ReloadOutlined />}
+              loading={busy}
+              onClick={onRerun}
+            />
           </Tooltip>
         </Space>
       </Col>

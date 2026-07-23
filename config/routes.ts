@@ -126,10 +126,22 @@ export default [
         component: './knowledge/document',
       },
       {
+        path: '/knowledge/document/:documentId/review',
+        name: 'AI 审阅工作台',
+        hideInMenu: true,
+        component: './knowledge/review/detail',
+      },
+      {
         path: '/knowledge/reviews',
         name: '审批中心',
         hideInMenu: true,
         component: './knowledge/review',
+      },
+      {
+        path: '/knowledge/reviews/:taskId',
+        name: '人工审批',
+        hideInMenu: true,
+        component: './knowledge/review/task',
       },
       {
         path: '/knowledge/index-job',

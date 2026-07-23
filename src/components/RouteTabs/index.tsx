@@ -58,6 +58,10 @@ const getRouteLabel = (
 ): string => {
   if (/^\/knowledge\/base\/[^/]+$/.test(pathname)) return formatMessage({ id: 'components.routeTabs.documentManagement' })
   if (/^\/knowledge\/document\/[^/]+$/.test(pathname)) return formatMessage({ id: 'components.routeTabs.documentDetails' })
+  if (/^\/knowledge\/document\/[^/]+\/review$/.test(pathname))
+    return formatMessage({ id: 'components.routeTabs.aiReviewWorkspace' })
+  if (/^\/knowledge\/reviews\/[^/]+$/.test(pathname))
+    return formatMessage({ id: 'components.routeTabs.humanReview' })
   return pathname === '/dashboard'
     ? formatMessage({ id: 'components.routeTabs.dashboard' })
     : findMenuName(menus, pathname) || pathname

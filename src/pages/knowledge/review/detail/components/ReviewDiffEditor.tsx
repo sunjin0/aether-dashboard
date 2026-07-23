@@ -38,7 +38,9 @@ const ReviewDiffEditor: React.FC<ReviewDiffEditorProps> = ({ diff, activeIssue }
         },
       ]
       : []
-    const collection = editorRef.current.getOriginalEditor().createDecorationsCollection(decorations)
+    const collection = editorRef.current
+      .getOriginalEditor()
+      .createDecorationsCollection(decorations)
     return () => collection.clear()
   }, [activeIssue])
 
@@ -57,7 +59,7 @@ const ReviewDiffEditor: React.FC<ReviewDiffEditorProps> = ({ diff, activeIssue }
     <Card
       size="small"
       title={title}
-      styles={{ body: { padding: 0, height: 'min(560px, calc(100vh - 310px))', overflow: 'hidden' } }}
+      styles={{ body: { padding: 0, height: 'calc(100vh - 250px)', overflow: 'hidden' } }}
       style={{ height: '100%' }}
     >
       <DiffEditor

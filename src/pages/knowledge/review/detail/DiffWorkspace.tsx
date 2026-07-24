@@ -403,7 +403,7 @@ const DiffWorkspace: React.FC<Props> = ({
             busy={busy}
             batchCount={batchAcceptableIssues.length}
             acceptedCount={unappliedAcceptedCount}
-            onRerun={runAiReview}
+            onRerun={status === 'DRAFT' ? runAiReview : undefined}
             onBatchAccept={batchAcceptableIssues.length > 0 ? batchAccept : undefined}
             onApplyAccepted={
               unappliedAcceptedCount > 0 && !diff.stale ? applyAcceptedChanges : undefined

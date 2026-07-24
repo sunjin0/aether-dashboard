@@ -22,7 +22,6 @@ import {
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 import { KnowledgeReviewTaskDetail } from '@/services/entity/Agent';
-import { updateDocumentDraft } from '@/services/knowledge/DocumentController';
 import {
   approveReviewTask,
   claimReviewTask,
@@ -48,6 +47,8 @@ const ReviewTaskDrawer: React.FC<Props> = ({
   presentation = 'drawer',
 }) => {
   const intl = useIntl();
+  const [messageApi, messageContextHolder] = message.useMessage();
+  const [modalApi, modalContextHolder] = Modal.useModal();
   const { initialState } = useModel('@@initialState');
   const [data, setData] = useState<KnowledgeReviewTaskDetail>();
   const [comment, setComment] = useState('');
@@ -60,8 +61,6 @@ const ReviewTaskDrawer: React.FC<Props> = ({
     data?.status === 'claimed' &&
     (claimedByCurrentUser ||
       String(data.reviewerId || '') === String(initialState?.currentUser?.id || ''));
-  const hasUnsavedChanges = versionContent !== (data?.version?.content || '');
-
   const actionText: Record<string, string> = {
     SUBMITTED: intl.formatMessage({ id: 'pages.knowledge.review.action.submitted' }),
     CLAIMED: intl.formatMessage({ id: 'pages.knowledge.review.action.claimed' }),
@@ -81,6 +80,8 @@ const ReviewTaskDrawer: React.FC<Props> = ({
     setLoading(true);
     try {
       setData((await getReviewTask(taskId)).data);
+    } catch {
+      // The global request error handler has already shown the failure.
     } finally {
       setLoading(false);
     }
@@ -93,6 +94,8 @@ const ReviewTaskDrawer: React.FC<Props> = ({
     setComment('');
     getAdminList({ current: 1, pageSize: 1000 }).then((res) => {
       if (!cancelled) setUserList(res.data);
+    }).catch(() => {
+      if (!cancelled) setUserList([]);
     });
     const loadTask = async () => {
       setLoading(true);
@@ -106,37 +109,24 @@ const ReviewTaskDrawer: React.FC<Props> = ({
         if (!cancelled) setLoading(false);
       }
     };
-    loadTask();
+    loadTask().catch(() => {
+      // The global request error handler has already shown the failure.
+    });
     return () => {
       cancelled = true;
     };
   }, [open, taskId]);
 
-  const saveDraft = async (silent = false) => {
-    if (!hasUnsavedChanges) return true;
-    if (!data?.version?.id || !data.version.contentChecksum) return false;
-    const updatedVersion = await updateDocumentDraft(
-      data.version.id,
-      versionContent,
-      data.version.contentChecksum,
-    );
-    if (!updatedVersion.data) return false;
-    setData((current) => (current ? { ...current, version: updatedVersion.data } : current));
-    if (!silent) message.success('修改已保存');
-    return true;
-  };
-
   const act = async (kind: 'claim' | 'approve' | 'reject') => {
     if (!taskId) return;
     if (kind === 'reject' && !comment.trim()) {
-      message.warning(
+      messageApi.warning(
         intl.formatMessage({ id: 'pages.knowledge.review.detail.rejectionReasonRequired' }),
       );
       return;
     }
     setActing(true);
     try {
-      if (kind === 'approve' && !(await saveDraft(true))) return;
       const response =
         kind === 'claim'
           ? await claimReviewTask(taskId)
@@ -144,7 +134,9 @@ const ReviewTaskDrawer: React.FC<Props> = ({
             ? await approveReviewTask(taskId, comment)
             : await rejectReviewTask(taskId, comment);
       if (response.code === 200) {
-        message.success(intl.formatMessage({ id: 'pages.knowledge.review.detail.actionSuccess' }));
+        messageApi.success(
+          intl.formatMessage({ id: 'pages.knowledge.review.detail.actionSuccess' }),
+        );
         onSuccess();
         if (kind === 'claim') {
           setClaimedByCurrentUser(true);
@@ -152,6 +144,8 @@ const ReviewTaskDrawer: React.FC<Props> = ({
         } else if (kind === 'approve') onClose();
         else load();
       }
+    } catch {
+      // The global request error handler has already shown the failure.
     } finally {
       setActing(false);
     }
@@ -230,8 +224,8 @@ const ReviewTaskDrawer: React.FC<Props> = ({
             height="360px"
             language="markdown"
             value={versionContent}
-            onChange={(value) => setVersionContent(value || '')}
             options={{
+              readOnly: true,
               minimap: { enabled: false },
               scrollBeyondLastLine: false,
               automaticLayout: true,
@@ -250,30 +244,33 @@ const ReviewTaskDrawer: React.FC<Props> = ({
         <div style={{ border: '1px solid #f0f0f0', borderRadius: 6 }}>{issueList}</div>
         {(data?.status === 'pending' || canDecide) && (
           <>
-            <Input.TextArea
-              rows={4}
-              value={comment}
-              onChange={(event) => setComment(event.target.value)}
-              placeholder={intl.formatMessage({
-                id: 'pages.knowledge.review.detail.rejectionReasonPlaceholder',
-              })}
-            />
+            {canDecide && (
+              <Input.TextArea
+                rows={4}
+                value={comment}
+                onChange={(event) => setComment(event.target.value)}
+                placeholder={intl.formatMessage({
+                  id: 'pages.knowledge.review.detail.rejectionReasonPlaceholder',
+                })}
+              />
+            )}
             <Space>
               {data?.status === 'pending' && (
-                <Button type="primary" onClick={() => act('claim')}>
+                <Button type="primary" loading={acting} onClick={() => act('claim')}>
                   {intl.formatMessage({ id: 'pages.knowledge.review.detail.claim' })}
                 </Button>
               )}
               {canDecide && (
-                <Button type="primary" onClick={() => act('approve')}>
+                <Button type="primary" loading={acting} onClick={() => act('approve')}>
                   {intl.formatMessage({ id: 'pages.knowledge.review.detail.approve' })}
                 </Button>
               )}
               {canDecide && (
                 <Button
                   danger
+                  disabled={acting}
                   onClick={() =>
-                    Modal.confirm({
+                    modalApi.confirm({
                       title: intl.formatMessage({
                         id: 'pages.knowledge.review.detail.rejectConfirm',
                       }),
@@ -293,31 +290,31 @@ const ReviewTaskDrawer: React.FC<Props> = ({
   );
 
   if (presentation === 'page') {
-    const handleBack = () => {
-      if (!hasUnsavedChanges) {
-        onClose();
-        return;
-      }
-      Modal.confirm({
-        title: '存在未保存的修改',
-        content: '返回后当前正文修改将丢失，是否继续？',
-        okText: '放弃修改',
-        okButtonProps: { danger: true },
-        cancelText: '继续编辑',
-        onOk: onClose,
-      });
-    };
+    const handleBack = onClose;
     const statusColor: Record<string, string> = {
       pending: 'warning',
       claimed: 'processing',
       approved: 'success',
       rejected: 'error',
     };
+    const statusText: Record<string, string> = {
+      pending: intl.formatMessage({ id: 'pages.knowledge.review.status.pending' }),
+      claimed: intl.formatMessage({ id: 'pages.knowledge.review.status.claimed' }),
+      approved: intl.formatMessage({ id: 'pages.knowledge.review.status.approved' }),
+      rejected: intl.formatMessage({ id: 'pages.knowledge.review.status.rejected' }),
+    };
     return (
-      <PageContainer
+      <>
+        {messageContextHolder}
+        {modalContextHolder}
+        <PageContainer
         title={title}
         subTitle={data?.version?.versionNo ? `v${data.version.versionNo}` : undefined}
-        tags={<Tag color={statusColor[data?.status || '']}>{data?.status || '-'}</Tag>}
+        tags={
+          <Tag color={statusColor[data?.status || '']}>
+            {statusText[data?.status || ''] || data?.status || '-'}
+          </Tag>
+        }
         onBack={handleBack}
       >
         <Spin spinning={loading}>
@@ -327,11 +324,9 @@ const ReviewTaskDrawer: React.FC<Props> = ({
                 size="small"
                 title={intl.formatMessage({ id: 'pages.knowledge.review.detail.versionContent' })}
                 extra={
-                  hasUnsavedChanges ? (
-                    <Tag color="warning">未保存</Tag>
-                  ) : (
-                    <Typography.Text type="secondary">已保存</Typography.Text>
-                  )
+                  <Typography.Text type="secondary">
+                    {intl.formatMessage({ id: 'pages.knowledge.review.detail.readOnlyDuringReview' })}
+                  </Typography.Text>
                 }
                 styles={{ body: { padding: 0 } }}
               >
@@ -339,9 +334,8 @@ const ReviewTaskDrawer: React.FC<Props> = ({
                   height="calc(100vh - 230px)"
                   language="markdown"
                   value={versionContent}
-                  onChange={(value) => setVersionContent(value || '')}
                   options={{
-                    readOnly: !canDecide,
+                    readOnly: true,
                     minimap: { enabled: false },
                     scrollBeyondLastLine: false,
                     automaticLayout: true,
@@ -359,7 +353,10 @@ const ReviewTaskDrawer: React.FC<Props> = ({
                   items={[
                     {
                       key: 'issues',
-                      label: `问题 ${(data?.issues || []).length}`,
+                      label: intl.formatMessage(
+                        { id: 'pages.knowledge.review.detail.issueCount' },
+                        { count: (data?.issues || []).length },
+                      ),
                       children: (
                         <div style={{ maxHeight: 'calc(100vh - 430px)', overflow: 'auto' }}>
                           {issueList}
@@ -368,7 +365,9 @@ const ReviewTaskDrawer: React.FC<Props> = ({
                     },
                     {
                       key: 'summary',
-                      label: '审批信息',
+                      label: intl.formatMessage({
+                        id: 'pages.knowledge.review.detail.reviewInfo',
+                      }),
                       children: (
                         <Space direction="vertical" size="middle" style={{ width: '100%' }}>
                           {data?.aiReview?.summary && (
@@ -391,7 +390,11 @@ const ReviewTaskDrawer: React.FC<Props> = ({
                               {userList.find((user) => user.id === data?.reviewerId)?.username ||
                                 '-'}
                             </Descriptions.Item>
-                            <Descriptions.Item label="AI 评分">
+                            <Descriptions.Item
+                              label={intl.formatMessage({
+                                id: 'pages.knowledge.review.detail.aiScore',
+                              })}
+                            >
                               {data?.aiReview?.score ?? '-'}
                             </Descriptions.Item>
                           </Descriptions>
@@ -400,7 +403,9 @@ const ReviewTaskDrawer: React.FC<Props> = ({
                     },
                     {
                       key: 'history',
-                      label: '操作记录',
+                      label: intl.formatMessage({
+                        id: 'pages.knowledge.review.detail.actionHistory',
+                      }),
                       children: (
                         <div style={{ maxHeight: 'calc(100vh - 430px)', overflow: 'auto' }}>
                           {actionTimeline}
@@ -413,38 +418,28 @@ const ReviewTaskDrawer: React.FC<Props> = ({
               {(data?.status === 'pending' || canDecide) && (
                 <Card
                   size="small"
-                  title="审批操作"
+                  title={intl.formatMessage({
+                    id: 'pages.knowledge.review.detail.reviewActions',
+                  })}
                   style={{ position: 'sticky', bottom: 16, marginTop: 16 }}
                 >
                   <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                    <Input.TextArea
-                      rows={3}
-                      value={comment}
-                      onChange={(event) => setComment(event.target.value)}
-                      placeholder={intl.formatMessage({
-                        id: 'pages.knowledge.review.detail.rejectionReasonPlaceholder',
-                      })}
-                    />
+                    {canDecide && (
+                      <Input.TextArea
+                        rows={3}
+                        value={comment}
+                        onChange={(event) => setComment(event.target.value)}
+                        placeholder={intl.formatMessage({
+                          id: 'pages.knowledge.review.detail.rejectionReasonPlaceholder',
+                        })}
+                      />
+                    )}
                     {data?.status === 'pending' ? (
                       <Button type="primary" block loading={acting} onClick={() => act('claim')}>
                         {intl.formatMessage({ id: 'pages.knowledge.review.detail.claim' })}
                       </Button>
                     ) : (
                       <Space wrap>
-                        <Button
-                          disabled={!hasUnsavedChanges}
-                          loading={acting}
-                          onClick={async () => {
-                            setActing(true);
-                            try {
-                              await saveDraft();
-                            } finally {
-                              setActing(false);
-                            }
-                          }}
-                        >
-                          保存修改
-                        </Button>
                         <Button type="primary" loading={acting} onClick={() => act('approve')}>
                           {intl.formatMessage({ id: 'pages.knowledge.review.detail.approve' })}
                         </Button>
@@ -452,7 +447,7 @@ const ReviewTaskDrawer: React.FC<Props> = ({
                           danger
                           disabled={acting}
                           onClick={() =>
-                            Modal.confirm({
+                            modalApi.confirm({
                               title: intl.formatMessage({
                                 id: 'pages.knowledge.review.detail.rejectConfirm',
                               }),
@@ -470,19 +465,24 @@ const ReviewTaskDrawer: React.FC<Props> = ({
             </Col>
           </Row>
         </Spin>
-      </PageContainer>
+        </PageContainer>
+      </>
     );
   }
 
   return (
-    <DrawerForm
-      title={title}
-      open={open}
-      onOpenChange={(nextOpen) => !nextOpen && onClose()}
-      submitter={false}
-    >
-      {content}
-    </DrawerForm>
+    <>
+      {messageContextHolder}
+      {modalContextHolder}
+      <DrawerForm
+        title={title}
+        open={open}
+        onOpenChange={(nextOpen) => !nextOpen && onClose()}
+        submitter={false}
+      >
+        {content}
+      </DrawerForm>
+    </>
   );
 };
 

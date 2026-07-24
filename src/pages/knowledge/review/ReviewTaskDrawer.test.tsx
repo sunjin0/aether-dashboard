@@ -6,7 +6,6 @@ import ReviewTaskDrawer from './ReviewTaskDrawer';
 const mockGetReviewTask = jest.fn();
 const mockClaimReviewTask = jest.fn();
 const mockApproveReviewTask = jest.fn();
-const mockUpdateDocumentDraft = jest.fn();
 
 jest.mock('@/services/knowledge/ReviewController', () => ({
   getReviewTask: (...args: unknown[]) => mockGetReviewTask(...args),
@@ -14,19 +13,18 @@ jest.mock('@/services/knowledge/ReviewController', () => ({
   approveReviewTask: (...args: unknown[]) => mockApproveReviewTask(...args),
   rejectReviewTask: jest.fn(),
 }));
-jest.mock('@/services/knowledge/DocumentController', () => ({
-  updateDocumentDraft: (...args: unknown[]) => mockUpdateDocumentDraft(...args),
-}));
 jest.mock('@/services/sys/AdminController', () => ({
   getAdminList: jest.fn().mockResolvedValue({ data: [] }),
 }));
 jest.mock('@monaco-editor/react', () => ({
-  Editor: ({ value, onChange }: { value?: string; onChange?: (value?: string) => void }) => (
-    <textarea
-      aria-label="document-editor"
-      value={value}
-      onChange={(event) => onChange?.(event.target.value)}
-    />
+  Editor: ({
+    value,
+    options,
+  }: {
+    value?: string;
+    options?: { readOnly?: boolean };
+  }) => (
+    <textarea aria-label="document-editor" value={value} readOnly={options?.readOnly} />
   ),
 }));
 
@@ -54,9 +52,6 @@ describe('ReviewTaskDrawer', () => {
     });
     mockClaimReviewTask.mockResolvedValue({ code: 200 });
     mockApproveReviewTask.mockResolvedValue({ code: 200 });
-    mockUpdateDocumentDraft.mockResolvedValue({
-      data: { id: 'version-1', content: '修改后正文', contentChecksum: 'checksum-2' },
-    });
   });
 
   it('shows a review task in a drawer rather than navigating to a detail page', async () => {
@@ -77,9 +72,9 @@ describe('ReviewTaskDrawer', () => {
     );
 
     expect(await screen.findByText('审批文档')).toBeTruthy();
-    expect(screen.getByText('问题 0')).toBeTruthy();
-    expect(screen.getByText('审批信息')).toBeTruthy();
-    expect(screen.getByText('操作记录')).toBeTruthy();
+    expect(screen.getByText('pages.knowledge.review.detail.issueCount')).toBeTruthy();
+    expect(screen.getByText('pages.knowledge.review.detail.reviewInfo')).toBeTruthy();
+    expect(screen.getByText('pages.knowledge.review.detail.actionHistory')).toBeTruthy();
     expect(screen.getByLabelText('document-editor')).toBeTruthy();
   });
 
@@ -107,7 +102,7 @@ describe('ReviewTaskDrawer', () => {
     expect(screen.getByText(dayjs(1735689600000).format('YYYY-MM-DD HH:mm'))).toBeTruthy();
   });
 
-  it('saves edited version content before approval', async () => {
+  it('keeps the submitted snapshot read-only and approves it without rewriting content', async () => {
     mockGetReviewTask.mockResolvedValue({
       data: {
         id: 'task-1',
@@ -120,14 +115,11 @@ describe('ReviewTaskDrawer', () => {
 
     render(<ReviewTaskDrawer taskId="task-1" open onClose={jest.fn()} onSuccess={jest.fn()} />);
 
-    fireEvent.change(await screen.findByLabelText('document-editor'), {
-      target: { value: '修改后正文' },
-    });
+    expect((await screen.findByLabelText('document-editor') as HTMLTextAreaElement).readOnly).toBe(
+      true,
+    );
     fireEvent.click(screen.getByRole('button', { name: 'pages.knowledge.review.detail.approve' }));
 
-    await waitFor(() =>
-      expect(mockUpdateDocumentDraft).toHaveBeenCalledWith('version-1', '修改后正文', 'checksum-1'),
-    );
-    expect(mockApproveReviewTask).toHaveBeenCalledWith('task-1', '');
+    await waitFor(() => expect(mockApproveReviewTask).toHaveBeenCalledWith('task-1', ''));
   });
 });

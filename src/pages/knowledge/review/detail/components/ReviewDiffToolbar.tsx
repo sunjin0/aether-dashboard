@@ -26,7 +26,7 @@ interface Props {
   busy?: boolean;
   batchCount?: number;
   acceptedCount?: number;
-  onRerun: () => void;
+  onRerun?: () => void;
   onBatchAccept?: () => void;
   onApplyAccepted?: () => void;
   onSubmit?: () => void;
@@ -181,18 +181,20 @@ const ReviewDiffToolbar: React.FC<Props> = ({
               </Button>
             </Popconfirm>
           )}
-          <Tooltip
-            title={intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.rerunButton' })}
-          >
-            <Button
-              aria-label={intl.formatMessage({
-                id: 'pages.knowledge.review.diffToolbar.rerunButton',
-              })}
-              icon={<ReloadOutlined />}
-              loading={busy}
-              onClick={onRerun}
-            />
-          </Tooltip>
+          {onRerun && (
+            <Tooltip
+              title={intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.rerunButton' })}
+            >
+              <Button
+                aria-label={intl.formatMessage({
+                  id: 'pages.knowledge.review.diffToolbar.rerunButton',
+                })}
+                icon={<ReloadOutlined />}
+                loading={busy}
+                onClick={onRerun}
+              />
+            </Tooltip>
+          )}
         </Space>
       </Col>
     </Row>

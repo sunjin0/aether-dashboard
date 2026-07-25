@@ -1,10 +1,10 @@
-import * as React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
-import ReviewIssueList from './ReviewIssueList';
+import * as React from 'react'
+import { fireEvent, render, screen } from '@testing-library/react'
+import ReviewIssueList from './ReviewIssueList'
 
 jest.mock('@umijs/max', () => ({
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
-}));
+}))
 
 const issue = {
   id: 'issue-1',
@@ -20,12 +20,12 @@ const issue = {
     target: { original: 'Approval is required.' },
     replacement: 'Approval criteria are required.',
   },
-};
+}
 
 describe('ReviewIssueList', () => {
   it('shows issue actions only after the issue is selected', () => {
     const IssueList = () => {
-      const [activeId, setActiveId] = React.useState<string>();
+      const [activeId, setActiveId] = React.useState<string>()
       return (
         <ReviewIssueList
           issues={[issue]}
@@ -37,20 +37,20 @@ describe('ReviewIssueList', () => {
           onReject={jest.fn()}
           onUnaccept={jest.fn()}
         />
-      );
-    };
+      )
+    }
 
-    render(<IssueList />);
+    render(<IssueList />)
 
     expect(
       screen.queryByRole('button', { name: /pages\.knowledge\.review\.issueList\.accept/ }),
-    ).toBeNull();
-    fireEvent.click(screen.getByText(issue.message));
+    ).toBeNull()
+    fireEvent.click(screen.getByText(issue.message))
     expect(
       screen.getByRole('button', { name: /pages\.knowledge\.review\.issueList\.accept/ }),
-    ).toBeTruthy();
+    ).toBeTruthy()
     expect(
       screen.getByRole('button', { name: /pages\.knowledge\.review\.issueList\.reject/ }),
-    ).toBeTruthy();
-  });
-});
+    ).toBeTruthy()
+  })
+})

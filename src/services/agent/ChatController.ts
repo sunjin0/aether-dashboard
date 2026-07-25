@@ -1,7 +1,7 @@
-import { getLocale } from '@@/exports';
-import { request } from '@umijs/max';
-import { fetchEventSource } from '@microsoft/fetch-event-source';
-import { ResponseStructure } from '@/services/entity/Common';
+import { getLocale } from '@@/exports'
+import { request } from '@umijs/max'
+import { fetchEventSource } from '@microsoft/fetch-event-source'
+import { ResponseStructure } from '@/services/entity/Common'
 import {
   AgentChatReplyRequest,
   AgentChatRequest,
@@ -12,7 +12,7 @@ import {
   AgentStreamQuestionData,
   AgentStreamReasoningData,
   AgentStreamToolCallData,
-} from '@/services/entity/Agent';
+} from '@/services/entity/Agent'
 
 export interface StreamAgentChatOptions {
   signal?: AbortSignal;
@@ -33,8 +33,8 @@ export const sendAgentChat = async (
   return request('/api/agent/chat', {
     method: 'POST',
     data: params,
-  });
-};
+  })
+}
 
 /**
  * @description 发送 Agent 流式聊天消息
@@ -43,7 +43,7 @@ export const streamAgentChat = async (
   params: AgentChatRequest,
   options: StreamAgentChatOptions = {},
 ) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token')
 
   await fetchEventSource('/api/agent/chat/stream', {
     method: 'Post',
@@ -57,45 +57,45 @@ export const streamAgentChat = async (
 
     onopen(response) {
       if (response.status !== 200) {
-        options.onError?.({ message: response.statusText });
-        return Promise.reject(new Error(response.statusText));
+        options.onError?.({ message: response.statusText })
+        return Promise.reject(new Error(response.statusText))
       }
-      return Promise.resolve();
+      return Promise.resolve()
     },
 
     onmessage(event) {
-      const eventType = event.event || 'message';
-      let data: any;
+      const eventType = event.event || 'message'
+      let data: any
 
       try {
-        data = JSON.parse(event.data);
+        data = JSON.parse(event.data)
       } catch {
-        return;
+        return
       }
 
       if (eventType === 'message') {
-        options.onMessage?.(data.chunk || '', data);
+        options.onMessage?.(data.chunk || '', data)
       } else if (eventType === 'reasoning') {
-        options.onReasoning?.(data.chunk || '', data);
+        options.onReasoning?.(data.chunk || '', data)
       } else if (eventType === 'tool_call') {
-        options.onToolCall?.(data);
+        options.onToolCall?.(data)
       } else if (eventType === 'question') {
-        options.onQuestion?.(data);
+        options.onQuestion?.(data)
       } else if (eventType === 'done') {
-        options.onDone?.(data);
+        options.onDone?.(data)
       } else if (eventType === 'error') {
-        options.onError?.(data);
+        options.onError?.(data)
       }
     },
 
     onerror(err) {
-      options.onError?.({ message: err.message || '连接错误' });
-      throw err; // 抛出错误停止重连
+      options.onError?.({ message: err.message || '连接错误' })
+      throw err // 抛出错误停止重连
     },
 
     openWhenHidden: true,
-  });
-};
+  })
+}
 
 /**
  * @description 流式回复 Agent 提问（使用同一个 stream 接口）
@@ -104,7 +104,7 @@ export const streamReplyAgentChat = async (
   params: AgentChatReplyRequest,
   options: StreamAgentChatOptions = {},
 ) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token')
 
   await fetchEventSource('/api/agent/chat/stream', {
     method: 'Post',
@@ -118,42 +118,42 @@ export const streamReplyAgentChat = async (
 
     onopen(response) {
       if (response.status !== 200) {
-        options.onError?.({ message: response.statusText });
-        return Promise.reject(new Error(response.statusText));
+        options.onError?.({ message: response.statusText })
+        return Promise.reject(new Error(response.statusText))
       }
-      return Promise.resolve();
+      return Promise.resolve()
     },
 
     onmessage(event) {
-      const eventType = event.event || 'message';
-      let data: any;
+      const eventType = event.event || 'message'
+      let data: any
 
       try {
-        data = JSON.parse(event.data);
+        data = JSON.parse(event.data)
       } catch {
-        return;
+        return
       }
 
       if (eventType === 'message') {
-        options.onMessage?.(data.chunk || '', data);
+        options.onMessage?.(data.chunk || '', data)
       } else if (eventType === 'reasoning') {
-        options.onReasoning?.(data.chunk || '', data);
+        options.onReasoning?.(data.chunk || '', data)
       } else if (eventType === 'tool_call') {
-        options.onToolCall?.(data);
+        options.onToolCall?.(data)
       } else if (eventType === 'question') {
-        options.onQuestion?.(data);
+        options.onQuestion?.(data)
       } else if (eventType === 'done') {
-        options.onDone?.(data);
+        options.onDone?.(data)
       } else if (eventType === 'error') {
-        options.onError?.(data);
+        options.onError?.(data)
       }
     },
 
     onerror(err) {
-      options.onError?.({ message: err.message || '连接错误' });
-      throw err;
+      options.onError?.({ message: err.message || '连接错误' })
+      throw err
     },
 
     openWhenHidden: true,
-  });
-};
+  })
+}

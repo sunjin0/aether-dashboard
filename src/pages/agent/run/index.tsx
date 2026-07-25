@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { ActionType, PageContainer, ProDescriptions, ProTable } from '@ant-design/pro-components';
-import { useIntl } from '@umijs/max';
+import React, { useEffect, useRef, useState } from 'react'
+import { ActionType, PageContainer, ProDescriptions, ProTable } from '@ant-design/pro-components'
+import { useIntl } from '@umijs/max'
 import {
   Alert,
   Card,
@@ -12,18 +12,18 @@ import {
   Statistic,
   Tag,
   Typography,
-} from 'antd';
-import TableActionMenu from '@/components/TableActionMenu';
+} from 'antd'
+import TableActionMenu from '@/components/TableActionMenu'
 import {
   getAgentRunInfo,
   getAgentRunList,
   getAgentRunStatistics,
-} from '@/services/agent/RunController';
-import { getOptionList } from '@/services/sys/DictController';
-import { AgentRun, AgentRunSearchParams, AgentRunStatistics } from '@/services/entity/Agent';
-import JsonDisplay from '@/components/JsonDisplay';
-import MarkdownText from '@/components/MarkdownText';
-import './index.less';
+} from '@/services/agent/RunController'
+import { getOptionList } from '@/services/sys/DictController'
+import { AgentRun, AgentRunSearchParams, AgentRunStatistics } from '@/services/entity/Agent'
+import JsonDisplay from '@/components/JsonDisplay'
+import MarkdownText from '@/components/MarkdownText'
+import './index.less'
 import {
   ApiOutlined,
   CheckCircleFilled,
@@ -32,82 +32,82 @@ import {
   DatabaseOutlined,
   FieldTimeOutlined,
   WarningOutlined,
-} from '@ant-design/icons';
+} from '@ant-design/icons'
 
-const { Text } = Typography;
+const { Text } = Typography
 
 const renderStatusTag = (status: number | undefined, intl: ReturnType<typeof useIntl>) => {
   if (status === 0) {
     return (
       <Tag color="success">{intl.formatMessage({ id: 'pages.agent.run.status.success' })}</Tag>
-    );
+    )
   }
   if (status === 1) {
-    return <Tag color="error">{intl.formatMessage({ id: 'pages.agent.run.status.failed' })}</Tag>;
+    return <Tag color="error">{intl.formatMessage({ id: 'pages.agent.run.status.failed' })}</Tag>
   }
   if (status === 2) {
     return (
       <Tag color="warning">{intl.formatMessage({ id: 'pages.agent.run.status.timeout' })}</Tag>
-    );
+    )
   }
-  return <Tag>{intl.formatMessage({ id: 'pages.agent.run.status.unknown' })}</Tag>;
-};
+  return <Tag>{intl.formatMessage({ id: 'pages.agent.run.status.unknown' })}</Tag>
+}
 
-const { RangePicker } = DatePicker;
+const { RangePicker } = DatePicker
 
 const AgentRunPage: React.FC = () => {
-  const intl = useIntl();
-  const ref = useRef<ActionType>();
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [run, setRun] = useState<AgentRun>();
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [statistics, setStatistics] = useState<AgentRunStatistics>();
-  const [statisticsLoading, setStatisticsLoading] = useState(false);
-  const [dateRange, setDateRange] = useState<[any, any] | null>(null);
+  const intl = useIntl()
+  const ref = useRef<ActionType>()
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [run, setRun] = useState<AgentRun>()
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [statistics, setStatistics] = useState<AgentRunStatistics>()
+  const [statisticsLoading, setStatisticsLoading] = useState(false)
+  const [dateRange, setDateRange] = useState<[any, any] | null>(null)
 
   const loadStatistics = async () => {
-    setStatisticsLoading(true);
+    setStatisticsLoading(true)
     try {
-      const params: any = {};
+      const params: any = {}
       if (dateRange) {
-        params.startTime = dateRange[0]?.valueOf();
-        params.endTime = dateRange[1]?.valueOf();
+        params.startTime = dateRange[0]?.valueOf()
+        params.endTime = dateRange[1]?.valueOf()
       }
-      const { code, data, message: msg } = await getAgentRunStatistics(params);
+      const { code, data, message: msg } = await getAgentRunStatistics(params)
       if (code === 200) {
-        setStatistics(data);
+        setStatistics(data)
       } else {
-        message.error(msg || intl.formatMessage({ id: 'pages.agent.run.loadStatisticsFailed' }));
+        message.error(msg || intl.formatMessage({ id: 'pages.agent.run.loadStatisticsFailed' }))
       }
     } finally {
-      setStatisticsLoading(false);
+      setStatisticsLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    loadStatistics();
-  }, [dateRange]);
+    loadStatistics()
+  }, [dateRange])
 
   const openDetail = async (record: AgentRun) => {
     if (!record.id) {
-      message.error(intl.formatMessage({ id: 'pages.agent.run.missingId' }));
-      return;
+      message.error(intl.formatMessage({ id: 'pages.agent.run.missingId' }))
+      return
     }
 
-    setDrawerOpen(true);
-    setDetailLoading(true);
+    setDrawerOpen(true)
+    setDetailLoading(true)
     try {
-      const { code, data, message: msg } = await getAgentRunInfo(record.id);
+      const { code, data, message: msg } = await getAgentRunInfo(record.id)
       if (code === 200) {
-        setRun(data);
+        setRun(data)
       } else {
-        setRun(undefined);
-        message.error(msg || intl.formatMessage({ id: 'pages.agent.run.loadDetailFailed' }));
+        setRun(undefined)
+        message.error(msg || intl.formatMessage({ id: 'pages.agent.run.loadDetailFailed' }))
       }
     } finally {
-      setDetailLoading(false);
+      setDetailLoading(false)
     }
-  };
+  }
 
   const columns: any[] = [
     {
@@ -190,7 +190,7 @@ const AgentRunPage: React.FC = () => {
         />
       ),
     },
-  ];
+  ]
 
   return (
     <PageContainer className="agent-run-page">
@@ -282,14 +282,14 @@ const AgentRunPage: React.FC = () => {
           span: 6,
         }}
         request={async (params: AgentRunSearchParams) => {
-          const { dateRange, ...rest } = params as any;
-          const queryParams: AgentRunSearchParams = { ...rest };
+          const { dateRange, ...rest } = params as any
+          const queryParams: AgentRunSearchParams = { ...rest }
           if (dateRange) {
             // 设置为毫秒级时间戳
-            queryParams.startTime = new Date(dateRange[0]).getTime();
-            queryParams.endTime = new Date(dateRange[1]).getTime();
+            queryParams.startTime = new Date(dateRange[0]).getTime()
+            queryParams.endTime = new Date(dateRange[1]).getTime()
           }
-          return getAgentRunList(queryParams);
+          return getAgentRunList(queryParams)
         }}
         columns={columns}
       />
@@ -415,7 +415,7 @@ const AgentRunPage: React.FC = () => {
         </Spin>
       </Drawer>
     </PageContainer>
-  );
-};
+  )
+}
 
-export default AgentRunPage;
+export default AgentRunPage

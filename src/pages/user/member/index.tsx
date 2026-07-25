@@ -1,31 +1,31 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState } from 'react'
 
-import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components';
-import { request, useIntl } from '@umijs/max';
-import { Button, message } from 'antd';
-import TableActionMenu from '@/components/TableActionMenu';
-import MemberForm from '@/pages/user/member/MemberForm';
-import { FormattedMessage } from '@@/plugin-locale';
-import { PlusOutlined } from '@ant-design/icons';
-import { history, useAccess } from '@@/exports';
+import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
+import { request, useIntl } from '@umijs/max'
+import { Button, message } from 'antd'
+import TableActionMenu from '@/components/TableActionMenu'
+import MemberForm from '@/pages/user/member/MemberForm'
+import { FormattedMessage } from '@@/plugin-locale'
+import { PlusOutlined } from '@ant-design/icons'
+import { history, useAccess } from '@@/exports'
 import {
   getMemberList,
   deleteMemberInfo,
   MemberSearchParams,
-} from '@/services/user/MemberController';
+} from '@/services/user/MemberController'
 /**
  *
  *@description 页面
  *@since 2025-07-23 10:46:11
  */
 const Member: React.FC = () => {
-  const [open, setOpen] = useState(false);
-  const [id, setId] = useState(undefined);
-  const ref = useRef<ActionType>();
-  const intl = useIntl();
-  const permissionMap = useAccess();
-  const path = history.location.pathname;
-  const write = permissionMap[path];
+  const [open, setOpen] = useState(false)
+  const [id, setId] = useState(undefined)
+  const ref = useRef<ActionType>()
+  const intl = useIntl()
+  const permissionMap = useAccess()
+  const path = history.location.pathname
+  const write = permissionMap[path]
   const columns: any = [
     {
       title: intl.formatMessage({ id: 'pages.user.member.username' }),
@@ -72,8 +72,8 @@ const Member: React.FC = () => {
                 label: intl.formatMessage({ id: 'pages.common.edit' }),
                 primary: true,
                 onClick: () => {
-                  setId(record.id);
-                  setOpen(true);
+                  setId(record.id)
+                  setOpen(true)
                 },
               },
               {
@@ -82,15 +82,15 @@ const Member: React.FC = () => {
                 danger: true,
                 confirm: { title: intl.formatMessage({ id: 'pages.confirm.delete' }) },
                 onClick: async () => {
-                  await deleteMemberInfo(record);
-                  ref.current?.reload();
+                  await deleteMemberInfo(record)
+                  ref.current?.reload()
                 },
               },
             ]}
           />
         ),
     },
-  ];
+  ]
   return (
     <PageContainer>
       <ProTable
@@ -103,8 +103,8 @@ const Member: React.FC = () => {
               icon={<PlusOutlined />}
               type="primary"
               onClick={() => {
-                setId(undefined);
-                setOpen(true);
+                setId(undefined)
+                setOpen(true)
               }}
             >
               <FormattedMessage id="pages.common.new" />
@@ -118,12 +118,12 @@ const Member: React.FC = () => {
         open={open}
         setOpen={setOpen}
         onSuccess={() => {
-          setId(undefined);
-          ref.current?.reload();
+          setId(undefined)
+          ref.current?.reload()
         }}
       />
     </PageContainer>
-  );
-};
+  )
+}
 
-export default Member;
+export default Member

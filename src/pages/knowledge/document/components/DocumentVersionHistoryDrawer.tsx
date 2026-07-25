@@ -1,15 +1,15 @@
-import { getIndexStatus } from '@/pages/agent/knowledge-base/status';
-import { KnowledgeDocumentVersion } from '@/services/entity/Agent';
+import { getIndexStatus } from '@/pages/agent/knowledge-base/status'
+import { KnowledgeDocumentVersion } from '@/services/entity/Agent'
 import {
   getDocumentVersions,
   rollbackDocumentVersion,
-} from '@/services/knowledge/DocumentController';
-import { ActionType, ProTable } from '@ant-design/pro-components';
-import { useIntl } from '@umijs/max';
-import { Drawer, message, Tag } from 'antd';
-import React, { useEffect, useRef, useState } from 'react';
-import DocumentChunkDrawer from './DocumentChunkDrawer';
-import TableActionMenu from '@/components/TableActionMenu';
+} from '@/services/knowledge/DocumentController'
+import { ActionType, ProTable } from '@ant-design/pro-components'
+import { useIntl } from '@umijs/max'
+import { Drawer, message, Tag } from 'antd'
+import React, { useEffect, useRef, useState } from 'react'
+import DocumentChunkDrawer from './DocumentChunkDrawer'
+import TableActionMenu from '@/components/TableActionMenu'
 
 interface DocumentVersionHistoryDrawerProps {
   documentId?: string;
@@ -29,14 +29,14 @@ const DocumentVersionHistoryDrawer: React.FC<DocumentVersionHistoryDrawerProps> 
   onClose,
   onRollbackSuccess,
 }) => {
-  const actionRef = useRef<ActionType>();
-  const [chunkVersion, setChunkVersion] = useState<KnowledgeDocumentVersion>();
-  const intl = useIntl();
+  const actionRef = useRef<ActionType>()
+  const [chunkVersion, setChunkVersion] = useState<KnowledgeDocumentVersion>()
+  const intl = useIntl()
 
   /** 切换文档或重新打开抽屉时重新加载版本，避免展示上一份文档的数据。 */
   useEffect(() => {
-    if (open && documentId) actionRef.current?.reload();
-  }, [open, documentId]);
+    if (open && documentId) actionRef.current?.reload()
+  }, [open, documentId])
 
   return (
     <Drawer
@@ -68,16 +68,16 @@ const DocumentVersionHistoryDrawer: React.FC<DocumentVersionHistoryDrawerProps> 
             dataIndex: 'indexStatus',
             width: 120,
             render: (_, record) => {
-              const status = getIndexStatus(record.indexStatus);
+              const status = getIndexStatus(record.indexStatus)
               return (
                 <Tag color={record.indexStatus === 3 ? 'error' : status.color}>
                   {record.indexStatus === 3
                     ? intl.formatMessage({
-                        id: 'pages.knowledge.document.versionHistory.indexStatus.failed',
-                      })
+                      id: 'pages.knowledge.document.versionHistory.indexStatus.failed',
+                    })
                     : status.label}
                 </Tag>
-              );
+              )
             },
           },
           {
@@ -131,23 +131,23 @@ const DocumentVersionHistoryDrawer: React.FC<DocumentVersionHistoryDrawerProps> 
                         }),
                       },
                       onClick: async () => {
-                        const response = await rollbackDocumentVersion(record.id!);
+                        const response = await rollbackDocumentVersion(record.id!)
                         if (response.code === 200) {
                           message.success(
                             response.message ||
                               intl.formatMessage({
                                 id: 'pages.knowledge.document.versionHistory.rollbackQueued',
                               }),
-                          );
-                          actionRef.current?.reload();
-                          onRollbackSuccess();
+                          )
+                          actionRef.current?.reload()
+                          onRollbackSuccess()
                         } else
                           message.error(
                             response.message ||
                               intl.formatMessage({
                                 id: 'pages.knowledge.document.versionHistory.rollbackFailed',
                               }),
-                          );
+                          )
                       },
                     },
                   ]}
@@ -162,7 +162,7 @@ const DocumentVersionHistoryDrawer: React.FC<DocumentVersionHistoryDrawerProps> 
         onClose={() => setChunkVersion(undefined)}
       />
     </Drawer>
-  );
-};
+  )
+}
 
-export default DocumentVersionHistoryDrawer;
+export default DocumentVersionHistoryDrawer

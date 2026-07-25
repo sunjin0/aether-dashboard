@@ -1,20 +1,20 @@
-import DrawerForm from '@/components/DrawerForm';
+import DrawerForm from '@/components/DrawerForm'
 import {
   addAdminPreference,
   getAdminPreference,
   updateAdminPreference,
-} from '@/services/sys/AdminPreferenceController';
+} from '@/services/sys/AdminPreferenceController'
 import {
   ProFormDatePicker,
   ProFormDigit,
   ProFormSelect,
   ProFormText,
   ProFormTextArea,
-} from '@ant-design/pro-components';
-import { Form } from 'antd';
-import dayjs from 'dayjs';
-import { getAdminList } from '@/services/sys/AdminController';
-import { useIntl } from '@umijs/max';
+} from '@ant-design/pro-components'
+import { Form } from 'antd'
+import dayjs from 'dayjs'
+import { getAdminList } from '@/services/sys/AdminController'
+import { useIntl } from '@umijs/max'
 
 interface PreferenceFormProps {
   id?: string;
@@ -24,16 +24,16 @@ interface PreferenceFormProps {
 }
 
 const PreferenceForm: React.FC<PreferenceFormProps> = ({ id, open, setOpen, onSuccess }) => {
-  const intl = useIntl();
-  const format = (id: string) => intl.formatMessage({ id });
-  const [form] = Form.useForm();
+  const intl = useIntl()
+  const format = (id: string) => intl.formatMessage({ id })
+  const [form] = Form.useForm()
   const categoryOptions = ['language', 'style', 'format', 'tech_stack', 'tool_strategy'].map(
     (value) => ({ label: format(`pages.sys.preference.category.${value}`), value }),
-  );
+  )
   const scopeOptions = ['global', 'session', 'task_type'].map((value) => ({
     label: format(`pages.sys.preference.scope.${value}`),
     value,
-  }));
+  }))
 
   return (
     <DrawerForm
@@ -50,11 +50,11 @@ const PreferenceForm: React.FC<PreferenceFormProps> = ({ id, open, setOpen, onSu
           decayRate: Number(values.decayRate),
           expiresAt: values.expiresAt ? dayjs(values.expiresAt).valueOf() : null,
           scopeDetail: values.scope === 'task_type' ? values.scopeDetail : null,
-        };
-        if (id) await updateAdminPreference({ ...payload, id });
-        else await addAdminPreference(payload);
-        onSuccess();
-        return true;
+        }
+        if (id) await updateAdminPreference({ ...payload, id })
+        else await addAdminPreference(payload)
+        onSuccess()
+        return true
       }}
     >
       <ProFormSelect
@@ -62,14 +62,14 @@ const PreferenceForm: React.FC<PreferenceFormProps> = ({ id, open, setOpen, onSu
         label={format('pages.sys.preference.admin')}
         rules={[{ required: true, message: format('pages.sys.preference.selectAdmin') }]}
         request={async () => {
-          const res = await getAdminList({ current: 1, pageSize: 100 });
+          const res = await getAdminList({ current: 1, pageSize: 100 })
           if (res.code === 200 && res.data) {
             return res.data.map((a) => ({
               label: a.username || String(a.id),
               value: String(a.id),
-            }));
+            }))
           }
-          return [];
+          return []
         }}
         fieldProps={{ showSearch: true }}
       />
@@ -151,7 +151,7 @@ const PreferenceForm: React.FC<PreferenceFormProps> = ({ id, open, setOpen, onSu
         ]}
       />
     </DrawerForm>
-  );
-};
+  )
+}
 
-export default PreferenceForm;
+export default PreferenceForm

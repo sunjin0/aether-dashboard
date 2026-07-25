@@ -1,25 +1,25 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState } from 'react'
 
-import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components';
-import { history, request, useIntl } from '@umijs/max';
-import { Button, message } from 'antd';
-import TableActionMenu from '@/components/TableActionMenu';
-import FileImage from '@/components/FileImage';
-import AdminForm from '@/pages/sys/admin/AdminForm';
-import { useAccess } from '@@/exports';
-import { getOptionList } from '@/services/sys/DictController';
-import { deleteAdminInfo, getAdminList, getRoleOptions } from '@/services/sys/AdminController';
-import { AdminSearchParams } from '@/services/entity/Sys';
-import { PlusOutlined } from '@ant-design/icons';
-import { FormattedMessage } from '@@/plugin-locale';
+import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
+import { history, request, useIntl } from '@umijs/max'
+import { Button, message } from 'antd'
+import TableActionMenu from '@/components/TableActionMenu'
+import FileImage from '@/components/FileImage'
+import AdminForm from '@/pages/sys/admin/AdminForm'
+import { useAccess } from '@@/exports'
+import { getOptionList } from '@/services/sys/DictController'
+import { deleteAdminInfo, getAdminList, getRoleOptions } from '@/services/sys/AdminController'
+import { AdminSearchParams } from '@/services/entity/Sys'
+import { PlusOutlined } from '@ant-design/icons'
+import { FormattedMessage } from '@@/plugin-locale'
 const Admin: React.FC = () => {
-  const intl = useIntl();
-  const [open, setOpen] = useState(false);
-  const [id, setId] = useState(undefined);
-  const ref = useRef<ActionType>();
-  const permissionMap = useAccess();
-  const path = history.location.pathname;
-  const write = permissionMap[path];
+  const intl = useIntl()
+  const [open, setOpen] = useState(false)
+  const [id, setId] = useState(undefined)
+  const ref = useRef<ActionType>()
+  const permissionMap = useAccess()
+  const path = history.location.pathname
+  const write = permissionMap[path]
   const columns: any[] = [
     {
       title: intl.formatMessage({ id: 'pages.sys.role.name' }),
@@ -92,8 +92,8 @@ const Admin: React.FC = () => {
                 label: intl.formatMessage({ id: 'pages.common.edit' }),
                 primary: true,
                 onClick: () => {
-                  setId(record.id);
-                  setOpen(true);
+                  setId(record.id)
+                  setOpen(true)
                 },
               },
               {
@@ -103,17 +103,17 @@ const Admin: React.FC = () => {
                 danger: true,
                 confirm: { title: intl.formatMessage({ id: 'pages.confirm.delete' }) },
                 onClick: async () => {
-                  const { code, message: msg } = await deleteAdminInfo(record);
-                  if (code === 200) message.success(msg);
-                  else message.error(msg);
-                  action?.reload();
+                  const { code, message: msg } = await deleteAdminInfo(record)
+                  if (code === 200) message.success(msg)
+                  else message.error(msg)
+                  action?.reload()
                 },
               },
             ]}
           />
         ),
     },
-  ];
+  ]
   return (
     <PageContainer>
       <ProTable
@@ -126,8 +126,8 @@ const Admin: React.FC = () => {
               icon={<PlusOutlined />}
               type="primary"
               onClick={() => {
-                setId(undefined);
-                setOpen(true);
+                setId(undefined)
+                setOpen(true)
               }}
             >
               <FormattedMessage id="pages.common.new" />
@@ -142,12 +142,12 @@ const Admin: React.FC = () => {
         open={open}
         setOpen={setOpen}
         onSuccess={() => {
-          setId(undefined);
-          ref.current?.reload();
+          setId(undefined)
+          ref.current?.reload()
         }}
       />
     </PageContainer>
-  );
-};
+  )
+}
 
-export default Admin;
+export default Admin

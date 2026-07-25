@@ -1,5 +1,5 @@
-import { request } from '@umijs/max';
-import type { ResponseStructure } from '@/services/entity/Common';
+import { request } from '@umijs/max'
+import type { ResponseStructure } from '@/services/entity/Common'
 
 export interface FileUploadResult {
   objectKey: string;
@@ -17,10 +17,10 @@ export interface FileReference {
 }
 
 export const uploadFile = async (file: File): Promise<ResponseStructure<FileUploadResult>> => {
-  const data = new FormData();
-  data.append('file', file);
-  return request('/api/file/upload', { method: 'POST', data });
-};
+  const data = new FormData()
+  data.append('file', file)
+  return request('/api/file/upload', { method: 'POST', data })
+}
 
 const getFileBlob = async (
   path: '/api/file/preview' | '/api/file/download',
@@ -36,27 +36,27 @@ const getFileBlob = async (
       },
       responseType: 'blob',
       skipErrorHandler: true,
-    });
+    })
   } catch (error: unknown) {
-    const body = (error as { response?: { data?: unknown } }).response?.data;
+    const body = (error as { response?: { data?: unknown } }).response?.data
     if (body instanceof Blob && body.type.includes('application/json')) {
-      const result = JSON.parse(await body.text()) as { message?: string };
-      throw new Error(result.message || '文件请求失败');
+      const result = JSON.parse(await body.text()) as { message?: string }
+      throw new Error(result.message || '文件请求失败')
     }
-    throw error;
+    throw error
   }
-};
+}
 
 export const createFilePreviewUrl = async (file: FileReference): Promise<string> =>
-  URL.createObjectURL(await getFileBlob('/api/file/preview', file));
+  URL.createObjectURL(await getFileBlob('/api/file/preview', file))
 
 export const downloadFile = async (file: FileReference): Promise<void> => {
-  const url = URL.createObjectURL(await getFileBlob('/api/file/download', file));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = file.fileName || 'file';
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 0);
-};
+  const url = URL.createObjectURL(await getFileBlob('/api/file/download', file))
+  const link = document.createElement('a')
+  link.href = url
+  link.download = file.fileName || 'file'
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.setTimeout(() => URL.revokeObjectURL(url), 0)
+}

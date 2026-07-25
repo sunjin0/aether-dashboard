@@ -1,10 +1,10 @@
-import { KnowledgeIndexJob, KnowledgeIndexJobSearchParams } from '@/services/entity/Agent';
-import { getIndexJobList, retryIndexJob } from '@/services/knowledge/IndexJobController';
-import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components';
-import { useAccess, useIntl } from '@@/exports';
-import { Descriptions, message, Tag, Tooltip } from 'antd';
-import TableActionMenu from '@/components/TableActionMenu';
-import React, { useRef } from 'react';
+import { KnowledgeIndexJob, KnowledgeIndexJobSearchParams } from '@/services/entity/Agent'
+import { getIndexJobList, retryIndexJob } from '@/services/knowledge/IndexJobController'
+import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
+import { useAccess, useIntl } from '@@/exports'
+import { Descriptions, message, Tag, Tooltip } from 'antd'
+import TableActionMenu from '@/components/TableActionMenu'
+import React, { useRef } from 'react'
 
 /** 将任务起止时间转换为可快速识别的耗时文本。 */
 const formatDuration = (
@@ -12,35 +12,35 @@ const formatDuration = (
   finishedAt?: number,
   intl?: ReturnType<typeof useIntl>,
 ) => {
-  if (!startedAt) return '-';
-  const duration = (finishedAt || Date.now()) - startedAt;
-  if (duration < 1000) return `${duration} ms`;
+  if (!startedAt) return '-'
+  const duration = (finishedAt || Date.now()) - startedAt
+  if (duration < 1000) return `${duration} ms`
   if (duration < 60_000)
     return intl
       ? intl.formatMessage(
-          { id: 'pages.knowledge.indexJob.duration.seconds' },
-          { value: (duration / 1000).toFixed(1) },
-        )
-      : `${(duration / 1000).toFixed(1)} 秒`;
+        { id: 'pages.knowledge.indexJob.duration.seconds' },
+        { value: (duration / 1000).toFixed(1) },
+      )
+      : `${(duration / 1000).toFixed(1)} 秒`
   return intl
     ? intl.formatMessage(
-        { id: 'pages.knowledge.indexJob.duration.minutes' },
-        { minutes: Math.floor(duration / 60_000), seconds: Math.floor((duration % 60_000) / 1000) },
-      )
-    : `${Math.floor(duration / 60_000)} 分 ${Math.floor((duration % 60_000) / 1000)} 秒`;
-};
+      { id: 'pages.knowledge.indexJob.duration.minutes' },
+      { minutes: Math.floor(duration / 60_000), seconds: Math.floor((duration % 60_000) / 1000) },
+    )
+    : `${Math.floor(duration / 60_000)} 分 ${Math.floor((duration % 60_000) / 1000)} 秒`
+}
 
 const IdText: React.FC<{ value?: string }> = ({ value }) => (
   <Tooltip title={value}>
     <span>{value || '-'}</span>
   </Tooltip>
-);
+)
 
 const KnowledgeIndexJobPage: React.FC = () => {
-  const actionRef = useRef<ActionType>();
-  const access = useAccess();
-  const canRetry = access['/knowledge/document'] || access['/knowledge/index-job'];
-  const intl = useIntl();
+  const actionRef = useRef<ActionType>()
+  const access = useAccess()
+  const canRetry = access['/knowledge/document'] || access['/knowledge/index-job']
+  const intl = useIntl()
 
   const statusLabels: Record<string, { text: string; color: string }> = {
     pending: {
@@ -63,7 +63,7 @@ const KnowledgeIndexJobPage: React.FC = () => {
       text: intl.formatMessage({ id: 'pages.knowledge.indexJob.status.cancelled' }),
       color: 'default',
     },
-  };
+  }
 
   const jobTypeLabels: Record<string, string> = {
     create: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.create' }),
@@ -72,7 +72,7 @@ const KnowledgeIndexJobPage: React.FC = () => {
     reindex: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.reindex' }),
     rollback: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.rollback' }),
     retry: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.retry' }),
-  };
+  }
 
   return (
     <PageContainer title={intl.formatMessage({ id: 'pages.knowledge.indexJob.title' })}>
@@ -208,8 +208,8 @@ const KnowledgeIndexJobPage: React.FC = () => {
               Object.entries(statusLabels).map(([key, value]) => [key, { text: value.text }]),
             ),
             render: (_, record) => {
-              const status = statusLabels[record.status || 'pending'];
-              return <Tag color={status.color}>{status.text}</Tag>;
+              const status = statusLabels[record.status || 'pending']
+              return <Tag color={status.color}>{status.text}</Tag>
             },
           },
           {
@@ -262,19 +262,19 @@ const KnowledgeIndexJobPage: React.FC = () => {
                         title: intl.formatMessage({ id: 'pages.knowledge.indexJob.retryConfirm' }),
                       },
                       onClick: async () => {
-                        if (!record.id) return;
-                        const result = await retryIndexJob(record.id);
+                        if (!record.id) return
+                        const result = await retryIndexJob(record.id)
                         if (result.code === 200) {
                           message.success(
                             result.message ||
                               intl.formatMessage({ id: 'pages.knowledge.indexJob.retryQueued' }),
-                          );
-                          actionRef.current?.reload();
+                          )
+                          actionRef.current?.reload()
                         } else
                           message.error(
                             result.message ||
                               intl.formatMessage({ id: 'pages.knowledge.indexJob.retryFailed' }),
-                          );
+                          )
                       },
                     },
                   ]}
@@ -284,7 +284,7 @@ const KnowledgeIndexJobPage: React.FC = () => {
         ]}
       />
     </PageContainer>
-  );
-};
+  )
+}
 
-export default KnowledgeIndexJobPage;
+export default KnowledgeIndexJobPage

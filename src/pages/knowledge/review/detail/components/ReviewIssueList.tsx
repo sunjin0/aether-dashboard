@@ -4,13 +4,13 @@ import {
   LeftOutlined,
   RightOutlined,
   UndoOutlined,
-} from '@ant-design/icons';
-import { useIntl } from '@umijs/max';
-import { Button, Card, Empty, List, Segmented, Space, Tag, Typography } from 'antd';
-import React from 'react';
-import { AiReviewDiffIssue } from '@/services/entity/Agent';
-import { severityColor } from '../constants';
-import { ReviewIssueFilter } from '../types';
+} from '@ant-design/icons'
+import { useIntl } from '@umijs/max'
+import { Button, Card, Empty, List, Segmented, Space, Tag, Typography } from 'antd'
+import React from 'react'
+import { AiReviewDiffIssue } from '@/services/entity/Agent'
+import { severityColor } from '../constants'
+import { ReviewIssueFilter } from '../types'
 
 interface Props {
   issues: AiReviewDiffIssue[];
@@ -37,9 +37,9 @@ const ReviewIssueList: React.FC<Props> = ({
   onReject,
   onUnaccept,
 }) => {
-  const intl = useIntl();
-  const activeIndex = issues.findIndex((issue) => issue.id === activeId);
-  const activeIssue = activeIndex >= 0 ? issues[activeIndex] : undefined;
+  const intl = useIntl()
+  const activeIndex = issues.findIndex((issue) => issue.id === activeId)
+  const activeIssue = activeIndex >= 0 ? issues[activeIndex] : undefined
   const filterOptions: { value: ReviewIssueFilter; label: string }[] = [
     {
       value: 'all',
@@ -61,11 +61,11 @@ const ReviewIssueList: React.FC<Props> = ({
       value: 'rejected',
       label: intl.formatMessage({ id: 'pages.knowledge.review.issueList.filter.rejected' }),
     },
-  ];
+  ]
   const statusText: Record<string, string> = {
     accepted: intl.formatMessage({ id: 'pages.knowledge.review.issueList.status.accepted' }),
     rejected: intl.formatMessage({ id: 'pages.knowledge.review.issueList.status.rejected' }),
-  };
+  }
 
   const actions = (issue: AiReviewDiffIssue) => {
     if (issue.handleStatus === 'accepted' && !issue.appliedChecksum) {
@@ -79,9 +79,9 @@ const ReviewIssueList: React.FC<Props> = ({
         >
           {intl.formatMessage({ id: 'pages.knowledge.review.issueList.unaccept' })}
         </Button>
-      );
+      )
     }
-    if (issue.handleStatus !== 'pending') return null;
+    if (issue.handleStatus !== 'pending') return null
     return (
       <Space size="small">
         {issue.suggestedPatch && (
@@ -105,8 +105,8 @@ const ReviewIssueList: React.FC<Props> = ({
           {intl.formatMessage({ id: 'pages.knowledge.review.issueList.reject' })}
         </Button>
       </Space>
-    );
-  };
+    )
+  }
 
   return (
     <Card
@@ -149,7 +149,7 @@ const ReviewIssueList: React.FC<Props> = ({
             size="small"
             dataSource={issues}
             renderItem={(issue) => {
-              const selected = activeId === issue.id;
+              const selected = activeId === issue.id
               return (
                 <List.Item
                   style={{
@@ -197,7 +197,7 @@ const ReviewIssueList: React.FC<Props> = ({
                     }
                   />
                 </List.Item>
-              );
+              )
             }}
           />
         </div>
@@ -235,7 +235,7 @@ const ReviewIssueList: React.FC<Props> = ({
         </div>
       )}
     </Card>
-  );
-};
+  )
+}
 
-export default ReviewIssueList;
+export default ReviewIssueList

@@ -1,9 +1,9 @@
-import { KnowledgeDocumentChunk, KnowledgeDocumentVersion } from '@/services/entity/Agent';
-import { getDocumentVersionChunkList } from '@/services/knowledge/DocumentController';
-import { ActionType, ProTable } from '@ant-design/pro-components';
-import { useIntl } from '@umijs/max';
-import { Drawer, Typography } from 'antd';
-import React, { useEffect, useRef } from 'react';
+import { KnowledgeDocumentChunk, KnowledgeDocumentVersion } from '@/services/entity/Agent'
+import { getDocumentVersionChunkList } from '@/services/knowledge/DocumentController'
+import { ActionType, ProTable } from '@ant-design/pro-components'
+import { useIntl } from '@umijs/max'
+import { Drawer, Typography } from 'antd'
+import React, { useEffect, useRef } from 'react'
 
 interface DocumentChunkDrawerProps {
   version?: KnowledgeDocumentVersion;
@@ -13,13 +13,13 @@ interface DocumentChunkDrawerProps {
 
 /** 分块属于特定版本，在版本历史中使用二级抽屉查看，避免成为独立菜单。 */
 const DocumentChunkDrawer: React.FC<DocumentChunkDrawerProps> = ({ version, open, onClose }) => {
-  const actionRef = useRef<ActionType>();
-  const intl = useIntl();
+  const actionRef = useRef<ActionType>()
+  const intl = useIntl()
 
   /** 每次打开或切换版本时重新请求，确保内容与当前版本一致。 */
   useEffect(() => {
-    if (open && version?.id) actionRef.current?.reload();
-  }, [open, version?.id]);
+    if (open && version?.id) actionRef.current?.reload()
+  }, [open, version?.id])
 
   return (
     <Drawer
@@ -72,7 +72,7 @@ const DocumentChunkDrawer: React.FC<DocumentChunkDrawerProps> = ({ version, open
         ]}
       />
     </Drawer>
-  );
-};
+  )
+}
 
-export default DocumentChunkDrawer;
+export default DocumentChunkDrawer

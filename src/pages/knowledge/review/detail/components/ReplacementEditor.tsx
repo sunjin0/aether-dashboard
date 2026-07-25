@@ -1,7 +1,7 @@
-﻿import { useIntl } from '@umijs/max';
-import { Input, Modal } from 'antd';
-import React, { useEffect, useState } from 'react';
-import { AiReviewDiffIssue } from '@/services/entity/Agent';
+﻿import { useIntl } from '@umijs/max'
+import { Input, Modal } from 'antd'
+import React, { useEffect, useState } from 'react'
+import { AiReviewDiffIssue } from '@/services/entity/Agent'
 interface Props {
   issue?: AiReviewDiffIssue;
   open: boolean;
@@ -10,9 +10,9 @@ interface Props {
   onConfirm: (replacement?: string) => void;
 }
 const ReplacementEditor: React.FC<Props> = ({ issue, open, loading, onCancel, onConfirm }) => {
-  const intl = useIntl();
-  const [replacement, setReplacement] = useState('');
-  useEffect(() => setReplacement(issue?.suggestedPatch?.replacement || ''), [issue]);
+  const intl = useIntl()
+  const [replacement, setReplacement] = useState('')
+  useEffect(() => setReplacement(issue?.suggestedPatch?.replacement || ''), [issue])
   return (
     <Modal
       open={open}
@@ -32,6 +32,6 @@ const ReplacementEditor: React.FC<Props> = ({ issue, open, loading, onCancel, on
         })}
       />
     </Modal>
-  );
-};
-export default ReplacementEditor;
+  )
+}
+export default ReplacementEditor

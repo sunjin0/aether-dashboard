@@ -1,8 +1,8 @@
-import DrawerForm from '@/components/DrawerForm';
-import { useIntl } from '@umijs/max';
-import { Form } from 'antd';
-import { ProFormText } from '@ant-design/pro-components';
-import { getMemberInfo, addMemberInfo, updateMemberInfo } from '@/services/user/MemberController';
+import DrawerForm from '@/components/DrawerForm'
+import { useIntl } from '@umijs/max'
+import { Form } from 'antd'
+import { ProFormText } from '@ant-design/pro-components'
+import { getMemberInfo, addMemberInfo, updateMemberInfo } from '@/services/user/MemberController'
 /**
  *
  *@description 表单
@@ -14,9 +14,9 @@ const MemberForm = (props: {
   setOpen?: (open: boolean) => void;
   onSuccess: () => void;
 }) => {
-  const { id, open, setOpen, onSuccess } = props;
-  const intl = useIntl();
-  const [form] = Form.useForm();
+  const { id, open, setOpen, onSuccess } = props
+  const intl = useIntl()
+  const [form] = Form.useForm()
   return (
     <DrawerForm
       open={open}
@@ -26,12 +26,12 @@ const MemberForm = (props: {
       form={form}
       onSuccess={async (values) => {
         if (id) {
-          await updateMemberInfo(values);
+          await updateMemberInfo(values)
         } else {
-          await addMemberInfo(values);
+          await addMemberInfo(values)
         }
-        onSuccess();
-        return true;
+        onSuccess()
+        return true
       }}
     >
       <ProFormText name={'id'} hidden={true} />
@@ -86,6 +86,6 @@ const MemberForm = (props: {
         ]}
       />
     </DrawerForm>
-  );
-};
-export default MemberForm;
+  )
+}
+export default MemberForm

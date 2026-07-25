@@ -4,8 +4,8 @@ import {
   FileDoneOutlined,
   ReloadOutlined,
   SendOutlined,
-} from '@ant-design/icons';
-import { useIntl } from '@umijs/max';
+} from '@ant-design/icons'
+import { useIntl } from '@umijs/max'
 import {
   Button,
   Col,
@@ -17,9 +17,9 @@ import {
   Tag,
   Tooltip,
   Typography,
-} from 'antd';
-import React from 'react';
-import { AiReviewDiff } from '@/services/entity/Agent';
+} from 'antd'
+import React from 'react'
+import { AiReviewDiff } from '@/services/entity/Agent'
 
 interface Props {
   diff: AiReviewDiff;
@@ -42,22 +42,22 @@ const ReviewDiffToolbar: React.FC<Props> = ({
   onApplyAccepted,
   onSubmit,
 }) => {
-  const intl = useIntl();
+  const intl = useIntl()
   const statusLabelMap: Record<string, string> = {
     success: intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.status.success' }),
     failed: intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.status.failed' }),
     stale: intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.status.stale' }),
     pending: intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.status.pending' }),
     running: intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.status.running' }),
-  };
+  }
   const statusColorMap: Record<string, string> = {
     success: 'success',
     failed: 'error',
     stale: 'warning',
     pending: 'processing',
     running: 'processing',
-  };
-  const status = diff.stale ? 'stale' : diff.reviewStatus;
+  }
+  const status = diff.stale ? 'stale' : diff.reviewStatus
   return (
     <Row
       align="middle"
@@ -198,6 +198,6 @@ const ReviewDiffToolbar: React.FC<Props> = ({
         </Space>
       </Col>
     </Row>
-  );
-};
-export default ReviewDiffToolbar;
+  )
+}
+export default ReviewDiffToolbar

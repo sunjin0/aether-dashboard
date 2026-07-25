@@ -1,22 +1,22 @@
-import DrawerForm from '@/components/DrawerForm';
+import DrawerForm from '@/components/DrawerForm'
 import {
   addKnowledgeBase,
   getKnowledgeBase,
   updateKnowledgeBase,
-} from '@/services/knowledge/KnowledgeBaseController';
+} from '@/services/knowledge/KnowledgeBaseController'
 import {
   getEmbeddingProviderOptions,
   getReviewModelProviderOptions,
-} from '@/services/agent/ModelProviderController';
+} from '@/services/agent/ModelProviderController'
 import {
   ProFormSelect,
   ProFormSwitch,
   ProFormText,
   ProFormTextArea,
-} from '@ant-design/pro-components';
-import { useIntl } from '@umijs/max';
-import { Card, Col, Form, Row } from 'antd';
-import './KnowledgeBaseForm.less';
+} from '@ant-design/pro-components'
+import { useIntl } from '@umijs/max'
+import { Card, Col, Form, Row } from 'antd'
+import './KnowledgeBaseForm.less'
 
 interface KnowledgeBaseFormProps {
   id?: string;
@@ -26,8 +26,8 @@ interface KnowledgeBaseFormProps {
 }
 
 const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen, onSuccess }) => {
-  const [form] = Form.useForm();
-  const intl = useIntl();
+  const [form] = Form.useForm()
+  const intl = useIntl()
 
   return (
     <DrawerForm
@@ -41,11 +41,11 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
           ...values,
           status: Number(values.status),
           reviewConfig: JSON.stringify(values.reviewConfig),
-        };
-        if (id) await updateKnowledgeBase({ ...payload, id });
-        else await addKnowledgeBase(payload);
-        onSuccess();
-        return true;
+        }
+        if (id) await updateKnowledgeBase({ ...payload, id })
+        else await addKnowledgeBase(payload)
+        onSuccess()
+        return true
       }}
     >
       <Card
@@ -225,7 +225,7 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
         />
       </Card>
     </DrawerForm>
-  );
-};
+  )
+}
 
-export default KnowledgeBaseForm;
+export default KnowledgeBaseForm

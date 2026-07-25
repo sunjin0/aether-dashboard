@@ -1,8 +1,8 @@
-import React, { useRef, useState } from 'react';
-import { ActionType, PageContainer, ProDescriptions, ProTable } from '@ant-design/pro-components';
-import { Card, Col, Descriptions, Drawer, Empty, message, Row, Spin, Statistic, Tag } from 'antd';
-import { history, useAccess, useIntl } from '@@/exports';
-import TableActionMenu from '@/components/TableActionMenu';
+import React, { useRef, useState } from 'react'
+import { ActionType, PageContainer, ProDescriptions, ProTable } from '@ant-design/pro-components'
+import { Card, Col, Descriptions, Drawer, Empty, message, Row, Spin, Statistic, Tag } from 'antd'
+import { history, useAccess, useIntl } from '@@/exports'
+import TableActionMenu from '@/components/TableActionMenu'
 import {
   closeAgentConversation,
   deleteAgentConversation,
@@ -11,143 +11,143 @@ import {
   getAgentConversationMessages,
   getConversationLifecycle,
   getConversationStatistics,
-} from '@/services/agent/ConversationController';
-import { getOptionList } from '@/services/sys/DictController';
+} from '@/services/agent/ConversationController'
+import { getOptionList } from '@/services/sys/DictController'
 import {
   AgentConversation,
   AgentConversationSearchParams,
   AgentMessage,
   ConversationLifecycle,
   MessageStatistics,
-} from '@/services/entity/Agent';
-import AgentMessageBubble from '@/components/AgentMessageBubble';
+} from '@/services/entity/Agent'
+import AgentMessageBubble from '@/components/AgentMessageBubble'
 
 const AgentConversationPage: React.FC = () => {
-  const intl = useIntl();
-  const ref = useRef<ActionType>();
-  const permissionMap = useAccess();
-  const path = history.location.pathname;
-  const write = permissionMap[path];
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [currentId, setCurrentId] = useState<string>();
-  const [conversation, setConversation] = useState<AgentConversation>();
-  const [messages, setMessages] = useState<AgentMessage[]>([]);
-  const [lifecycle, setLifecycle] = useState<ConversationLifecycle>();
-  const [statistics, setStatistics] = useState<MessageStatistics>();
-  const [detailLoading, setDetailLoading] = useState(false);
+  const intl = useIntl()
+  const ref = useRef<ActionType>()
+  const permissionMap = useAccess()
+  const path = history.location.pathname
+  const write = permissionMap[path]
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [currentId, setCurrentId] = useState<string>()
+  const [conversation, setConversation] = useState<AgentConversation>()
+  const [messages, setMessages] = useState<AgentMessage[]>([])
+  const [lifecycle, setLifecycle] = useState<ConversationLifecycle>()
+  const [statistics, setStatistics] = useState<MessageStatistics>()
+  const [detailLoading, setDetailLoading] = useState(false)
 
   const loadDetail = async (id: string) => {
-    setDetailLoading(true);
+    setDetailLoading(true)
     try {
       const [detailResult, messageResult, lifecycleResult, statisticsResult] = await Promise.all([
         getAgentConversationInfo(id),
         getAgentConversationMessages(id, { current: 1, pageSize: 20 }),
         getConversationLifecycle(id),
         getConversationStatistics(id),
-      ]);
+      ])
 
       if (detailResult.code === 200) {
-        setConversation(detailResult.data);
+        setConversation(detailResult.data)
       } else {
-        setConversation(undefined);
+        setConversation(undefined)
         message.error(
           detailResult.message ||
             intl.formatMessage({ id: 'pages.agent.conversation.loadDetailFailed' }),
-        );
+        )
       }
 
       if (messageResult.code === 200) {
-        setMessages(messageResult.data || []);
+        setMessages(messageResult.data || [])
       } else {
-        setMessages([]);
+        setMessages([])
         message.error(
           messageResult.message ||
             intl.formatMessage({ id: 'pages.agent.conversation.loadMessagesFailed' }),
-        );
+        )
       }
 
       if (lifecycleResult.code === 200) {
-        setLifecycle(lifecycleResult.data);
+        setLifecycle(lifecycleResult.data)
       } else {
-        setLifecycle(undefined);
+        setLifecycle(undefined)
       }
 
       if (statisticsResult.code === 200) {
-        setStatistics(statisticsResult.data);
+        setStatistics(statisticsResult.data)
       } else {
-        setStatistics(undefined);
+        setStatistics(undefined)
       }
     } finally {
-      setDetailLoading(false);
+      setDetailLoading(false)
     }
-  };
+  }
 
   const openDetail = async (record: AgentConversation) => {
     if (!record.id) {
-      message.error(intl.formatMessage({ id: 'pages.agent.conversation.missingId' }));
-      return;
+      message.error(intl.formatMessage({ id: 'pages.agent.conversation.missingId' }))
+      return
     }
-    setCurrentId(record.id);
-    setDrawerOpen(true);
-    await loadDetail(record.id);
-  };
+    setCurrentId(record.id)
+    setDrawerOpen(true)
+    await loadDetail(record.id)
+  }
 
   const handleCloseConversation = async (record: AgentConversation) => {
     if (!record.id) {
-      message.error(intl.formatMessage({ id: 'pages.agent.conversation.missingId' }));
-      return;
+      message.error(intl.formatMessage({ id: 'pages.agent.conversation.missingId' }))
+      return
     }
 
-    const { code, message: msg } = await closeAgentConversation(record.id);
+    const { code, message: msg } = await closeAgentConversation(record.id)
     if (code === 200) {
-      message.success(msg || intl.formatMessage({ id: 'pages.agent.conversation.closeSuccess' }));
-      ref.current?.reload();
+      message.success(msg || intl.formatMessage({ id: 'pages.agent.conversation.closeSuccess' }))
+      ref.current?.reload()
       if (record.id === currentId) {
-        await loadDetail(record.id);
+        await loadDetail(record.id)
       }
     } else {
-      message.error(msg || intl.formatMessage({ id: 'pages.agent.conversation.closeFailed' }));
+      message.error(msg || intl.formatMessage({ id: 'pages.agent.conversation.closeFailed' }))
     }
-  };
+  }
 
   const formatDuration = (ms: number): string => {
-    const minutes = Math.floor(ms / 60000);
-    const seconds = Math.floor((ms % 60000) / 1000);
+    const minutes = Math.floor(ms / 60000)
+    const seconds = Math.floor((ms % 60000) / 1000)
     if (minutes > 0) {
       return intl.formatMessage(
         { id: 'pages.agent.conversation.durationMinutesSeconds' },
         { minutes, seconds },
-      );
+      )
     }
-    return intl.formatMessage({ id: 'pages.agent.conversation.durationSeconds' }, { seconds });
-  };
+    return intl.formatMessage({ id: 'pages.agent.conversation.durationSeconds' }, { seconds })
+  }
 
   const formatTimestamp = (timestamp: number): string => {
-    return new Date(timestamp).toLocaleString(intl.locale);
-  };
+    return new Date(timestamp).toLocaleString(intl.locale)
+  }
 
   const formatTokens = (tokens: number): string => {
     if (tokens >= 1000000) {
-      return `${(tokens / 1000000).toFixed(1)}M`;
+      return `${(tokens / 1000000).toFixed(1)}M`
     }
     if (tokens >= 1000) {
-      return `${(tokens / 1000).toFixed(1)}K`;
+      return `${(tokens / 1000).toFixed(1)}K`
     }
-    return tokens.toString();
-  };
+    return tokens.toString()
+  }
 
   const formatLatency = (ms: number): string => {
     if (ms >= 1000) {
       return intl.formatMessage(
         { id: 'pages.agent.conversation.latencySeconds' },
         { seconds: (ms / 1000).toFixed(1) },
-      );
+      )
     }
     return intl.formatMessage(
       { id: 'pages.agent.conversation.latencyMilliseconds' },
       { milliseconds: ms },
-    );
-  };
+    )
+  }
 
   const lifecycleStatusMap: Record<number, { text: string; color: string }> = {
     0: {
@@ -162,28 +162,28 @@ const AgentConversationPage: React.FC = () => {
       text: intl.formatMessage({ id: 'pages.agent.conversation.status.archived' }),
       color: 'warning',
     },
-  };
+  }
 
   const handleDeleteConversation = async (record: AgentConversation) => {
     if (!record.id) {
-      message.error(intl.formatMessage({ id: 'pages.agent.conversation.missingId' }));
-      return;
+      message.error(intl.formatMessage({ id: 'pages.agent.conversation.missingId' }))
+      return
     }
 
-    const { code, message: msg } = await deleteAgentConversation(record.id);
+    const { code, message: msg } = await deleteAgentConversation(record.id)
     if (code === 200) {
-      message.success(msg || intl.formatMessage({ id: 'pages.agent.conversation.deleteSuccess' }));
-      ref.current?.reload();
+      message.success(msg || intl.formatMessage({ id: 'pages.agent.conversation.deleteSuccess' }))
+      ref.current?.reload()
       if (record.id === currentId) {
-        setDrawerOpen(false);
-        setCurrentId(undefined);
-        setConversation(undefined);
-        setMessages([]);
+        setDrawerOpen(false)
+        setCurrentId(undefined)
+        setConversation(undefined)
+        setMessages([])
       }
     } else {
-      message.error(msg || intl.formatMessage({ id: 'pages.agent.conversation.deleteFailed' }));
+      message.error(msg || intl.formatMessage({ id: 'pages.agent.conversation.deleteFailed' }))
     }
-  };
+  }
 
   const columns: any[] = [
     {
@@ -257,7 +257,7 @@ const AgentConversationPage: React.FC = () => {
         />
       ),
     },
-  ];
+  ]
 
   return (
     <PageContainer>
@@ -467,7 +467,7 @@ const AgentConversationPage: React.FC = () => {
         </Spin>
       </Drawer>
     </PageContainer>
-  );
-};
+  )
+}
 
-export default AgentConversationPage;
+export default AgentConversationPage

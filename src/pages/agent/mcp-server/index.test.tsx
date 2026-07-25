@@ -1,8 +1,8 @@
-import * as React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import McpServerPage from './index';
+import * as React from 'react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import McpServerPage from './index'
 
-const mockDiscoverMcpServerTools = jest.fn();
+const mockDiscoverMcpServerTools = jest.fn()
 
 jest.mock('@/services/agent/McpServerController', () => ({
   deleteMcpServer: jest.fn(),
@@ -10,15 +10,15 @@ jest.mock('@/services/agent/McpServerController', () => ({
   getMcpServerList: jest.fn(),
   importMcpServerTools: jest.fn(),
   updateMcpServer: jest.fn(),
-}));
+}))
 
 jest.mock('@/services/agent/ToolController', () => ({
   getAgentToolList: jest.fn(() => Promise.resolve({ data: [] })),
-}));
+}))
 
-jest.mock('@/services/sys/DictController', () => ({ getOptionList: jest.fn() }));
-jest.mock('./McpServerForm', () => () => null);
-jest.mock('@/components/JsonDisplay', () => () => null);
+jest.mock('@/services/sys/DictController', () => ({ getOptionList: jest.fn() }))
+jest.mock('./McpServerForm', () => () => null)
+jest.mock('@/components/JsonDisplay', () => () => null)
 
 jest.mock('@ant-design/pro-components', () => ({
   PageContainer: ({ children }: any) => <>{children}</>,
@@ -35,10 +35,10 @@ jest.mock('@ant-design/pro-components', () => ({
       Discover
     </button>
   ),
-}));
+}))
 
 jest.mock('antd', () => {
-  const React = require('react');
+  const React = require('react')
   return {
     Button: ({ children, onClick }: any) => <button onClick={onClick}>{children}</button>,
     Checkbox: ({ checked, onChange, children }: any) => (
@@ -59,29 +59,29 @@ jest.mock('antd', () => {
       Paragraph: ({ children }: any) => <p>{children}</p>,
     },
     message: { error: jest.fn(), success: jest.fn(), warning: jest.fn() },
-  };
-});
+  }
+})
 
 jest.mock('@@/exports', () => ({
   FormattedMessage: () => null,
   history: { location: { pathname: '/agent/mcp-server' } },
   useAccess: () => ({ '/agent/mcp-server': true }),
   useIntl: () => ({ formatMessage: ({ id }: any) => id }),
-}));
+}))
 
 describe('McpServerPage', () => {
   it('selects a tool when its card is clicked', async () => {
     mockDiscoverMcpServerTools.mockResolvedValue({
       code: 200,
       data: [{ name: 'weather', description: 'Gets weather' }],
-    });
+    })
 
-    render(<McpServerPage />);
-    fireEvent.click(screen.getByRole('button', { name: 'Discover' }));
+    render(<McpServerPage />)
+    fireEvent.click(screen.getByRole('button', { name: 'Discover' }))
 
-    const card = await screen.findByRole('checkbox', { name: 'weather' });
-    fireEvent.click(card);
+    const card = await screen.findByRole('checkbox', { name: 'weather' })
+    fireEvent.click(card)
 
-    await waitFor(() => expect(card.getAttribute('aria-checked')).toBe('true'));
-  });
-});
+    await waitFor(() => expect(card.getAttribute('aria-checked')).toBe('true'))
+  })
+})

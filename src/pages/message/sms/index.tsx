@@ -1,21 +1,21 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState } from 'react'
 
-import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components';
-import { request, useIntl, history } from '@umijs/max';
-import { message, Tag } from 'antd';
-import TableActionMenu from '@/components/TableActionMenu';
-import { useAccess } from '@@/exports';
-import Model from '@/components/Model';
-import { getOptionList } from '@/services/sys/DictController';
-import { deleteSmsInfo, getSmsList } from '@/services/msg/SmsController';
-import { SmsSearchParams } from '@/services/entity/Msg';
+import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
+import { request, useIntl, history } from '@umijs/max'
+import { message, Tag } from 'antd'
+import TableActionMenu from '@/components/TableActionMenu'
+import { useAccess } from '@@/exports'
+import Model from '@/components/Model'
+import { getOptionList } from '@/services/sys/DictController'
+import { deleteSmsInfo, getSmsList } from '@/services/msg/SmsController'
+import { SmsSearchParams } from '@/services/entity/Msg'
 
 const Sms: React.FC = () => {
-  const intl = useIntl();
-  const ref = useRef<ActionType>();
-  const permissionMap = useAccess();
-  const path = history.location.pathname;
-  const write = permissionMap[path];
+  const intl = useIntl()
+  const ref = useRef<ActionType>()
+  const permissionMap = useAccess()
+  const path = history.location.pathname
+  const write = permissionMap[path]
   const columns: any[] = [
     {
       title: intl.formatMessage({ id: 'pages.common.id' }),
@@ -56,7 +56,7 @@ const Sms: React.FC = () => {
               ? intl.formatMessage({ id: 'pages.common.unusable' })
               : intl.formatMessage({ id: 'pages.common.used' })}
           </Tag>
-        );
+        )
       },
       hideInSearch: true,
     },
@@ -93,17 +93,17 @@ const Sms: React.FC = () => {
                 danger: true,
                 confirm: { title: intl.formatMessage({ id: 'pages.confirm.delete' }) },
                 onClick: async () => {
-                  const { code, message: msg } = await deleteSmsInfo(record);
-                  if (code === 200) message.success(msg);
-                  else message.error(msg);
-                  action?.reload();
+                  const { code, message: msg } = await deleteSmsInfo(record)
+                  if (code === 200) message.success(msg)
+                  else message.error(msg)
+                  action?.reload()
                 },
               },
             ]}
           />
         ),
     },
-  ];
+  ]
   return (
     <PageContainer>
       <ProTable
@@ -113,7 +113,7 @@ const Sms: React.FC = () => {
         request={async (params: SmsSearchParams) => getSmsList(params)}
       />
     </PageContainer>
-  );
-};
+  )
+}
 
-export default Sms;
+export default Sms

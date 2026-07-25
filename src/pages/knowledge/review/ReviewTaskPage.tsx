@@ -1,11 +1,13 @@
 import { PageContainer } from '@ant-design/pro-components'
-import { DiffEditor } from '@monaco-editor/react'
+import MDEditor from '@uiw/react-md-editor'
 import { useIntl } from '@umijs/max'
-import { Alert, Card, Col, Descriptions, Row, Space, Spin, Tag, Tooltip, Typography } from 'antd'
-import React from 'react'
+import { Alert, Button, Card, Col, Descriptions, message, Row, Space, Spin, Tag, Tooltip, Typography } from 'antd'
+import React, { useState } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { useReviewTask } from '@/pages/knowledge/review/hooks/useReviewTask'
 import ReviewActionTimeline from '@/pages/knowledge/review/components/ReviewActionTimeline'
 import ReviewTaskActions from '@/pages/knowledge/review/components/ReviewTaskActions'
+import { editReviewTaskContent } from '@/services/knowledge/ReviewController'
 import {
   patchOperationLabelKey,
   severityColor,
@@ -88,8 +90,19 @@ const ReviewTaskPage: React.FC<Props> = ({ taskId, onClose, onSuccess }) => {
     </div>
   )
 
-  const previousVersionContent = data?.version?.sourceVersionId ? '' : ''
-  const hasDiff = previousVersionContent && data?.version?.content
+  const [editedContent, setEditedContent] = useState<string>()
+  const [mode, setMode] = useState<'preview' | 'edit'>('edit')
+  const content = editedContent ?? data?.version?.content ?? ''
+
+  const handleSaveDraft = async () => {
+    if (!taskId || editedContent === undefined) return
+    try {
+      const res = await editReviewTaskContent(taskId, { content: editedContent, expectedChecksum: data?.version?.contentChecksum ?? '' })
+      if (res.code === 200) {
+        message.success(intl.formatMessage({ id: 'pages.knowledge.review.detail.saveDraftSuccess' }))
+      }
+    } catch { /* handled globally */ }
+  }
 
   return (
     <PageContainer
@@ -107,51 +120,33 @@ const ReviewTaskPage: React.FC<Props> = ({ taskId, onClose, onSuccess }) => {
           <Col xs={24} lg={16}>
             <Card
               size="small"
-              title={
-                hasDiff
-                  ? intl.formatMessage({ id: 'pages.knowledge.review.detail.contentDiff' })
-                  : intl.formatMessage({ id: 'pages.knowledge.review.detail.versionContent' })
-              }
+              title={intl.formatMessage({ id: 'pages.knowledge.review.detail.versionContent' })}
               extra={
-                <Typography.Text type="secondary">
-                  {intl.formatMessage({ id: 'pages.knowledge.review.detail.readOnlyDuringReview' })}
-                </Typography.Text>
+                <Space>
+                  <Button.Group size="small">
+                    <Button type={mode === 'preview' ? 'primary' : 'default'} onClick={() => setMode('preview')}>
+                      {intl.formatMessage({ id: 'pages.knowledge.review.detail.preview' })}
+                    </Button>
+                    <Button type={mode === 'edit' ? 'primary' : 'default'} onClick={() => setMode('edit')}>
+                      {intl.formatMessage({ id: 'pages.knowledge.review.detail.edit' })}
+                    </Button>
+                  </Button.Group>
+                  <Button type="link" size="small" onClick={handleSaveDraft} disabled={editedContent === undefined}>
+                    {intl.formatMessage({ id: 'pages.knowledge.review.detail.saveDraft' })}
+                  </Button>
+                </Space>
               }
-              styles={{ body: { padding: 0 } }}
+              styles={{ body: { padding: mode === 'preview' ? 12 : 0 } }}
             >
-              {hasDiff ? (
-                <DiffEditor
-                  height="calc(100vh - 230px)"
-                  language="markdown"
-                  original={previousVersionContent}
-                  modified={data?.version?.content || ''}
-                  options={{
-                    readOnly: true,
-                    domReadOnly: true,
-                    renderSideBySide: true,
-                    minimap: { enabled: false },
-                    scrollBeyondLastLine: false,
-                    automaticLayout: true,
-                    originalEditable: false,
-                    fontSize: 13,
-                    lineHeight: 22,
-                  }}
-                />
+              {mode === 'preview' ? (
+                <div style={{ maxHeight: 'calc(100vh - 230px)', overflow: 'auto' }}>
+                  <ReactMarkdown>{content || '-'}</ReactMarkdown>
+                </div>
               ) : (
-                <DiffEditor
+                <MDEditor
                   height="calc(100vh - 230px)"
-                  language="markdown"
-                  original=""
-                  modified={data?.version?.content || ''}
-                  options={{
-                    readOnly: true,
-                    minimap: { enabled: false },
-                    scrollBeyondLastLine: false,
-                    automaticLayout: true,
-                    fontSize: 13,
-                    lineHeight: 22,
-                    wordWrap: 'on',
-                  }}
+                  value={content}
+                  onChange={(value) => setEditedContent(value ?? '')}
                 />
               )}
             </Card>

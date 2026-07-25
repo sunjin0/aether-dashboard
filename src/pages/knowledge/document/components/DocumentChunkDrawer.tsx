@@ -2,8 +2,8 @@ import { KnowledgeDocumentChunk, KnowledgeDocumentVersion } from '@/services/ent
 import { getDocumentVersionChunkList } from '@/services/knowledge/DocumentController'
 import { ActionType, ProTable } from '@ant-design/pro-components'
 import { useIntl } from '@umijs/max'
-import { Drawer, Typography } from 'antd'
-import React, { useEffect, useRef } from 'react'
+import { Drawer, Input, Typography } from 'antd'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 interface DocumentChunkDrawerProps {
   version?: KnowledgeDocumentVersion;
@@ -15,11 +15,29 @@ interface DocumentChunkDrawerProps {
 const DocumentChunkDrawer: React.FC<DocumentChunkDrawerProps> = ({ version, open, onClose }) => {
   const actionRef = useRef<ActionType>()
   const intl = useIntl()
+  const [chunks, setChunks] = useState<KnowledgeDocumentChunk[]>([])
+  const [loading, setLoading] = useState(false)
+  const [searchText, setSearchText] = useState('')
 
-  /** 每次打开或切换版本时重新请求，确保内容与当前版本一致。 */
   useEffect(() => {
-    if (open && version?.id) actionRef.current?.reload()
+    if (!open || !version?.id) return
+    let cancelled = false
+    setLoading(true)
+    getDocumentVersionChunkList(version.id).then((resp) => {
+      if (!cancelled) setChunks(resp.data || [])
+    }).finally(() => {
+      if (!cancelled) setLoading(false)
+    })
+    return () => { cancelled = true }
   }, [open, version?.id])
+
+  const filteredChunks = useMemo(
+    () =>
+      searchText
+        ? chunks.filter((c) => c.content?.toLowerCase().includes(searchText.toLowerCase()))
+        : chunks,
+    [chunks, searchText],
+  )
 
   return (
     <Drawer
@@ -30,16 +48,28 @@ const DocumentChunkDrawer: React.FC<DocumentChunkDrawerProps> = ({ version, open
       onClose={onClose}
       destroyOnClose
     >
+      <Input.Search
+        placeholder={intl.formatMessage({ id: 'pages.knowledge.document.chunks.searchPlaceholder' })}
+        allowClear
+        style={{ marginBottom: 16, width: 300 }}
+        onSearch={setSearchText}
+        onChange={(e) => !e.target.value && setSearchText('')}
+      />
       <ProTable<KnowledgeDocumentChunk>
         actionRef={actionRef}
         rowKey="id"
         search={false}
         pagination={false}
-        request={() =>
-          version?.id
-            ? getDocumentVersionChunkList(version.id)
-            : Promise.resolve({ code: 200, data: [] })
-        }
+        loading={loading}
+        dataSource={filteredChunks}
+        expandable={{
+          expandedRowRender: (record) => (
+            <div style={{ padding: '8px 0', whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: 13, lineHeight: 1.6 }}>
+              {record.content || '-'}
+            </div>
+          ),
+          rowExpandable: (record) => Boolean(record.content),
+        }}
         columns={[
           {
             title: intl.formatMessage({ id: 'pages.knowledge.document.chunks.sequence' }),
@@ -52,7 +82,7 @@ const DocumentChunkDrawer: React.FC<DocumentChunkDrawerProps> = ({ version, open
             dataIndex: 'content',
             copyable: true,
             render: (_, record) => (
-              <Typography.Paragraph ellipsis={{ rows: 3, tooltip: record.content }}>
+              <Typography.Paragraph ellipsis={{ rows: 2, expandable: false }} style={{ margin: 0 }}>
                 {record.content || '-'}
               </Typography.Paragraph>
             ),

@@ -18,12 +18,11 @@ import {
   ProTable,
 } from '@ant-design/pro-components'
 import { history, useAccess, useIntl, useLocation } from '@@/exports'
-import { Button, message, Tag } from 'antd'
-import React, { useRef, useState } from 'react'
+import { Button, message, Tag, Tabs } from 'antd'
+import React, { useMemo, useRef, useState } from 'react'
 import FileUploadModal from '@/components/FileUploadModal'
 import TemporaryUrlPreviewModal from '@/components/TemporaryUrlPreviewModal'
 import TableActionMenu from '@/components/TableActionMenu'
-import DocumentVersionHistoryDrawer from './components/DocumentVersionHistoryDrawer'
 import { getKnowledgeBaseContext } from './query'
 
 const KnowledgeDocumentPage: React.FC = () => {
@@ -37,9 +36,40 @@ const KnowledgeDocumentPage: React.FC = () => {
   // 编辑时使用记录自身的知识库，避免“全部文档”查询下缺少筛选上下文。
   const [formKnowledgeBaseId, setFormKnowledgeBaseId] = useState<string>()
   const [reindexingId, setReindexingId] = useState<string>()
-  const [versionDocument, setVersionDocument] = useState<Document>()
   const access = useAccess()
   const canWrite = access['/knowledge/document']
+  const [reviewStatusTab, setReviewStatusTab] = useState<string>('all')
+
+  const reviewStatusTabItems = useMemo(() => [
+    {
+      key: 'all',
+      label: intl.formatMessage({ id: 'pages.knowledge.document.tabs.all' }),
+    },
+    {
+      key: 'DRAFT',
+      label: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.draft' }),
+    },
+    {
+      key: 'AI_REVIEWING',
+      label: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.aiReviewing' }),
+    },
+    {
+      key: 'AI_REVIEWED',
+      label: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.recommendationsPending' }),
+    },
+    {
+      key: 'SUBMITTED',
+      label: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.humanReviewing' }),
+    },
+    {
+      key: 'APPROVED',
+      label: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.approved' }),
+    },
+    {
+      key: 'REJECTED',
+      label: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.rejected' }),
+    },
+  ], [intl])
 
   const reload = () => actionRef.current?.reload()
 
@@ -112,6 +142,7 @@ const KnowledgeDocumentPage: React.FC = () => {
       title: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus' }),
       dataIndex: 'reviewStatus',
       valueType: 'select',
+      hideInSearch: true,
       valueEnum: {
         DRAFT: { text: intl.formatMessage({ id: 'pages.knowledge.document.reviewStatus.draft' }) },
         AI_REVIEWING: {
@@ -230,7 +261,7 @@ const KnowledgeDocumentPage: React.FC = () => {
               {
                 key: 'versions',
                 label: intl.formatMessage({ id: 'pages.knowledge.document.versionHistory' }),
-                onClick: () => setVersionDocument(record),
+                onClick: () => history.push(`/knowledge/document/${record.id}/versions`),
               },
               {
                 key: 'reindex',
@@ -278,6 +309,15 @@ const KnowledgeDocumentPage: React.FC = () => {
         </Button>
       }
     >
+      <Tabs
+        activeKey={reviewStatusTab}
+        onChange={(key) => {
+          setReviewStatusTab(key)
+          formRef.current?.setFieldsValue({ reviewStatus: undefined })
+          formRef.current?.submit()
+        }}
+        items={reviewStatusTabItems}
+      />
       <ProTable<Document>
         actionRef={actionRef}
         formRef={formRef}
@@ -285,6 +325,7 @@ const KnowledgeDocumentPage: React.FC = () => {
         columns={columns}
         scroll={{ x: 1300 }}
         form={{ initialValues: { knowledgeBaseId: knowledgeBase.id || undefined } }}
+        params={{ reviewStatus: reviewStatusTab === 'all' ? undefined : reviewStatusTab }}
         request={(params: DocumentSearchParams) => getDocumentList(params)}
         toolBarRender={() =>
           canWrite
@@ -294,6 +335,7 @@ const KnowledgeDocumentPage: React.FC = () => {
                 accept=".txt,.md,.pdf,.docx"
                 allowedExtensions={['txt', 'md', 'pdf', 'docx']}
                 title={intl.formatMessage({ id: 'pages.knowledge.document.uploadTitle' })}
+                initialValues={{ selectedKnowledgeBaseId: knowledgeBase.id || undefined }}
                 extraFields={
                   <>
                     <ProFormSelect
@@ -349,14 +391,6 @@ const KnowledgeDocumentPage: React.FC = () => {
             ]
             : []
         }
-      />
-      <DocumentVersionHistoryDrawer
-        documentId={versionDocument?.id}
-        documentTitle={versionDocument?.title}
-        open={Boolean(versionDocument)}
-        canWrite={canWrite}
-        onClose={() => setVersionDocument(undefined)}
-        onRollbackSuccess={reload}
       />
       {formOpen && (
         <DocumentForm

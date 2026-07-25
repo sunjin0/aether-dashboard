@@ -1,6 +1,6 @@
 import { PageContainer, ProTable } from '@ant-design/pro-components'
 import { history, useIntl, useLocation } from '@umijs/max'
-import { Button, message, Modal, Space, Tabs, Tag } from 'antd'
+import { Button, Input, message, Modal, Space, Tabs, Tag } from 'antd'
 import TableActionMenu from '@/components/TableActionMenu'
 import React, { useMemo, useRef, useState } from 'react'
 import type { ActionType } from '@ant-design/pro-components'
@@ -90,31 +90,72 @@ const KnowledgeReviewPage: React.FC = () => {
     setBatchActing(true)
     const tasks = [...selectedRowKeys]
     setSelectedRowKeys([])
-    Promise.all(tasks.map((id) => approveReviewTask(String(id)).catch(() => {}))).finally(() => {
+    let successCount = 0
+    let failCount = 0
+    Promise.allSettled(tasks.map((id) => approveReviewTask(String(id)))).then((results) => {
+      results.forEach((r) => {
+        if (r.status === 'fulfilled' && r.value.code === 200) successCount++
+        else failCount++
+      })
+    }).finally(() => {
       setBatchActing(false)
       actionRef.current?.reload()
-      message.success(
-        intl.formatMessage({ id: 'pages.knowledge.review.detail.actionSuccess' }),
-      )
+      if (failCount === 0) {
+        message.success(
+          intl.formatMessage({ id: 'pages.knowledge.review.detail.actionSuccess' }),
+        )
+      } else {
+        message.warning(
+          intl.formatMessage(
+            { id: 'pages.knowledge.review.detail.batchPartialSuccess' },
+            { success: successCount, failed: failCount },
+          ),
+        )
+      }
     })
   }
 
   const handleBatchReject = () => {
     if (selectedRowKeys.length === 0) return
+    let rejectReason = ''
     Modal.confirm({
       title: intl.formatMessage({ id: 'pages.knowledge.review.detail.rejectConfirm' }),
       content: (
         <div>
           <p>{intl.formatMessage({ id: 'pages.knowledge.review.detail.rejectionReasonRequired' })}</p>
+          <Input.TextArea
+            rows={3}
+            placeholder={intl.formatMessage({ id: 'pages.knowledge.review.detail.rejectionReasonPlaceholder' })}
+            onChange={(e) => { rejectReason = e.target.value }}
+          />
         </div>
       ),
       onOk: () => {
         setBatchActing(true)
         const tasks = [...selectedRowKeys]
         setSelectedRowKeys([])
-        Promise.all(tasks.map((id) => rejectReviewTask(String(id), '').catch(() => {}))).finally(() => {
+        let successCount = 0
+        let failCount = 0
+        Promise.allSettled(tasks.map((id) => rejectReviewTask(String(id), rejectReason))).then((results) => {
+          results.forEach((r) => {
+            if (r.status === 'fulfilled' && r.value.code === 200) successCount++
+            else failCount++
+          })
+        }).finally(() => {
           setBatchActing(false)
           actionRef.current?.reload()
+          if (failCount === 0) {
+            message.success(
+              intl.formatMessage({ id: 'pages.knowledge.review.detail.actionSuccess' }),
+            )
+          } else {
+            message.warning(
+              intl.formatMessage(
+                { id: 'pages.knowledge.review.detail.batchPartialSuccess' },
+                { success: successCount, failed: failCount },
+              ),
+            )
+          }
         })
       },
     })
@@ -141,6 +182,9 @@ const KnowledgeReviewPage: React.FC = () => {
         rowSelection={{
           selectedRowKeys,
           onChange: setSelectedRowKeys,
+          getCheckboxProps: (record: KnowledgeReviewTask) => ({
+            disabled: record.status !== 'pending' && record.status !== 'claimed',
+          }),
         }}
         tableAlertOptionRender={() => (
           <Space>

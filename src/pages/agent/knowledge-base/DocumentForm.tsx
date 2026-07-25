@@ -1,7 +1,8 @@
 ﻿import DrawerForm from '@/components/DrawerForm'
 import { addDocument, getDocument, updateDocument } from '@/services/knowledge/DocumentController'
 import { getKnowledgeBaseList } from '@/services/knowledge/KnowledgeBaseController'
-import { ProFormSelect, ProFormText, ProFormTextArea } from '@ant-design/pro-components'
+import { ProFormSelect, ProFormText } from '@ant-design/pro-components'
+import MDEditor from '@uiw/react-md-editor'
 import { Form } from 'antd'
 import { useIntl } from '@umijs/max'
 
@@ -61,14 +62,15 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
           { required: true, message: format('pages.agent.knowledgeBase.enterDocumentTitle') },
         ]}
       />
-      <ProFormTextArea
+      <Form.Item
         name="content"
         label={format('pages.agent.knowledgeBase.documentContent')}
         rules={[
           { required: true, message: format('pages.agent.knowledgeBase.enterDocumentContent') },
         ]}
-        fieldProps={{ rows: 14, maxLength: 100000, showCount: true }}
-      />
+      >
+        <MDEditor height={400} />
+      </Form.Item>
       <ProFormText
         name="sourceUrl"
         label={format('pages.agent.knowledgeBase.sourceUrl')}

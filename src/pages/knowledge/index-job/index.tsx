@@ -2,9 +2,9 @@ import { KnowledgeIndexJob, KnowledgeIndexJobSearchParams } from '@/services/ent
 import { getIndexJobList, retryIndexJob } from '@/services/knowledge/IndexJobController'
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
 import { useAccess, useIntl } from '@@/exports'
-import { Descriptions, message, Tag, Tooltip } from 'antd'
+import { Descriptions, message, Tag, Tabs, Tooltip } from 'antd'
 import TableActionMenu from '@/components/TableActionMenu'
-import React, { useRef } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 
 /** 将任务起止时间转换为可快速识别的耗时文本。 */
 const formatDuration = (
@@ -74,14 +74,46 @@ const KnowledgeIndexJobPage: React.FC = () => {
     retry: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobType.retry' }),
   }
 
+  const [statusTab, setStatusTab] = useState<string>('all')
+  const [pollingInterval, setPollingInterval] = useState<number | undefined>(3000)
+  const hasActiveRef = useRef(false)
+
+  const statusTabItems = useMemo(() => [
+    { key: 'all', label: intl.formatMessage({ id: 'pages.knowledge.indexJob.status.all' }) },
+    { key: 'running', label: statusLabels.running.text },
+    { key: 'success', label: statusLabels.success.text },
+    { key: 'failed', label: statusLabels.failed.text },
+  ], [intl, statusLabels])
+
+  const handleRequest = async (params: KnowledgeIndexJobSearchParams) => {
+    const result = await getIndexJobList(params)
+    const hasActive = (result.data || []).some(
+      (j) => j.status === 'running' || j.status === 'pending',
+    )
+    if (hasActive !== hasActiveRef.current) {
+      hasActiveRef.current = hasActive
+      setPollingInterval(hasActive ? 3000 : undefined)
+    }
+    return result
+  }
+
   return (
     <PageContainer title={intl.formatMessage({ id: 'pages.knowledge.indexJob.title' })}>
+      <Tabs
+        activeKey={statusTab}
+        onChange={(key) => {
+          setStatusTab(key)
+          actionRef.current?.reload()
+        }}
+        items={statusTabItems}
+      />
       <ProTable<KnowledgeIndexJob>
         actionRef={actionRef}
-        polling={3000}
+        polling={pollingInterval}
         rowKey="id"
         scroll={{ x: 1800 }}
-        request={(params: KnowledgeIndexJobSearchParams) => getIndexJobList(params)}
+        request={handleRequest}
+        params={{ status: statusTab === 'all' ? undefined : statusTab }}
         expandable={{
           expandedRowRender: (record) => (
             <Descriptions size="small" column={3} bordered>
@@ -269,6 +301,8 @@ const KnowledgeIndexJobPage: React.FC = () => {
                             result.message ||
                               intl.formatMessage({ id: 'pages.knowledge.indexJob.retryQueued' }),
                           )
+                          setStatusTab('running')
+                          setPollingInterval(3000)
                           actionRef.current?.reload()
                         } else
                           message.error(

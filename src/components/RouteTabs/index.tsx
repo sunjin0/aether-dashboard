@@ -62,6 +62,8 @@ const getRouteLabel = (
     return formatMessage({ id: 'components.routeTabs.documentDetails' });
   if (/^\/knowledge\/document\/[^/]+\/review$/.test(pathname))
     return formatMessage({ id: 'components.routeTabs.aiReviewWorkspace' });
+  if (pathname.endsWith('/versions') && pathname.startsWith('/knowledge/document/'))
+    return formatMessage({ id: 'components.routeTabs.versionHistory' });
   if (/^\/knowledge\/reviews\/[^/]+$/.test(pathname))
     return formatMessage({ id: 'components.routeTabs.humanReview' });
   return pathname === '/dashboard'

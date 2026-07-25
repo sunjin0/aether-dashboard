@@ -132,9 +132,14 @@ export default [
         component: './knowledge/review/detail',
       },
       {
+        path: '/knowledge/document/:documentId/versions',
+        name: '版本历史',
+        hideInMenu: true,
+        component: './knowledge/document/version',
+      },
+      {
         path: '/knowledge/reviews',
         name: '审批中心',
-        hideInMenu: true,
         component: './knowledge/review',
       },
       {

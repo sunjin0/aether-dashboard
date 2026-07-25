@@ -82,3 +82,8 @@ export const approveReviewTask = (
   request(`/api/knowledge/review-task/${id}/approve`, { method: 'POST', data: { comment } })
 export const rejectReviewTask = (id: string, comment: string): Promise<ResponseStructure<void>> =>
   request(`/api/knowledge/review-task/${id}/reject`, { method: 'POST', data: { comment } })
+export const editReviewTaskContent = (
+  taskId: string,
+  data: { content: string; expectedChecksum: string },
+): Promise<ResponseStructure<string>> =>
+  request(`/api/knowledge/review-task/${taskId}/edit`, { method: 'PUT', data })

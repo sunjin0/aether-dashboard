@@ -9,11 +9,12 @@ import {
   getReviewModelProviderOptions,
 } from '@/services/agent/ModelProviderController'
 import {
+  ProCard,
   ProFormSelect,
   ProFormSwitch,
   ProFormText,
   ProFormTextArea,
-} from '@ant-design/pro-components'
+} from '@ant-design/pro-components';
 import { useIntl } from '@umijs/max'
 import { Card, Col, Form, Row } from 'antd'
 import './KnowledgeBaseForm.less'
@@ -48,9 +49,9 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
         return true
       }}
     >
-      <Card
+      <ProCard
         title={intl.formatMessage({ id: 'pages.knowledge.base.form.basicInfo' })}
-        size="small"
+
         className="knowledge-base-form-card"
       >
         <Row gutter={16}>
@@ -111,11 +112,12 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
           label={intl.formatMessage({ id: 'pages.knowledge.base.form.description' })}
           fieldProps={{ rows: 2, maxLength: 1000, showCount: true }}
         />
-      </Card>
+      </ProCard>
 
-      <Card
+      <ProCard
         title={intl.formatMessage({ id: 'pages.knowledge.base.form.retrievalConfig' })}
-        size="small"
+
+        style={{ marginTop: 16 }}
         className="knowledge-base-form-card"
       >
         <ProFormSelect
@@ -136,13 +138,23 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
           name="retrievalConfig"
           label={intl.formatMessage({ id: 'pages.knowledge.base.form.retrievalConfig' })}
           tooltip={intl.formatMessage({ id: 'pages.knowledge.base.form.retrievalConfigTooltip' })}
-          fieldProps={{ rows: 3, placeholder: '{ }' }}
+          fieldProps={{ rows: 3, placeholder: '{ }', style: { fontFamily: 'Consolas, Monaco, monospace' } }}
+          rules={[
+            {
+              validator: (_: unknown, value: string) => {
+                if (!value || value === '{}') return Promise.resolve()
+                try { JSON.parse(value); return Promise.resolve() }
+                catch { return Promise.reject(new Error(intl.formatMessage({ id: 'pages.knowledge.base.form.retrievalConfigInvalid' }))) }
+              },
+            },
+          ]}
         />
-      </Card>
+      </ProCard>
 
-      <Card
+      <ProCard
         title={intl.formatMessage({ id: 'pages.knowledge.base.form.reviewPolicy' })}
-        size="small"
+
+        style={{ marginTop: 16 }}
         className="knowledge-base-form-card"
       >
         <Row gutter={16}>
@@ -200,11 +212,12 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
             id: 'pages.knowledge.base.form.reviewModelPlaceholder',
           })}
         />
-      </Card>
+      </ProCard>
 
-      <Card
+      <ProCard
         title={intl.formatMessage({ id: 'pages.knowledge.base.form.status' })}
-        size="small"
+
+        style={{ marginTop: 16 }}
         className="knowledge-base-form-card"
       >
         <ProFormSelect
@@ -223,7 +236,7 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
             },
           ]}
         />
-      </Card>
+      </ProCard>
     </DrawerForm>
   )
 }

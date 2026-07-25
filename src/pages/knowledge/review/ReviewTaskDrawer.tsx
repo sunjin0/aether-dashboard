@@ -1,10 +1,13 @@
 import { DrawerForm } from '@ant-design/pro-components'
+import MDEditor from '@uiw/react-md-editor'
 import { useIntl } from '@umijs/max'
-import { Alert, Descriptions, List, Space, Spin, Tag, Tooltip, Typography } from 'antd'
-import React from 'react'
+import { Alert, Button, Descriptions, List, message, Space, Spin, Tag, Tooltip, Typography } from 'antd'
+import React, { useState } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { useReviewTask } from '@/pages/knowledge/review/hooks/useReviewTask'
 import ReviewActionTimeline from '@/pages/knowledge/review/components/ReviewActionTimeline'
 import ReviewTaskActions from '@/pages/knowledge/review/components/ReviewTaskActions'
+import { editReviewTaskContent } from '@/services/knowledge/ReviewController'
 import {
   patchOperationLabelKey,
   severityColor,
@@ -39,6 +42,19 @@ const ReviewTaskDrawer: React.FC<Props> = ({ taskId, open, onClose, onSuccess })
   })
 
   const title = data?.documentTitle || intl.formatMessage({ id: 'pages.knowledge.review.detail.title' })
+  const [editedContent, setEditedContent] = useState<string>()
+  const [mode, setMode] = useState<'preview' | 'edit'>('preview')
+  const content = editedContent ?? data?.version?.content ?? ''
+
+  const handleSaveDraft = async () => {
+    if (!taskId || editedContent === undefined) return
+    try {
+      const res = await editReviewTaskContent(taskId, { content: editedContent, expectedChecksum: data?.version?.contentChecksum ?? '' })
+      if (res.code === 200) {
+        message.success(intl.formatMessage({ id: 'pages.knowledge.review.detail.saveDraftSuccess' }))
+      }
+    } catch { /* handled globally */ }
+  }
 
   return (
     <>
@@ -59,21 +75,37 @@ const ReviewTaskDrawer: React.FC<Props> = ({ taskId, open, onClose, onSuccess })
                 {getUserName(data?.reviewerId)}
               </Descriptions.Item>
             </Descriptions>
-            <Typography.Title level={5}>
-              {intl.formatMessage({ id: 'pages.knowledge.review.detail.versionContent' })}
-            </Typography.Title>
-            <Typography.Paragraph
-              style={{
-                border: '1px solid #f0f0f0',
-                borderRadius: 6,
-                padding: 12,
-                maxHeight: 360,
-                overflow: 'auto',
-                whiteSpace: 'pre-wrap',
-              }}
-            >
-              {data?.version?.content || '-'}
-            </Typography.Paragraph>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <Typography.Title level={5} style={{ margin: 0 }}>
+                {intl.formatMessage({ id: 'pages.knowledge.review.detail.versionContent' })}
+              </Typography.Title>
+              <Space>
+                <Button.Group size="small">
+                  <Button type={mode === 'preview' ? 'primary' : 'default'} onClick={() => setMode('preview')}>
+                    {intl.formatMessage({ id: 'pages.knowledge.review.detail.preview' })}
+                  </Button>
+                  <Button type={mode === 'edit' ? 'primary' : 'default'} onClick={() => setMode('edit')}>
+                    {intl.formatMessage({ id: 'pages.knowledge.review.detail.edit' })}
+                  </Button>
+                </Button.Group>
+                {taskId && (
+                  <Button type="link" size="small" onClick={handleSaveDraft} disabled={editedContent === undefined}>
+                    {intl.formatMessage({ id: 'pages.knowledge.review.detail.saveDraft' })}
+                  </Button>
+                )}
+              </Space>
+            </div>
+            {mode === 'preview' ? (
+              <div style={{ border: '1px solid #f0f0f0', borderRadius: 6, padding: 12, maxHeight: 400, overflow: 'auto' }}>
+                <ReactMarkdown>{content || '-'}</ReactMarkdown>
+              </div>
+            ) : (
+              <MDEditor
+                height={300}
+                value={content}
+                onChange={(value) => setEditedContent(value ?? '')}
+              />
+            )}
             <Typography.Title level={5}>
               {intl.formatMessage(
                 { id: 'pages.knowledge.review.detail.aiReviewScore' },

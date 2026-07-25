@@ -763,6 +763,7 @@ export default {
   'pages.knowledge.review.diffWorkspace.state.failed': 'AI Review Failed',
   'pages.knowledge.review.diffWorkspace.state.failedDesc': 'Please re-run the review.',
   'pages.knowledge.review.diffWorkspace.state.rerun': 'Re-run Review',
+  'pages.knowledge.review.diffWorkspace.state.startAiReview': 'Start AI Review',
   'pages.knowledge.review.diffWorkspace.alert.changed':
     'Document content has changed, reloaded to latest review result',
   'pages.knowledge.review.diffWorkspace.alert.appliedSaved':
@@ -772,6 +773,8 @@ export default {
   'pages.knowledge.review.diffWorkspace.alert.staleDesc':
     'Current diff kept for reference only; accept and reject actions are disabled.',
   'pages.knowledge.review.diffWorkspace.alert.noPending': 'No pending AI review issues.',
+  'pages.knowledge.review.diffWorkspace.submitCriticalWarning': 'Critical Issues Exist',
+  'pages.knowledge.review.diffWorkspace.submitCriticalDesc': '{count} critical issue(s) remain unresolved. Submit for review anyway?',
   'pages.knowledge.review.replacementEditor.title': 'Accept Suggestion',
   'pages.knowledge.review.replacementEditor.okText': 'Confirm Accept',
   'pages.knowledge.review.replacementEditor.placeholder':
@@ -795,11 +798,13 @@ export default {
   'pages.knowledge.review.diffToolbar.applyOkText': 'Confirm Apply',
   'pages.knowledge.review.diffToolbar.applyButton': 'Apply {count} accepted change(s)',
   'pages.knowledge.review.diffToolbar.rerunButton': 'Run AI review again',
-  'pages.knowledge.review.diffToolbar.status.success': 'AI review completed',
-  'pages.knowledge.review.diffToolbar.status.failed': 'AI review failed',
-  'pages.knowledge.review.diffToolbar.status.stale': 'AI review stale',
-  'pages.knowledge.review.diffToolbar.status.pending': 'AI review pending',
-  'pages.knowledge.review.diffToolbar.status.running': 'AI review running',
+  'pages.knowledge.review.diffToolbar.status.draft': 'Draft',
+  'pages.knowledge.review.diffToolbar.status.aiReviewing': 'AI Reviewing',
+  'pages.knowledge.review.diffToolbar.status.aiReviewed': 'AI Reviewed',
+  'pages.knowledge.review.diffToolbar.status.submitted': 'Submitted',
+  'pages.knowledge.review.diffToolbar.status.approved': 'Approved',
+  'pages.knowledge.review.diffToolbar.status.rejected': 'Rejected',
+  'pages.knowledge.review.diffToolbar.status.stale': 'Stale',
   'pages.knowledge.review.diffToolbar.pending': 'Pending',
   'pages.knowledge.review.diffToolbar.critical': 'Critical',
   'pages.knowledge.review.diffToolbar.accepted': 'Accepted',
@@ -809,6 +814,8 @@ export default {
   'pages.knowledge.review.issueList.filter.pending': 'Pending',
   'pages.knowledge.review.issueList.filter.risk': 'High Risk',
   'pages.knowledge.review.issueList.filter.accepted': 'Accepted',
+  'pages.knowledge.review.issueList.prev': 'Previous',
+  'pages.knowledge.review.issueList.next': 'Next',
   'pages.knowledge.review.issueList.filter.rejected': 'Ignored',
   'pages.knowledge.review.issueList.status.pending': 'Pending',
   'pages.knowledge.review.issueList.status.accepted': 'Accepted, pending submission',
@@ -898,4 +905,33 @@ export default {
   'pages.components.systemPromptEditor.startOptimization': 'Start Optimization',
   'pages.components.systemPromptEditor.useOptimizationResult': 'Use optimization result',
   'pages.components.systemPromptEditor.optimizeFailed': 'Optimization failed',
+
+  // Review - Issue severity labels
+  'pages.knowledge.review.severity.critical': 'Critical',
+  'pages.knowledge.review.severity.high': 'High',
+  'pages.knowledge.review.severity.medium': 'Medium',
+  'pages.knowledge.review.severity.low': 'Low',
+  'pages.knowledge.review.severity.warning': 'Warning',
+  'pages.knowledge.review.severity.info': 'Info',
+
+  // Review - Issue type labels
+  'pages.knowledge.review.issueType.formatting': 'Formatting',
+  'pages.knowledge.review.issueType.readability': 'Readability',
+  'pages.knowledge.review.issueType.contentQuality': 'Content Quality',
+  'pages.knowledge.review.issueType.clarity': 'Clarity',
+  'pages.knowledge.review.issueType.accuracy': 'Accuracy',
+  'pages.knowledge.review.issueType.consistency': 'Consistency',
+  'pages.knowledge.review.issueType.languageConsistency': 'Language Consistency',
+  'pages.knowledge.review.issueType.style': 'Style',
+  'pages.knowledge.review.issueType.grammar': 'Grammar',
+  'pages.knowledge.review.issueType.spelling': 'Spelling',
+  'pages.knowledge.review.issueType.structure': 'Structure',
+  'pages.knowledge.review.issueType.other': 'Other',
+
+  // Review - Patch operation labels
+  'pages.knowledge.review.patchOperation.replace': 'Replace',
+  'pages.knowledge.review.patchOperation.delete': 'Delete',
+  'pages.knowledge.review.patchOperation.insertBefore': 'Insert Before',
+  'pages.knowledge.review.patchOperation.insertAfter': 'Insert After',
+  'pages.knowledge.review.patchOperation.setHeading': 'Set Heading',
 };

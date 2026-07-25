@@ -743,6 +743,7 @@ export default {
   'pages.knowledge.review.diffWorkspace.state.failed': 'AI 审查失败',
   'pages.knowledge.review.diffWorkspace.state.failedDesc': '请重新运行审查。',
   'pages.knowledge.review.diffWorkspace.state.rerun': '重新审查',
+  'pages.knowledge.review.diffWorkspace.state.startAiReview': '开始 AI 审查',
   'pages.knowledge.review.diffWorkspace.alert.changed': '文档内容已变化，已刷新到最新审查结果',
   'pages.knowledge.review.diffWorkspace.alert.appliedSaved':
     '修改已保存为草稿，可继续编辑或手动重新发起 AI 审查',
@@ -750,6 +751,8 @@ export default {
   'pages.knowledge.review.diffWorkspace.alert.staleDesc':
     '保留当前 Diff 仅用于追溯，采纳和忽略操作已禁用。',
   'pages.knowledge.review.diffWorkspace.alert.noPending': '当前没有待处理的 AI 审查问题。',
+  'pages.knowledge.review.diffWorkspace.submitCriticalWarning': '存在严重问题',
+  'pages.knowledge.review.diffWorkspace.submitCriticalDesc': '仍有 {count} 个严重问题未处理，确定提交审批吗？',
   'pages.knowledge.review.replacementEditor.title': '采纳修改建议',
   'pages.knowledge.review.replacementEditor.okText': '确认采纳',
   'pages.knowledge.review.replacementEditor.placeholder':
@@ -772,11 +775,13 @@ export default {
   'pages.knowledge.review.diffToolbar.applyOkText': '确认应用',
   'pages.knowledge.review.diffToolbar.applyButton': '应用 {count} 项已接受修改',
   'pages.knowledge.review.diffToolbar.rerunButton': '重新运行 AI 审查',
-  'pages.knowledge.review.diffToolbar.status.success': 'AI 审查已完成',
-  'pages.knowledge.review.diffToolbar.status.failed': 'AI 审查失败',
+  'pages.knowledge.review.diffToolbar.status.draft': '草稿',
+  'pages.knowledge.review.diffToolbar.status.aiReviewing': 'AI 审查中',
+  'pages.knowledge.review.diffToolbar.status.aiReviewed': 'AI 已审查',
+  'pages.knowledge.review.diffToolbar.status.submitted': '已提交人工审核',
+  'pages.knowledge.review.diffToolbar.status.approved': '已通过',
+  'pages.knowledge.review.diffToolbar.status.rejected': '已驳回',
   'pages.knowledge.review.diffToolbar.status.stale': '审查结果已过期',
-  'pages.knowledge.review.diffToolbar.status.pending': '等待 AI 审查',
-  'pages.knowledge.review.diffToolbar.status.running': 'AI 审查进行中',
   'pages.knowledge.review.diffToolbar.pending': '待处理',
   'pages.knowledge.review.diffToolbar.critical': '高风险',
   'pages.knowledge.review.diffToolbar.accepted': '已采纳',
@@ -786,6 +791,8 @@ export default {
   'pages.knowledge.review.issueList.filter.pending': '待处理',
   'pages.knowledge.review.issueList.filter.risk': '高风险',
   'pages.knowledge.review.issueList.filter.accepted': '已采纳',
+  'pages.knowledge.review.issueList.prev': '上一条',
+  'pages.knowledge.review.issueList.next': '下一条',
   'pages.knowledge.review.issueList.filter.rejected': '已忽略',
   'pages.knowledge.review.issueList.status.pending': '待处理',
   'pages.knowledge.review.issueList.status.accepted': '已接受，待提交',
@@ -870,4 +877,33 @@ export default {
   'pages.components.systemPromptEditor.startOptimization': '开始优化',
   'pages.components.systemPromptEditor.useOptimizationResult': '使用优化结果',
   'pages.components.systemPromptEditor.optimizeFailed': '优化失败',
+
+  // Review - Issue severity labels
+  'pages.knowledge.review.severity.critical': '严重',
+  'pages.knowledge.review.severity.high': '高',
+  'pages.knowledge.review.severity.medium': '中',
+  'pages.knowledge.review.severity.low': '低',
+  'pages.knowledge.review.severity.warning': '警告',
+  'pages.knowledge.review.severity.info': '提示',
+
+  // Review - Issue type labels
+  'pages.knowledge.review.issueType.formatting': '格式',
+  'pages.knowledge.review.issueType.readability': '可读性',
+  'pages.knowledge.review.issueType.contentQuality': '内容质量',
+  'pages.knowledge.review.issueType.clarity': '清晰度',
+  'pages.knowledge.review.issueType.accuracy': '准确性',
+  'pages.knowledge.review.issueType.consistency': '一致性',
+  'pages.knowledge.review.issueType.languageConsistency': '语言一致性',
+  'pages.knowledge.review.issueType.style': '风格',
+  'pages.knowledge.review.issueType.grammar': '语法',
+  'pages.knowledge.review.issueType.spelling': '拼写',
+  'pages.knowledge.review.issueType.structure': '结构',
+  'pages.knowledge.review.issueType.other': '其他',
+
+  // Review - Patch operation labels
+  'pages.knowledge.review.patchOperation.replace': '替换',
+  'pages.knowledge.review.patchOperation.delete': '删除',
+  'pages.knowledge.review.patchOperation.insertBefore': '前插',
+  'pages.knowledge.review.patchOperation.insertAfter': '后插',
+  'pages.knowledge.review.patchOperation.setHeading': '设置标题',
 };

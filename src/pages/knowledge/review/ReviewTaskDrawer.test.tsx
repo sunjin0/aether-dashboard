@@ -16,18 +16,6 @@ jest.mock('@/services/knowledge/ReviewController', () => ({
 jest.mock('@/services/sys/AdminController', () => ({
   getAdminList: jest.fn().mockResolvedValue({ data: [] }),
 }))
-jest.mock('@monaco-editor/react', () => ({
-  Editor: ({
-    value,
-    options,
-  }: {
-    value?: string;
-    options?: { readOnly?: boolean };
-  }) => (
-    <textarea aria-label="document-editor" value={value} readOnly={options?.readOnly} />
-  ),
-}))
-
 jest.mock('@umijs/max', () => ({
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
   useModel: () => ({ initialState: { currentUser: { id: 'admin-1' } } }),
@@ -54,28 +42,10 @@ describe('ReviewTaskDrawer', () => {
     mockApproveReviewTask.mockResolvedValue({ code: 200 })
   })
 
-  it('shows a review task in a drawer rather than navigating to a detail page', async () => {
+  it('shows a review task in a drawer', async () => {
     render(<ReviewTaskDrawer taskId="task-1" open onClose={jest.fn()} onSuccess={jest.fn()} />)
 
     expect(await screen.findByText('审批文档')).toBeTruthy()
-  })
-
-  it('renders the page presentation as a review workspace', async () => {
-    render(
-      <ReviewTaskDrawer
-        taskId="task-1"
-        open
-        presentation="page"
-        onClose={jest.fn()}
-        onSuccess={jest.fn()}
-      />,
-    )
-
-    expect(await screen.findByText('审批文档')).toBeTruthy()
-    expect(screen.getByText('pages.knowledge.review.detail.issueCount')).toBeTruthy()
-    expect(screen.getByText('pages.knowledge.review.detail.reviewInfo')).toBeTruthy()
-    expect(screen.getByText('pages.knowledge.review.detail.actionHistory')).toBeTruthy()
-    expect(screen.getByLabelText('document-editor')).toBeTruthy()
   })
 
   it('shows decision actions immediately after a successful claim and formats action logs', async () => {
@@ -102,7 +72,7 @@ describe('ReviewTaskDrawer', () => {
     expect(screen.getByText(dayjs(1735689600000).format('YYYY-MM-DD HH:mm'))).toBeTruthy()
   })
 
-  it('keeps the submitted snapshot read-only and approves it without rewriting content', async () => {
+  it('shows approve button for claimed tasks and calls approve API', async () => {
     mockGetReviewTask.mockResolvedValue({
       data: {
         id: 'task-1',
@@ -115,9 +85,7 @@ describe('ReviewTaskDrawer', () => {
 
     render(<ReviewTaskDrawer taskId="task-1" open onClose={jest.fn()} onSuccess={jest.fn()} />)
 
-    expect((await screen.findByLabelText('document-editor') as HTMLTextAreaElement).readOnly).toBe(
-      true,
-    )
+    expect(await screen.findByRole('button', { name: 'pages.knowledge.review.detail.approve' })).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'pages.knowledge.review.detail.approve' }))
 
     await waitFor(() => expect(mockApproveReviewTask).toHaveBeenCalledWith('task-1', ''))

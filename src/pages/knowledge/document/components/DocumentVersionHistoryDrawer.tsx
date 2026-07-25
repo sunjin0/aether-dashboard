@@ -106,7 +106,7 @@ const DocumentVersionHistoryDrawer: React.FC<DocumentVersionHistoryDrawerProps> 
           {
             title: intl.formatMessage({ id: 'pages.common.option' }),
             valueType: 'option',
-            width: 180,
+            width: 250,
             render: (_, record) =>
               record.id ? (
                 <TableActionMenu
@@ -124,7 +124,8 @@ const DocumentVersionHistoryDrawer: React.FC<DocumentVersionHistoryDrawerProps> 
                       label: intl.formatMessage({
                         id: 'pages.knowledge.document.versionHistory.rollback',
                       }),
-                      visible: !!canWrite,
+                      primary: true,
+                      visible: canWrite,
                       confirm: {
                         title: intl.formatMessage({
                           id: 'pages.knowledge.document.versionHistory.rollbackConfirm',

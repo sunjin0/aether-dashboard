@@ -1,7 +1,7 @@
 import { history, useLocation, useParams } from '@umijs/max'
 import { Button, Result } from 'antd'
 import React from 'react'
-import ReviewTaskDrawer from '../ReviewTaskDrawer'
+import ReviewTaskPageComponent from '../ReviewTaskPage'
 
 const getSafeReturnTo = (search: string, fallback: string) => {
   const value = new URLSearchParams(search).get('returnTo')
@@ -25,10 +25,8 @@ const ReviewTaskPage: React.FC = () => {
   }
 
   return (
-    <ReviewTaskDrawer
+    <ReviewTaskPageComponent
       taskId={taskId}
-      open
-      presentation="page"
       onClose={goBack}
       onSuccess={() => undefined}
     />

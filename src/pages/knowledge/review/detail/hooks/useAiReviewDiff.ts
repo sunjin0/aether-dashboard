@@ -6,6 +6,7 @@ import {
   acceptAiReviewIssues,
   applyAcceptedAiReviewIssues,
   getAiReviewDiff,
+  getLatestAiReview,
   rejectAiReviewIssue,
   unacceptAiReviewIssue,
 } from '@/services/knowledge/ReviewController'
@@ -14,21 +15,26 @@ const isConflict = (error: unknown) => {
   const value = error as { response?: { status?: number }; status?: number }
   return value?.response?.status === 409 || value?.status === 409
 }
-export const useAiReviewDiff = (reviewId: string) => {
+export const useAiReviewDiff = (reviewId: string, documentVersionId?: string) => {
   const [diff, setDiff] = useState<AiReviewDiff>()
   const [loading, setLoading] = useState(false)
   const [conflict, setConflict] = useState(false)
   const refresh = useCallback(async () => {
-    if (!reviewId) return
     setLoading(true)
     try {
-      const response = await getAiReviewDiff(reviewId)
+      let id = reviewId
+      if (!id && documentVersionId) {
+        const latest = await getLatestAiReview(documentVersionId)
+        id = latest.data?.id || ''
+      }
+      if (!id) return
+      const response = await getAiReviewDiff(id)
       setDiff(response.data)
       setConflict(false)
     } finally {
       setLoading(false)
     }
-  }, [reviewId])
+  }, [reviewId, documentVersionId])
   useEffect(() => {
     refresh()
   }, [refresh])

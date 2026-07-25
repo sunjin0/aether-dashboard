@@ -44,20 +44,22 @@ const ReviewDiffToolbar: React.FC<Props> = ({
 }) => {
   const intl = useIntl()
   const statusLabelMap: Record<string, string> = {
-    success: intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.status.success' }),
-    failed: intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.status.failed' }),
-    stale: intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.status.stale' }),
-    pending: intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.status.pending' }),
-    running: intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.status.running' }),
+    DRAFT: intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.status.draft' }),
+    AI_REVIEWING: intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.status.aiReviewing' }),
+    AI_REVIEWED: intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.status.aiReviewed' }),
+    SUBMITTED: intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.status.submitted' }),
+    APPROVED: intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.status.approved' }),
+    REJECTED: intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.status.rejected' }),
   }
   const statusColorMap: Record<string, string> = {
-    success: 'success',
-    failed: 'error',
-    stale: 'warning',
-    pending: 'processing',
-    running: 'processing',
+    DRAFT: 'default',
+    AI_REVIEWING: 'processing',
+    AI_REVIEWED: 'success',
+    SUBMITTED: 'processing',
+    APPROVED: 'success',
+    REJECTED: 'error',
   }
-  const status = diff.stale ? 'stale' : diff.reviewStatus
+  const reviewStatus = diff.reviewStatus || ''
   return (
     <Row
       align="middle"
@@ -73,8 +75,13 @@ const ReviewDiffToolbar: React.FC<Props> = ({
     >
       <Col>
         <Space size="middle">
-          <Tag color={statusColorMap[status] || 'default'}>
-            {statusLabelMap[status] || `AI review ${status}`}
+          {diff.stale && (
+            <Tag color="warning">
+              {intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.status.stale' })}
+            </Tag>
+          )}
+          <Tag color={statusColorMap[reviewStatus] || 'default'}>
+            {statusLabelMap[reviewStatus] || reviewStatus || '-'}
           </Tag>
           <Statistic
             title={
@@ -158,28 +165,14 @@ const ReviewDiffToolbar: React.FC<Props> = ({
           )}
           {(onApplyAccepted || onBatchAccept) && onSubmit && <Divider type="vertical" />}
           {onSubmit && (
-            <Popconfirm
-              title={intl.formatMessage({
-                id: 'pages.knowledge.review.diffToolbar.submitConfirmTitle',
-              })}
-              description={intl.formatMessage({
-                id: 'pages.knowledge.review.diffToolbar.submitConfirmDesc',
-              })}
-              onConfirm={onSubmit}
-              okText={intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.submitOkText' })}
-              cancelText={intl.formatMessage({
-                id: 'pages.knowledge.review.diffToolbar.cancelText',
-              })}
+            <Button
+              type={acceptedCount > 0 ? 'default' : 'primary'}
+              icon={<SendOutlined />}
+              loading={busy}
+              onClick={onSubmit}
             >
-              <Button
-                type={acceptedCount > 0 ? 'default' : 'primary'}
-                icon={<SendOutlined />}
-                loading={busy}
-                // disabled={busy || acceptedCount > 0}
-              >
-                {intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.submitReview' })}
-              </Button>
-            </Popconfirm>
+              {intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.submitReview' })}
+            </Button>
           )}
           {onRerun && (
             <Tooltip

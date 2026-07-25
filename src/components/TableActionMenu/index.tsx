@@ -1,5 +1,5 @@
 ﻿import { DownOutlined } from '@ant-design/icons';
-import { Button, Dropdown, Popconfirm, Space } from 'antd';
+import { Button, Dropdown, Modal, Popconfirm, Space } from 'antd';
 import type { MenuProps } from 'antd';
 import React from 'react';
 import { useIntl } from '@umijs/max';
@@ -16,13 +16,7 @@ export interface TableActionItem {
 }
 
 interface TableActionMenuProps {
-  /**
-   * 表格行操作项
-   */
   items: TableActionItem[];
-  /**
-   * 最多显示的primary按钮数量
-   */
   maxPrimary?: number;
 }
 
@@ -35,18 +29,15 @@ const TableActionMenu: React.FC<TableActionMenuProps> = ({ items, maxPrimary = 3
   const menuItems: MenuProps['items'] = moreItems.map((item) => ({
     key: item.key,
     danger: item.danger,
-    label: item.confirm ? (
-      <Popconfirm
-        title={item.confirm.title}
-        description={item.confirm.description}
-        onConfirm={item.onClick}
-      >
-        <span>{item.label}</span>
-      </Popconfirm>
-    ) : (
-      item.label
-    ),
-    onClick: item.confirm ? undefined : item.onClick,
+    label: item.label,
+    onClick: item.confirm
+      ? () =>
+          Modal.confirm({
+            title: item.confirm!.title,
+            content: item.confirm!.description,
+            onOk: item.onClick,
+          })
+      : item.onClick,
   }));
 
   return (

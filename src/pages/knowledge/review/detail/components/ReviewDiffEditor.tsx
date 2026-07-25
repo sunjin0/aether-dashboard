@@ -11,16 +11,20 @@ const ReviewDiffEditor: React.FC<ReviewDiffEditorProps> = ({ diff, activeIssue }
 
   useEffect(() => {
     if (!activeIssue || !editorRef.current) return
-    const originalEditor = editorRef.current.getOriginalEditor()
-    const modifiedEditor = editorRef.current.getModifiedEditor()
-    if (activeIssue.baseStartLine) {
-      originalEditor.revealLineInCenter(activeIssue.baseStartLine)
-      originalEditor.setPosition({ lineNumber: activeIssue.baseStartLine, column: 1 })
-    }
-    if (activeIssue.proposedStartLine && activeIssue.proposedStartLine > 0) {
-      modifiedEditor.revealLineInCenter(activeIssue.proposedStartLine)
-      modifiedEditor.setPosition({ lineNumber: activeIssue.proposedStartLine, column: 1 })
-    }
+    const rafId = requestAnimationFrame(() => {
+      const originalEditor = editorRef.current?.getOriginalEditor()
+      const modifiedEditor = editorRef.current?.getModifiedEditor()
+      if (!originalEditor || !modifiedEditor) return
+      if (activeIssue.baseStartLine) {
+        originalEditor.revealLineInCenter(activeIssue.baseStartLine)
+        originalEditor.setPosition({ lineNumber: activeIssue.baseStartLine, column: 1 })
+      }
+      if (activeIssue.proposedStartLine && activeIssue.proposedStartLine > 0) {
+        modifiedEditor.revealLineInCenter(activeIssue.proposedStartLine)
+        modifiedEditor.setPosition({ lineNumber: activeIssue.proposedStartLine, column: 1 })
+      }
+    })
+    return () => cancelAnimationFrame(rafId)
   }, [activeIssue])
 
   useEffect(() => {

@@ -6,10 +6,16 @@ import {
   UndoOutlined,
 } from '@ant-design/icons'
 import { useIntl } from '@umijs/max'
-import { Button, Card, Empty, List, Segmented, Space, Tag, Typography } from 'antd'
+import { Button, Card, Empty, List, Segmented, Space, Tag, Tooltip, Typography } from 'antd'
 import React from 'react'
 import { AiReviewDiffIssue } from '@/services/entity/Agent'
-import { severityColor } from '../constants'
+import {
+  issueTypeColor,
+  issueTypeLabelKey,
+  patchOperationLabelKey,
+  severityColor,
+  severityLabelKey,
+} from '../constants'
 import { ReviewIssueFilter } from '../types'
 
 interface Props {
@@ -62,6 +68,26 @@ const ReviewIssueList: React.FC<Props> = ({
       label: intl.formatMessage({ id: 'pages.knowledge.review.issueList.filter.rejected' }),
     },
   ]
+  const localizedSeverity = (severity: string) =>
+    intl.formatMessage({ id: severityLabelKey[severity] || severity })
+  const localizedIssueType = (type?: string) =>
+    type ? intl.formatMessage({ id: issueTypeLabelKey[type] || type }) : ''
+  const localizedOperation = (patch: unknown) => {
+    if (!patch) return ''
+    if (typeof patch === 'string') {
+      try {
+        const parsed = JSON.parse(patch)
+        return intl.formatMessage({ id: patchOperationLabelKey[parsed.operation] || parsed.operation })
+      } catch {
+        return ''
+      }
+    }
+    const obj = patch as { operation?: string }
+    return obj.operation
+      ? intl.formatMessage({ id: patchOperationLabelKey[obj.operation] || obj.operation })
+      : ''
+  }
+
   const statusText: Record<string, string> = {
     accepted: intl.formatMessage({ id: 'pages.knowledge.review.issueList.status.accepted' }),
     rejected: intl.formatMessage({ id: 'pages.knowledge.review.issueList.status.rejected' }),
@@ -164,8 +190,16 @@ const ReviewIssueList: React.FC<Props> = ({
                     title={
                       <Space size="small" wrap>
                         <Tag color={severityColor[issue.severity] || 'default'}>
-                          {issue.severity}
+                          {localizedSeverity(issue.severity)}
                         </Tag>
+                        {issue.issueType && (
+                          <Tag color={issueTypeColor[issue.issueType] || 'default'}>
+                            {localizedIssueType(issue.issueType)}
+                          </Tag>
+                        )}
+                        {issue.suggestedPatch && (
+                          <Tag color="processing">{localizedOperation(issue.suggestedPatch)}</Tag>
+                        )}
                         <Typography.Text style={{ fontWeight: 500 }}>
                           {issue.message}
                         </Typography.Text>
@@ -174,12 +208,11 @@ const ReviewIssueList: React.FC<Props> = ({
                     description={
                       <Space size="small" wrap>
                         {issue.originalExcerpt && (
-                          <Typography.Text type="secondary" ellipsis style={{ maxWidth: 260 }}>
-                            {issue.originalExcerpt}
-                          </Typography.Text>
-                        )}
-                        {issue.blockId && (
-                          <Typography.Text type="secondary">· {issue.blockId}</Typography.Text>
+                          <Tooltip title={issue.originalExcerpt}>
+                            <Typography.Text type="secondary" ellipsis style={{ maxWidth: 260 }}>
+                              {issue.originalExcerpt}
+                            </Typography.Text>
+                          </Tooltip>
                         )}
                         {issue.handleStatus !== 'pending' && (
                           <Tag color={issue.handleStatus === 'accepted' ? 'success' : 'default'}>
@@ -205,7 +238,17 @@ const ReviewIssueList: React.FC<Props> = ({
       {activeIssue && (
         <div style={{ flex: 'none', padding: 12, borderTop: '1px solid #f0f0f0' }}>
           <Space direction="vertical" size="small" style={{ width: '100%' }}>
-            <Typography.Text strong>{activeIssue.message}</Typography.Text>
+            <Space size="small" wrap>
+              <Tag color={severityColor[activeIssue.severity] || 'default'}>
+                {localizedSeverity(activeIssue.severity)}
+              </Tag>
+              {activeIssue.issueType && (
+                <Tag color={issueTypeColor[activeIssue.issueType] || 'default'}>
+                  {localizedIssueType(activeIssue.issueType)}
+                </Tag>
+              )}
+              <Typography.Text strong>{activeIssue.message}</Typography.Text>
+            </Space>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
               <Space size="small">
                 <Button
@@ -214,7 +257,7 @@ const ReviewIssueList: React.FC<Props> = ({
                   disabled={activeIndex <= 0}
                   onClick={() => onSelect(issues[activeIndex - 1])}
                 >
-                  上一条
+                  {intl.formatMessage({ id: 'pages.knowledge.review.issueList.prev' })}
                 </Button>
                 <Typography.Text type="secondary">
                   {activeIndex + 1} / {issues.length}
@@ -226,7 +269,7 @@ const ReviewIssueList: React.FC<Props> = ({
                   disabled={activeIndex >= issues.length - 1}
                   onClick={() => onSelect(issues[activeIndex + 1])}
                 >
-                  下一条
+                  {intl.formatMessage({ id: 'pages.knowledge.review.issueList.next' })}
                 </Button>
               </Space>
               {actions(activeIssue)}

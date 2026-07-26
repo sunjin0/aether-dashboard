@@ -439,6 +439,10 @@ export default {
   'pages.agent.chat.questionExpired': '提问已处理或已过期',
   'pages.agent.chat.selectAgent': '请选择 Agent',
   'pages.agent.chat.enterMessage': '请输入消息内容',
+  'pages.agent.chat.attachFile': '添加附件',
+  'pages.agent.chat.attachmentLimit': '一次最多上传 3 个附件',
+  'pages.agent.chat.attachmentTooLarge': '单个附件不能超过 10MB',
+  'pages.agent.chat.analyzeAttachments': '请分析我上传的文件。',
   'pages.agent.chat.generateFailed': '生成失败',
   'pages.agent.chat.sendFailed': '发送失败',
   'pages.agent.chat.untitledConversation': '未命名会话',
@@ -464,6 +468,9 @@ export default {
   'pages.agent.chat.deepThinking': '深度思考',
   'pages.agent.chat.thinking': '思考中...',
   'pages.agent.chat.inputPlaceholder': '输入消息，支持 Markdown 格式...',
+  'pages.agent.chat.welcomeHint': '有问题尽管问，我会尽力为你提供清晰、可靠的回答',
+  'pages.agent.chat.uploading': '上传中',
+  'pages.agent.chat.aiDisclaimer': '内容由 AI 生成，请仔细甄别',
   'pages.agent.chat.send': '发送',
   'pages.agent.chat.newLine': '换行',
   'pages.agent.chat.model': '模型: {model}',
@@ -765,7 +772,8 @@ export default {
     '保留当前 Diff 仅用于追溯，采纳和忽略操作已禁用。',
   'pages.knowledge.review.diffWorkspace.alert.noPending': '当前没有待处理的 AI 审查问题。',
   'pages.knowledge.review.diffWorkspace.submitCriticalWarning': '存在严重问题',
-  'pages.knowledge.review.diffWorkspace.submitCriticalDesc': '仍有 {count} 个严重问题未处理，确定提交审批吗？',
+  'pages.knowledge.review.diffWorkspace.submitCriticalDesc':
+    '仍有 {count} 个严重问题未处理，确定提交审批吗？',
   'pages.knowledge.review.replacementEditor.title': '采纳修改建议',
   'pages.knowledge.review.replacementEditor.okText': '确认采纳',
   'pages.knowledge.review.replacementEditor.placeholder':
@@ -919,4 +927,4 @@ export default {
   'pages.knowledge.review.patchOperation.insertBefore': '前插',
   'pages.knowledge.review.patchOperation.insertAfter': '后插',
   'pages.knowledge.review.patchOperation.setHeading': '设置标题',
-};
+}

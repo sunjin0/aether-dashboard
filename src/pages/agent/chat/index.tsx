@@ -3,7 +3,6 @@ import { PageContainer } from '@ant-design/pro-components'
 import { useIntl } from '@umijs/max'
 import {
   Button,
-  Checkbox,
   Empty,
   Input,
   List,
@@ -13,17 +12,27 @@ import {
   Tag,
   Tooltip,
   Typography,
+  Upload,
 } from 'antd'
+import type { UploadFile } from 'antd/es/upload/interface'
 import {
   ArrowDownOutlined,
+  ArrowUpOutlined,
+  BulbOutlined,
   ClearOutlined,
+  CommentOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  PaperClipOutlined,
   PlusOutlined,
   SearchOutlined,
 } from '@ant-design/icons'
 import { getAgentDefinitionList } from '@/services/agent/AgentDefinitionController'
-import { streamAgentChat, streamReplyAgentChat } from '@/services/agent/ChatController'
+import {
+  streamAgentChat,
+  streamReplyAgentChat,
+  uploadAgentChatAttachments,
+} from '@/services/agent/ChatController'
 import {
   getAgentConversationList,
   getAgentConversationMessages,
@@ -31,6 +40,7 @@ import {
 import { getOptionList } from '@/services/sys/DictController'
 import {
   AgentChatReplyRequest,
+  AgentChatAttachment,
   AgentConversation,
   AgentDefinition,
   AgentMessage,
@@ -46,14 +56,17 @@ const TYPEWRITER_INTERVAL = 16
 const TYPEWRITER_BASE_STEP = 2
 const TYPEWRITER_MAX_STEP = 50
 
-type ChatStreamStatus = 'streaming' | 'error' | 'stopped';
+type ChatStreamStatus = 'streaming' | 'error' | 'stopped'
 
 type ChatMessage = AgentMessage & {
-  clientId?: string;
-  streamStatus?: ChatStreamStatus;
-  errorMsg?: string;
-  reasoningStream?: string;
-};
+  clientId?: string
+  streamStatus?: ChatStreamStatus
+  errorMsg?: string
+  reasoningStream?: string
+  progressMessage?: string
+}
+
+type ChatAttachmentFile = UploadFile & { attachment?: AgentChatAttachment }
 
 const restoreMessageSources = (messageItem: AgentMessage): ChatMessage => {
   if (!messageItem.citations) {
@@ -67,7 +80,7 @@ const restoreMessageSources = (messageItem: AgentMessage): ChatMessage => {
   }
 }
 
-type ChatTurnState = 'idle' | 'streaming' | 'waiting_user' | 'submitting_answer' | 'error';
+type ChatTurnState = 'idle' | 'streaming' | 'waiting_user' | 'submitting_answer' | 'error'
 
 const createClientId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random()}`
 
@@ -85,6 +98,7 @@ const ChatDebugPage: React.FC = () => {
   const [conversations, setConversations] = useState<AgentConversation[]>([])
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
+  const [attachments, setAttachments] = useState<ChatAttachmentFile[]>([])
   const [loadingAgents, setLoadingAgents] = useState(false)
   const [loadingConversations, setLoadingConversations] = useState(false)
   const [loadingMessages, setLoadingMessages] = useState(false)
@@ -162,9 +176,7 @@ const ChatDebugPage: React.FC = () => {
       if (code === 200) {
         setConversations(data || [])
       } else {
-        message.error(
-          msg || intl.formatMessage({ id: 'pages.agent.chat.loadConversationsFailed' }),
-        )
+        message.error(msg || intl.formatMessage({ id: 'pages.agent.chat.loadConversationsFailed' }))
       }
     } finally {
       setLoadingConversations(false)
@@ -299,6 +311,7 @@ const ChatDebugPage: React.FC = () => {
     }
     setConversationId(undefined)
     setMessages([])
+    setAttachments([])
     resetConversationTurnState()
   }
 
@@ -614,6 +627,9 @@ const ChatDebugPage: React.FC = () => {
     }
 
     const content = (text || input).trim()
+    const recognizedAttachments = attachments
+      .map((item) => item.attachment)
+      .filter((item): item is AgentChatAttachment => Boolean(item))
     const conversationAgentId = conversationId
       ? conversations.find((item) => item.id === conversationId)?.agentDefinitionId
       : undefined
@@ -622,7 +638,7 @@ const ChatDebugPage: React.FC = () => {
       message.error(intl.formatMessage({ id: 'pages.agent.chat.selectAgent' }))
       return
     }
-    if (!content) {
+    if (!content && !recognizedAttachments.length) {
       message.error(intl.formatMessage({ id: 'pages.agent.chat.enterMessage' }))
       return
     }
@@ -630,7 +646,17 @@ const ChatDebugPage: React.FC = () => {
     const userMessage: ChatMessage = {
       clientId: createClientId('user'),
       role: 'user',
-      content,
+      content: content || intl.formatMessage({ id: 'pages.agent.chat.analyzeAttachments' }),
+      attachments: recognizedAttachments.length
+        ? JSON.stringify(
+            recognizedAttachments.map(({ fileName, size, contentType, objectKey }) => ({
+              fileName,
+              size,
+              contentType,
+              objectKey,
+            })),
+          )
+        : undefined,
     }
     const assistantClientId = createClientId('assistant')
     const assistantMessage: ChatMessage = {
@@ -652,18 +678,38 @@ const ChatDebugPage: React.FC = () => {
     setSending(true)
     setChatTurnState('streaming')
     setInput('')
+    setAttachments([])
     setMessages((current) => [...current, userMessage, assistantMessage])
 
     try {
       const payload: any = conversationId
-        ? { agentId: sendAgentId, conversationId, message: content }
-        : { agentId: sendAgentId, message: content }
+        ? {
+            agentId: sendAgentId,
+            conversationId,
+            message: content || intl.formatMessage({ id: 'pages.agent.chat.analyzeAttachments' }),
+          }
+        : {
+            agentId: sendAgentId,
+            message: content || intl.formatMessage({ id: 'pages.agent.chat.analyzeAttachments' }),
+          }
+      if (recognizedAttachments.length) {
+        payload.attachments = userMessage.attachments
+        payload.attachmentContent = recognizedAttachments
+          .map((attachment) => `文件：${attachment.fileName}\n${attachment.extractedContent}`)
+          .join('\n\n')
+      }
       if (thinking) {
         payload.thinking = true
         payload.reasoningEffort = reasoningEffort
       }
       await streamAgentChat(payload, {
         signal: controller.signal,
+        onProgress: (data) => {
+          updateAssistantMessage(assistantClientId, (item) => ({
+            ...item,
+            progressMessage: data.message,
+          }))
+        },
         onMessage: (chunk, data) => {
           if (data.conversationId) {
             setConversationId(data.conversationId)
@@ -845,10 +891,10 @@ const ChatDebugPage: React.FC = () => {
   const groupedConversations = useMemo(() => {
     const filtered = searchText
       ? conversations.filter(
-        (item) =>
-          item.title?.toLowerCase().includes(searchText.toLowerCase()) ||
+          (item) =>
+            item.title?.toLowerCase().includes(searchText.toLowerCase()) ||
             item.id?.toLowerCase().includes(searchText.toLowerCase()),
-      )
+        )
       : conversations
 
     const groups: Record<string, AgentConversation[]> = {}
@@ -867,14 +913,53 @@ const ChatDebugPage: React.FC = () => {
   const currentConversation = conversations.find((item) => item.id === conversationId)
   const activeAgentId = currentConversation?.agentDefinitionId || agentId
   const currentAgent = agents.find((item) => item.id === activeAgentId)
+  const inputDisabled =
+    sending || chatTurnState === 'waiting_user' || chatTurnState === 'submitting_answer'
+
+  const handleAttachmentUpload = async (file: UploadFile['originFileObj']) => {
+    if (!file) return Upload.LIST_IGNORE
+    if (file.size > 10 * 1024 * 1024) {
+      message.error(intl.formatMessage({ id: 'pages.agent.chat.attachmentTooLarge' }))
+      return Upload.LIST_IGNORE
+    }
+    if (attachments.length >= 3) {
+      message.error(intl.formatMessage({ id: 'pages.agent.chat.attachmentLimit' }))
+      return Upload.LIST_IGNORE
+    }
+
+    const pending: ChatAttachmentFile = {
+      uid: file.uid,
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      status: 'uploading',
+      originFileObj: file,
+    }
+    setAttachments((current) => [...current, pending])
+    try {
+      const result = await uploadAgentChatAttachments([file])
+      const attachment = result.data?.[0]
+      if (result.code !== 200 || !attachment) {
+        throw new Error(result.message || intl.formatMessage({ id: 'pages.agent.chat.sendFailed' }))
+      }
+      setAttachments((current) =>
+        current.map((item) =>
+          item.uid === file.uid ? { ...item, status: 'done', attachment } : item,
+        ),
+      )
+    } catch (error) {
+      setAttachments((current) => current.filter((item) => item.uid !== file.uid))
+      message.error(
+        error instanceof Error
+          ? error.message
+          : intl.formatMessage({ id: 'pages.agent.chat.sendFailed' }),
+      )
+    }
+    return false
+  }
 
   return (
-    <PageContainer
-      header={{
-        title: intl.formatMessage({ id: 'pages.agent.chat.title' }),
-        breadcrumb: undefined,
-      }}
-    >
+    <PageContainer title={false} className="agent-chat-page-container">
       <div className="agent-chat-page">
         {/* 侧边栏 */}
         <div
@@ -907,14 +992,25 @@ const ChatDebugPage: React.FC = () => {
                       value: item.id,
                     }))}
                 />
-                <Tooltip title={intl.formatMessage({ id: 'pages.agent.chat.newConversation' })}>
+                <Tooltip title={intl.formatMessage({ id: 'pages.agent.chat.collapseSidebar' })}>
                   <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    disabled={sending}
-                    onClick={handleNewConversation}
+                    className="agent-chat-sidebar-toggle"
+                    type="text"
+                    icon={<MenuFoldOutlined />}
+                    onClick={() => setSidebarCollapsed(true)}
                   />
                 </Tooltip>
+              </div>
+
+              <div className="agent-chat-new-conversation">
+                <Button
+                  block
+                  icon={<PlusOutlined />}
+                  disabled={sending}
+                  onClick={handleNewConversation}
+                >
+                  {intl.formatMessage({ id: 'pages.agent.chat.newConversation' })}
+                </Button>
               </div>
 
               <div className="agent-chat-sidebar-search">
@@ -977,33 +1073,28 @@ const ChatDebugPage: React.FC = () => {
         </div>
 
         {/* 主面板 */}
-        <div className="agent-chat-panel">
+        <div className={`agent-chat-panel ${!messages.length ? 'agent-chat-panel-empty' : ''}`}>
           {/* 顶部 */}
           <div className="agent-chat-panel-header">
             <div className="agent-chat-panel-info">
               <div className="agent-chat-panel-title">
-                <Tooltip
-                  title={intl.formatMessage({
-                    id: sidebarCollapsed
-                      ? 'pages.agent.chat.expandSidebar'
-                      : 'pages.agent.chat.collapseSidebar',
-                  })}
-                >
-                  <Button
-                    type="text"
-                    icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                    onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                  />
-                </Tooltip>
+                {sidebarCollapsed && (
+                  <Tooltip title={intl.formatMessage({ id: 'pages.agent.chat.expandSidebar' })}>
+                    <Button
+                      className="agent-chat-panel-menu"
+                      type="text"
+                      icon={<MenuUnfoldOutlined />}
+                      onClick={() => setSidebarCollapsed(false)}
+                    />
+                  </Tooltip>
+                )}
                 <Text strong={true} style={{ fontSize: 16 }}>
                   {currentAgent?.name ||
                     currentAgent?.code ||
                     intl.formatMessage({ id: 'pages.agent.chat.noAgentSelected' })}
                 </Text>
                 {currentAgent?.model && (
-                  <Tag color="blue" style={{ marginLeft: 8 }}>
-                    {currentAgent.model}
-                  </Tag>
+                  <Tag className="agent-chat-model-tag">{currentAgent.model}</Tag>
                 )}
               </div>
               <div className="agent-chat-panel-subtitle">
@@ -1011,13 +1102,6 @@ const ChatDebugPage: React.FC = () => {
                   ? renderConversationTitle(currentConversation)
                   : intl.formatMessage({ id: 'pages.agent.chat.newConversationTitle' })}
               </div>
-            </div>
-            <div className="agent-chat-panel-actions">
-              {sending && (
-                <Button type="primary" danger icon={<ClearOutlined />} onClick={handleStop}>
-                  {intl.formatMessage({ id: 'pages.agent.chat.stopGenerating' })}
-                </Button>
-              )}
             </div>
           </div>
 
@@ -1028,29 +1112,32 @@ const ChatDebugPage: React.FC = () => {
                 <div className="agent-chat-message-list">
                   {!messages.length ? (
                     <div className="agent-chat-empty-container">
-                      <Empty
-                        image="https://gw.alipayobjects.com/zos/antfincdn/ZHrcdLPrvN/empty.svg"
-                        description={
-                          <span style={{ fontSize: 15, color: 'rgba(0, 0, 0, 0.45)' }}>
-                            {currentAgent
-                              ? intl.formatMessage(
-                                { id: 'pages.agent.chat.startChatWithAgent' },
-                                { name: currentAgent.name },
-                              )
-                              : intl.formatMessage({ id: 'pages.agent.chat.selectAgentToStart' })}
-                          </span>
-                        }
-                      >
-                        {currentAgent && (
-                          <div className="agent-chat-quick-start">
-                            {quickStartQuestions.map((q) => (
-                              <Tag key={q} onClick={() => handleSend(q)}>
-                                {q}
-                              </Tag>
-                            ))}
-                          </div>
-                        )}
-                      </Empty>
+                      <div className="agent-chat-welcome-mark">
+                        <CommentOutlined />
+                      </div>
+                      <h2>
+                        {currentAgent
+                          ? intl.formatMessage(
+                              { id: 'pages.agent.chat.startChatWithAgent' },
+                              { name: currentAgent.name },
+                            )
+                          : intl.formatMessage({ id: 'pages.agent.chat.selectAgentToStart' })}
+                      </h2>
+                      <p>{intl.formatMessage({ id: 'pages.agent.chat.welcomeHint' })}</p>
+                      {currentAgent && (
+                        <div className="agent-chat-quick-start">
+                          {quickStartQuestions.map((question) => (
+                            <button
+                              type="button"
+                              key={question}
+                              onClick={() => handleSend(question)}
+                            >
+                              <span>{question}</span>
+                              <ArrowUpOutlined />
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <>
@@ -1084,39 +1171,32 @@ const ChatDebugPage: React.FC = () => {
             )}
           </div>
 
-          {/* 底部输入 */}
           <div className="agent-chat-input-bar">
-            <div className="agent-chat-thinking-bar">
-              <Checkbox checked={thinking} onChange={(e) => setThinking(e.target.checked)}>
-                <span className="agent-chat-thinking-label">
-                  {intl.formatMessage({ id: 'pages.agent.chat.deepThinking' })}
-                </span>
-              </Checkbox>
-              {thinking && (
-                <Select
-                  size="small"
-                  value={reasoningEffort}
-                  onChange={setReasoningEffort}
-                  style={{ width: 80 }}
-                  options={reasoningEffortOptions}
-                />
-              )}
-              {thinking && sending && (
-                <Tag color="processing" style={{ marginLeft: 8 }}>
-                  {intl.formatMessage({ id: 'pages.agent.chat.thinking' })}
-                </Tag>
-              )}
-            </div>
             <div className="agent-chat-input-wrapper">
+              {!!attachments.length && (
+                <div className="agent-chat-attachment-list">
+                  {attachments.map((file) => (
+                    <Tag
+                      key={file.uid}
+                      closable={file.status !== 'uploading'}
+                      onClose={() =>
+                        setAttachments((current) => current.filter((item) => item.uid !== file.uid))
+                      }
+                    >
+                      <PaperClipOutlined />
+                      {file.name}
+                      {file.status === 'uploading'
+                        ? ` · ${intl.formatMessage({ id: 'pages.agent.chat.uploading' })}`
+                        : ''}
+                    </Tag>
+                  ))}
+                </div>
+              )}
               <div className="agent-chat-input-box">
                 <Input.TextArea
                   value={input}
-                  disabled={
-                    sending ||
-                    chatTurnState === 'waiting_user' ||
-                    chatTurnState === 'submitting_answer'
-                  }
-                  autoSize={{ minRows: 1, maxRows: 3 }}
+                  disabled={inputDisabled}
+                  autoSize={{ minRows: 2, maxRows: 6 }}
                   placeholder={intl.formatMessage({ id: 'pages.agent.chat.inputPlaceholder' })}
                   onChange={(event) => setInput(event.target.value)}
                   onPressEnter={(event) => {
@@ -1129,36 +1209,86 @@ const ChatDebugPage: React.FC = () => {
                   }}
                 />
               </div>
-              <Button
-                className="agent-chat-send-btn"
-                type="primary"
-                disabled={
-                  sending ||
-                  !input.trim() ||
-                  chatTurnState === 'waiting_user' ||
-                  chatTurnState === 'submitting_answer'
-                }
-                onClick={() => handleSend()}
-              >
-                {intl.formatMessage({ id: 'pages.agent.chat.send' })}
-              </Button>
+              <div className="agent-chat-input-tools">
+                <div className="agent-chat-input-tools-left">
+                  <Upload
+                    multiple
+                    accept=".txt,.md,.pdf,.docx,.xlsx,.png,.jpg,.jpeg,.webp"
+                    fileList={attachments}
+                    disabled={inputDisabled}
+                    beforeUpload={handleAttachmentUpload}
+                    onRemove={(file) => {
+                      setAttachments((current) => current.filter((item) => item.uid !== file.uid))
+                    }}
+                    showUploadList={false}
+                  >
+                    <Tooltip title={intl.formatMessage({ id: 'pages.agent.chat.attachFile' })}>
+                      <Button
+                        className="agent-chat-tool-icon"
+                        type="text"
+                        shape="circle"
+                        aria-label={intl.formatMessage({ id: 'pages.agent.chat.attachFile' })}
+                        icon={<PaperClipOutlined />}
+                        disabled={inputDisabled}
+                      />
+                    </Tooltip>
+                  </Upload>
+                  <Button
+                    className={`agent-chat-thinking-btn ${
+                      thinking ? 'agent-chat-thinking-btn-active' : ''
+                    }`}
+                    type="text"
+                    icon={<BulbOutlined />}
+                    onClick={() => setThinking((value) => !value)}
+                  >
+                    {intl.formatMessage({ id: 'pages.agent.chat.deepThinking' })}
+                  </Button>
+                  {thinking && (
+                    <Select
+                      bordered={false}
+                      size="small"
+                      value={reasoningEffort}
+                      onChange={setReasoningEffort}
+                      options={reasoningEffortOptions}
+                    />
+                  )}
+                  {thinking && sending && (
+                    <Tag color="processing">
+                      {intl.formatMessage({ id: 'pages.agent.chat.thinking' })}
+                    </Tag>
+                  )}
+                </div>
+                {sending ? (
+                  <Tooltip title={intl.formatMessage({ id: 'pages.agent.chat.stopGenerating' })}>
+                    <Button
+                      className="agent-chat-send-btn agent-chat-stop-btn"
+                      shape="circle"
+                      icon={<ClearOutlined />}
+                      onClick={handleStop}
+                    />
+                  </Tooltip>
+                ) : (
+                  <Tooltip title={intl.formatMessage({ id: 'pages.agent.chat.send' })}>
+                    <Button
+                      className="agent-chat-send-btn"
+                      type="primary"
+                      shape="circle"
+                      aria-label={intl.formatMessage({ id: 'pages.agent.chat.send' })}
+                      icon={<ArrowUpOutlined />}
+                      disabled={
+                        attachments.some((item) => item.status === 'uploading') ||
+                        (!input.trim() && !attachments.length) ||
+                        chatTurnState === 'waiting_user' ||
+                        chatTurnState === 'submitting_answer'
+                      }
+                      onClick={() => handleSend()}
+                    />
+                  </Tooltip>
+                )}
+              </div>
             </div>
             <div className="agent-chat-input-hint">
-              <span>
-                <kbd>Enter</kbd> {intl.formatMessage({ id: 'pages.agent.chat.send' })}
-              </span>
-              <span>
-                <kbd>Shift</kbd> + <kbd>Enter</kbd>{' '}
-                {intl.formatMessage({ id: 'pages.agent.chat.newLine' })}
-              </span>
-              {currentAgent?.model && (
-                <span style={{ marginLeft: 'auto' }}>
-                  {intl.formatMessage(
-                    { id: 'pages.agent.chat.model' },
-                    { model: currentAgent.model },
-                  )}
-                </span>
-              )}
+              {intl.formatMessage({ id: 'pages.agent.chat.aiDisclaimer' })}
             </div>
           </div>
         </div>

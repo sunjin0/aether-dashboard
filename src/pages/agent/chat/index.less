@@ -1,351 +1,541 @@
 @chat-prefix: agent-chat;
+@primary: #4d6bfe;
+@ink: #172033;
+@muted: #7c879b;
+@line: #e8ebf0;
+
+.@{chat-prefix}-page-container {
+  .ant-pro-page-container-children-container {
+    padding-block: 0;
+  }
+}
 
 .@{chat-prefix}-page {
   display: flex;
-  height: calc(100vh - 252px);
-  min-height: 400px;
-  background: #f5f7fa;
-  border-radius: 12px;
+  height: calc(100vh - 208px);
+  min-height: 560px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid @line;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 12px 36px rgba(31, 42, 68, 0.06);
 }
 
-// ============ 侧边栏 ============
 .@{chat-prefix}-sidebar {
-  width: 300px;
-  flex-shrink: 0;
   display: flex;
+  width: 264px;
+  flex-shrink: 0;
   flex-direction: column;
-  background: #fff;
-  border-right: 1px solid rgba(0, 0, 0, 0.06);
-  transition: width 0.3s ease;
+  border-right: 1px solid @line;
+  background: #f7f8fa;
+  transition:
+    width 0.25s ease,
+    opacity 0.2s ease;
 
   &-collapsed {
     width: 0;
-    border-right: none;
     overflow: hidden;
+    border-right: 0;
+    opacity: 0;
   }
 
   .@{chat-prefix}-sidebar-header {
-    flex-shrink: 0;
     display: flex;
-    gap: 8px;
-    padding: 16px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    flex-shrink: 0;
+    gap: 6px;
+    padding: 14px 12px 10px;
 
     .ant-select {
+      min-width: 0;
       flex: 1;
+    }
+
+    .ant-select-selector {
+      border: 0 !important;
+      border-radius: 10px !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      font-weight: 600;
+    }
+  }
+
+  .@{chat-prefix}-sidebar-toggle {
+    color: #657085;
+  }
+
+  .@{chat-prefix}-new-conversation {
+    padding: 2px 12px 12px;
+
+    .ant-btn {
+      height: 44px;
+      border-color: #e1e5eb;
+      border-radius: 22px;
+      background: #fff;
+      color: @ink;
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(31, 42, 68, 0.04);
+
+      &:hover {
+        border-color: #cfd6ff;
+        color: @primary;
+        background: #fbfcff;
+      }
     }
   }
 
   .@{chat-prefix}-sidebar-search {
-    flex-shrink: 0;
-    padding: 12px 16px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    padding: 0 12px 10px;
 
     .ant-input-affix-wrapper {
-      border-radius: 8px;
-      background: #f5f7fa;
-      border: none;
+      border: 0;
+      border-radius: 10px;
+      background: #eef0f3;
+      box-shadow: none;
     }
   }
 
   .@{chat-prefix}-session-list {
-    flex: 1;
     min-height: 0;
+    flex: 1;
+    padding: 2px 8px 16px;
     overflow-y: auto;
-    padding-bottom: 8px;
-
-    &::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: rgba(0, 0, 0, 0.1);
-      border-radius: 3px;
-    }
+    scrollbar-width: thin;
+    scrollbar-color: #d9dde4 transparent;
   }
 
-  // Spin 组件需要 flex 布局以允许子元素滚动
-  .ant-spin-nested-loading {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-  }
-
+  .ant-spin-nested-loading,
   .ant-spin-container {
-    flex: 1;
-    min-height: 0;
     display: flex;
+    min-height: 0;
+    flex: 1;
     flex-direction: column;
   }
 
   .@{chat-prefix}-session-group {
-    padding: 8px 16px 4px;
-    color: rgba(0, 0, 0, 0.45);
+    padding: 12px 10px 5px;
+    color: #9aa2b1;
     font-size: 12px;
     font-weight: 500;
   }
 
-  .@{chat-prefix}-session-active {
-    background: #e6f4ff !important;
-  }
-
   .ant-list-item {
-    padding: 12px 16px;
-    margin: 0 8px;
+    min-height: 38px;
+    margin: 2px 0;
+    padding: 8px 10px;
+    border: 0 !important;
     border-radius: 8px;
     cursor: pointer;
-    border-bottom: none !important;
+    transition: background 0.16s ease;
 
     &:hover {
-      background: #f0f5ff;
+      background: #eceff3;
+    }
+
+    .ant-typography {
+      color: #4d576a;
+      font-size: 13px;
+      font-weight: 400;
+    }
+  }
+
+  .@{chat-prefix}-session-active {
+    background: #e7ebf3 !important;
+
+    .ant-typography {
+      color: @ink;
     }
   }
 }
 
-// ============ 主面板 ============
 .@{chat-prefix}-panel {
-  flex: 1;
-  min-width: 0;
   display: flex;
+  min-width: 0;
+  flex: 1;
   flex-direction: column;
   background: #fff;
 }
 
 .@{chat-prefix}-panel-header {
-  flex-shrink: 0;
+  z-index: 2;
   display: flex;
+  min-height: 62px;
+  flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px;
-  min-height: 64px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  background: #fff;
-  z-index: 10;
+  padding: 10px 22px;
+  border-bottom: 1px solid rgba(232, 235, 240, 0.72);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
 }
 
 .@{chat-prefix}-panel-info {
   display: flex;
+  min-width: 0;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .@{chat-prefix}-panel-title {
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: 8px;
+
+  .@{chat-prefix}-panel-menu {
+    margin-left: -8px;
+  }
 }
 
 .@{chat-prefix}-panel-subtitle {
-  color: rgba(0, 0, 0, 0.45);
+  padding-left: 2px;
+  overflow: hidden;
+  color: #9aa2b1;
   font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.@{chat-prefix}-panel-actions {
-  display: flex;
-  gap: 8px;
+.@{chat-prefix}-model-tag {
+  margin: 0;
+  border: 0;
+  border-radius: 10px;
+  background: #f0f2f5;
+  color: #7c879b;
+  font-size: 11px;
 }
 
-// ============ 消息区域 ============
 .@{chat-prefix}-message-container {
-  flex: 1;
-  min-height: 0;
   position: relative;
+  min-height: 0;
+  flex: 1;
   overflow: hidden;
 }
 
 .@{chat-prefix}-message-scroll {
   height: 100%;
   overflow-y: auto;
-  background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
+  background: #fff;
   scroll-behavior: smooth;
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 3px;
-
-    &:hover {
-      background: rgba(0, 0, 0, 0.2);
-    }
-  }
+  scrollbar-width: thin;
+  scrollbar-color: #d9dde4 transparent;
 }
 
 .@{chat-prefix}-message-list {
-  min-height: 100%;
-  padding: 24px;
   display: flex;
+  width: min(100%, 900px);
+  min-height: 100%;
+  margin: 0 auto;
+  padding: 30px 28px 18px;
   flex-direction: column;
 }
 
 .@{chat-prefix}-empty-container {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   min-height: 0;
-  gap: 16px;
-  padding: 40px;
   flex: 1;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 36px 0 22px;
+  flex-direction: column;
+  text-align: center;
+
+  h2 {
+    margin: 14px 0 4px;
+    color: @ink;
+    font-size: 24px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    margin: 0 0 22px;
+    color: @muted;
+    font-size: 14px;
+  }
+}
+
+.@{chat-prefix}-welcome-mark {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border-radius: 15px 15px 15px 5px;
+  background: linear-gradient(145deg, #5d7cff, #4664e8);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(77, 107, 254, 0.24);
+  font-size: 23px;
 }
 
 .@{chat-prefix}-quick-start {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  max-width: 400px;
+  display: grid;
+  width: min(100%, 620px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 
-  .ant-tag {
-    padding: 6px 12px;
-    border-radius: 16px;
+  button {
+    display: flex;
+    min-height: 46px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border: 1px solid @line;
+    border-radius: 13px;
+    background: #fff;
+    color: #505b70;
     cursor: pointer;
-    transition: all 0.2s;
+    font: inherit;
+    font-size: 13px;
+    text-align: left;
+    transition:
+      border-color 0.16s ease,
+      background 0.16s ease,
+      transform 0.16s ease;
+
+    .anticon {
+      color: #abb2bf;
+      transform: rotate(45deg);
+    }
 
     &:hover {
-      color: #1677ff;
-      border-color: #1677ff;
-      background: #e6f4ff;
+      border-color: #cbd3ff;
+      background: #f8f9ff;
+      color: @primary;
+      transform: translateY(-1px);
     }
   }
 }
 
 .@{chat-prefix}-scroll-bottom {
   position: absolute;
-  bottom: 16px;
+  z-index: 3;
+  bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 10;
 
   .ant-btn {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    border-radius: 20px;
+    border-color: @line;
+    border-radius: 18px;
+    box-shadow: 0 6px 18px rgba(31, 42, 68, 0.1);
   }
 }
 
-// ============ 输入区域 ============
 .@{chat-prefix}-input-bar {
+  z-index: 3;
   flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px 24px 16px;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  background: #fff;
-  z-index: 10;
+  padding: 10px 24px 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), #fff 24%);
+  transition: padding-bottom 0.24s ease;
 }
 
-.@{chat-prefix}-thinking-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 4px;
-}
-
-.@{chat-prefix}-thinking-label {
-  color: rgba(0, 0, 0, 0.65);
-  font-size: 13px;
+.@{chat-prefix}-panel-empty .@{chat-prefix}-input-bar {
+  padding-bottom: clamp(40px, 12vh, 128px);
 }
 
 .@{chat-prefix}-input-wrapper {
   display: flex;
-  gap: 12px;
-  align-items: flex-end;
+  width: min(100%, 780px);
+  margin: 0 auto;
+  padding: 10px 12px 9px;
+  flex-direction: column;
+  border: 1px solid #dfe3e9;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 10px 34px rgba(31, 42, 68, 0.1);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:focus-within {
+    border-color: #bcc7ff;
+    box-shadow:
+      0 12px 36px rgba(31, 42, 68, 0.12),
+      0 0 0 3px rgba(77, 107, 254, 0.06);
+  }
+}
+
+.@{chat-prefix}-attachment-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 2px 6px;
+
+  .ant-tag {
+    max-width: 240px;
+    margin: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 9px;
+    background: #f2f4f7;
+    color: #5b6578;
+    line-height: 26px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    .anticon {
+      margin-right: 5px;
+    }
+  }
 }
 
 .@{chat-prefix}-input-box {
-  flex: 1;
   min-width: 0;
 
   .ant-input {
-    border-radius: 12px;
-    padding: 10px 16px;
+    min-height: 52px !important;
+    padding: 5px 5px 8px;
     resize: none;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    transition:
-      border-color 0.2s,
-      box-shadow 0.2s;
+    border: 0;
+    background: transparent;
+    color: @ink;
+    font-size: 15px;
+    line-height: 1.65;
+    box-shadow: none !important;
 
-    &:focus,
-    &-focused {
-      border-color: #1677ff;
-      box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+    &::placeholder {
+      color: #adb5c2;
     }
   }
+}
 
-  .ant-input-textarea {
-    min-height: 42px !important;
-    max-height: 120px;
+.@{chat-prefix}-input-tools {
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.@{chat-prefix}-input-tools-left {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+
+  .ant-select {
+    width: 76px;
   }
 
-  .ant-input-textarea-show-count::after {
-    display: none;
+  .ant-tag {
+    margin: 0 0 0 4px;
+    border-radius: 10px;
+  }
+}
+
+.@{chat-prefix}-tool-icon,
+.@{chat-prefix}-thinking-btn {
+  color: #596477;
+
+  &:hover {
+    color: @primary !important;
+    background: #f1f4ff !important;
+  }
+}
+
+.@{chat-prefix}-thinking-btn {
+  height: 32px;
+  padding-inline: 10px;
+  border-radius: 16px;
+  font-size: 13px;
+
+  &-active {
+    background: #edf1ff !important;
+    color: @primary !important;
   }
 }
 
 .@{chat-prefix}-send-btn {
-  height: 44px;
-  min-width: 44px;
-  border-radius: 12px;
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: 0;
+  background: @primary;
+  box-shadow: none;
+
+  &:hover {
+    background: #3e5bea !important;
+  }
+
+  &[disabled] {
+    background: #d9deed;
+    color: #fff;
+  }
+}
+
+.@{chat-prefix}-stop-btn {
+  background: #eef0f4;
+  color: #566174;
+
+  &:hover {
+    background: #e4e7ec !important;
+    color: @ink !important;
+  }
 }
 
 .@{chat-prefix}-input-hint {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 0 4px;
-  color: rgba(0, 0, 0, 0.35);
-  font-size: 12px;
-
-  kbd {
-    display: inline-flex;
-    align-items: center;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background: rgba(0, 0, 0, 0.06);
-    font-family: inherit;
-    font-size: 11px;
-  }
+  width: min(100%, 780px);
+  margin: 7px auto 0;
+  color: #a1a9b6;
+  font-size: 11px;
+  text-align: center;
 }
 
-// ============ 响应式 ============
 @media (max-width: 768px) {
+  .@{chat-prefix}-page-container {
+    .ant-pro-page-container-children-container {
+      padding-inline: 0;
+    }
+  }
+
   .@{chat-prefix}-page {
-    flex-direction: column;
-    height: calc(100vh - 140px);
+    height: calc(100vh - 84px);
+    min-height: 480px;
+    border-inline: 0;
+    border-radius: 0;
   }
 
   .@{chat-prefix}-sidebar {
-    width: 100%;
-    max-height: 40vh;
-    border-right: none;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    position: absolute;
+    z-index: 20;
+    width: min(84vw, 300px);
+    height: 100%;
+    box-shadow: 12px 0 36px rgba(31, 42, 68, 0.16);
 
     &-collapsed {
-      max-height: 0;
-      border-bottom: none;
+      width: 0;
+      box-shadow: none;
     }
   }
 
   .@{chat-prefix}-panel-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-    padding: 12px 16px;
-    min-height: auto;
+    padding-inline: 14px;
   }
 
   .@{chat-prefix}-message-list {
-    padding: 16px;
+    padding: 22px 16px 12px;
   }
 
-  .@{chat-prefix}-input-bar {
-    padding: 12px 16px;
+  .@{chat-prefix}-quick-start {
+    grid-template-columns: 1fr;
+  }
+
+  .@{chat-prefix}-empty-container {
+    h2 {
+      font-size: 20px;
+    }
+
+    p {
+      margin-bottom: 14px;
+    }
+  }
+
+  .@{chat-prefix}-input-bar,
+  .@{chat-prefix}-panel-empty .@{chat-prefix}-input-bar {
+    padding: 8px 10px 12px;
+  }
+
+  .@{chat-prefix}-input-wrapper {
+    border-radius: 16px;
   }
 
   .@{chat-prefix}-input-hint {

@@ -317,6 +317,16 @@ export interface AgentChatRequest {
   thinking?: boolean;
   temporary?: boolean;
   reasoningEffort?: 'low' | 'medium' | 'high';
+  attachmentContent?: string;
+  attachments?: string;
+}
+
+export interface AgentChatAttachment {
+  fileName: string;
+  contentType?: string;
+  size?: number;
+  objectKey: string;
+  extractedContent: string;
 }
 
 /**
@@ -559,6 +569,7 @@ export interface AgentMessage {
   answeredAt?: number;
   expiresAt?: number;
   content?: string;
+  attachments?: string;
   citations?: string;
   sources?: KnowledgeSource[];
   reasoningContent?: string;

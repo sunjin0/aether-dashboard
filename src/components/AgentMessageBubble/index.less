@@ -3,14 +3,23 @@
 .@{bubble-prefix} {
   display: flex;
   width: 100%;
-  margin: 16px 0;
+  margin: 10px 0 18px;
   animation: bubble-fade-in 0.3s ease;
 
   &-left {
     justify-content: flex-start;
 
     .@{bubble-prefix}-card {
-      max-width: min(760px, 80%);
+      width: 100%;
+      max-width: 100%;
+      padding: 4px 2px;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+
+      &:hover {
+        box-shadow: none;
+      }
     }
   }
 
@@ -18,9 +27,16 @@
     justify-content: flex-end;
 
     .@{bubble-prefix}-card {
-      max-width: min(680px, 72%);
-      border-color: rgba(22, 119, 255, 0.16);
-      background: linear-gradient(135deg, #e6f4ff 0%, #f0f7ff 100%);
+      max-width: min(620px, 78%);
+      padding: 11px 15px;
+      border: 0;
+      border-radius: 16px 16px 4px 16px;
+      background: #f1f3f6;
+      box-shadow: none;
+
+      &:hover {
+        box-shadow: none;
+      }
     }
   }
 
@@ -56,7 +72,7 @@
   }
 
   &-header {
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 8px;
@@ -287,6 +303,13 @@
     line-height: 1.7;
     overflow-wrap: anywhere;
     word-break: break-word;
+  }
+
+  &-attachments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
   }
 
   &-meta {

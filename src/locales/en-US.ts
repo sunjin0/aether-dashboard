@@ -447,6 +447,10 @@ export default {
   'pages.agent.chat.questionExpired': 'The question has already been handled or has expired',
   'pages.agent.chat.selectAgent': 'Select an agent',
   'pages.agent.chat.enterMessage': 'Enter a message',
+  'pages.agent.chat.attachFile': 'Attach files',
+  'pages.agent.chat.attachmentLimit': 'You can upload at most 3 attachments at a time',
+  'pages.agent.chat.attachmentTooLarge': 'Each attachment must not exceed 10MB',
+  'pages.agent.chat.analyzeAttachments': 'Please analyze the files I uploaded.',
   'pages.agent.chat.generateFailed': 'Generation failed',
   'pages.agent.chat.sendFailed': 'Send failed',
   'pages.agent.chat.untitledConversation': 'Untitled conversation',
@@ -472,6 +476,10 @@ export default {
   'pages.agent.chat.deepThinking': 'Deep thinking',
   'pages.agent.chat.thinking': 'Thinking...',
   'pages.agent.chat.inputPlaceholder': 'Enter a message. Markdown is supported...',
+  'pages.agent.chat.welcomeHint':
+    'Ask anything and I will do my best to provide a clear, reliable answer',
+  'pages.agent.chat.uploading': 'Uploading',
+  'pages.agent.chat.aiDisclaimer': 'AI-generated content may contain mistakes',
   'pages.agent.chat.send': 'Send',
   'pages.agent.chat.newLine': 'New line',
   'pages.agent.chat.model': 'Model: {model}',
@@ -786,7 +794,8 @@ export default {
     'Current diff kept for reference only; accept and reject actions are disabled.',
   'pages.knowledge.review.diffWorkspace.alert.noPending': 'No pending AI review issues.',
   'pages.knowledge.review.diffWorkspace.submitCriticalWarning': 'Critical Issues Exist',
-  'pages.knowledge.review.diffWorkspace.submitCriticalDesc': '{count} critical issue(s) remain unresolved. Submit for review anyway?',
+  'pages.knowledge.review.diffWorkspace.submitCriticalDesc':
+    '{count} critical issue(s) remain unresolved. Submit for review anyway?',
   'pages.knowledge.review.replacementEditor.title': 'Accept Suggestion',
   'pages.knowledge.review.replacementEditor.okText': 'Confirm Accept',
   'pages.knowledge.review.replacementEditor.placeholder':
@@ -946,4 +955,4 @@ export default {
   'pages.knowledge.review.patchOperation.insertBefore': 'Insert Before',
   'pages.knowledge.review.patchOperation.insertAfter': 'Insert After',
   'pages.knowledge.review.patchOperation.setHeading': 'Set Heading',
-};
+}

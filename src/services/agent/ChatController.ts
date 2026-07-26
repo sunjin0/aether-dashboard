@@ -5,6 +5,7 @@ import { ResponseStructure } from '@/services/entity/Common'
 import {
   AgentChatReplyRequest,
   AgentChatRequest,
+  AgentChatAttachment,
   AgentMessage,
   AgentStreamDoneData,
   AgentStreamErrorData,
@@ -19,6 +20,7 @@ export interface StreamAgentChatOptions {
   onMessage?: (chunk: string, data: AgentStreamMessageData) => void;
   onReasoning?: (chunk: string, data: AgentStreamReasoningData) => void;
   onToolCall?: (data: AgentStreamToolCallData) => void;
+  onProgress?: (data: { stage?: string; message?: string }) => void;
   onQuestion?: (data: AgentStreamQuestionData) => void;
   onDone?: (data: AgentStreamDoneData) => void;
   onError?: (data: AgentStreamErrorData) => void;
@@ -44,7 +46,6 @@ export const streamAgentChat = async (
   options: StreamAgentChatOptions = {},
 ) => {
   const token = localStorage.getItem('token')
-
   await fetchEventSource('/api/agent/chat/stream', {
     method: 'Post',
     headers: {
@@ -79,6 +80,8 @@ export const streamAgentChat = async (
         options.onReasoning?.(data.chunk || '', data)
       } else if (eventType === 'tool_call') {
         options.onToolCall?.(data)
+      } else if (eventType === 'progress') {
+        options.onProgress?.(data)
       } else if (eventType === 'question') {
         options.onQuestion?.(data)
       } else if (eventType === 'done') {
@@ -95,6 +98,15 @@ export const streamAgentChat = async (
 
     openWhenHidden: true,
   })
+}
+
+/** 上传文件并完成文本识别；聊天请求仅携带该接口返回的识别结果。 */
+export const uploadAgentChatAttachments = async (
+  files: File[],
+): Promise<ResponseStructure<AgentChatAttachment[]>> => {
+  const data = new FormData()
+  files.forEach((file) => data.append('files', file))
+  return request('/api/agent/chat/attachment', { method: 'POST', data })
 }
 
 /**

@@ -1,7 +1,7 @@
 import React, { useCallback, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Collapse, message, Popover, Tooltip, Typography } from 'antd';
+import { Collapse, message, Popover, Tag, Tooltip, Typography } from 'antd';
 import { useIntl } from '@umijs/max';
 import {
   CustomerServiceOutlined,
@@ -21,7 +21,7 @@ const { Text } = Typography;
 export type AgentMessageBubbleStatus = 'streaming' | 'error' | 'stopped';
 
 export interface AgentMessageBubbleProps {
-  agentMessage: AgentMessage & { reasoningStream?: string };
+  agentMessage: AgentMessage & { reasoningStream?: string; progressMessage?: string };
   align?: 'left' | 'right';
   compact?: boolean;
   status?: AgentMessageBubbleStatus;
@@ -44,6 +44,16 @@ const getAlign = (message: AgentMessage, align?: 'left' | 'right') => {
     return align;
   }
   return message.role === 'user' ? 'right' : 'left';
+};
+
+const getAttachments = (value?: string) => {
+  if (!value) return [] as { fileName?: string; size?: number }[];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 };
 
 const remarkCitations = (sources: KnowledgeSource[], messageId?: string) => () => (tree: any) => {
@@ -210,6 +220,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
 
   const currentReasoning = agentMessage.reasoningContent || agentMessage.reasoningStream || '';
   const currentContent = agentMessage.content || '';
+  const attachments = getAttachments(agentMessage.attachments);
 
   useEffect(() => {
     if (reasoningContainerRef.current) {
@@ -261,7 +272,8 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
       if (status === 'streaming') {
         return (
           <Text className="agent-message-bubble-placeholder" type="secondary">
-            {intl.formatMessage({ id: 'components.agentMessageBubble.generating' })}
+            {agentMessage.progressMessage ||
+              intl.formatMessage({ id: 'components.agentMessageBubble.generating' })}
           </Text>
         );
       }
@@ -311,6 +323,16 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
             {intl.formatMessage({ id: 'components.agentMessageBubble.reasoningOnly' })}
           </Text>
         ) : null}
+
+        {!!attachments.length && (
+          <div className="agent-message-bubble-attachments">
+            {attachments.map((attachment, index) => (
+              <Tag key={`${attachment.fileName || 'file'}-${index}`}>
+                {attachment.fileName || 'file'}
+              </Tag>
+            ))}
+          </div>
+        )}
 
         {agentMessage.toolCallLogs && agentMessage.toolCallLogs.length > 0 && (
           <div className="agent-message-bubble-tool-calls">

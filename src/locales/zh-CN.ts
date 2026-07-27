@@ -192,6 +192,7 @@ export default {
   'components.agentMessageBubble.reasoningOnly': '模型仅返回推理过程，未返回最终答案',
   'components.agentMessageBubble.sources': '参考来源（{count}）',
   'components.agentMessageBubble.similarity': '相关度',
+  'components.agentMessageBubble.contextExpanded': '已扩展上下文（{count} 段）',
   'components.agentMessageBubble.unnamedDocument': '未命名文档',
   'components.agentMessageBubble.yesterday': '昨天 {time}',
   'components.fileUploadModal.uploadFile': '上传文件',

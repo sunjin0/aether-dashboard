@@ -369,6 +369,14 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
                           {(source.similarity * 100).toFixed(1)}%
                         </span>
                       )}
+                      {source.contextExpanded && (source.contextChunkCount || 0) > 1 && (
+                        <span className="agent-message-bubble-source-context-expanded">
+                          {intl.formatMessage(
+                            { id: 'components.agentMessageBubble.contextExpanded' },
+                            { count: source.contextChunkCount },
+                          )}
+                        </span>
+                      )}
                     </div>
                   }
                   content={
@@ -398,6 +406,14 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
                     {source.similarity !== undefined && (
                       <span className="agent-message-bubble-source-similarity">
                         {(source.similarity * 100).toFixed(1)}%
+                      </span>
+                    )}
+                    {source.contextExpanded && (source.contextChunkCount || 0) > 1 && (
+                      <span className="agent-message-bubble-source-context-expanded">
+                        {intl.formatMessage(
+                          { id: 'components.agentMessageBubble.contextExpanded' },
+                          { count: source.contextChunkCount },
+                        )}
                       </span>
                     )}
                   </div>

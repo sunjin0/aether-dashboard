@@ -198,6 +198,7 @@ export default {
     'The model returned reasoning only, without a final answer',
   'components.agentMessageBubble.sources': 'Sources ({count})',
   'components.agentMessageBubble.similarity': 'Similarity',
+  'components.agentMessageBubble.contextExpanded': 'Expanded context ({count} chunks)',
   'components.agentMessageBubble.unnamedDocument': 'Untitled document',
   'components.agentMessageBubble.yesterday': 'Yesterday at {time}',
   'components.fileUploadModal.uploadFile': 'Upload file',

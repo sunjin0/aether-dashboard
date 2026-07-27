@@ -538,6 +538,9 @@ export interface AgentStreamDoneData {
 export interface KnowledgeSource {
   citationIndex: number;
   similarity?: number;
+  /** Adjacent chunks are merged into this anchor source for answer context. */
+  contextExpanded?: boolean;
+  contextChunkCount?: number;
   documentName?: string;
   sectionPath?: string;
   content: string;

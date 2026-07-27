@@ -14,9 +14,11 @@ import {
   ProFormSwitch,
   ProFormText,
   ProFormTextArea,
+  ProFormDigit,
+  ProFormDependency,
 } from '@ant-design/pro-components';
 import { useIntl } from '@umijs/max'
-import { Card, Col, Form, Row } from 'antd'
+import { Col, Form, Row } from 'antd'
 import './KnowledgeBaseForm.less'
 
 interface KnowledgeBaseFormProps {
@@ -37,11 +39,13 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
       setOpen={setOpen}
       form={form}
       request={getKnowledgeBase}
+      drawerProps={{ width: 920, className: 'knowledge-base-form-drawer' }}
       onSuccess={async (values) => {
         const payload = {
           ...values,
           status: Number(values.status),
           reviewConfig: JSON.stringify(values.reviewConfig),
+          retrievalConfig: JSON.stringify(values.retrievalConfig || {}),
         }
         if (id) await updateKnowledgeBase({ ...payload, id })
         else await addKnowledgeBase(payload)
@@ -51,7 +55,6 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
     >
       <ProCard
         title={intl.formatMessage({ id: 'pages.knowledge.base.form.basicInfo' })}
-
         className="knowledge-base-form-card"
       >
         <Row gutter={16}>
@@ -116,7 +119,6 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
 
       <ProCard
         title={intl.formatMessage({ id: 'pages.knowledge.base.form.retrievalConfig' })}
-
         style={{ marginTop: 16 }}
         className="knowledge-base-form-card"
       >
@@ -134,21 +136,40 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
           request={async () => (await getEmbeddingProviderOptions()).data || []}
           fieldProps={{ showSearch: true, optionFilterProp: 'label' }}
         />
-        <ProFormTextArea
-          name="retrievalConfig"
-          label={intl.formatMessage({ id: 'pages.knowledge.base.form.retrievalConfig' })}
-          tooltip={intl.formatMessage({ id: 'pages.knowledge.base.form.retrievalConfigTooltip' })}
-          fieldProps={{ rows: 3, placeholder: '{ }', style: { fontFamily: 'Consolas, Monaco, monospace' } }}
-          rules={[
-            {
-              validator: (_: unknown, value: string) => {
-                if (!value || value === '{}') return Promise.resolve()
-                try { JSON.parse(value); return Promise.resolve() }
-                catch { return Promise.reject(new Error(intl.formatMessage({ id: 'pages.knowledge.base.form.retrievalConfigInvalid' }))) }
-              },
-            },
-          ]}
-        />
+        <div className="knowledge-base-form-section-title">召回设置</div>
+        <Row gutter={16}>
+          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'topK']} label="最终片段数" initialValue={5} min={1} max={20} /></Col>
+          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'minSimilarity']} label="向量相似度阈值" initialValue={0.3} min={-1} max={1} fieldProps={{ step: 0.05 }} /></Col>
+          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'maxChunksPerDocument']} label="每文档最多片段" initialValue={2} min={1} max={10} /></Col>
+        </Row>
+        <Row gutter={16} className="knowledge-base-form-switches">
+          <Col xs={24} md={12}><ProFormSwitch name={['retrievalConfig', 'hybridEnabled']} label="启用混合检索" initialValue /></Col>
+          <Col xs={24} md={12}><ProFormSwitch name={['retrievalConfig', 'strictGrounding']} label="仅基于知识库资料回答" initialValue={false} /></Col>
+        </Row>
+        <ProFormDependency name={['retrievalConfig', 'hybridEnabled']}>
+          {({ retrievalConfig }) => retrievalConfig?.hybridEnabled ? (
+            <Row gutter={16}>
+              <Col xs={24} md={12}><ProFormDigit name={['retrievalConfig', 'vectorWeight']} label="向量权重" initialValue={0.7} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col>
+              <Col xs={24} md={12}><ProFormDigit name={['retrievalConfig', 'minLexicalScore']} label="全文检索阈值" initialValue={0.05} min={0} max={1} fieldProps={{ step: 0.01 }} /></Col>
+            </Row>
+          ) : null}
+        </ProFormDependency>
+        <div className="knowledge-base-form-section-title">排序设置</div>
+        <Row gutter={16}>
+          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'authorityScore']} label="知识库权威度" initialValue={0} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col>
+          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'authorityWeight']} label="权威度排序权重" initialValue={0} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col>
+          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'freshnessWeight']} label="新鲜度排序权重" initialValue={0} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col>
+        </Row>
+        <ProFormSwitch name={['retrievalConfig', 'rerankEnabled']} label="启用重排序（Reranker）" initialValue={false} />
+        <ProFormDependency name={['retrievalConfig', 'rerankEnabled']}>
+          {({ retrievalConfig }) => retrievalConfig?.rerankEnabled ? (
+            <Row gutter={16}>
+              <Col xs={24} md={8}><ProFormSelect name={['retrievalConfig', 'rerankProviderId']} label="重排序模型供应商" request={getReviewModelProviderOptions} rules={[{ required: true }]} /></Col>
+              <Col xs={24} md={8}><ProFormText name={['retrievalConfig', 'rerankModel']} label="重排序模型名称" /></Col>
+              <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'rerankTopN']} label="重排序保留数" initialValue={5} min={1} max={20} /></Col>
+            </Row>
+          ) : null}
+        </ProFormDependency>
       </ProCard>
 
       <ProCard

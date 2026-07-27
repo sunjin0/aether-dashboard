@@ -73,7 +73,7 @@ export interface KnowledgeBase {
   name?: string;
   description?: string;
   visibility?: 'platform' | 'private' | 'shared';
-  retrievalConfig?: string;
+  retrievalConfig?: RetrievalConfig | string;
   reviewConfig?: ReviewConfig;
   indexStatus?: 0 | 1 | 2;
   referenceCount?: number;
@@ -81,6 +81,23 @@ export interface KnowledgeBase {
   status?: 0 | 1;
   createdAt?: number;
   updatedAt?: number;
+}
+
+export interface RetrievalConfig {
+  topK?: number;
+  minSimilarity?: number;
+  maxChunksPerDocument?: number;
+  hybridEnabled?: boolean;
+  vectorWeight?: number;
+  minLexicalScore?: number;
+  rerankEnabled?: boolean;
+  rerankProviderId?: string;
+  rerankModel?: string;
+  rerankTopN?: number;
+  strictGrounding?: boolean;
+  authorityScore?: number;
+  authorityWeight?: number;
+  freshnessWeight?: number;
 }
 
 export interface ReviewConfig {

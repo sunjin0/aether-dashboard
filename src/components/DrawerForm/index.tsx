@@ -5,7 +5,7 @@ import { Button } from 'antd';
 import { useIntl } from '@umijs/max';
 
 export default (props: Props) => {
-  const { id, onSuccess, open, setOpen, children, form, request, readonly } = props;
+  const { id, onSuccess, open, setOpen, children, form, request, readonly, drawerProps } = props;
   const [loading, setLoading] = useState(false);
   const intl = useIntl();
   return (
@@ -34,6 +34,7 @@ export default (props: Props) => {
       autoFocusFirstInput
       drawerProps={{
         destroyOnClose: true,
+        ...drawerProps,
       }}
       submitter={{
         render: (props, dom) => {

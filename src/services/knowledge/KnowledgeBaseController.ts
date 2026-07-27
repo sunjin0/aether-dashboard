@@ -1,8 +1,11 @@
 import { request } from '@umijs/max'
-import { KnowledgeBase, KnowledgeBaseSearchParams, ReviewConfig } from '@/services/entity/Agent'
+import { KnowledgeBase, KnowledgeBaseSearchParams, RetrievalConfig, ReviewConfig } from '@/services/entity/Agent'
 import { ResponseStructure } from '@/services/entity/Common'
 
-type KnowledgeBaseMutation = Omit<KnowledgeBase, 'reviewConfig'> & { reviewConfig?: string };
+type KnowledgeBaseMutation = Omit<KnowledgeBase, 'reviewConfig' | 'retrievalConfig'> & {
+  reviewConfig?: string;
+  retrievalConfig?: string;
+};
 
 const parseReviewConfig = (value: ReviewConfig | string | undefined): ReviewConfig | undefined => {
   if (!value || typeof value !== 'string') return value as ReviewConfig | undefined
@@ -13,9 +16,19 @@ const parseReviewConfig = (value: ReviewConfig | string | undefined): ReviewConf
   }
 }
 
+const parseRetrievalConfig = (value: RetrievalConfig | string | undefined): RetrievalConfig | undefined => {
+  if (!value || typeof value !== 'string') return value as RetrievalConfig | undefined
+  try {
+    return JSON.parse(value) as RetrievalConfig
+  } catch {
+    return undefined
+  }
+}
+
 const normalizeKnowledgeBase = (item: KnowledgeBase): KnowledgeBase => ({
   ...item,
   reviewConfig: parseReviewConfig(item.reviewConfig),
+  retrievalConfig: parseRetrievalConfig(item.retrievalConfig),
 })
 
 export const getKnowledgeBaseList = async (

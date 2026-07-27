@@ -9,6 +9,7 @@ import Footer from './Footer';
 import { Question, SelectLang } from './RightContent';
 import { AvatarDropdown, AvatarName } from './RightContent/AvatarDropdown';
 import { ProFormInstance } from '@ant-design/pro-components';
+import type { DrawerProps } from 'antd';
 import React from 'react';
 import ProFormFileUpload from './ProFormFileUpload';
 import FileImage from './FileImage';
@@ -23,5 +24,6 @@ export type Props = {
   setOpen?: (open: boolean) => void;
   children?: React.ReactNode;
   readonly?: boolean;
+  drawerProps?: DrawerProps;
 };
 export { AvatarDropdown, AvatarName, FileImage, Footer, ProFormFileUpload, Question, SelectLang };

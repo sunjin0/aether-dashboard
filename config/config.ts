@@ -25,6 +25,7 @@ export default defineConfig({
   hash: isProduction,
 
   publicPath: PUBLIC_PATH,
+  favicons: [publicUrl('logo.svg')],
 
   /**
    * @name 兼容性设置
@@ -87,7 +88,7 @@ export default defineConfig({
    * @name layout 插件
    * @doc https://umijs.org/docs/max/layout-menu
    */
-  title: 'Ant Design Pro',
+  title: 'Aether Dashboard',
   layout: {
     locale: true,
     ...defaultSettings,

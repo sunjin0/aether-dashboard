@@ -1,6 +1,6 @@
 import { request } from '@umijs/max'
 import { KnowledgeBase, KnowledgeBaseSearchParams, RetrievalConfig, ReviewConfig } from '@/services/entity/Agent'
-import { ResponseStructure } from '@/services/entity/Common'
+import { Option, ResponseStructure } from '@/services/entity/Common'
 
 type KnowledgeBaseMutation = Omit<KnowledgeBase, 'reviewConfig' | 'retrievalConfig'> & {
   reviewConfig?: string;
@@ -39,6 +39,10 @@ export const getKnowledgeBaseList = async (
     data: params,
   })
   return { ...response, data: (response.data || []).map(normalizeKnowledgeBase) }
+}
+export const getKnowledgeBaseOptions = async (status = 1, indexStatus?: number): Promise<Option[]> => {
+  const { data } = await request<ResponseStructure<Option[]>>('/api/knowledge/base/options', { method: 'GET', params: { status, indexStatus } })
+  return data || []
 }
 
 export const getKnowledgeBase = async (id: string): Promise<ResponseStructure<KnowledgeBase>> => {

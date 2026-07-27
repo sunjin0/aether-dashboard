@@ -20,6 +20,10 @@ export const getAgentDefinitionList = async (
     data: params,
   })
 }
+export const getAgentDefinitionOptions = async (status = 1): Promise<Option[]> => {
+  const { data } = await request<ResponseStructure<Option[]>>('/api/agent/definition/options', { method: 'GET', params: { status } })
+  return data || []
+}
 
 /**
  * @description 获取 Agent 定义详情

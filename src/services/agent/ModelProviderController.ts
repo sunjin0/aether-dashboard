@@ -1,5 +1,5 @@
 import { request } from '@umijs/max'
-import { ResponseStructure } from '@/services/entity/Common'
+import { Option, ResponseStructure } from '@/services/entity/Common'
 import {
   ModelProvider,
   ModelProviderSearchParams,
@@ -16,6 +16,10 @@ export const getModelProviderList = async (
     method: 'POST',
     data: params,
   })
+}
+export const getModelProviderOptions = async (type?: string, excludeEmbedding = false): Promise<Option[]> => {
+  const { data } = await request<ResponseStructure<Option[]>>('/api/agent/model-provider/options', { method: 'GET', params: { type, excludeEmbedding } })
+  return data || []
 }
 
 /**
@@ -85,8 +89,6 @@ export const getEmbeddingProviderOptions = async () =>
 
 /** 获取可用于 AI 文档审查的已启用非 Embedding 模型供应商。 */
 export const getReviewModelProviderOptions = async () => {
-  const response = await getModelProviderList({ current: 1, pageSize: 1000, status: 1 })
-  return (response.data || [])
-    .filter((provider) => provider.id && provider.type?.toLowerCase() !== 'embedding')
-    .map((provider) => ({ label: provider.name || provider.id!, value: provider.id! }))
+  const options = await getModelProviderOptions(undefined, true)
+  return options
 }

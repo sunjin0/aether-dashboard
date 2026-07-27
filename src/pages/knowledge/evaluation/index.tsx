@@ -10,7 +10,7 @@ import {
 } from '@ant-design/pro-components'
 import { Button, Card, Descriptions, Drawer, message, Modal, Space, Table, Tag } from 'antd'
 import { useAccess } from '@umijs/max'
-import { getAgentDefinitionList } from '@/services/agent/AgentDefinitionController'
+import { getAgentDefinitionOptions } from '@/services/agent/AgentDefinitionController'
 import {
   EvaluationCase,
   EvaluationRunResult,
@@ -65,11 +65,7 @@ export default function EvaluationPage() {
             name="agentDefinitionId"
             label="Agent"
             rules={[{ required: true }]}
-            request={async () =>
-              ((await getAgentDefinitionList({ current: 1, pageSize: 1000 })).data || []).map(
-                (x) => ({ label: x.name || x.id, value: x.id }),
-              )
-            }
+            request={async () => getAgentDefinitionOptions()}
           />
           <ProFormTextArea name="description" label="说明" />
         </ModalForm>,

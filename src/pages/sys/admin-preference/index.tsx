@@ -7,7 +7,7 @@ import {
   getAdminPreferenceStatistics,
   overrideAdminPreference,
 } from '@/services/sys/AdminPreferenceController'
-import { getAdminList } from '@/services/sys/AdminController'
+import { getAdminOptions } from '@/services/sys/AdminController'
 import {
   AppstoreOutlined,
   CheckCircleFilled,
@@ -85,13 +85,7 @@ const PreferencePage: React.FC = () => {
   const refresh = () => ref.current?.reloadAndRest?.()
 
   useEffect(() => {
-    getAdminList({ current: 1, pageSize: 100 }).then((res) => {
-      if (res.code === 200 && res.data) {
-        setAdminOptions(
-          res.data.map((a) => ({ label: a.username || String(a.id), value: String(a.id) })),
-        )
-      }
-    })
+    getAdminOptions().then((options) => setAdminOptions(options.map((item) => ({ label: item.label, value: String(item.value) }))))
   }, [])
 
   const loadStatistics = async () => {

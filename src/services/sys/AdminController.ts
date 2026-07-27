@@ -14,6 +14,10 @@ export const getAdminList = async (
     data: params,
   })
 }
+export const getAdminOptions = async (): Promise<Option[]> => {
+  const { data } = await request<ResponseStructure<Option[]>>('/api/sys/admin/options', { method: 'GET' })
+  return data || []
+}
 /**
  * @description 获取管理员信息
  * @since 2025-07-17

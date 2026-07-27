@@ -27,7 +27,7 @@ import {
   PlusOutlined,
   SearchOutlined,
 } from '@ant-design/icons'
-import { getAgentDefinitionList } from '@/services/agent/AgentDefinitionController'
+import { getAgentDefinitionOptions } from '@/services/agent/AgentDefinitionController'
 import {
   streamAgentChat,
   streamReplyAgentChat,
@@ -142,20 +142,8 @@ const ChatDebugPage: React.FC = () => {
   const loadAgents = async () => {
     setLoadingAgents(true)
     try {
-      const {
-        code,
-        data,
-        message: msg,
-      } = await getAgentDefinitionList({
-        current: 1,
-        pageSize: 1000,
-        status: 1,
-      })
-      if (code === 200) {
-        setAgents(data || [])
-      } else {
-        message.error(msg || intl.formatMessage({ id: 'pages.agent.chat.loadAgentsFailed' }))
-      }
+      const options = await getAgentDefinitionOptions()
+      setAgents(options.map((item) => ({ id: String(item.value), name: item.label } as any)))
     } finally {
       setLoadingAgents(false)
     }

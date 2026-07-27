@@ -8,7 +8,7 @@ import {
   unbindToolFromAgent,
   updateToolPriority,
 } from '@/services/agent/AgentDefinitionController'
-import { getAgentToolList } from '@/services/agent/ToolController'
+  import { getAgentToolOptions } from '@/services/agent/ToolController'
 import { AgentToolBinding, BindToolRequest, AgentTool } from '@/services/entity/Agent'
 import { useIntl } from '@umijs/max'
 import TableActionMenu from '@/components/TableActionMenu'
@@ -34,20 +34,12 @@ const AgentToolBinding: React.FC<AgentToolBindingProps> = ({ agentId, open, setO
 
   // 加载可用工具列表
   const loadToolOptions = async () => {
-    const { data, code } = await getAgentToolList({
-      current: 1,
-      pageSize: 1000,
-      status: 1,
-    })
+    const data = await getAgentToolOptions()
+    const code = 200
 
     if (code === 200 && data) {
-      const options = data
-        .filter((item) => item.id)
-        .map((item) => ({
-          label: `${item.name || item.id} (${item.code}) / ${item.mcpServerName || '-'} / ${item.mcpToolName || '-'}`,
-          value: item.id as string,
-        }))
-      setToolOptions(options)
+        const options = data
+      setToolOptions(options.map((item) => ({ label: item.label, value: String(item.value) })))
     }
   }
 

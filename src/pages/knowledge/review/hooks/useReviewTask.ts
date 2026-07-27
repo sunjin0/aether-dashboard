@@ -8,7 +8,7 @@ import {
   getReviewTask,
   rejectReviewTask,
 } from '@/services/knowledge/ReviewController'
-import { getAdminList } from '@/services/sys/AdminController'
+import { getAdminOptions } from '@/services/sys/AdminController'
 
 interface UseReviewTaskOptions {
   taskId?: string
@@ -64,11 +64,11 @@ export const useReviewTask = ({ taskId, open, onSuccess }: UseReviewTaskOptions)
     if (!open || !taskId) return
     setClaimedByCurrentUser(false)
     setComment('')
-    getAdminList({ current: 1, pageSize: 1000 }).then((res) => {
-      const map: Record<string, string> = {}
-      for (const user of res.data || []) {
-        if (user.id) map[String(user.id)] = user.username || String(user.id)
-      }
+      getAdminOptions().then((options) => {
+        const map: Record<string, string> = {}
+        for (const option of options) {
+          if (option.value) map[String(option.value)] = option.label || String(option.value)
+        }
       setUserMap(map)
     })
     load()

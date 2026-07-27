@@ -4,7 +4,7 @@ import {
   getKnowledgeBaseBindingList,
   updateKnowledgeBaseBindingStatus,
 } from '@/services/agent/KnowledgeBaseBindingController'
-import { getKnowledgeBaseList } from '@/services/knowledge/KnowledgeBaseController'
+import { getKnowledgeBaseOptions } from '@/services/knowledge/KnowledgeBaseController'
 import { KnowledgeBaseBinding } from '@/services/entity/Agent'
 import { PlusOutlined } from '@ant-design/icons'
 import { ActionType, ProTable } from '@ant-design/pro-components'
@@ -33,19 +33,11 @@ const AgentKnowledgeBaseBinding: React.FC<AgentKnowledgeBaseBindingProps> = ({ a
   }, [agentId, open])
 
   const openBindingForm = async () => {
-    const response = await getKnowledgeBaseList({ current: 1, pageSize: 1000, status: 1 })
-    if (response.code !== 200) {
-      message.error(response.message || format('pages.agent.knowledgeBase.loadFailed'))
-      return
+    try {
+      setOptions((await getKnowledgeBaseOptions(1, 2)).map((item) => ({ label: item.label, value: String(item.value) })))
+    } catch (error) {
+      message.error(format('pages.agent.knowledgeBase.loadFailed'))
     }
-    setOptions(
-      (response.data || [])
-        .filter((item) => item.id && item.status === 1 && item.indexStatus === 2)
-        .map((item) => ({
-          label: `${item.name || item.id} (${item.scope === 'PLATFORM' ? format('pages.agent.knowledgeBase.platform') : format('pages.agent.knowledgeBase.agentOnly')})`,
-          value: item.id as string,
-        })),
-    )
     form.resetFields()
     setBindOpen(true)
   }

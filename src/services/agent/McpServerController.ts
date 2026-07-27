@@ -1,11 +1,15 @@
 import { request } from '@umijs/max'
-import { ResponseStructure } from '@/services/entity/Common'
+import { Option, ResponseStructure } from '@/services/entity/Common'
 import { McpServer, McpServerSearchParams, McpTool } from '@/services/entity/Agent'
 
 export const getMcpServerList = async (
   params: McpServerSearchParams,
 ): Promise<ResponseStructure<McpServer[]>> =>
   request('/api/agent/mcp-server/list', { method: 'POST', data: params })
+export const getMcpServerOptions = async (): Promise<Option[]> => {
+  const { data } = await request<ResponseStructure<Option[]>>('/api/agent/mcp-server/options', { method: 'GET' })
+  return data || []
+}
 
 export const getMcpServer = async (id: string): Promise<ResponseStructure<McpServer>> =>
   request(`/api/agent/mcp-server/${id}`, { method: 'GET' })

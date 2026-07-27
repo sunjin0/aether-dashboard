@@ -13,7 +13,7 @@ import {
 } from '@ant-design/pro-components'
 import { Form } from 'antd'
 import dayjs from 'dayjs'
-import { getAdminList } from '@/services/sys/AdminController'
+import { getAdminOptions } from '@/services/sys/AdminController'
 import { useIntl } from '@umijs/max'
 
 interface PreferenceFormProps {
@@ -61,16 +61,7 @@ const PreferenceForm: React.FC<PreferenceFormProps> = ({ id, open, setOpen, onSu
         name="adminId"
         label={format('pages.sys.preference.admin')}
         rules={[{ required: true, message: format('pages.sys.preference.selectAdmin') }]}
-        request={async () => {
-          const res = await getAdminList({ current: 1, pageSize: 100 })
-          if (res.code === 200 && res.data) {
-            return res.data.map((a) => ({
-              label: a.username || String(a.id),
-              value: String(a.id),
-            }))
-          }
-          return []
-        }}
+          request={async () => getAdminOptions()}
         fieldProps={{ showSearch: true }}
       />
 

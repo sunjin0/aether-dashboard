@@ -1,5 +1,5 @@
 import { request } from '@umijs/max'
-import { ResponseStructure } from '@/services/entity/Common'
+import { Option, ResponseStructure } from '@/services/entity/Common'
 import {
   AgentTool,
   AgentToolFacets,
@@ -19,6 +19,10 @@ export const getAgentToolList = async (
     method: 'POST',
     data: params,
   })
+}
+export const getAgentToolOptions = async (mcpServerId?: string): Promise<Option[]> => {
+  const { data } = await request<ResponseStructure<Option[]>>('/api/agent/tool/options', { method: 'GET', params: { mcpServerId } })
+  return data || []
 }
 
 /**

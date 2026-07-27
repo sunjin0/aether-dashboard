@@ -3,7 +3,7 @@ import { useIntl } from '@umijs/max';
 import { Modal, Input, Button, Space, Typography, Spin, Select, Avatar } from 'antd';
 import { SendOutlined, StopOutlined, RobotOutlined, UserOutlined } from '@ant-design/icons';
 import { streamAgentChat } from '@/services/agent/ChatController';
-import { getAgentDefinitionList } from '@/services/agent/AgentDefinitionController';
+import { getAgentDefinitionOptions } from '@/services/agent/AgentDefinitionController';
 import { AgentDefinition } from '@/services/entity/Agent';
 import MarkdownText from '@/components/MarkdownText';
 import './PromptGenerateModal.less';
@@ -61,14 +61,8 @@ const PromptGenerateModal: React.FC<PromptGenerateModalProps> = ({
   const loadAgents = async () => {
     setLoadingAgents(true);
     try {
-      const { code, data } = await getAgentDefinitionList({
-        current: 1,
-        pageSize: 1000,
-        status: 1,
-      });
-      if (code === 200) {
-        setAgents(data || []);
-      }
+        const options = await getAgentDefinitionOptions();
+        setAgents(options.map((item) => ({ id: String(item.value), name: item.label } as AgentDefinition)));
     } catch {
       // ignore
     } finally {

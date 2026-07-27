@@ -9,7 +9,7 @@ import {
   SendOutlined,
 } from '@ant-design/icons';
 import { streamAgentChat } from '@/services/agent/ChatController';
-import { getAgentDefinitionList } from '@/services/agent/AgentDefinitionController';
+import { getAgentDefinitionOptions } from '@/services/agent/AgentDefinitionController';
 import { AgentDefinition } from '@/services/entity/Agent';
 import MarkdownText from '@/components/MarkdownText';
 import './OptimizerButton.less';
@@ -62,14 +62,8 @@ const OptimizerButton: React.FC<OptimizerButtonProps> = ({ prompt, onOptimized, 
   const loadAgents = async () => {
     setLoadingAgents(true);
     try {
-      const { code, data } = await getAgentDefinitionList({
-        current: 1,
-        pageSize: 1000,
-        status: 1,
-      });
-      if (code === 200) {
-        setAgents(data || []);
-      }
+      const options = await getAgentDefinitionOptions();
+      setAgents(options.map((item) => ({ id: String(item.value), name: item.label } as any)));
     } catch {
       // ignore
     } finally {

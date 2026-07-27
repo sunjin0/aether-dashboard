@@ -4,7 +4,7 @@ import {
   getAgentToolInfo,
   updateAgentToolInfo,
 } from '@/services/agent/ToolController'
-import { getMcpServerList } from '@/services/agent/McpServerController'
+import { getMcpServerOptions } from '@/services/agent/McpServerController'
 import { getOptionList } from '@/services/sys/DictController'
 import {
   ProFormDigit,
@@ -89,12 +89,7 @@ const AgentToolForm = (props: {
         name="mcpServerId"
         label={format('pages.agent.tool.mcpServer')}
         rules={[{ required: true }]}
-        request={async () => {
-          const { code, data } = await getMcpServerList({ current: 1, pageSize: 1000, status: 1 })
-          return code === 200
-            ? (data || []).map((item) => ({ label: `${item.name} (${item.code})`, value: item.id }))
-            : []
-        }}
+          request={async () => getMcpServerOptions()}
       />
       <ProFormText
         name="mcpToolName"

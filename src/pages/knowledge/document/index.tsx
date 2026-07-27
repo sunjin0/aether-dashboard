@@ -8,7 +8,7 @@ import {
   reindexDocument,
   uploadDocuments,
 } from '@/services/knowledge/DocumentController'
-import { getKnowledgeBaseList } from '@/services/knowledge/KnowledgeBaseController'
+import { getKnowledgeBaseOptions } from '@/services/knowledge/KnowledgeBaseController'
 import {
   ActionType,
   PageContainer,
@@ -106,12 +106,7 @@ const KnowledgeDocumentPage: React.FC = () => {
       title: intl.formatMessage({ id: 'pages.knowledge.document.knowledgeBase' }),
       dataIndex: 'knowledgeBaseId',
       valueType: 'select',
-      request: async () => {
-        const response = await getKnowledgeBaseList({ current: 1, pageSize: 1000 });
-        return (response.data || [])
-          .filter((item) => item.id)
-          .map((item) => ({ label: item.name || item.id, value: item.id }));
-      },
+      request: async () => getKnowledgeBaseOptions(),
       fieldProps: {
         showSearch: true,
         optionFilterProp: 'label',
@@ -351,15 +346,7 @@ const KnowledgeDocumentPage: React.FC = () => {
                           }),
                         },
                       ]}
-                      request={async () => {
-                        const response = await getKnowledgeBaseList({
-                          current: 1,
-                          pageSize: 1000,
-                        })
-                        return (response.data || [])
-                          .filter((item) => item.id)
-                          .map((item) => ({ label: item.name || item.id, value: item.id }))
-                      }}
+                        request={async () => getKnowledgeBaseOptions()}
                     />
                   </>
                 }

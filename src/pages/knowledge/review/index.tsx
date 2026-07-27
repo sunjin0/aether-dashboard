@@ -11,7 +11,7 @@ import {
   rejectReviewTask,
 } from '@/services/knowledge/ReviewController'
 import type { KnowledgeReviewTask, KnowledgeReviewTaskSearchParams } from '@/services/entity/Agent'
-import { getAdminList } from '@/services/sys/AdminController'
+import { getAdminOptions } from '@/services/sys/AdminController'
 
 const reviewViews: NonNullable<KnowledgeReviewTaskSearchParams['view']>[] = [
   'available',
@@ -212,8 +212,7 @@ const KnowledgeReviewPage: React.FC = () => {
             dataIndex: 'submitterId',
             valueType: 'select',
             request: async () => {
-              const { data } = await getAdminList({ current: 1, pageSize: 1000 })
-              return (data || []).map((item) => ({ label: item.username, value: item.id }))
+                return getAdminOptions()
             },
             hideInSearch: true,
           },
@@ -240,8 +239,7 @@ const KnowledgeReviewPage: React.FC = () => {
             dataIndex: 'reviewerId',
             valueType: 'select',
             request: async () => {
-              const { data } = await getAdminList({ current: 1, pageSize: 1000 })
-              return (data || []).map((item) => ({ label: item.username, value: item.id }))
+                return getAdminOptions()
             },
           },
           {

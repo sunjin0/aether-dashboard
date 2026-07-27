@@ -16,7 +16,7 @@ import {
   getModelProviderList,
 } from '@/services/agent/AgentDefinitionController'
 import { getModelProviderInfo } from '@/services/agent/ModelProviderController'
-import { getAgentToolList } from '@/services/agent/ToolController'
+  import { getAgentToolOptions } from '@/services/agent/ToolController'
 import { getOptionList } from '@/services/sys/DictController'
 import { useIntl } from '@umijs/max'
 
@@ -153,18 +153,7 @@ const AgentDefinitionForm = (props: {
               mode="multiple"
               showSearch
               request={async () => {
-                const { data } = await getAgentToolList({
-                  current: 1,
-                  pageSize: 1000,
-                  status: 1,
-                })
-
-                return (data || [])
-                  .filter((item) => item.id)
-                  .map((item) => ({
-                    label: `${item.name || item.id} (${item.code}) / ${item.mcpToolName || '-'}`,
-                    value: item.id as string,
-                  }))
+                  return getAgentToolOptions()
               }}
               placeholder={format('pages.agent.definition.selectToolsToBind')}
             />

@@ -13,6 +13,7 @@ import { SettingDrawer } from '@ant-design/pro-components'
 import { RunTimeLayoutConfig } from '@umijs/max'
 import { history, Link } from '@umijs/max'
 import React from 'react'
+import { message } from 'antd'
 import { AliveScope } from 'react-activation'
 import defaultSettings from '../config/defaultSettings'
 import RouteTabs, { setRouteMenus } from './components/RouteTabs'
@@ -29,6 +30,35 @@ const iconMap: Record<string, React.ReactNode> = {
   OpenAIOutlined: <OpenAIOutlined />,
   DatabaseOutlined: <DatabaseOutlined />,
 }
+
+const pagePermissionPaths = [
+  '/agent/model-provider',
+  '/agent/definition',
+  '/agent/mcp-server',
+  '/agent/tool',
+  '/agent/conversation',
+  '/agent/chat',
+  '/agent/run',
+  '/agent/tool-call-log',
+  '/knowledge/base',
+  '/knowledge/document',
+  '/knowledge/reviews',
+  '/knowledge/index-job',
+  '/knowledge/evaluation',
+  '/sys/admin',
+  '/sys/role',
+  '/sys/resource',
+  '/sys/dict',
+  '/sys/preference',
+  '/message/sms',
+  '/message/email',
+  '/user/member',
+]
+
+const resolvePagePermission = (pathname: string) =>
+  [...pagePermissionPaths].sort((a, b) => b.length - a.length).find(
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
+  )
 
 /**
  * @see  https://umijs.org/zh-CN/plugins/plugin-initial-state
@@ -122,6 +152,13 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       // 如果没有登录，重定向到 login
       if (!initialState?.currentUser && location.pathname !== loginPath) {
         history.push(loginPath)
+        return
+      }
+      const permissionMap = initialState?.currentUser?.permissionMap
+      const permissionPath = resolvePagePermission(location.pathname)
+      if (permissionPath && permissionMap && !Object.prototype.hasOwnProperty.call(permissionMap, permissionPath)) {
+        message.warning('暂无该页面访问权限')
+        history.push('/dashboard')
       }
     },
     bgLayoutImgList: [

@@ -24,7 +24,7 @@ interface FileUploadModalProps {
   /** 调用方可传入任意 Form.Item，用于扩展上传接口参数。 */
   extraFields?: React.ReactNode;
   /** 文件与已校验的自定义字段值同时提交给调用方。 */
-  upload: (file: File, values: UploadExtraValues) => Promise<UploadActionResult>;
+  upload: (files: File[], values: UploadExtraValues) => Promise<UploadActionResult>;
   onSuccess?: () => void;
 }
 
@@ -44,13 +44,13 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
   const intl = useIntl();
   const [form] = Form.useForm<UploadExtraValues>();
   const [open, setOpen] = useState(false);
-  const [file, setFile] = useState<File>();
+  const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
 
   /** 关闭弹窗时清理文件和扩展字段，避免下次打开沿用旧数据。 */
   const reset = () => {
     form.resetFields();
-    setFile(undefined);
+    setFiles([]);
     setOpen(false);
   };
 
@@ -75,17 +75,17 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
       );
       return Upload.LIST_IGNORE;
     }
-    setFile(selectedFile);
+    setFiles((current) => [...current, selectedFile]);
     return false;
   };
 
   /** 校验扩展字段后，将文件和字段值统一交给业务接口。 */
   const submit = async () => {
-    if (!file) return;
+    if (!files.length) return;
     const values = await form.validateFields();
     setUploading(true);
     try {
-      const response = await upload(file, values);
+      const response = await upload(files, values);
       if (response.code === 200) {
         message.success(
           response.message ||
@@ -103,9 +103,7 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
     }
   };
 
-  const fileList: UploadFile[] = file
-    ? [{ uid: file.name, name: file.name, status: 'done', size: file.size }]
-    : [];
+  const fileList: UploadFile[] = files.map((file) => ({ uid: `${file.name}-${file.lastModified}`, name: file.name, status: 'done', size: file.size }));
 
   return (
     <>
@@ -121,7 +119,7 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
         okText={intl.formatMessage({ id: 'components.fileUploadModal.confirmUpload' })}
         cancelText={intl.formatMessage({ id: 'components.fileUploadModal.cancel' })}
         confirmLoading={uploading}
-        okButtonProps={{ disabled: !file }}
+        okButtonProps={{ disabled: !files.length }}
         destroyOnClose
       >
         <Form form={form} layout="vertical" initialValues={initialValues}>
@@ -129,11 +127,11 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
         </Form>
         <Upload.Dragger
           accept={accept}
-          maxCount={1}
+          multiple
           fileList={fileList}
           beforeUpload={beforeUpload}
-          onRemove={() => {
-            setFile(undefined);
+          onRemove={(removed) => {
+            setFiles((current) => current.filter((file) => `${file.name}-${file.lastModified}` !== removed.uid));
             return true;
           }}
         >

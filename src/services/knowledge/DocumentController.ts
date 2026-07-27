@@ -62,6 +62,23 @@ export const uploadDocument = async (
   if (title) data.append('title', title)
   return request('/api/knowledge/document/upload', { method: 'POST', data })
 }
+
+export interface DocumentUploadResult {
+  fileName?: string;
+  success: boolean;
+  versionId?: string;
+  message?: string;
+}
+
+export const uploadDocuments = async (
+  knowledgeBaseId: string,
+  files: File[],
+): Promise<ResponseStructure<DocumentUploadResult[]>> => {
+  const data = new FormData()
+  data.append('knowledgeBaseId', knowledgeBaseId)
+  files.forEach((file) => data.append('files', file))
+  return request('/api/knowledge/document/upload/batch', { method: 'POST', data })
+}
 /**
  * 获取文档预览地址
  * @param id 文档ID

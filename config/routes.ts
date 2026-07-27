@@ -153,6 +153,7 @@ export default [
         name: '索引任务',
         component: './knowledge/index-job',
       },
+      { path: '/knowledge/evaluation', name: '检索评测', component: './knowledge/evaluation' },
     ],
   },
   {

@@ -6,7 +6,7 @@ import {
   getDocumentPreviewUrl,
   getDocumentList,
   reindexDocument,
-  uploadDocument,
+  uploadDocuments,
 } from '@/services/knowledge/DocumentController'
 import { getKnowledgeBaseList } from '@/services/knowledge/KnowledgeBaseController'
 import {
@@ -14,7 +14,6 @@ import {
   PageContainer,
   ProFormInstance,
   ProFormSelect,
-  ProFormText,
   ProTable,
 } from '@ant-design/pro-components'
 import { history, useAccess, useIntl, useLocation } from '@@/exports'
@@ -332,8 +331,8 @@ const KnowledgeDocumentPage: React.FC = () => {
             ? [
               <FileUploadModal
                 key="upload"
-                accept=".txt,.md,.pdf,.docx"
-                allowedExtensions={['txt', 'md', 'pdf', 'docx']}
+                accept=".txt,.md,.pdf,.docx,.xlsx"
+                allowedExtensions={['txt', 'md', 'pdf', 'docx', 'xlsx']}
                 title={intl.formatMessage({ id: 'pages.knowledge.document.uploadTitle' })}
                 initialValues={{ selectedKnowledgeBaseId: knowledgeBase.id || undefined }}
                 extraFields={
@@ -362,30 +361,21 @@ const KnowledgeDocumentPage: React.FC = () => {
                           .map((item) => ({ label: item.name || item.id, value: item.id }))
                       }}
                     />
-                    <ProFormText
-                      name="title"
-                      label={intl.formatMessage({ id: 'pages.knowledge.document.documentTitle' })}
-                      placeholder={intl.formatMessage({
-                        id: 'pages.knowledge.document.enterTitle',
-                      })}
-                      rules={[
-                        {
-                          required: true,
-                          message: intl.formatMessage({
-                            id: 'pages.knowledge.document.enterTitle',
-                          }),
-                        },
-                      ]}
-                    />
                   </>
                 }
-                upload={(file, values) =>
-                  uploadDocument(
+                upload={async (files, values) => {
+                  const response = await uploadDocuments(
                       values.selectedKnowledgeBaseId as string,
-                      file,
-                      values.title as string,
+                      files,
                   )
-                }
+                  const failed = (response.data || []).filter((item) => !item.success)
+                  return {
+                    code: response.code,
+                    message: failed.length
+                      ? `${files.length - failed.length}/${files.length} uploaded; ${failed.length} failed`
+                      : response.message,
+                  }
+                }}
                 onSuccess={reload}
               />,
             ]

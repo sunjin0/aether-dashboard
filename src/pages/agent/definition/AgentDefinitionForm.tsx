@@ -16,7 +16,7 @@ import {
   getModelProviderList,
 } from '@/services/agent/AgentDefinitionController'
 import { getModelProviderInfo } from '@/services/agent/ModelProviderController'
-  import { getAgentToolOptions } from '@/services/agent/ToolController'
+import { getAgentToolOptions } from '@/services/agent/ToolController'
 import { getOptionList } from '@/services/sys/DictController'
 import { useIntl } from '@umijs/max'
 
@@ -60,83 +60,135 @@ const AgentDefinitionForm = (props: {
         rules={[{ required: true }]}
       />
       <ProFormTextArea name="description" label={format('pages.common.description')} />
-      <Form.Item name="systemPrompt" label={format('pages.agent.definition.systemPrompt')}>
-        <SystemPromptEditor
-          agentName={form.getFieldValue('name')}
-          placeholder={format('pages.agent.definition.systemPromptPlaceholder')}
-        />
-      </Form.Item>
       <ProFormSelect
-        name="modelProviderId"
-        label={format('pages.agent.definition.modelProvider')}
-        showSearch={true}
+        name="executionMode"
+        label={format('pages.agent.definition.executionMode')}
+        initialValue="STANDARD"
         rules={[{ required: true }]}
-        request={async () => getModelProviderList()}
-        fieldProps={{
-          onChange: async (value: string) => {
-            if (value) {
-              const { data } = await getModelProviderInfo(value)
-              if (data?.defaultModel) {
-                form.setFieldsValue({ model: data.defaultModel })
-              }
-            }
+        options={[
+          {
+            label: format('pages.agent.definition.executionMode.standard'),
+            value: 'STANDARD',
           },
+          {
+            label: format('pages.agent.definition.executionMode.deep'),
+            value: 'DEEP',
+          },
+        ]}
+      />
+      <ProFormDependency name={['executionMode']}>
+        {({ executionMode }) => (
+          <Form.Item
+            name="systemPrompt"
+            label={format(
+              executionMode === 'DEEP'
+                ? 'pages.agent.definition.deep.systemPrompt'
+                : 'pages.agent.definition.systemPrompt',
+            )}
+          >
+            <SystemPromptEditor
+              agentName={form.getFieldValue('name')}
+              placeholder={format(
+                executionMode === 'DEEP'
+                  ? 'pages.agent.definition.deep.systemPromptPlaceholder'
+                  : 'pages.agent.definition.systemPromptPlaceholder',
+              )}
+            />
+          </Form.Item>
+        )}
+      </ProFormDependency>
+      <ProFormDependency name={['executionMode']}>
+        {({ executionMode }) => {
+          if (executionMode === 'DEEP') {
+            return null
+          }
+          return (
+            <>
+              <ProFormSelect
+                name="modelProviderId"
+                label={format('pages.agent.definition.modelProvider')}
+                showSearch={true}
+                rules={[{ required: true }]}
+                request={async () => getModelProviderList()}
+                fieldProps={{
+                  onChange: async (value: string) => {
+                    if (value) {
+                      const { data } = await getModelProviderInfo(value)
+                      if (data?.defaultModel) {
+                        form.setFieldsValue({ model: data.defaultModel })
+                      }
+                    }
+                  },
+                }}
+              />
+              <ProFormText
+                name="model"
+                label={format('pages.agent.definition.model')}
+                rules={[{ required: true }]}
+                disabled
+              />
+            </>
+          )
         }}
-      />
-      <ProFormText
-        name="model"
-        label={format('pages.agent.definition.model')}
-        rules={[{ required: true }]}
-        disabled
-      />
-      <ProFormDigit
-        name="temperature"
-        label={format('pages.agent.definition.temperature')}
-        min={0}
-        max={2}
-      />
-      <ProFormDigit
-        name="maxTokens"
-        label={format('pages.agent.definition.maxTokens')}
-        min={1}
-        fieldProps={{ precision: 0 }}
-      />
+      </ProFormDependency>
       <ProFormSelect
         name="status"
         label={format('pages.common.status')}
         request={async () => getOptionList('Agent_Definition_Status')}
         rules={[{ required: true }]}
       />
-      <ProFormDigit
-        name="maxToolRounds"
-        label={format('pages.agent.definition.maxToolRounds')}
-        min={0}
-        fieldProps={{ precision: 0 }}
-      />
       <ProFormSelect
         name="accessType"
         label={format('pages.agent.definition.accessType')}
         request={async () => getOptionList('Agent_Access_Type')}
       />
-
-      <ProFormSwitch
-        name="defaultThinking"
-        label={format('pages.agent.definition.defaultThinking')}
-      />
-      <ProFormDependency name={['defaultThinking']}>
-        {(values) => {
-          if (!values.defaultThinking) {
-            return null
-          }
-          return (
-            <ProFormSelect
-              name="defaultReasoningEffort"
-              label={format('pages.agent.definition.defaultReasoningEffort')}
-              request={async () => getOptionList('Agent_Reasoning_Effort')}
-              placeholder={format('pages.agent.definition.selectDefaultReasoningEffort')}
-            />
-          )
-        }}
+      <ProFormDependency name={['executionMode', 'defaultThinking']}>
+        {({ executionMode, defaultThinking }) => (
+          <>
+            {executionMode === 'DEEP' ? (
+              <ProFormDigit
+                name="maxToolRounds"
+                label={format('pages.agent.definition.deep.maxSteps')}
+                tooltip={format('pages.agent.definition.deep.maxStepsTip')}
+                min={1}
+                fieldProps={{ precision: 0 }}
+              />
+            ) : (
+              <>
+                <ProFormDigit
+                  name="temperature"
+                  label={format('pages.agent.definition.temperature')}
+                  min={0}
+                  max={2}
+                />
+                <ProFormDigit
+                  name="maxTokens"
+                  label={format('pages.agent.definition.maxTokens')}
+                  min={1}
+                  fieldProps={{ precision: 0 }}
+                />
+                <ProFormDigit
+                  name="maxToolRounds"
+                  label={format('pages.agent.definition.maxToolRounds')}
+                  min={0}
+                  fieldProps={{ precision: 0 }}
+                />
+                <ProFormSwitch
+                  name="defaultThinking"
+                  label={format('pages.agent.definition.defaultThinking')}
+                />
+                {defaultThinking && (
+                  <ProFormSelect
+                    name="defaultReasoningEffort"
+                    label={format('pages.agent.definition.defaultReasoningEffort')}
+                    request={async () => getOptionList('Agent_Reasoning_Effort')}
+                    placeholder={format('pages.agent.definition.selectDefaultReasoningEffort')}
+                  />
+                )}
+              </>
+            )}
+          </>
+        )}
       </ProFormDependency>
 
       <ProFormDependency name={['id']}>

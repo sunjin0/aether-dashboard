@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ActionType, PageContainer, ProDescriptions, ProTable } from '@ant-design/pro-components'
 import { useIntl } from '@umijs/max'
+import type { Dayjs } from 'dayjs'
 import {
   Alert,
   Card,
@@ -20,9 +21,15 @@ import {
   getAgentRunStatistics,
 } from '@/services/agent/RunController'
 import { getOptionList } from '@/services/sys/DictController'
-import { AgentRun, AgentRunSearchParams, AgentRunStatistics } from '@/services/entity/Agent'
+import {
+  AgentRun,
+  AgentRunSearchParams,
+  AgentRunStatistics,
+  AgentRunStatisticsParams,
+} from '@/services/entity/Agent'
 import JsonDisplay from '@/components/JsonDisplay'
 import MarkdownText from '@/components/MarkdownText'
+import AgentRunStepsTimeline from './AgentRunStepsTimeline'
 import './index.less'
 import {
   ApiOutlined,
@@ -37,23 +44,28 @@ import {
 const { Text } = Typography
 
 const renderStatusTag = (status: number | undefined, intl: ReturnType<typeof useIntl>) => {
-  if (status === 0) {
-    return (
-      <Tag color="success">{intl.formatMessage({ id: 'pages.agent.run.status.success' })}</Tag>
-    )
+  const statusMap: Record<number, { color: string; text: string }> = {
+    0: { color: 'success', text: intl.formatMessage({ id: 'pages.agent.run.status.success' }) },
+    1: { color: 'error', text: intl.formatMessage({ id: 'pages.agent.run.status.failed' }) },
+    2: { color: 'warning', text: intl.formatMessage({ id: 'pages.agent.run.status.timeout' }) },
+    3: { color: 'processing', text: intl.formatMessage({ id: 'pages.agent.run.status.queued' }) },
+    4: { color: 'cyan', text: intl.formatMessage({ id: 'pages.agent.run.status.running' }) },
+    5: { color: 'default', text: intl.formatMessage({ id: 'pages.agent.run.status.cancelled' }) },
   }
-  if (status === 1) {
-    return <Tag color="error">{intl.formatMessage({ id: 'pages.agent.run.status.failed' })}</Tag>
-  }
-  if (status === 2) {
-    return (
-      <Tag color="warning">{intl.formatMessage({ id: 'pages.agent.run.status.timeout' })}</Tag>
-    )
-  }
-  return <Tag>{intl.formatMessage({ id: 'pages.agent.run.status.unknown' })}</Tag>
+  const item = statusMap[status ?? -1]
+
+  return item ? (
+    <Tag color={item.color}>{item.text}</Tag>
+  ) : (
+    <Tag>{intl.formatMessage({ id: 'pages.agent.run.status.unknown' })}</Tag>
+  )
 }
 
 const { RangePicker } = DatePicker
+
+type AgentRunSearchFormParams = AgentRunSearchParams & {
+  dateRange?: [Dayjs, Dayjs]
+}
 
 const AgentRunPage: React.FC = () => {
   const intl = useIntl()
@@ -63,30 +75,52 @@ const AgentRunPage: React.FC = () => {
   const [detailLoading, setDetailLoading] = useState(false)
   const [statistics, setStatistics] = useState<AgentRunStatistics>()
   const [statisticsLoading, setStatisticsLoading] = useState(false)
-  const [dateRange, setDateRange] = useState<[any, any] | null>(null)
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | null>(null)
+  const agentDefinitionIdRef = useRef<string>()
+  const detailRequestTokenRef = useRef(0)
+  const statisticsRequestTokenRef = useRef(0)
 
-  const loadStatistics = async () => {
-    setStatisticsLoading(true)
-    try {
-      const params: any = {}
-      if (dateRange) {
-        params.startTime = dateRange[0]?.valueOf()
-        params.endTime = dateRange[1]?.valueOf()
-      }
-      const { code, data, message: msg } = await getAgentRunStatistics(params)
-      if (code === 200) {
-        setStatistics(data)
-      } else {
-        message.error(msg || intl.formatMessage({ id: 'pages.agent.run.loadStatisticsFailed' }))
-      }
+  const loadStatistics = useCallback(
+    async (
+      selectedDateRange: [Dayjs, Dayjs] | null,
+      agentDefinitionId = agentDefinitionIdRef.current,
+    ) => {
+      const requestToken = ++statisticsRequestTokenRef.current
+      setStatisticsLoading(true)
+      try {
+        const params: AgentRunStatisticsParams = {}
+        if (agentDefinitionId) {
+          params.agentDefinitionId = agentDefinitionId
+        }
+        if (selectedDateRange) {
+          params.startTime = selectedDateRange[0]?.valueOf()
+          params.endTime = selectedDateRange[1]?.valueOf()
+        }
+        const { code, data, message: msg } = await getAgentRunStatistics(params)
+        if (requestToken !== statisticsRequestTokenRef.current) {
+          return
+        }
+        if (code === 200) {
+          setStatistics(data)
+        } else {
+          message.error(msg || intl.formatMessage({ id: 'pages.agent.run.loadStatisticsFailed' }))
+        }
+      } catch {
+        if (requestToken === statisticsRequestTokenRef.current) {
+          message.error(intl.formatMessage({ id: 'pages.agent.run.loadStatisticsFailed' }))
+        }
     } finally {
-      setStatisticsLoading(false)
-    }
-  }
+        if (requestToken === statisticsRequestTokenRef.current) {
+          setStatisticsLoading(false)
+        }
+      }
+    },
+    [intl],
+  )
 
   useEffect(() => {
-    loadStatistics()
-  }, [dateRange])
+    void loadStatistics(dateRange)
+  }, [dateRange, loadStatistics])
 
   const openDetail = async (record: AgentRun) => {
     if (!record.id) {
@@ -94,18 +128,30 @@ const AgentRunPage: React.FC = () => {
       return
     }
 
+    const requestToken = ++detailRequestTokenRef.current
     setDrawerOpen(true)
+    setRun(undefined)
     setDetailLoading(true)
     try {
       const { code, data, message: msg } = await getAgentRunInfo(record.id)
+      if (requestToken !== detailRequestTokenRef.current) {
+        return
+      }
       if (code === 200) {
         setRun(data)
       } else {
         setRun(undefined)
         message.error(msg || intl.formatMessage({ id: 'pages.agent.run.loadDetailFailed' }))
       }
+    } catch {
+      if (requestToken === detailRequestTokenRef.current) {
+        setRun(undefined)
+        message.error(intl.formatMessage({ id: 'pages.agent.run.loadDetailFailed' }))
+      }
     } finally {
-      setDetailLoading(false)
+      if (requestToken === detailRequestTokenRef.current) {
+        setDetailLoading(false)
+      }
     }
   }
 
@@ -172,6 +218,16 @@ const AgentRunPage: React.FC = () => {
       hideInSearch: true,
     },
     {
+      title: intl.formatMessage({ id: 'pages.agent.run.executionMode' }),
+      dataIndex: 'executionMode',
+      valueType: 'select',
+      valueEnum: {
+        STANDARD: { text: intl.formatMessage({ id: 'pages.agent.run.executionMode.standard' }) },
+        DEEP: { text: intl.formatMessage({ id: 'pages.agent.run.executionMode.deep' }) },
+      },
+      hideInSearch: true,
+    },
+    {
       title: intl.formatMessage({ id: 'pages.common.option' }),
       valueType: 'option',
       width: 120,
@@ -198,6 +254,14 @@ const AgentRunPage: React.FC = () => {
         className="agent-run-statistics"
         title={intl.formatMessage({ id: 'pages.agent.run.statistics' })}
         style={{ marginBottom: 16 }}
+        extra={
+          <RangePicker
+            value={dateRange}
+            onChange={(value) => {
+              setDateRange(value && value[0] && value[1] ? [value[0], value[1]] : null)
+            }}
+          />
+        }
       >
         <Spin spinning={statisticsLoading}>
           {statistics ? (
@@ -281,14 +345,16 @@ const AgentRunPage: React.FC = () => {
           labelWidth: 120,
           span: 6,
         }}
-        request={async (params: AgentRunSearchParams) => {
-          const { dateRange, ...rest } = params as any
+        request={async (params: AgentRunSearchFormParams) => {
+          const { dateRange: tableDateRange, ...rest } = params
           const queryParams: AgentRunSearchParams = { ...rest }
-          if (dateRange) {
+          if (tableDateRange) {
             // 设置为毫秒级时间戳
-            queryParams.startTime = new Date(dateRange[0]).getTime()
-            queryParams.endTime = new Date(dateRange[1]).getTime()
+            queryParams.startTime = tableDateRange[0].valueOf()
+            queryParams.endTime = tableDateRange[1].valueOf()
           }
+          agentDefinitionIdRef.current = queryParams.agentDefinitionId
+          void loadStatistics(dateRange, queryParams.agentDefinitionId)
           return getAgentRunList(queryParams)
         }}
         columns={columns}
@@ -298,7 +364,11 @@ const AgentRunPage: React.FC = () => {
         width={760}
         className="agent-run-detail-drawer"
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        onClose={() => {
+          detailRequestTokenRef.current += 1
+          setDrawerOpen(false)
+          setDetailLoading(false)
+        }}
         destroyOnClose={true}
       >
         <Spin spinning={detailLoading}>
@@ -312,6 +382,21 @@ const AgentRunPage: React.FC = () => {
                   {
                     title: intl.formatMessage({ id: 'pages.agent.run.agentId' }),
                     dataIndex: 'agentDefinitionId',
+                  },
+                  {
+                    title: intl.formatMessage({ id: 'pages.agent.run.executionMode' }),
+                    dataIndex: 'executionMode',
+                    render: (value: React.ReactNode) => (
+                      <Tag color={value === 'DEEP' ? 'purple' : 'blue'}>
+                        {value === 'DEEP'
+                          ? intl.formatMessage({ id: 'pages.agent.run.executionMode.deep' })
+                          : intl.formatMessage({ id: 'pages.agent.run.executionMode.standard' })}
+                      </Tag>
+                    ),
+                  },
+                  {
+                    title: intl.formatMessage({ id: 'pages.agent.run.externalRunId' }),
+                    dataIndex: 'externalRunId',
                   },
                   {
                     title: intl.formatMessage({ id: 'pages.agent.run.userId' }),
@@ -350,6 +435,15 @@ const AgentRunPage: React.FC = () => {
                   },
                 ]}
               />
+              {run.executionMode === 'DEEP' && run.id && (
+                <Card
+                  title={intl.formatMessage({ id: 'pages.agent.run.steps' })}
+                  size="small"
+                  style={{ marginTop: 16 }}
+                >
+                  <AgentRunStepsTimeline runId={run.id} />
+                </Card>
+              )}
               <Card
                 title={intl.formatMessage({ id: 'pages.agent.run.tokensAndLatency' })}
                 size="small"

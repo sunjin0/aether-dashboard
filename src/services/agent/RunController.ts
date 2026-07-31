@@ -2,6 +2,7 @@ import { request } from '@umijs/max'
 import { ResponseStructure } from '@/services/entity/Common'
 import {
   AgentRun,
+  AgentRunStep,
   AgentRunSearchParams,
   AgentRunStatistics,
   AgentRunStatisticsParams,
@@ -25,6 +26,24 @@ export const getAgentRunList = async (
 export const getAgentRunInfo = async (id: string): Promise<ResponseStructure<AgentRun>> => {
   return request(`/api/agent/run/${id}`, {
     method: 'GET',
+  })
+}
+
+/**
+ * @description 获取 Agent 运行步骤
+ */
+export const getAgentRunSteps = async (id: string): Promise<ResponseStructure<AgentRunStep[]>> => {
+  return request(`/api/agent/run/${id}/steps`, {
+    method: 'GET',
+  })
+}
+
+/**
+ * @description 取消 Agent 运行
+ */
+export const cancelAgentRun = async (id: string): Promise<ResponseStructure<void>> => {
+  return request(`/api/agent/run/${id}/cancel`, {
+    method: 'POST',
   })
 }
 

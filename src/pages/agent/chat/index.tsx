@@ -21,6 +21,7 @@ import {
   BulbOutlined,
   ClearOutlined,
   CommentOutlined,
+  LoadingOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   PaperClipOutlined,
@@ -30,9 +31,11 @@ import {
 import { getAgentDefinitionOptions } from '@/services/agent/AgentDefinitionController'
 import {
   streamAgentChat,
+  streamDeepRun,
   streamReplyAgentChat,
   uploadAgentChatAttachments,
 } from '@/services/agent/ChatController'
+import { cancelAgentRun } from '@/services/agent/RunController'
 import {
   getAgentConversationList,
   getAgentConversationMessages,
@@ -45,10 +48,13 @@ import {
   AgentDefinition,
   AgentMessage,
   AskUserAnswer,
+  AgentStreamRunStepData,
+  AgentStreamAcceptedData,
   KnowledgeSource,
 } from '@/services/entity/Agent'
 import { Option } from '@/services/entity/Common'
 import AgentMessageBubble from '@/components/AgentMessageBubble'
+import { cancelDeepRun, getDeepStepDisplayText, mergeDeepRunSteps } from './deepProgress'
 import './index.less'
 
 const { Text } = Typography
@@ -111,9 +117,13 @@ const ChatDebugPage: React.FC = () => {
   const [reasoningEffortOptions, setReasoningEffortOptions] = useState<Option[]>([])
   const [chatTurnState, setChatTurnState] = useState<ChatTurnState>('idle')
   const [pendingQuestionMessage, setPendingQuestionMessage] = useState<ChatMessage | null>(null)
+  const [deepRunId, setDeepRunId] = useState<string | null>(null)
+  const [deepRunSteps, setDeepRunSteps] = useState<AgentStreamRunStepData[]>([])
   const messageEndRef = useRef<HTMLDivElement>(null)
   const messageListRef = useRef<HTMLDivElement>(null)
   const abortControllerRef = useRef<AbortController>()
+  const deepStreamAbortControllerRef = useRef<AbortController>()
+  const deepRunIdRef = useRef<string | null>(null)
   const streamingAssistantIdRef = useRef<string>()
   const stoppedByUserRef = useRef(false)
   const typewriterQueueRef = useRef('')
@@ -128,6 +138,41 @@ const ChatDebugPage: React.FC = () => {
   const resetConversationTurnState = () => {
     setPendingQuestionMessage(null)
     setChatTurnState('idle')
+  }
+
+  const resetDeepProgress = () => {
+    deepStreamAbortControllerRef.current?.abort()
+    deepStreamAbortControllerRef.current = undefined
+    deepRunIdRef.current = null
+    setDeepRunId(null)
+    setDeepRunSteps([])
+  }
+
+  const addDeepRunStep = (data: AgentStreamRunStepData) => {
+    if (!deepRunIdRef.current && data.runId) {
+      deepRunIdRef.current = data.runId
+      setDeepRunId(data.runId)
+    }
+    setDeepRunSteps((current) => mergeDeepRunSteps(current, data))
+  }
+
+  const acceptDeepRun = (data: AgentStreamAcceptedData) => {
+    deepRunIdRef.current = data.runId
+    setDeepRunId(data.runId)
+    setConversationId(data.conversationId)
+    deepStreamAbortControllerRef.current?.abort()
+    const controller = new AbortController()
+    deepStreamAbortControllerRef.current = controller
+    void streamDeepRun(data.runId, {
+      signal: controller.signal,
+      onRunStep: addDeepRunStep,
+      onDone: async (done) => {
+        if (done.conversationId) {
+          setConversationId(done.conversationId)
+          await loadMessages(done.conversationId)
+        }
+      },
+    }).catch(() => undefined)
   }
 
   const setConversationMessages = (messageList: ChatMessage[]) => {
@@ -288,7 +333,11 @@ const ChatDebugPage: React.FC = () => {
 
   useEffect(() => {
     return () => {
+      if (deepRunIdRef.current) {
+        void cancelDeepRun(deepRunIdRef.current, cancelAgentRun)
+      }
       abortControllerRef.current?.abort()
+      deepStreamAbortControllerRef.current?.abort()
       resetTypewriter()
     }
   }, [])
@@ -336,6 +385,10 @@ const ChatDebugPage: React.FC = () => {
   }
 
   const handleStop = () => {
+    if (deepRunIdRef.current) {
+      void cancelDeepRun(deepRunIdRef.current, cancelAgentRun)
+    }
+    deepStreamAbortControllerRef.current?.abort()
     if (!abortControllerRef.current) {
       return
     }
@@ -358,6 +411,15 @@ const ChatDebugPage: React.FC = () => {
 
     if (!questionMessageId || !questionConversationId) {
       message.error(intl.formatMessage({ id: 'pages.agent.chat.incompleteQuestion' }))
+      return
+    }
+
+    const conversationAgentId = conversations.find(
+      (item) => item.id === questionConversationId,
+    )?.agentDefinitionId
+    const replyAgentId = conversationAgentId || agentId
+    if (!replyAgentId) {
+      message.error(intl.formatMessage({ id: 'pages.agent.chat.selectAgent' }))
       return
     }
 
@@ -440,8 +502,10 @@ const ChatDebugPage: React.FC = () => {
     setMessages((current) => [...current, assistantMessage])
 
     const controller = new AbortController()
+    resetDeepProgress()
     abortControllerRef.current = controller
     streamingAssistantIdRef.current = assistantClientId
+    stoppedByUserRef.current = false
     setSending(true)
 
     let terminalEventReceived = false
@@ -452,6 +516,7 @@ const ChatDebugPage: React.FC = () => {
 
     try {
       const replyPayload: AgentChatReplyRequest = {
+        agentId: replyAgentId,
         conversationId: questionConversationId,
         parentMessageId: questionMessageId,
         answer: { answers },
@@ -460,6 +525,8 @@ const ChatDebugPage: React.FC = () => {
 
       await streamReplyAgentChat(replyPayload, {
         signal: controller.signal,
+        onAccepted: acceptDeepRun,
+        onRunStep: addDeepRunStep,
         onMessage: (chunk, data) => {
           if (data.conversationId) {
             setConversationId(data.conversationId)
@@ -604,8 +671,11 @@ const ChatDebugPage: React.FC = () => {
       }
     } finally {
       setSending(false)
-      abortControllerRef.current = undefined
-      streamingAssistantIdRef.current = undefined
+      if (abortControllerRef.current === controller) {
+        resetDeepProgress()
+        abortControllerRef.current = undefined
+        streamingAssistantIdRef.current = undefined
+      }
     }
   }
 
@@ -660,6 +730,7 @@ const ChatDebugPage: React.FC = () => {
     let typewriterDrainPromise: Promise<void> | undefined
 
     resetTypewriter()
+    resetDeepProgress()
     abortControllerRef.current = controller
     streamingAssistantIdRef.current = assistantClientId
     stoppedByUserRef.current = false
@@ -692,6 +763,8 @@ const ChatDebugPage: React.FC = () => {
       }
       await streamAgentChat(payload, {
         signal: controller.signal,
+        onAccepted: acceptDeepRun,
+        onRunStep: addDeepRunStep,
         onProgress: (data) => {
           updateAssistantMessage(assistantClientId, (item) => ({
             ...item,
@@ -838,9 +911,12 @@ const ChatDebugPage: React.FC = () => {
       setChatTurnState('error')
     } finally {
       setSending(false)
-      abortControllerRef.current = undefined
-      streamingAssistantIdRef.current = undefined
-      stoppedByUserRef.current = false
+      if (abortControllerRef.current === controller) {
+        resetDeepProgress()
+        abortControllerRef.current = undefined
+        streamingAssistantIdRef.current = undefined
+        stoppedByUserRef.current = false
+      }
     }
   }
 
@@ -1130,18 +1206,59 @@ const ChatDebugPage: React.FC = () => {
                   ) : (
                     <>
                       {messages.map((item, index) => (
-                        <AgentMessageBubble
-                          key={item.id || item.clientId || `${item.role}-${index}`}
-                          agentMessage={item}
-                          status={item.streamStatus}
-                          errorMessage={item.errorMsg}
-                          onQuestionSubmit={
-                            item.messageType === 'interaction' &&
-                            item.interactionStatus === 'pending'
-                              ? handleReplyQuestion
-                              : undefined
-                          }
-                        />
+                        <React.Fragment key={item.id || item.clientId || `${item.role}-${index}`}>
+                          <AgentMessageBubble
+                            agentMessage={item}
+                            status={item.streamStatus}
+                            errorMessage={item.errorMsg}
+                            onQuestionSubmit={
+                              item.messageType === 'interaction' &&
+                              item.interactionStatus === 'pending'
+                                ? handleReplyQuestion
+                                : undefined
+                            }
+                          />
+                          {item.clientId === streamingAssistantIdRef.current &&
+                            item.streamStatus === 'streaming' &&
+                            deepRunSteps.length > 0 && (
+                              <div
+                                aria-live="polite"
+                                style={{
+                                  marginTop: 8,
+                                  padding: '8px 12px',
+                                  background: '#f6f8fa',
+                                  borderRadius: 6,
+                                }}
+                              >
+                                <Text type="secondary" style={{ fontSize: 12 }}>
+                                  <LoadingOutlined spin />{' '}
+                                  {intl.formatMessage({ id: 'pages.agent.chat.deepRunning' })}
+                                </Text>
+                                {deepRunSteps.slice(-4).map((step, stepIndex) => {
+                                  const displayText = getDeepStepDisplayText(step, intl.formatMessage)
+                                  return displayText ? (
+                                    <div
+                                      key={step.eventId || `${step.occurredAt || 0}-${stepIndex}`}
+                                      style={{ fontSize: 12, marginTop: 2 }}
+                                    >
+                                      <Text type="secondary">{displayText}</Text>
+                                    </div>
+                                  ) : (
+                                    <div
+                                      key={step.eventId || `${step.occurredAt || 0}-${stepIndex}`}
+                                      style={{ fontSize: 12, marginTop: 2 }}
+                                    >
+                                      <Text type="secondary">
+                                        {intl.formatMessage({
+                                          id: 'pages.agent.chat.deepStepFallback',
+                                        })}
+                                      </Text>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            )}
+                        </React.Fragment>
                       ))}
                       <div ref={messageEndRef} />
                     </>

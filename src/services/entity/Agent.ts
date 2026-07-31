@@ -46,6 +46,7 @@ export interface AgentDefinition {
   status?: number;
   maxToolRounds?: number;
   accessType?: string;
+  executionMode?: 'STANDARD' | 'DEEP';
   createdAt?: string;
   updatedAt?: string;
 }
@@ -461,6 +462,7 @@ export interface QuestionItem {
  * @description Agent 聊天回复请求
  */
 export interface AgentChatReplyRequest {
+  agentId: string;
   conversationId: string;
   parentMessageId?: string;
   answer?: {
@@ -523,6 +525,7 @@ export interface AgentStreamQuestionData {
 export interface AgentStreamDoneData {
   conversationId?: string;
   messageId?: string;
+  runId?: string;
   content?: string;
   sources?: KnowledgeSource[];
   reasoningContent?: string;
@@ -533,6 +536,12 @@ export interface AgentStreamDoneData {
   totalTokens?: number;
   latencyMs?: number;
   waitingUser?: boolean;
+}
+
+/** Identifies a newly accepted Deep run before progress callbacks begin. */
+export interface AgentStreamAcceptedData {
+  runId: string;
+  conversationId: string;
 }
 
 export interface KnowledgeSource {
@@ -549,8 +558,12 @@ export interface KnowledgeSource {
 
 export type AgentStreamEvent =
   | { event: 'message'; data: AgentStreamMessageData }
+  | { event: 'reasoning'; data: AgentStreamReasoningData }
   | { event: 'tool_call'; data: AgentStreamToolCallData }
+  | { event: 'progress'; data: { stage?: string; message?: string } }
   | { event: 'question'; data: AgentStreamQuestionData }
+  | { event: 'accepted'; data: AgentStreamAcceptedData }
+  | { event: 'run_step'; data: AgentStreamRunStepData }
   | { event: 'done'; data: AgentStreamDoneData }
   | { event: 'error'; data: AgentStreamErrorData };
 
@@ -631,10 +644,40 @@ export interface AgentRun {
   completionTokens?: number;
   totalTokens?: number;
   latencyMs?: number;
-  status?: number;
+  status?: 0 | 1 | 2 | 3 | 4 | 5;
   errorMsg?: string;
+  executionMode?: 'STANDARD' | 'DEEP';
+  externalRunId?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface AgentRunStep {
+  id?: string;
+  runId?: string;
+  eventId?: string;
+  eventType?: string;
+  data?: string;
+  occurredAt?: number;
+  createdAt?: string;
+}
+
+export interface AgentStreamRunStepData {
+  runId?: string;
+  eventId?: string;
+  eventType?: string;
+  occurredAt?: number;
+  data?: {
+    toolName?: string;
+    message?: string;
+    outputSummary?: string;
+    summary?: string;
+    maxSteps?: number;
+    status?: string;
+    toolCount?: number;
+    actions?: Array<{ name?: string }>;
+    error?: string;
+  };
 }
 
 /**
@@ -840,7 +883,7 @@ export interface AgentRunStatistics {
  * @description Agent 运行统计查询参数
  */
 export interface AgentRunStatisticsParams {
-  agentId?: string;
+  agentDefinitionId?: string;
   startTime?: number;
   endTime?: number;
 }

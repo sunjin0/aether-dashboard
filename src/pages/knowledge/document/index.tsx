@@ -111,7 +111,7 @@ const KnowledgeDocumentPage: React.FC = () => {
         showSearch: true,
         optionFilterProp: 'label',
         onChange: (value: string) => {
-          formRef.current?.submit();
+          formRef.current?.submit()
         },
       },
     },
@@ -175,14 +175,14 @@ const KnowledgeDocumentPage: React.FC = () => {
         3: { text: intl.formatMessage({ id: 'pages.knowledge.document.indexStatus.failed' }) },
       },
       render: (_: unknown, record: Document) => {
-        const item = getIndexStatus(record.indexStatus);
+        const item = getIndexStatus(record.indexStatus)
         return (
           <Tag color={record.indexStatus === 3 ? 'error' : item.color}>
             {record.indexStatus === 3
               ? intl.formatMessage({ id: 'pages.knowledge.document.indexStatus.failed' })
               : item.label}
           </Tag>
-        );
+        )
       },
     },
     {
@@ -190,8 +190,8 @@ const KnowledgeDocumentPage: React.FC = () => {
       dataIndex: 'status',
       hideInSearch: true,
       render: (_: unknown, record: Document) => {
-        const item = getDocumentStatus(record.status);
-        return <Tag color={item.color}>{item.label}</Tag>;
+        const item = getDocumentStatus(record.status)
+        return <Tag color={item.color}>{item.label}</Tag>
       },
     },
     {
@@ -213,9 +213,9 @@ const KnowledgeDocumentPage: React.FC = () => {
       fixed: 'right',
       width: 300,
       render: (_: unknown, record: Document) => {
-        if (!canWrite || !record.id) return [];
-        const canReindex = record.reviewStatus === 'APPROVED' || record.indexStatus === 3;
-        const canDelete = !['AI_REVIEWING', 'SUBMITTED'].includes(record.reviewStatus || '');
+        if (!canWrite || !record.id) return []
+        const canReindex = record.reviewStatus === 'APPROVED' || record.indexStatus === 3
+        const canDelete = !['AI_REVIEWING', 'SUBMITTED'].includes(record.reviewStatus || '')
         return [
           record.originalFileName ? (
             <TemporaryUrlPreviewModal
@@ -237,19 +237,19 @@ const KnowledgeDocumentPage: React.FC = () => {
                 primary: true,
                 label: intl.formatMessage({ id: 'pages.knowledge.document.edit' }),
                 onClick: () => {
-                  setDocumentId(record.id);
-                  setFormKnowledgeBaseId(record.knowledgeBaseId);
-                  setFormOpen(true);
+                  setDocumentId(record.id)
+                  setFormKnowledgeBaseId(record.knowledgeBaseId)
+                  setFormOpen(true)
                 },
               },
               {
                 key: 'workspace',
                 label: intl.formatMessage({ id: 'pages.knowledge.document.reviewWorkspace' }),
                 onClick: () => {
-                  const returnTo = `${location.pathname}${location.search}`;
+                  const returnTo = `${location.pathname}${location.search}`
                   history.push(
                     `/knowledge/document/${record.id}/review?returnTo=${encodeURIComponent(returnTo)}`,
-                  );
+                  )
                 },
               },
               {
@@ -273,26 +273,26 @@ const KnowledgeDocumentPage: React.FC = () => {
                   title: intl.formatMessage({ id: 'pages.knowledge.document.deleteConfirm' }),
                 },
                 onClick: async () => {
-                  const response = await deleteDocument(record.id!);
+                  const response = await deleteDocument(record.id!)
                   if (response.code === 200) {
                     message.success(
                       response.message ||
                         intl.formatMessage({ id: 'pages.knowledge.document.deleteSuccess' }),
-                    );
-                    reload();
+                    )
+                    reload()
                   } else
                     message.error(
                       response.message ||
                         intl.formatMessage({ id: 'pages.knowledge.document.deleteFailed' }),
-                    );
+                    )
                 },
               },
             ]}
           />,
-        ];
+        ]
       },
     },
-  ];
+  ]
 
   return (
     <PageContainer
@@ -346,7 +346,7 @@ const KnowledgeDocumentPage: React.FC = () => {
                           }),
                         },
                       ]}
-                        request={async () => getKnowledgeBaseOptions()}
+                      request={async () => getKnowledgeBaseOptions()}
                     />
                   </>
                 }

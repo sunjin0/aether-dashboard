@@ -64,11 +64,11 @@ export const useReviewTask = ({ taskId, open, onSuccess }: UseReviewTaskOptions)
     if (!open || !taskId) return
     setClaimedByCurrentUser(false)
     setComment('')
-      getAdminOptions().then((options) => {
-        const map: Record<string, string> = {}
-        for (const option of options) {
-          if (option.value) map[String(option.value)] = option.label || String(option.value)
-        }
+    getAdminOptions().then((options) => {
+      const map: Record<string, string> = {}
+      for (const option of options) {
+        if (option.value) map[String(option.value)] = option.label || String(option.value)
+      }
       setUserMap(map)
     })
     load()

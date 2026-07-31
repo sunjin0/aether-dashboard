@@ -719,13 +719,13 @@ const ChatDebugPage: React.FC = () => {
       content: content || intl.formatMessage({ id: 'pages.agent.chat.analyzeAttachments' }),
       attachments: recognizedAttachments.length
         ? JSON.stringify(
-            recognizedAttachments.map(({ fileName, size, contentType, objectKey }) => ({
-              fileName,
-              size,
-              contentType,
-              objectKey,
-            })),
-          )
+          recognizedAttachments.map(({ fileName, size, contentType, objectKey }) => ({
+            fileName,
+            size,
+            contentType,
+            objectKey,
+          })),
+        )
         : undefined,
     }
     const assistantClientId = createClientId('assistant')
@@ -755,14 +755,14 @@ const ChatDebugPage: React.FC = () => {
     try {
       const payload: any = conversationId
         ? {
-            agentId: sendAgentId,
-            conversationId,
-            message: content || intl.formatMessage({ id: 'pages.agent.chat.analyzeAttachments' }),
-          }
+          agentId: sendAgentId,
+          conversationId,
+          message: content || intl.formatMessage({ id: 'pages.agent.chat.analyzeAttachments' }),
+        }
         : {
-            agentId: sendAgentId,
-            message: content || intl.formatMessage({ id: 'pages.agent.chat.analyzeAttachments' }),
-          }
+          agentId: sendAgentId,
+          message: content || intl.formatMessage({ id: 'pages.agent.chat.analyzeAttachments' }),
+        }
       if (recognizedAttachments.length) {
         payload.attachments = userMessage.attachments
         payload.attachmentContent = recognizedAttachments
@@ -966,10 +966,10 @@ const ChatDebugPage: React.FC = () => {
   const groupedConversations = useMemo(() => {
     const filtered = searchText
       ? conversations.filter(
-          (item) =>
-            item.title?.toLowerCase().includes(searchText.toLowerCase()) ||
+        (item) =>
+          item.title?.toLowerCase().includes(searchText.toLowerCase()) ||
             item.id?.toLowerCase().includes(searchText.toLowerCase()),
-        )
+      )
       : conversations
 
     const groups: Record<string, AgentConversation[]> = {}
@@ -1226,9 +1226,9 @@ const ChatDebugPage: React.FC = () => {
                       <h2>
                         {currentAgent
                           ? intl.formatMessage(
-                              { id: 'pages.agent.chat.startChatWithAgent' },
-                              { name: currentAgent.name },
-                            )
+                            { id: 'pages.agent.chat.startChatWithAgent' },
+                            { name: currentAgent.name },
+                          )
                           : intl.formatMessage({ id: 'pages.agent.chat.selectAgentToStart' })}
                       </h2>
                       <p>{intl.formatMessage({ id: 'pages.agent.chat.welcomeHint' })}</p>
@@ -1265,46 +1265,46 @@ const ChatDebugPage: React.FC = () => {
                           {item.clientId === streamingAssistantIdRef.current &&
                             item.streamStatus === 'streaming' &&
                             deepRunSteps.length > 0 && (
-                              <div
-                                aria-live="polite"
-                                style={{
-                                  marginTop: 8,
-                                  padding: '8px 12px',
-                                  background: '#f6f8fa',
-                                  borderRadius: 6,
-                                }}
-                              >
-                                <Text type="secondary" style={{ fontSize: 12 }}>
-                                  <LoadingOutlined spin />{' '}
-                                  {intl.formatMessage({ id: 'pages.agent.chat.deepRunning' })}
-                                </Text>
-                                {deepRunSteps.slice(-4).map((step, stepIndex) => {
-                                  if (step.eventType === 'message.delta') {
-                                    return null
-                                  }
-                                  const displayText = getDeepStepDisplayText(step, intl.formatMessage)
-                                  return displayText ? (
-                                    <div
-                                      key={step.eventId || `${step.occurredAt || 0}-${stepIndex}`}
-                                      style={{ fontSize: 12, marginTop: 2 }}
-                                    >
-                                      <Text type="secondary">{displayText}</Text>
-                                    </div>
-                                  ) : (
-                                    <div
-                                      key={step.eventId || `${step.occurredAt || 0}-${stepIndex}`}
-                                      style={{ fontSize: 12, marginTop: 2 }}
-                                    >
-                                      <Text type="secondary">
-                                        {intl.formatMessage({
-                                          id: 'pages.agent.chat.deepStepFallback',
-                                        })}
-                                      </Text>
-                                    </div>
-                                  )
-                                })}
-                              </div>
-                            )}
+                            <div
+                              aria-live="polite"
+                              style={{
+                                marginTop: 8,
+                                padding: '8px 12px',
+                                background: '#f6f8fa',
+                                borderRadius: 6,
+                              }}
+                            >
+                              <Text type="secondary" style={{ fontSize: 12 }}>
+                                <LoadingOutlined spin />{' '}
+                                {intl.formatMessage({ id: 'pages.agent.chat.deepRunning' })}
+                              </Text>
+                              {deepRunSteps.slice(-4).map((step, stepIndex) => {
+                                if (step.eventType === 'message.delta') {
+                                  return null
+                                }
+                                const displayText = getDeepStepDisplayText(step, intl.formatMessage)
+                                return displayText ? (
+                                  <div
+                                    key={step.eventId || `${step.occurredAt || 0}-${stepIndex}`}
+                                    style={{ fontSize: 12, marginTop: 2 }}
+                                  >
+                                    <Text type="secondary">{displayText}</Text>
+                                  </div>
+                                ) : (
+                                  <div
+                                    key={step.eventId || `${step.occurredAt || 0}-${stepIndex}`}
+                                    style={{ fontSize: 12, marginTop: 2 }}
+                                  >
+                                    <Text type="secondary">
+                                      {intl.formatMessage({
+                                        id: 'pages.agent.chat.deepStepFallback',
+                                      })}
+                                    </Text>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
                         </React.Fragment>
                       ))}
                       <div ref={messageEndRef} />

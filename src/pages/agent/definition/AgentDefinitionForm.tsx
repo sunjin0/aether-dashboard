@@ -205,7 +205,7 @@ const AgentDefinitionForm = (props: {
               mode="multiple"
               showSearch
               request={async () => {
-                  return getAgentToolOptions()
+                return getAgentToolOptions()
               }}
               placeholder={format('pages.agent.definition.selectToolsToBind')}
             />

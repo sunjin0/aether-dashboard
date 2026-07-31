@@ -89,7 +89,7 @@ const AgentToolForm = (props: {
         name="mcpServerId"
         label={format('pages.agent.tool.mcpServer')}
         rules={[{ required: true }]}
-          request={async () => getMcpServerOptions()}
+        request={async () => getMcpServerOptions()}
       />
       <ProFormText
         name="mcpToolName"

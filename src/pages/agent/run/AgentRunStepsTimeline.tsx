@@ -101,9 +101,9 @@ const AgentRunStepsTimeline: React.FC<AgentRunStepsTimelineProps> = ({ runId }) 
         const label = eventMessageId
           ? intl.formatMessage({ id: eventMessageId }, { toolName: data.toolName || '-' })
           : intl.formatMessage(
-              { id: 'pages.agent.run.steps.unknown' },
-              { eventType: eventType || 'none' },
-            )
+            { id: 'pages.agent.run.steps.unknown' },
+            { eventType: eventType || 'none' },
+          )
         const time = step.occurredAt ? new Date(step.occurredAt).toLocaleString() : ''
 
         return {

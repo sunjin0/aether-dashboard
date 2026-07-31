@@ -16,7 +16,7 @@ import {
   ProFormTextArea,
   ProFormDigit,
   ProFormDependency,
-} from '@ant-design/pro-components';
+} from '@ant-design/pro-components'
 import { useIntl } from '@umijs/max'
 import { Col, Form, Row } from 'antd'
 import './KnowledgeBaseForm.less'

@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { history, useParams } from '@umijs/max';
-import { PageContainer } from '@ant-design/pro-components';
-import { Button, Card, Input, Popconfirm, Select, Space, Tag, Tooltip, message } from 'antd';
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { history, useParams } from '@umijs/max'
+import { PageContainer } from '@ant-design/pro-components'
+import { Button, Card, Input, Popconfirm, Select, Space, Tag, Tooltip, message } from 'antd'
 import {
   AppstoreOutlined,
   DeleteOutlined,
@@ -10,7 +10,7 @@ import {
   SaveOutlined,
   SendOutlined,
   SettingOutlined,
-} from '@ant-design/icons';
+} from '@ant-design/icons'
 import {
   ReactFlow,
   addEdge,
@@ -27,25 +27,25 @@ import {
   Handle,
   useEdgesState,
   useNodesState,
-} from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
+} from '@xyflow/react'
+import '@xyflow/react/dist/style.css'
 import {
   AgentWorkflow,
   WorkflowNode,
   getWorkflow,
   publishWorkflow,
   updateWorkflow,
-} from '@/services/agent/WorkflowController';
-import { getAgentDefinitionOptions } from '@/services/agent/AgentDefinitionController';
-import { getAgentToolOptions } from '@/services/agent/ToolController';
-import StartVariablesBuilder from './StartVariablesBuilder';
+} from '@/services/agent/WorkflowController'
+import { getAgentDefinitionOptions } from '@/services/agent/AgentDefinitionController'
+import { getAgentToolOptions } from '@/services/agent/ToolController'
+import StartVariablesBuilder from './StartVariablesBuilder'
 
 const moduleDesc: React.CSSProperties = {
   color: '#8c8c8c',
   fontSize: 12,
   lineHeight: 1.6,
   marginBottom: 8,
-};
+}
 type WorkflowData = { workflowNode: WorkflowNode };
 const label: Record<string, string> = {
   start: '开始',
@@ -53,18 +53,18 @@ const label: Record<string, string> = {
   mcp: 'MCP 工具',
   human: '人工提问',
   end: '结束',
-};
+}
 const color: Record<string, string> = {
   start: '#52c41a',
   agent: '#1677ff',
   mcp: '#fa8c16',
   human: '#722ed1',
   end: '#13c2c2',
-};
+}
 const initial: WorkflowNode[] = [
   { id: 'start', type: 'start', name: '开始', position: { x: 80, y: 260 } },
   { id: 'end', type: 'end', name: '结束', position: { x: 780, y: 260 } },
-];
+]
 const toFlowNodes = (items: WorkflowNode[]): Node<WorkflowData>[] =>
   items.map((item) => ({
     id: item.id,
@@ -72,7 +72,7 @@ const toFlowNodes = (items: WorkflowNode[]): Node<WorkflowData>[] =>
     position: item.position || { x: 100, y: 200 },
     data: { workflowNode: item },
     deletable: !['start', 'end'].includes(item.type),
-  }));
+  }))
 const toFlowEdges = (items: any[]): Edge[] =>
   items.map((item, index) => ({
     id: item.id || `${item.source}-${item.target}-${index}`,
@@ -84,11 +84,11 @@ const toFlowEdges = (items: any[]): Edge[] =>
     type: 'smoothstep',
     selectable: true,
     deletable: true,
-  }));
+  }))
 
 const WorkflowCanvasNode: React.FC<NodeProps<Node<WorkflowData>>> = ({ data, selected }) => {
-  const item = data.workflowNode;
-  const nodeColor = color[item.type];
+  const item = data.workflowNode
+  const nodeColor = color[item.type]
   return (
     <div
       style={{
@@ -139,52 +139,52 @@ const WorkflowCanvasNode: React.FC<NodeProps<Node<WorkflowData>>> = ({ data, sel
       </div>
       <div style={{ padding: '11px 12px', fontWeight: 600 }}>{item.name || label[item.type]}</div>
     </div>
-  );
-};
+  )
+}
 
 const Editor: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const [workflow, setWorkflow] = useState<AgentWorkflow>();
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node<WorkflowData>>(toFlowNodes(initial));
+  const { id } = useParams<{ id: string }>()
+  const [workflow, setWorkflow] = useState<AgentWorkflow>()
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node<WorkflowData>>(toFlowNodes(initial))
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(
     toFlowEdges([{ source: 'start', target: 'end' }]),
-  );
-  const [selectedId, setSelectedId] = useState('start');
-  const [schema, setSchema] = useState('[]');
-  const [agentOptions, setAgentOptions] = useState<any[]>([]);
-  const [toolOptions, setToolOptions] = useState<any[]>([]);
-  const [paletteOpen, setPaletteOpen] = useState(true);
-  const [propertyOpen, setPropertyOpen] = useState(true);
-  const selected = nodes.find((node) => node.id === selectedId)?.data.workflowNode;
+  )
+  const [selectedId, setSelectedId] = useState('start')
+  const [schema, setSchema] = useState('[]')
+  const [agentOptions, setAgentOptions] = useState<any[]>([])
+  const [toolOptions, setToolOptions] = useState<any[]>([])
+  const [paletteOpen, setPaletteOpen] = useState(true)
+  const [propertyOpen, setPropertyOpen] = useState(true)
+  const selected = nodes.find((node) => node.id === selectedId)?.data.workflowNode
   useEffect(() => {
-    if (!id) return;
+    if (!id) return
     getWorkflow(id).then((r) => {
-      if (r.code !== 200 || !r.data) return;
-      setWorkflow(r.data);
+      if (r.code !== 200 || !r.data) return
+      setWorkflow(r.data)
       try {
-        const parsedNodes = r.data.nodes ? JSON.parse(r.data.nodes) : [];
+        const parsedNodes = r.data.nodes ? JSON.parse(r.data.nodes) : []
         const restored =
-          Array.isArray(parsedNodes) && parsedNodes.length > 0 ? parsedNodes : initial;
-        const parsedEdges = r.data.edges ? JSON.parse(r.data.edges) : [];
+          Array.isArray(parsedNodes) && parsedNodes.length > 0 ? parsedNodes : initial
+        const parsedEdges = r.data.edges ? JSON.parse(r.data.edges) : []
         const restoredEdges =
           Array.isArray(parsedEdges) && parsedEdges.length > 0
             ? parsedEdges
             : restored
-                .slice(0, -1)
-                .map((node: WorkflowNode, index: number) => ({
-                  source: node.id,
-                  target: restored[index + 1].id,
-                }));
-        setNodes(toFlowNodes(restored));
-        setEdges(toFlowEdges(restoredEdges));
-        setSchema(r.data.inputSchema || '[]');
+              .slice(0, -1)
+              .map((node: WorkflowNode, index: number) => ({
+                source: node.id,
+                target: restored[index + 1].id,
+              }))
+        setNodes(toFlowNodes(restored))
+        setEdges(toFlowEdges(restoredEdges))
+        setSchema(r.data.inputSchema || '[]')
       } catch {
-        message.error('画布数据格式错误');
+        message.error('画布数据格式错误')
       }
-    });
-    getAgentDefinitionOptions().then(setAgentOptions);
-    getAgentToolOptions().then(setToolOptions);
-  }, [id, setEdges, setNodes]);
+    })
+    getAgentDefinitionOptions().then(setAgentOptions)
+    getAgentToolOptions().then(setToolOptions)
+  }, [id, setEdges, setNodes])
   const onConnect = useCallback(
     (connection: Connection) =>
       setEdges((current) =>
@@ -194,7 +194,7 @@ const Editor: React.FC = () => {
         ),
       ),
     [setEdges],
-  );
+  )
   const add = (type: WorkflowNode['type']) => {
     const item: WorkflowNode = {
       id: `${type}_${Date.now()}`,
@@ -204,10 +204,10 @@ const Editor: React.FC = () => {
       prompt: type === 'agent' ? '请根据输入变量完成任务：${input}' : undefined,
       question: type === 'human' ? '请补充必要信息' : undefined,
       argumentsTemplate: type === 'mcp' ? '{}' : undefined,
-    };
-    setNodes((current) => [...current, ...toFlowNodes([item])]);
-    setSelectedId(item.id);
-  };
+    }
+    setNodes((current) => [...current, ...toFlowNodes([item])])
+    setSelectedId(item.id)
+  }
   const updateSelected = (values: Partial<WorkflowNode>) =>
     setNodes((current) =>
       current.map((node) =>
@@ -215,83 +215,83 @@ const Editor: React.FC = () => {
           ? { ...node, data: { workflowNode: { ...node.data.workflowNode, ...values } } }
           : node,
       ),
-    );
+    )
   const autoArrange = () => {
-    const rank: Record<string, number> = { start: 0 };
-    let moved = true;
-    let guard = 0;
+    const rank: Record<string, number> = { start: 0 }
+    let moved = true
+    let guard = 0
     while (moved && guard++ < nodes.length * nodes.length) {
-      moved = false;
+      moved = false
       edges.forEach((edge) => {
         if (
           rank[edge.source] !== undefined &&
           (rank[edge.target] === undefined || rank[edge.target] < rank[edge.source] + 1)
         ) {
-          rank[edge.target] = rank[edge.source] + 1;
-          moved = true;
+          rank[edge.target] = rank[edge.source] + 1
+          moved = true
         }
-      });
+      })
     }
-    const groups: Record<number, Node<WorkflowData>[]> = {};
+    const groups: Record<number, Node<WorkflowData>[]> = {}
     nodes.forEach((node) => {
-      const level = rank[node.id] ?? 1;
-      groups[level] = [...(groups[level] || []), node];
-    });
+      const level = rank[node.id] ?? 1
+      groups[level] = [...(groups[level] || []), node]
+    })
     setNodes((current) =>
       current.map((node) => {
-        const level = rank[node.id] ?? 1;
-        const index = groups[level].findIndex((item) => item.id === node.id);
-        return { ...node, position: { x: 80 + level * 260, y: 110 + index * 170 } };
+        const level = rank[node.id] ?? 1
+        const index = groups[level].findIndex((item) => item.id === node.id)
+        return { ...node, position: { x: 80 + level * 260, y: 110 + index * 170 } }
       }),
-    );
-  };
+    )
+  }
   const removeSelected = () => {
-    if (!selected || ['start', 'end'].includes(selected.type)) return;
-    setNodes((current) => current.filter((node) => node.id !== selectedId));
+    if (!selected || ['start', 'end'].includes(selected.type)) return
+    setNodes((current) => current.filter((node) => node.id !== selectedId))
     setEdges((current) =>
       current.filter((edge) => edge.source !== selectedId && edge.target !== selectedId),
-    );
-    setSelectedId('start');
-  };
+    )
+    setSelectedId('start')
+  }
   const save = async (publish = false) => {
-    if (!id || !workflow) return;
+    if (!id || !workflow) return
     try {
-      JSON.parse(schema);
+      JSON.parse(schema)
     } catch {
-      message.error('开始表单字段必须是合法 JSON 数组');
-      return;
+      message.error('开始表单字段必须是合法 JSON 数组')
+      return
     }
     const workflowNodes = nodes.map((node) => ({
       ...node.data.workflowNode,
       position: node.position,
-    }));
+    }))
     const workflowEdges = edges.map((edge) => ({
       source: edge.source,
       target: edge.target,
       sourceHandle: edge.sourceHandle,
       targetHandle: edge.targetHandle,
-    }));
+    }))
     const result = await updateWorkflow(id, {
       name: workflow.name,
       description: workflow.description,
       nodes: JSON.stringify(workflowNodes),
       edges: JSON.stringify(workflowEdges),
       inputSchema: schema,
-    });
+    })
     if (result.code !== 200) {
-      message.error(result.message || '保存失败');
-      return;
+      message.error(result.message || '保存失败')
+      return
     }
     if (publish) {
-      const published = await publishWorkflow(id);
+      const published = await publishWorkflow(id)
       if (published.code !== 200) {
-        message.error(published.message || '发布校验失败');
-        return;
+        message.error(published.message || '发布校验失败')
+        return
       }
-      message.success(`已发布 v${published.data}`);
-    } else message.success('草稿已保存');
-  };
-  const nodeTypes = useMemo(() => ({ workflow: WorkflowCanvasNode }), []);
+      message.success(`已发布 v${published.data}`)
+    } else message.success('草稿已保存')
+  }
+  const nodeTypes = useMemo(() => ({ workflow: WorkflowCanvasNode }), [])
   return (
     <PageContainer
       header={{ title: workflow?.name || '工作流编排', breadcrumb: undefined }}
@@ -499,6 +499,6 @@ const Editor: React.FC = () => {
         </ReactFlow>
       </div>
     </PageContainer>
-  );
-};
-export default Editor;
+  )
+}
+export default Editor

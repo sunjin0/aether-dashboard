@@ -61,7 +61,7 @@ const PreferenceForm: React.FC<PreferenceFormProps> = ({ id, open, setOpen, onSu
         name="adminId"
         label={format('pages.sys.preference.admin')}
         rules={[{ required: true, message: format('pages.sys.preference.selectAdmin') }]}
-          request={async () => getAdminOptions()}
+        request={async () => getAdminOptions()}
         fieldProps={{ showSearch: true }}
       />
 

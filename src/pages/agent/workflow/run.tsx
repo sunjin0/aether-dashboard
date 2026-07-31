@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { history, useIntl, useParams } from '@umijs/max';
-import { PageContainer } from '@ant-design/pro-components';
+import React, { useEffect, useState } from 'react'
+import { history, useIntl, useParams } from '@umijs/max'
+import { PageContainer } from '@ant-design/pro-components'
 import {
   Button,
   Card,
@@ -13,7 +13,7 @@ import {
   Steps,
   Tag,
   message,
-} from 'antd';
+} from 'antd'
 import {
   getWorkflow,
   getWorkflowInstance,
@@ -23,8 +23,8 @@ import {
   terminateWorkflow,
   AgentWorkflow,
   WorkflowInstance,
-} from '@/services/agent/WorkflowController';
-import FormattedContent from '@/components/FormattedContent';
+} from '@/services/agent/WorkflowController'
+import FormattedContent from '@/components/FormattedContent'
 
 const statusColor: Record<string, string> = {
   RUNNING: 'processing',
@@ -33,103 +33,103 @@ const statusColor: Record<string, string> = {
   COMPLETED: 'success',
   TERMINATED: 'default',
   PENDING: 'default',
-};
+}
 const RunPage: React.FC = () => {
-  const intl = useIntl();
-  const t = (key: string) => intl.formatMessage({ id: key });
-  const { id } = useParams<{ id: string }>();
-  const [workflow, setWorkflow] = useState<AgentWorkflow>();
-  const [instance, setInstance] = useState<WorkflowInstance>();
-  const [form] = Form.useForm();
-  const [answerForm] = Form.useForm();
-  const [starting, setStarting] = useState(false);
-  const [answering, setAnswering] = useState(false);
-  const [acting, setActing] = useState(false);
+  const intl = useIntl()
+  const t = (key: string) => intl.formatMessage({ id: key })
+  const { id } = useParams<{ id: string }>()
+  const [workflow, setWorkflow] = useState<AgentWorkflow>()
+  const [instance, setInstance] = useState<WorkflowInstance>()
+  const [form] = Form.useForm()
+  const [answerForm] = Form.useForm()
+  const [starting, setStarting] = useState(false)
+  const [answering, setAnswering] = useState(false)
+  const [acting, setActing] = useState(false)
   useEffect(() => {
-    if (id) getWorkflow(id).then((r) => r.data && setWorkflow(r.data));
-  }, [id]);
+    if (id) getWorkflow(id).then((r) => r.data && setWorkflow(r.data))
+  }, [id])
   const fields = (() => {
     try {
-      return JSON.parse(workflow?.inputSchema || '[]');
+      return JSON.parse(workflow?.inputSchema || '[]')
     } catch {
-      return [];
+      return []
     }
-  })();
+  })()
   const load = (instanceId: string) =>
     getWorkflowInstance(instanceId).then((r) => {
-      if (r.code === 200) setInstance(r.data);
-    });
+      if (r.code === 200) setInstance(r.data)
+    })
   useEffect(() => {
-    if (!instance || ['COMPLETED', 'FAILED', 'TERMINATED'].includes(instance.status)) return;
-    const timer = window.setInterval(() => load(instance.id), 2000);
-    return () => window.clearInterval(timer);
-  }, [instance?.id, instance?.status]);
+    if (!instance || ['COMPLETED', 'FAILED', 'TERMINATED'].includes(instance.status)) return
+    const timer = window.setInterval(() => load(instance.id), 2000)
+    return () => window.clearInterval(timer)
+  }, [instance?.id, instance?.status])
   const start = async () => {
-    if (!id) return;
-    setStarting(true);
+    if (!id) return
+    setStarting(true)
     try {
-      const result = await startWorkflow(id, form.getFieldsValue());
+      const result = await startWorkflow(id, form.getFieldsValue())
       if (result.code === 200 && result.data) {
-        message.success('流程已启动');
-        load(result.data);
-      } else message.error(result.message || '启动失败');
+        message.success('流程已启动')
+        load(result.data)
+      } else message.error(result.message || '启动失败')
     } finally {
-      setStarting(false);
+      setStarting(false)
     }
-  };
+  }
   const answer = async () => {
-    if (!instance) return;
-    setAnswering(true);
+    if (!instance) return
+    setAnswering(true)
     try {
-      const node = instance.nodes?.find((item) => item.status === 'WAITING_USER');
-      const config = node?.interactionConfig ? JSON.parse(node.interactionConfig) : {};
+      const node = instance.nodes?.find((item) => item.status === 'WAITING_USER')
+      const config = node?.interactionConfig ? JSON.parse(node.interactionConfig) : {}
       const result = await answerWorkflow(
         instance.id,
         config.type === 'mcp_tool_approval'
           ? { decision: answerForm.getFieldValue('decision') }
           : answerForm.getFieldsValue(),
-      );
+      )
       if (result.code === 200) {
-        message.success('已提交');
-        answerForm.resetFields();
-        load(instance.id);
-      } else message.error(result.message || '提交失败');
+        message.success('已提交')
+        answerForm.resetFields()
+        load(instance.id)
+      } else message.error(result.message || '提交失败')
     } finally {
-      setAnswering(false);
+      setAnswering(false)
     }
-  };
+  }
   const act = async (action: () => Promise<void>) => {
-    setActing(true);
+    setActing(true)
     try {
-      await action();
+      await action()
     } finally {
-      setActing(false);
+      setActing(false)
     }
-  };
+  }
   const graphNodes = (() => {
     try {
-      const nodes = JSON.parse(instance?.versionNodes || workflow?.nodes || '[]');
-      const edges = JSON.parse(instance?.versionEdges || workflow?.edges || '[]');
-      if (!Array.isArray(nodes) || !Array.isArray(edges)) return Array.isArray(nodes) ? nodes : [];
-      const byId = new Map(nodes.map((node: any) => [node.id, node]));
-      const next = new Map(edges.map((edge: any) => [edge.source, edge.target]));
-      const ordered: any[] = [];
-      const visited = new Set<string>();
-      let current = nodes.find((node: any) => node.type === 'start')?.id;
+      const nodes = JSON.parse(instance?.versionNodes || workflow?.nodes || '[]')
+      const edges = JSON.parse(instance?.versionEdges || workflow?.edges || '[]')
+      if (!Array.isArray(nodes) || !Array.isArray(edges)) return Array.isArray(nodes) ? nodes : []
+      const byId = new Map(nodes.map((node: any) => [node.id, node]))
+      const next = new Map(edges.map((edge: any) => [edge.source, edge.target]))
+      const ordered: any[] = []
+      const visited = new Set<string>()
+      let current = nodes.find((node: any) => node.type === 'start')?.id
       while (current && byId.has(current) && !visited.has(current)) {
-        visited.add(current);
-        ordered.push(byId.get(current));
-        current = next.get(current);
+        visited.add(current)
+        ordered.push(byId.get(current))
+        current = next.get(current)
       }
       // 已发布历史数据可能不完整，仍展示未连入主链的节点，但放在主流程之后。
       nodes.forEach((node: any) => {
-        if (!visited.has(node.id)) ordered.push(node);
-      });
-      return ordered;
+        if (!visited.has(node.id)) ordered.push(node)
+      })
+      return ordered
     } catch {
-      return [];
+      return []
     }
-  })();
+  })()
   return (
     <PageContainer
       header={{ title: t('pages.agent.workflow.run.title'), breadcrumb: undefined }}
@@ -185,9 +185,9 @@ const RunPage: React.FC = () => {
                 graphNodes.findIndex((node: any) => node.id === instance.currentNodeId),
               )}
               items={graphNodes.map((node: any) => {
-                const log = instance.nodes?.find((item) => item.nodeId === node.id);
-                const nodeName = node.name || t(`pages.agent.workflow.run.node.${node.type}`);
-                const nodeStatus = log?.status || 'PENDING';
+                const log = instance.nodes?.find((item) => item.nodeId === node.id)
+                const nodeName = node.name || t(`pages.agent.workflow.run.node.${node.type}`)
+                const nodeStatus = log?.status || 'PENDING'
                 return {
                   title: nodeName,
                   description: (
@@ -201,7 +201,7 @@ const RunPage: React.FC = () => {
                       )}
                     </Space>
                   ),
-                };
+                }
               })}
             />
           </Card>
@@ -209,8 +209,8 @@ const RunPage: React.FC = () => {
             <Card title="等待人工操作" style={{ marginTop: 16 }}>
               <Form form={answerForm} layout="vertical">
                 {(() => {
-                  const node = instance.nodes?.find((item) => item.status === 'WAITING_USER');
-                  const config = node?.interactionConfig ? JSON.parse(node.interactionConfig) : {};
+                  const node = instance.nodes?.find((item) => item.status === 'WAITING_USER')
+                  const config = node?.interactionConfig ? JSON.parse(node.interactionConfig) : {}
                   return config.type === 'mcp_tool_approval' ? (
                     <>
                       <p>{config.question || '请确认 MCP 工具调用'}</p>
@@ -226,7 +226,7 @@ const RunPage: React.FC = () => {
                         <Input.TextArea />
                       </Form.Item>
                     </>
-                  );
+                  )
                 })()}
                 <Button type="primary" loading={answering} onClick={answer}>
                   提交并继续
@@ -241,8 +241,8 @@ const RunPage: React.FC = () => {
                 loading={acting}
                 onClick={() =>
                   act(async () => {
-                    await retryWorkflow(instance.id);
-                    load(instance.id);
+                    await retryWorkflow(instance.id)
+                    load(instance.id)
                   })
                 }
               >
@@ -253,8 +253,8 @@ const RunPage: React.FC = () => {
                 loading={acting}
                 onClick={() =>
                   act(async () => {
-                    await terminateWorkflow(instance.id);
-                    load(instance.id);
+                    await terminateWorkflow(instance.id)
+                    load(instance.id)
                   })
                 }
               >
@@ -265,6 +265,6 @@ const RunPage: React.FC = () => {
         </>
       )}
     </PageContainer>
-  );
-};
-export default RunPage;
+  )
+}
+export default RunPage

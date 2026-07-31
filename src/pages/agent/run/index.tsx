@@ -109,7 +109,7 @@ const AgentRunPage: React.FC = () => {
         if (requestToken === statisticsRequestTokenRef.current) {
           message.error(intl.formatMessage({ id: 'pages.agent.run.loadStatisticsFailed' }))
         }
-    } finally {
+      } finally {
         if (requestToken === statisticsRequestTokenRef.current) {
           setStatisticsLoading(false)
         }

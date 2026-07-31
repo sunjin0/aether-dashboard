@@ -212,7 +212,7 @@ const KnowledgeReviewPage: React.FC = () => {
             dataIndex: 'submitterId',
             valueType: 'select',
             request: async () => {
-                return getAdminOptions()
+              return getAdminOptions()
             },
             hideInSearch: true,
           },
@@ -239,7 +239,7 @@ const KnowledgeReviewPage: React.FC = () => {
             dataIndex: 'reviewerId',
             valueType: 'select',
             request: async () => {
-                return getAdminOptions()
+              return getAdminOptions()
             },
           },
           {

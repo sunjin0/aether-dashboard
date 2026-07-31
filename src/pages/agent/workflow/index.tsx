@@ -1,8 +1,8 @@
-import React, { useRef, useState } from 'react';
-import { history, useIntl } from '@umijs/max';
-import { PageContainer, ProTable, type ActionType } from '@ant-design/pro-components';
-import { Button, Form, Input, Modal, Popconfirm, Space, Tag, message } from 'antd';
-import { PlusOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import React, { useRef, useState } from 'react'
+import { history, useIntl } from '@umijs/max'
+import { PageContainer, ProTable, type ActionType } from '@ant-design/pro-components'
+import { Button, Form, Input, Modal, Popconfirm, Space, Tag, message } from 'antd'
+import { PlusOutlined, PlayCircleOutlined } from '@ant-design/icons'
 import {
   AgentWorkflow,
   createWorkflow,
@@ -10,30 +10,30 @@ import {
   getWorkflowList,
   offlineWorkflow,
   publishWorkflow,
-} from '@/services/agent/WorkflowController';
+} from '@/services/agent/WorkflowController'
 
 const WorkflowPage: React.FC = () => {
-  const intl = useIntl();
-  const t = (id: string, values?: Record<string, any>) => intl.formatMessage({ id }, values);
-  const ref = useRef<ActionType>();
-  const [open, setOpen] = useState(false);
-  const [form] = Form.useForm();
+  const intl = useIntl()
+  const t = (id: string, values?: Record<string, any>) => intl.formatMessage({ id }, values)
+  const ref = useRef<ActionType>()
+  const [open, setOpen] = useState(false)
+  const [form] = Form.useForm()
   const create = async () => {
-    const result = await createWorkflow(form.getFieldsValue());
+    const result = await createWorkflow(form.getFieldsValue())
     if (result.code === 200 && result.data) {
-      message.success('草稿已创建');
-      setOpen(false);
-      history.push(`/agent/workflow/${result.data}`);
-    } else message.error(result.message || '创建失败');
-  };
+      message.success('草稿已创建')
+      setOpen(false)
+      history.push(`/agent/workflow/${result.data}`)
+    } else message.error(result.message || '创建失败')
+  }
   const action = async (record: AgentWorkflow, fn: (id: string) => Promise<any>, text: string) => {
-    if (!record.id) return;
-    const result = await fn(record.id);
+    if (!record.id) return
+    const result = await fn(record.id)
     if (result.code === 200) {
-      message.success(text);
-      ref.current?.reload();
-    } else message.error(result.message || '操作失败');
-  };
+      message.success(text)
+      ref.current?.reload()
+    } else message.error(result.message || '操作失败')
+  }
   return (
     <PageContainer
       header={{ title: t('pages.agent.workflow.title'), breadcrumb: undefined }}
@@ -75,8 +75,8 @@ const WorkflowPage: React.FC = () => {
               <Tag color={r.status === 1 ? 'green' : r.status === 2 ? 'default' : 'orange'}>
                 {r.status === 1
                   ? t('pages.agent.workflow.status.published', {
-                      version: r.publishedVersion ?? '-',
-                    })
+                    version: r.publishedVersion ?? '-',
+                  })
                   : r.status === 2
                     ? t('pages.agent.workflow.status.offline')
                     : t('pages.agent.workflow.status.draft')}
@@ -146,6 +146,6 @@ const WorkflowPage: React.FC = () => {
         </Form>
       </Modal>
     </PageContainer>
-  );
-};
-export default WorkflowPage;
+  )
+}
+export default WorkflowPage

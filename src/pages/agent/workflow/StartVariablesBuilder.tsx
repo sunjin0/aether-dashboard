@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Checkbox, Input, Space, Switch, Tooltip } from 'antd';
+import React, { useEffect, useState } from 'react'
+import { Button, Checkbox, Input, Space, Switch, Tooltip } from 'antd'
 import {
   CodeOutlined,
   DeleteOutlined,
@@ -7,7 +7,7 @@ import {
   EyeOutlined,
   PlusOutlined,
   UpOutlined,
-} from '@ant-design/icons';
+} from '@ant-design/icons'
 
 export interface StartVariableField {
   name: string;
@@ -17,14 +17,14 @@ export interface StartVariableField {
 }
 
 const parseFields = (value?: string): StartVariableField[] => {
-  if (!value) return [];
+  if (!value) return []
   try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed.filter((item) => item && typeof item === 'object') : [];
+    const parsed = JSON.parse(value)
+    return Array.isArray(parsed) ? parsed.filter((item) => item && typeof item === 'object') : []
   } catch {
-    return [];
+    return []
   }
-};
+}
 
 export interface StartVariablesBuilderProps {
   value?: string;
@@ -32,31 +32,31 @@ export interface StartVariablesBuilderProps {
 }
 
 const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, onChange }) => {
-  const [fields, setFields] = useState<StartVariableField[]>(() => parseFields(value));
-  const [jsonMode, setJsonMode] = useState(false);
+  const [fields, setFields] = useState<StartVariableField[]>(() => parseFields(value))
+  const [jsonMode, setJsonMode] = useState(false)
   useEffect(() => {
-    setFields(parseFields(value));
-  }, [value]);
+    setFields(parseFields(value))
+  }, [value])
   const emit = (next: StartVariableField[]) => {
-    setFields(next);
-    onChange?.(JSON.stringify(next, null, 2));
-  };
+    setFields(next)
+    onChange?.(JSON.stringify(next, null, 2))
+  }
   const update = (index: number, patch: Partial<StartVariableField>) =>
-    emit(fields.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+    emit(fields.map((item, i) => (i === index ? { ...item, ...patch } : item)))
   const add = () =>
-    emit([...fields, { name: `input_${fields.length + 1}`, label: `输入${fields.length + 1}` }]);
-  const remove = (index: number) => emit(fields.filter((_, i) => i !== index));
+    emit([...fields, { name: `input_${fields.length + 1}`, label: `输入${fields.length + 1}` }])
+  const remove = (index: number) => emit(fields.filter((_, i) => i !== index))
   const move = (index: number, dir: -1 | 1) => {
-    const target = index + dir;
-    if (target < 0 || target >= fields.length) return;
+    const target = index + dir
+    if (target < 0 || target >= fields.length) return
     const next = [...fields];
-    [next[index], next[target]] = [next[target], next[index]];
-    emit(next);
-  };
+    [next[index], next[target]] = [next[target], next[index]]
+    emit(next)
+  }
   const labels: { name: string; label: string } = {
     name: '变量名（name）',
     label: '显示名称（label）',
-  };
+  }
   if (jsonMode) {
     return (
       <Space direction="vertical" style={{ width: '100%' }} size={8}>
@@ -70,14 +70,14 @@ const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, on
           block
           icon={<EyeOutlined />}
           onClick={() => {
-            setJsonMode(false);
-            setFields(parseFields(value));
+            setJsonMode(false)
+            setFields(parseFields(value))
           }}
         >
           返回可视化编辑
         </Button>
       </Space>
-    );
+    )
   }
   return (
     <Space direction="vertical" style={{ width: '100%' }} size={8}>
@@ -167,7 +167,7 @@ const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, on
         添加字段
       </Button>
     </Space>
-  );
-};
+  )
+}
 
-export default StartVariablesBuilder;
+export default StartVariablesBuilder

@@ -8,7 +8,7 @@ import {
   unbindToolFromAgent,
   updateToolPriority,
 } from '@/services/agent/AgentDefinitionController'
-  import { getAgentToolOptions } from '@/services/agent/ToolController'
+import { getAgentToolOptions } from '@/services/agent/ToolController'
 import { AgentToolBinding, BindToolRequest, AgentTool } from '@/services/entity/Agent'
 import { useIntl } from '@umijs/max'
 import TableActionMenu from '@/components/TableActionMenu'
@@ -38,7 +38,7 @@ const AgentToolBinding: React.FC<AgentToolBindingProps> = ({ agentId, open, setO
     const code = 200
 
     if (code === 200 && data) {
-        const options = data
+      const options = data
       setToolOptions(options.map((item) => ({ label: item.label, value: String(item.value) })))
     }
   }

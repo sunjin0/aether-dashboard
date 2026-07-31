@@ -1,0 +1,22 @@
+services:
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aether-dashboard
+    restart: unless-stopped
+    ports:
+      - "${DASHBOARD_PORT:-8001}:80"
+    environment:
+      # Admin 后端的容器内访问地址；Dashboard 的 /api/ 请求将由 Nginx 代理到此地址。
+      AETHER_ADMIN_UPSTREAM: ${AETHER_ADMIN_UPSTREAM:-http://aether-admin:8080}
+    networks:
+      aether-services:
+        aliases:
+          - aether-dashboard
+
+networks:
+  aether-services:
+    external: true
+    name: ${AETHER_SHARED_NETWORK:-aether-mcp-server_default}
+

@@ -108,6 +108,23 @@ export default [
         name: '工具调用日志',
         component: './agent/tool-call-log',
       },
+      {
+        path: '/agent/workflow',
+        name: 'AI 工作流',
+        component: './agent/workflow',
+      },
+      {
+        path: '/agent/workflow/:id/run',
+        name: '工作流运行',
+        hideInMenu: true,
+        component: './agent/workflow/run',
+      },
+      {
+        path: '/agent/workflow/:id',
+        name: '工作流编排',
+        hideInMenu: true,
+        component: './agent/workflow/editor',
+      },
     ],
   },
   {

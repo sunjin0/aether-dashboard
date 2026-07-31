@@ -12,6 +12,8 @@ jest.mock('@umijs/max', () => ({
         'components.routeTabs.dashboard': '仪表盘',
         'components.routeTabs.aiReviewWorkspace': 'AI 审阅工作台',
         'components.routeTabs.humanReview': '人工审批',
+        'components.routeTabs.workflowEditor': '工作流编排',
+        'components.routeTabs.workflowRun': '工作流运行',
       })[id] || id,
   }),
 }));
@@ -121,6 +123,27 @@ describe('RouteTabs', () => {
     );
 
     expect(screen.getByRole('button', { name: '人工审批' })).toBeTruthy();
+  });
+
+  it('uses names for hidden dynamic workflow routes', async () => {
+    const { rerender } = render(
+      <RouteTabs pathname="/agent/workflow/workflow-1">
+        <div>Workflow editor</div>
+      </RouteTabs>,
+    );
+
+    setRouteMenus(menus);
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: '工作流编排' })).toBeTruthy();
+    });
+
+    rerender(
+      <RouteTabs pathname="/agent/workflow/workflow-1/run">
+        <div>Workflow run</div>
+      </RouteTabs>,
+    );
+
+    expect(screen.getByRole('button', { name: '工作流运行' })).toBeTruthy();
   });
 
   it('does not create a tab for the root route before its dashboard redirect', () => {

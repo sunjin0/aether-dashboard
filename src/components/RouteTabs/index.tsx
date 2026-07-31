@@ -66,6 +66,10 @@ const getRouteLabel = (
     return formatMessage({ id: 'components.routeTabs.versionHistory' });
   if (/^\/knowledge\/reviews\/[^/]+$/.test(pathname))
     return formatMessage({ id: 'components.routeTabs.humanReview' });
+  if (/^\/agent\/workflow\/[^/]+\/run$/.test(pathname))
+    return formatMessage({ id: 'components.routeTabs.workflowRun' });
+  if (/^\/agent\/workflow\/[^/]+$/.test(pathname))
+    return formatMessage({ id: 'components.routeTabs.workflowEditor' });
   return pathname === '/dashboard'
     ? formatMessage({ id: 'components.routeTabs.dashboard' })
     : findMenuName(menus, pathname) || pathname;

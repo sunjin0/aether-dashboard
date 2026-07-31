@@ -19,7 +19,9 @@ import {
   ArrowDownOutlined,
   ArrowUpOutlined,
   BulbOutlined,
+  CheckCircleFilled,
   ClearOutlined,
+  CloseCircleFilled,
   CommentOutlined,
   LoadingOutlined,
   MenuFoldOutlined,
@@ -54,7 +56,12 @@ import {
 } from '@/services/entity/Agent'
 import { Option } from '@/services/entity/Common'
 import AgentMessageBubble from '@/components/AgentMessageBubble'
-import { cancelDeepRun, getDeepStepDisplayText, mergeDeepRunSteps } from './deepProgress'
+import {
+  cancelDeepRun,
+  getDeepRunTasks,
+  getDeepStepDisplayText,
+  mergeDeepRunSteps,
+} from './deepProgress'
 import './index.less'
 
 const { Text } = Typography
@@ -119,6 +126,7 @@ const ChatDebugPage: React.FC = () => {
   const [pendingQuestionMessage, setPendingQuestionMessage] = useState<ChatMessage | null>(null)
   const [deepRunId, setDeepRunId] = useState<string | null>(null)
   const [deepRunSteps, setDeepRunSteps] = useState<AgentStreamRunStepData[]>([])
+  const [taskPlanCollapsed, setTaskPlanCollapsed] = useState(false)
   const messageEndRef = useRef<HTMLDivElement>(null)
   const messageListRef = useRef<HTMLDivElement>(null)
   const abortControllerRef = useRef<AbortController>()
@@ -146,6 +154,7 @@ const ChatDebugPage: React.FC = () => {
     deepRunIdRef.current = null
     setDeepRunId(null)
     setDeepRunSteps([])
+    setTaskPlanCollapsed(false)
   }
 
   const addDeepRunStep = (data: AgentStreamRunStepData) => {
@@ -155,6 +164,8 @@ const ChatDebugPage: React.FC = () => {
     }
     setDeepRunSteps((current) => mergeDeepRunSteps(current, data))
   }
+
+  const deepRunTasks = useMemo(() => getDeepRunTasks(deepRunSteps), [deepRunSteps])
 
   const acceptDeepRun = (data: AgentStreamAcceptedData) => {
     deepRunIdRef.current = data.runId
@@ -349,6 +360,7 @@ const ChatDebugPage: React.FC = () => {
     setConversationId(undefined)
     setMessages([])
     setAttachments([])
+    resetDeepProgress()
     resetConversationTurnState()
   }
 
@@ -362,6 +374,7 @@ const ChatDebugPage: React.FC = () => {
       setAgentId(conversation.agentDefinitionId)
     }
     setMessages([])
+    resetDeepProgress()
     resetConversationTurnState()
     await loadMessages(conversation.id)
   }
@@ -672,7 +685,6 @@ const ChatDebugPage: React.FC = () => {
     } finally {
       setSending(false)
       if (abortControllerRef.current === controller) {
-        resetDeepProgress()
         abortControllerRef.current = undefined
         streamingAssistantIdRef.current = undefined
       }
@@ -912,7 +924,6 @@ const ChatDebugPage: React.FC = () => {
     } finally {
       setSending(false)
       if (abortControllerRef.current === controller) {
-        resetDeepProgress()
         abortControllerRef.current = undefined
         streamingAssistantIdRef.current = undefined
         stoppedByUserRef.current = false
@@ -1169,6 +1180,39 @@ const ChatDebugPage: React.FC = () => {
             </div>
           </div>
 
+          {deepRunTasks.length > 0 && (
+            <section className="agent-chat-task-plan" aria-label={intl.formatMessage({ id: 'pages.agent.chat.deepTaskPlan' })}>
+              <div className="agent-chat-task-plan-header">
+                <Text strong>{intl.formatMessage({ id: 'pages.agent.chat.deepTaskPlan' })}</Text>
+                <div>
+                  <Text type="secondary">{intl.formatMessage({ id: 'pages.agent.chat.deepRunning' })}</Text>
+                  <Button type="text" size="small" onClick={() => setTaskPlanCollapsed((value) => !value)}>
+                    {intl.formatMessage({ id: taskPlanCollapsed ? 'pages.agent.chat.deepTaskPlan.expand' : 'pages.agent.chat.deepTaskPlan.collapse' })}
+                  </Button>
+                </div>
+              </div>
+              {!taskPlanCollapsed && <div className="agent-chat-deep-task-list">
+                {deepRunTasks.map((task) => (
+                  <div className="agent-chat-deep-task" key={task.id}>
+                    {task.status === 'completed' ? (
+                      <CheckCircleFilled className="agent-chat-deep-task-completed" />
+                    ) : task.status === 'failed' ? (
+                      <CloseCircleFilled className="agent-chat-deep-task-failed" />
+                    ) : task.status === 'running' ? (
+                      <LoadingOutlined spin className="agent-chat-deep-task-running" />
+                    ) : (
+                      <span className="agent-chat-deep-task-pending" />
+                    )}
+                    <span>{task.title}</span>
+                    <Text type="secondary" className="agent-chat-deep-task-status">
+                      {intl.formatMessage({ id: `pages.agent.chat.deepTaskStatus.${task.status}` })}
+                    </Text>
+                  </div>
+                ))}
+              </div>}
+            </section>
+          )}
+
           {/* 消息列表 */}
           <div className="agent-chat-message-container">
             <div className="agent-chat-message-scroll" ref={messageListRef} onScroll={handleScroll}>
@@ -1235,6 +1279,9 @@ const ChatDebugPage: React.FC = () => {
                                   {intl.formatMessage({ id: 'pages.agent.chat.deepRunning' })}
                                 </Text>
                                 {deepRunSteps.slice(-4).map((step, stepIndex) => {
+                                  if (step.eventType === 'message.delta') {
+                                    return null
+                                  }
                                   const displayText = getDeepStepDisplayText(step, intl.formatMessage)
                                   return displayText ? (
                                     <div

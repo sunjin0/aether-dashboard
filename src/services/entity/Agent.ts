@@ -677,7 +677,25 @@ export interface AgentStreamRunStepData {
     toolCount?: number;
     actions?: Array<{ name?: string }>;
     error?: string;
+    /** Deep Agent 规划事件中的任务列表。 */
+    tasks?: AgentRunTask[];
+    /** 兼容 Deep Agent 服务返回的 plan 数组或带 tasks 的 plan 对象。 */
+    plan?: AgentRunTask[] | { tasks?: AgentRunTask[] };
+    /** 兼容以 steps 字段返回的任务列表。 */
+    steps?: AgentRunTask[];
   };
+}
+
+/** Deep Agent 规划任务。 */
+export interface AgentRunTask {
+  id?: string;
+  taskId?: string;
+  name?: string;
+  title?: string;
+  task?: string;
+  description?: string;
+  content?: string;
+  status?: 'pending' | 'in_progress' | 'running' | 'completed' | 'success' | 'failed' | 'blocked' | string;
 }
 
 /**

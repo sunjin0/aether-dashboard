@@ -211,6 +211,25 @@
   overflow: hidden;
 }
 
+.@{chat-prefix}-task-plan {
+  margin: 14px 28px 0;
+  padding: 12px 14px;
+  border: 1px solid #dfe5ff;
+  border-radius: 10px;
+  background: #f8f9ff;
+}
+
+.@{chat-prefix}-task-plan-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  .ant-typography {
+    font-size: 13px;
+  }
+}
+
 .@{chat-prefix}-message-scroll {
   height: 100%;
   overflow-y: auto;
@@ -317,6 +336,55 @@
     border-radius: 18px;
     box-shadow: 0 6px 18px rgba(31, 42, 68, 0.1);
   }
+}
+
+.@{chat-prefix}-deep-task-list {
+  display: flex;
+  margin-top: 8px;
+  padding-top: 8px;
+  flex-direction: column;
+  gap: 5px;
+  border-top: 1px solid #e0e5f8;
+}
+
+.@{chat-prefix}-deep-task {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  color: #4d576a;
+  font-size: 12px;
+
+  > span:nth-child(2) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.@{chat-prefix}-deep-task-completed {
+  color: #52c41a;
+}
+
+.@{chat-prefix}-deep-task-failed {
+  color: #ff4d4f;
+}
+
+.@{chat-prefix}-deep-task-running {
+  color: @primary;
+}
+
+.@{chat-prefix}-deep-task-pending {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 10px;
+  border: 1px solid #aeb7c6;
+  border-radius: 50%;
+}
+
+.@{chat-prefix}-deep-task-status {
+  margin-left: auto;
+  white-space: nowrap;
 }
 
 .@{chat-prefix}-input-bar {
@@ -513,6 +581,10 @@
 
   .@{chat-prefix}-message-list {
     padding: 22px 16px 12px;
+  }
+
+  .@{chat-prefix}-task-plan {
+    margin: 10px 16px 0;
   }
 
   .@{chat-prefix}-quick-start {

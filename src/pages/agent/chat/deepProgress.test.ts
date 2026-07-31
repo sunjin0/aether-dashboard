@@ -1,4 +1,9 @@
-import { cancelDeepRun, mergeDeepRunSteps, getDeepStepDisplayText } from './deepProgress'
+import {
+  cancelDeepRun,
+  getDeepRunTasks,
+  mergeDeepRunSteps,
+  getDeepStepDisplayText,
+} from './deepProgress'
 import { AgentStreamRunStepData } from '@/services/entity/Agent'
 
 describe('deep progress helpers', () => {
@@ -55,6 +60,25 @@ describe('deep progress helpers', () => {
     expect(
       getDeepStepDisplayText({ data: { message: ['unsafe'] } } as unknown as AgentStreamRunStepData),
     ).toBeUndefined()
+  })
+
+  it('extracts the latest Deep Agent plan tasks and normalizes their status', () => {
+    expect(
+      getDeepRunTasks([
+        {
+          eventType: 'plan.updated',
+          data: {
+            plan: [
+              { id: 'collect', title: '收集资料', status: 'completed' },
+              { id: 'report', title: '输出报告', status: 'in_progress' },
+            ],
+          },
+        },
+      ]),
+    ).toEqual([
+      { id: 'collect', title: '收集资料', status: 'completed' },
+      { id: 'report', title: '输出报告', status: 'running' },
+    ])
   })
 
   it('requests cancellation for a run ID', async () => {

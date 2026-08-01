@@ -4,7 +4,8 @@ import remarkGfm from 'remark-gfm'
 import './index.less'
 
 export interface FormattedContentProps {
-  content?: string
+  /** 支持接口直接返回的对象、数组及普通文本。 */
+  content?: unknown
   maxHeight?: number
 }
 
@@ -39,26 +40,31 @@ const formatJson = (text: string): string => {
 }
 
 const FormattedContent: React.FC<FormattedContentProps> = ({ content, maxHeight = 180 }) => {
-  if (!content) return null
-  const format = detectFormat(content)
+  if (content == null || content === '') return null
+  const text = typeof content === 'string'
+    ? content
+    : typeof content === 'object'
+      ? JSON.stringify(content, null, 2)
+      : String(content)
+  const format = detectFormat(text)
   const containerStyle: React.CSSProperties = { maxHeight, overflow: 'auto' }
   if (format === 'json') {
     return (
       <pre className="formatted-content-json" style={containerStyle}>
-        {formatJson(content)}
+        {formatJson(text)}
       </pre>
     )
   }
   if (format === 'markdown') {
     return (
       <div className="formatted-content-markdown" style={containerStyle}>
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
       </div>
     )
   }
   return (
     <pre className="formatted-content-text" style={containerStyle}>
-      {content}
+      {text}
     </pre>
   )
 }

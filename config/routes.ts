@@ -42,6 +42,11 @@ export default [
         component: './sys/admin',
       },
       {
+        path: '/sys/service-account',
+        name: '服务账号管理',
+        component: './sys/service-account',
+      },
+      {
         path: '/sys/role',
         name: '角色管理',
         component: './sys/role',

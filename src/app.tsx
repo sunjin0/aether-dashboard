@@ -51,6 +51,7 @@ const pagePermissionPaths = [
   '/knowledge/index-job',
   '/knowledge/evaluation',
   '/sys/admin',
+  '/sys/service-account',
   '/sys/role',
   '/sys/resource',
   '/sys/dict',

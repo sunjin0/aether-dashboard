@@ -58,7 +58,7 @@ export const deleteAdminInfo = async (
   params: AdminSearchParams,
 ): Promise<ResponseStructure<Admin>> => {
   return request('/api/sys/admin/delete', {
-    method: 'GET',
+    method: 'DELETE',
     params: {
       id: params.id,
     },

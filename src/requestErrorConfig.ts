@@ -97,7 +97,7 @@ export const errorConfig: RequestConfig = {
         'Accept-Language': getLocale(),
       }
       const item = localStorage.getItem('token')
-      if (item) {
+      if (item && !config.headers.Authorization) {
         config.headers.Authorization = 'Bearer ' + item
       }
       return { ...config }

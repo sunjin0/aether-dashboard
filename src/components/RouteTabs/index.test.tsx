@@ -127,7 +127,7 @@ describe('RouteTabs', () => {
 
   it('uses names for hidden dynamic workflow routes', async () => {
     const { rerender } = render(
-      <RouteTabs pathname="/agent/workflow/workflow-1">
+      <RouteTabs pathname="/workflow/workflow/workflow-1">
         <div>Workflow editor</div>
       </RouteTabs>,
     );
@@ -138,7 +138,7 @@ describe('RouteTabs', () => {
     });
 
     rerender(
-      <RouteTabs pathname="/agent/workflow/workflow-1/run">
+      <RouteTabs pathname="/workflow/workflow/workflow-1/run">
         <div>Workflow run</div>
       </RouteTabs>,
     );

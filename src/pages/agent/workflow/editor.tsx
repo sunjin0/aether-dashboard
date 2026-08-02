@@ -37,6 +37,7 @@ import {
   getWorkflow,
   publishWorkflow,
   updateWorkflow,
+  validateWorkflowDraft,
 } from '@/services/agent/WorkflowController'
 import { getAgentDefinitionOptions } from '@/services/agent/AgentDefinitionController'
 import { getAgentToolInfo, getAgentToolOptions } from '@/services/agent/ToolController'
@@ -340,6 +341,7 @@ const Editor: React.FC = () => {
   )
   const [selectedId, setSelectedId] = useState('start')
   const [schema, setSchema] = useState('[]')
+  const [outputSchema, setOutputSchema] = useState('[]')
   const [agentOptions, setAgentOptions] = useState<any[]>([])
   const [toolOptions, setToolOptions] = useState<any[]>([])
   const [paletteOpen, setPaletteOpen] = useState(true)
@@ -389,6 +391,7 @@ const Editor: React.FC = () => {
         setNodes(toFlowNodes(restored))
         setEdges(toFlowEdges(restoredEdges, restored))
         setSchema(r.data.inputSchema || '[]')
+        setOutputSchema(r.data.outputSchema || '[]')
       } catch {
         message.error('画布数据格式错误')
       }
@@ -576,8 +579,9 @@ const Editor: React.FC = () => {
     if (!id || !workflow) return
     try {
       JSON.parse(schema)
+      JSON.parse(outputSchema)
     } catch {
-      message.error('开始表单字段必须是合法 JSON 数组')
+      message.error('开始表单字段和最终输出字段必须是合法 JSON 数组')
       return
     }
     const workflowNodes = nodes.map((node) => ({
@@ -608,12 +612,19 @@ const Editor: React.FC = () => {
       nodes: JSON.stringify(workflowNodes),
       edges: JSON.stringify(workflowEdges),
       inputSchema: schema,
+      outputSchema,
+      maxConcurrentInstances: workflow.maxConcurrentInstances,
     })
     if (result.code !== 200) {
       message.error(result.message || '保存失败')
       return
     }
     if (publish) {
+      const validation = await validateWorkflowDraft(id)
+      if (validation.code !== 200) {
+        message.error(validation.message || '草稿校验失败')
+        return
+      }
       const published = await publishWorkflow(id)
       if (published.code !== 200) {
         message.error(published.message || '发布校验失败')
@@ -628,7 +639,7 @@ const Editor: React.FC = () => {
       header={{ title: workflow?.name || '工作流编排', breadcrumb: undefined }}
       extra={
         <Space>
-          <Button onClick={() => history.push('/agent/workflow')}>返回</Button>
+          <Button onClick={() => history.push('/workflow/workflow')}>返回</Button>
           <Button icon={<SaveOutlined />} onClick={() => save(false)}>
             保存
           </Button>
@@ -917,6 +928,21 @@ const Editor: React.FC = () => {
               styles={{ body: { maxHeight: 360, overflow: 'auto' } }}
             >
               <StartVariablesBuilder value={schema} onChange={setSchema} />
+            </Card>
+          </Panel>
+          <Panel position="bottom-right">
+            <Card
+              size="small"
+              title={
+                <CardTitle
+                  title="最终输出"
+                  tip="声明业务系统可接收的最终结果变量。发布时会校验每个字段在所有结束路径上都能产生；未声明的内部变量不会进入业务回调。"
+                />
+              }
+              style={{ width: 320 }}
+              styles={{ body: { maxHeight: 360, overflow: 'auto' } }}
+            >
+              <StartVariablesBuilder value={outputSchema} onChange={setOutputSchema} mode="output" />
             </Card>
           </Panel>
         </ReactFlow>

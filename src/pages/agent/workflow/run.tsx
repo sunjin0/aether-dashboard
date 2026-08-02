@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { getLocale, history, useIntl, useParams } from '@umijs/max'
 import { PageContainer } from '@ant-design/pro-components'
-import { Button, Card, Descriptions, Form, Input, Modal, Popconfirm, Radio, Select, Space, Tag, message } from 'antd'
+import { Button, Card, Collapse, DatePicker, Descriptions, Form, Input, Modal, Popconfirm, Radio, Select, Space, Tag, message } from 'antd'
 import { fetchEventSource } from '@microsoft/fetch-event-source'
 import { ReloadOutlined } from '@ant-design/icons'
 import {
@@ -21,14 +21,19 @@ import '@xyflow/react/dist/style.css'
 import {
   getWorkflow,
   getWorkflowInstance,
+  getWorkflowCallbacks,
   getWorkflowInstances,
   startWorkflow,
+  startBusinessWorkflow,
   answerWorkflow,
   retryWorkflow,
+  replayWorkflow,
   terminateWorkflow,
   updateWorkflowVariables,
+  retryWorkflowCallback,
   AgentWorkflow,
   WorkflowInstance,
+  WorkflowCallbackDelivery,
 } from '@/services/agent/WorkflowController'
 import FormattedContent from '@/components/FormattedContent'
 
@@ -38,6 +43,7 @@ const statusColor: Record<string, string> = {
   FAILED: 'error',
   COMPLETED: 'success',
   TERMINATED: 'default',
+  TIMED_OUT: 'error',
   PENDING: 'default',
 }
 const nodeLabel: Record<string, string> = {
@@ -60,6 +66,7 @@ const runStatusColor: Record<string, string> = {
   COMPLETED: '#52c41a',
   FAILED: '#ff4d4f',
   TERMINATED: '#999',
+  TIMED_OUT: '#ff4d4f',
   PENDING: '#bfbfbf',
 }
 type RunNodeData = { def: Record<string, any>; log?: Record<string, any> }
@@ -175,6 +182,7 @@ const RunPage: React.FC = () => {
   const [variablesOpen, setVariablesOpen] = useState(false)
   const [variablesJson, setVariablesJson] = useState('{}')
   const [savingVariables, setSavingVariables] = useState(false)
+  const [callbackDeliveries, setCallbackDeliveries] = useState<WorkflowCallbackDelivery[]>([])
   useEffect(() => {
     if (id) getWorkflow(id).then((r) => r.data && setWorkflow(r.data))
   }, [id])
@@ -230,10 +238,14 @@ const RunPage: React.FC = () => {
     return Array.from(names)
   })()
   const sharedStateKeys = Array.from(new Set([...declaredSharedFields, ...Object.keys(publicVariables)]))
-  const load = (instanceId: string) =>
+  const load = (instanceId: string) => {
     getWorkflowInstance(instanceId).then((r) => {
       if (r.code === 200) setInstance(r.data)
     })
+    getWorkflowCallbacks(instanceId).then((r) => {
+      if (r.code === 200) setCallbackDeliveries(r.data || [])
+    })
+  }
   const loadHistory = () => {
     if (!id) return
     getWorkflowInstances({ workflowId: id, current: 1, pageSize: 50 }).then((r) => {
@@ -255,7 +267,7 @@ const RunPage: React.FC = () => {
     }
   }
   useEffect(() => {
-    if (!instance || ['COMPLETED', 'FAILED', 'TERMINATED'].includes(instance.status)) return
+    if (!instance || ['COMPLETED', 'FAILED', 'TERMINATED', 'TIMED_OUT'].includes(instance.status)) return
     const controller = new AbortController()
     const token = localStorage.getItem('token')
     fetchEventSource(`/api/agent/workflow/instances/${encodeURIComponent(instance.id)}/events`, {
@@ -270,7 +282,24 @@ const RunPage: React.FC = () => {
     if (!id) return
     setStarting(true)
     try {
-      const result = await startWorkflow(id, form.getFieldsValue())
+      const values = form.getFieldsValue()
+      const variables: Record<string, unknown> = {}
+      fields.forEach((field: any) => {
+        if (field?.name) variables[field.name] = values[field.name]
+      })
+      const businessType = String(values._businessType || '').trim()
+      const businessId = String(values._businessId || '').trim()
+      const idempotencyKey = String(values._idempotencyKey || '').trim()
+      const callbackUrl = String(values._callbackUrl || '').trim()
+      const hasBusinessFields = !!(businessType || businessId || idempotencyKey || callbackUrl || values._deadlineAt)
+      if (hasBusinessFields && (!businessType || !businessId || !idempotencyKey)) {
+        message.error('业务启动需填写业务类型、业务单据 ID 和幂等键')
+        return
+      }
+      const deadlineAt = values._deadlineAt?.valueOf?.()
+      const result = hasBusinessFields
+        ? await startBusinessWorkflow(id, { variables, businessType, businessId, idempotencyKey, callbackUrl: callbackUrl || undefined, deadlineAt })
+        : await startWorkflow(id, variables)
       if (result.code === 200 && result.data) {
         message.success(t('pages.agent.workflow.run.started'))
         load(result.data)
@@ -431,7 +460,7 @@ const RunPage: React.FC = () => {
               <Button>{t('pages.agent.workflow.run.restart')}</Button>
             </Popconfirm>
           )}
-          <Button onClick={() => history.push(`/agent/workflow/${id}`)}>{t('pages.agent.workflow.run.backEditor')}</Button>
+          <Button onClick={() => history.push(`/workflow/workflow/${id}`)}>{t('pages.agent.workflow.run.backEditor')}</Button>
         </Space>
       }
     >
@@ -448,6 +477,22 @@ const RunPage: React.FC = () => {
                 <Input placeholder={field.placeholder} />
               </Form.Item>
             ))}
+            <Collapse
+              ghost
+              style={{ marginBottom: 12 }}
+              items={[{
+                key: 'business',
+                label: '业务接入（可选）',
+                children: <>
+                  <p style={{ color: '#8c8c8c', fontSize: 12 }}>填写后以业务幂等模式启动；回调地址须命中服务端白名单。</p>
+                  <Form.Item name="_businessType" label="业务类型"><Input placeholder="如 ticket" /></Form.Item>
+                  <Form.Item name="_businessId" label="业务单据 ID"><Input placeholder="如 TICKET-001" /></Form.Item>
+                  <Form.Item name="_idempotencyKey" label="幂等键"><Input placeholder="如 ticket:TICKET-001:created:v1" /></Form.Item>
+                  <Form.Item name="_callbackUrl" label="终态回调地址"><Input placeholder="https://workflow.example.com/callback" /></Form.Item>
+                  <Form.Item name="_deadlineAt" label="人工等待截止时间"><DatePicker showTime style={{ width: '100%' }} /></Form.Item>
+                </>,
+              }]}
+            />
             <Button
               type="primary"
               loading={starting}
@@ -475,6 +520,7 @@ const RunPage: React.FC = () => {
           >
             <Descriptions column={2}>
               <Descriptions.Item label="实例 ID">{instance.id}</Descriptions.Item>
+              <Descriptions.Item label="业务关联">{instance.businessType && instance.businessId ? `${instance.businessType} · ${instance.businessId}` : '-'}</Descriptions.Item>
               <Descriptions.Item label={t('pages.agent.workflow.run.currentNode')}>
                 {instance.currentNodeId || '-'}
               </Descriptions.Item>
@@ -482,6 +528,28 @@ const RunPage: React.FC = () => {
                   {instance.status === 'FAILED' ? instance.errorMessage || '-' : '-'}
                 </Descriptions.Item>
             </Descriptions>
+            {callbackDeliveries.length > 0 && (
+              <Card size="small" title="业务回调投递" style={{ marginTop: 12 }}>
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  {callbackDeliveries.map((delivery) => (
+                    <Space key={delivery.id} style={{ justifyContent: 'space-between', width: '100%' }} wrap>
+                      <span>{delivery.eventType} · 第 {delivery.attemptCount || 0} 次</span>
+                      <Space>
+                        <Tag color={delivery.status === 'DELIVERED' ? 'success' : delivery.status === 'FAILED' ? 'error' : 'processing'}>{delivery.status}</Tag>
+                        {delivery.responseStatus && <span>HTTP {delivery.responseStatus}</span>}
+                        {delivery.status === 'FAILED' && (
+                          <Button size="small" loading={acting} onClick={() => act(async () => {
+                            await retryWorkflowCallback(instance.id, delivery.id)
+                            load(instance.id)
+                          })}>重投</Button>
+                        )}
+                      </Space>
+                      {delivery.errorMessage && <span style={{ color: '#ff4d4f', width: '100%' }}>{delivery.errorMessage}</span>}
+                    </Space>
+                  ))}
+                </Space>
+              </Card>
+            )}
             <div
               style={{
                 height: 520,
@@ -673,6 +741,17 @@ const RunPage: React.FC = () => {
                   {t('pages.agent.workflow.run.terminate')}
                 </Button>
               </Space>
+            )}
+            {['FAILED', 'COMPLETED', 'TERMINATED'].includes(instance.status) && !instance.businessType && !instance.businessId && !instance.idempotencyKey && (
+              <Popconfirm title={t('pages.agent.workflow.run.replayConfirm')} onConfirm={() => act(async () => {
+                const result = await replayWorkflow(instance.id)
+                if (result.code !== 200 || !result.data) throw new Error(result.message || t('pages.agent.workflow.run.startFailed'))
+                message.success(t('pages.agent.workflow.run.replayed'))
+                await load(result.data)
+                await loadHistory()
+              })}>
+                <Button style={{ marginTop: 16 }} loading={acting}>{t('pages.agent.workflow.run.replay')}</Button>
+              </Popconfirm>
             )}
           </Card>
         </>

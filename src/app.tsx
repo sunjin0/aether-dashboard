@@ -1,5 +1,6 @@
 import { AvatarDropdown, AvatarName, FileImage, Footer, SelectLang } from '@/components'
 import {
+  ApartmentOutlined,
   DashboardOutlined,
   DatabaseOutlined,
   LinkOutlined,
@@ -23,6 +24,7 @@ import { getRoutes, info } from '@/services/sys/LoginController'
 const isDev = process.env.NODE_ENV === 'development'
 const loginPath = '/login'
 const iconMap: Record<string, React.ReactNode> = {
+  ApartmentOutlined: <ApartmentOutlined />,
   SettingOutlined: <SettingOutlined />,
   UserOutlined: <UserOutlined />,
   DashboardOutlined: <DashboardOutlined />,
@@ -40,6 +42,8 @@ const pagePermissionPaths = [
   '/agent/chat',
   '/agent/run',
   '/agent/tool-call-log',
+  '/workflow/workflow',
+  '/workflow/operations',
   '/knowledge/base',
   '/knowledge/document',
   '/knowledge/reviews',

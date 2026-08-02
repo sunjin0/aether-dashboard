@@ -29,9 +29,11 @@ const parseFields = (value?: string): StartVariableField[] => {
 export interface StartVariablesBuilderProps {
   value?: string;
   onChange?: (value: string) => void;
+  mode?: 'input' | 'output';
 }
 
-const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, onChange }) => {
+const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, onChange, mode = 'input' }) => {
+  const outputMode = mode === 'output'
   const [fields, setFields] = useState<StartVariableField[]>(() => parseFields(value))
   const [jsonMode, setJsonMode] = useState(false)
   useEffect(() => {
@@ -46,8 +48,9 @@ const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, on
   const add = () => {
     let n = 1
     const used = new Set(fields.map((f) => f.name))
-    while (used.has(`input_${n}`)) n += 1
-    emit([...fields, { name: `input_${n}`, label: `输入${n}` }])
+    const prefix = outputMode ? 'output' : 'input'
+    while (used.has(`${prefix}_${n}`)) n += 1
+    emit([...fields, { name: `${prefix}_${n}`, label: `${outputMode ? '输出' : '输入'}${n}` }])
   }
   const remove = (index: number) => emit(fields.filter((_, i) => i !== index))
   const move = (index: number, dir: -1 | 1) => {
@@ -65,7 +68,7 @@ const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, on
           rows={6}
           style={{ fontFamily: 'Consolas, Monaco, monospace', fontSize: 12 }}
           onChange={(e) => onChange?.(e.target.value)}
-          placeholder={'[{"name":"input","label":"任务说明","required":true}]'}
+          placeholder={outputMode ? '[{"name":"summary","label":"处理摘要"}]' : '[{"name":"input","label":"任务说明","required":true}]'}
         />
         <Button
           block
@@ -106,8 +109,8 @@ const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, on
             }}
           />
           {fields.length > 0
-            ? `${fields.length} 个开始变量`
-            : '暂无开始变量，启动流程时不显示输入表单'}
+            ? `${fields.length} 个${outputMode ? '最终输出字段' : '开始变量'}`
+            : outputMode ? '暂无最终输出字段，业务回调不会包含流程变量' : '暂无开始变量，启动流程时不显示输入表单'}
         </span>
         <Tooltip title="切换 JSON 编辑">
           <Button
@@ -191,22 +194,24 @@ const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, on
                 />
               </Tooltip>
             </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
-              <Input
-                size="small"
-                style={{ flex: 1, minWidth: 0 }}
-                value={field.placeholder}
-                placeholder="占位提示 placeholder（可选）"
-                onChange={(e) => update(index, { placeholder: e.target.value })}
-              />
-              <Checkbox
-                style={{ flex: '0 0 auto' }}
-                checked={!!field.required}
-                onChange={(e) => update(index, { required: e.target.checked })}
-              >
-                必填
-              </Checkbox>
-            </div>
+            {!outputMode && (
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
+                <Input
+                  size="small"
+                  style={{ flex: 1, minWidth: 0 }}
+                  value={field.placeholder}
+                  placeholder="占位提示 placeholder（可选）"
+                  onChange={(e) => update(index, { placeholder: e.target.value })}
+                />
+                <Checkbox
+                  style={{ flex: '0 0 auto' }}
+                  checked={!!field.required}
+                  onChange={(e) => update(index, { required: e.target.checked })}
+                >
+                  必填
+                </Checkbox>
+              </div>
+            )}
             {duplicated && (
               <span
                 style={{

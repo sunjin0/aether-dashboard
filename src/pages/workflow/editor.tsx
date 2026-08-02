@@ -38,7 +38,7 @@ import {
   publishWorkflow,
   updateWorkflow,
   validateWorkflowDraft,
-} from '@/services/agent/WorkflowController'
+} from '@/services/workflow/WorkflowController'
 import { getAgentDefinitionOptions } from '@/services/agent/AgentDefinitionController'
 import { getAgentToolInfo, getAgentToolOptions } from '@/services/agent/ToolController'
 import StartVariablesBuilder from './StartVariablesBuilder'

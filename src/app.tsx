@@ -44,6 +44,7 @@ const pagePermissionPaths = [
   '/agent/tool-call-log',
   '/workflow/workflow',
   '/workflow/operations',
+  '/workflow/run',
   '/knowledge/base',
   '/knowledge/document',
   '/knowledge/reviews',
@@ -59,10 +60,15 @@ const pagePermissionPaths = [
   '/user/member',
 ]
 
-const resolvePagePermission = (pathname: string) =>
-  [...pagePermissionPaths].sort((a, b) => b.length - a.length).find(
+const resolvePagePermission = (pathname: string) => {
+  // 工作流运行页带有实例/定义 ID，需映射到独立的运行权限资源，而不是编排权限。
+  if (/^\/workflow\/workflow\/[^/]+\/run$/.test(pathname)) {
+    return '/workflow/run'
+  }
+  return [...pagePermissionPaths].sort((a, b) => b.length - a.length).find(
     (path) => pathname === path || pathname.startsWith(`${path}/`),
   )
+}
 
 /**
  * @see  https://umijs.org/zh-CN/plugins/plugin-initial-state

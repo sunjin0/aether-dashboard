@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { getLocale, history, useIntl, useParams } from '@umijs/max'
+import { getLocale, history, useIntl, useLocation, useModel, useParams } from '@umijs/max'
 import { PageContainer } from '@ant-design/pro-components'
 import { Button, Card, Collapse, DatePicker, Descriptions, Form, Input, Modal, Popconfirm, Radio, Select, Space, Tag, message } from 'antd'
 import { fetchEventSource } from '@microsoft/fetch-event-source'
@@ -34,7 +34,7 @@ import {
   AgentWorkflow,
   WorkflowInstance,
   WorkflowCallbackDelivery,
-} from '@/services/agent/WorkflowController'
+} from '@/services/workflow/WorkflowController'
 import FormattedContent from '@/components/FormattedContent'
 
 const statusColor: Record<string, string> = {
@@ -169,6 +169,10 @@ const RunPage: React.FC = () => {
     defaultMessage: status || '-',
   })
   const { id } = useParams<{ id: string }>()
+  const { initialState } = useModel('@@initialState')
+  const canStart = Boolean(initialState?.currentUser?.permissionMap?.['/workflow/run'])
+  const location = useLocation()
+  const requestedInstanceId = useMemo(() => new URLSearchParams(location.search).get('instanceId'), [location.search])
   const [workflow, setWorkflow] = useState<AgentWorkflow>()
   const [instance, setInstance] = useState<WorkflowInstance>()
   const [selectedNodeId, setSelectedNodeId] = useState<string>()
@@ -246,6 +250,9 @@ const RunPage: React.FC = () => {
       if (r.code === 200) setCallbackDeliveries(r.data || [])
     })
   }
+  useEffect(() => {
+    if (requestedInstanceId) load(requestedInstanceId)
+  }, [requestedInstanceId])
   const loadHistory = () => {
     if (!id) return
     getWorkflowInstances({ workflowId: id, current: 1, pageSize: 50 }).then((r) => {
@@ -464,7 +471,7 @@ const RunPage: React.FC = () => {
         </Space>
       }
     >
-      {!instance && (
+      {!instance && canStart && (
         <Card title={t('pages.agent.workflow.run.sharedState')} style={{ marginBottom: 16 }}>
           <Form form={form} layout="vertical">
             {fields.map((field: any) => (
@@ -506,6 +513,9 @@ const RunPage: React.FC = () => {
             )}
           </Form>
         </Card>
+      )}
+      {!instance && !canStart && (
+        <Card style={{ marginBottom: 16 }}>{t('pages.agent.workflow.run.startReadOnly')}</Card>
       )}
       {instance && (
         <>

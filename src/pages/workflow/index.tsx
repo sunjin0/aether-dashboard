@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react'
 import { history, useIntl } from '@umijs/max'
 import { PageContainer, ProTable, type ActionType } from '@ant-design/pro-components'
 import { Button, Descriptions, Form, Input, InputNumber, Modal, Select, Switch, Table, Tag, message } from 'antd'
-import { AppstoreOutlined, DownloadOutlined, HistoryOutlined, PlusOutlined, PlayCircleOutlined, UploadOutlined } from '@ant-design/icons'
+import { AppstoreOutlined, DownloadOutlined, HistoryOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons'
 import {
   AgentWorkflow,
   createWorkflow,
@@ -26,7 +26,7 @@ import {
   WorkflowSchedule,
   WorkflowVersion,
   WorkflowVersionDiff,
-} from '@/services/agent/WorkflowController'
+} from '@/services/workflow/WorkflowController'
 import TableActionMenu from '@/components/TableActionMenu'
 
 const WorkflowPage: React.FC = () => {
@@ -305,12 +305,6 @@ const WorkflowPage: React.FC = () => {
                     key: 'export',
                     label: <><DownloadOutlined /> {t('pages.agent.workflow.export')}</>,
                     onClick: () => downloadWorkflow(r),
-                  },
-                  {
-                    key: 'start',
-                    label: <><PlayCircleOutlined /> {t('pages.agent.workflow.action.start')}</>,
-                    primary: true,
-                    onClick: () => history.push(`/workflow/workflow/${r.id}/run`),
                   },
                   {
                     key: 'publish',

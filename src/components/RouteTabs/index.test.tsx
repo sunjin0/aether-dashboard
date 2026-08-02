@@ -146,6 +146,27 @@ describe('RouteTabs', () => {
     expect(screen.getByRole('button', { name: '工作流运行' })).toBeTruthy();
   });
 
+  it('keeps labels for legacy workflow dynamic routes', async () => {
+    const { rerender } = render(
+      <RouteTabs pathname="/agent/workflow/workflow-1">
+        <div>Legacy workflow editor</div>
+      </RouteTabs>,
+    );
+
+    setRouteMenus(menus);
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: '工作流编排' })).toBeTruthy();
+    });
+
+    rerender(
+      <RouteTabs pathname="/agent/workflow/workflow-1/run">
+        <div>Legacy workflow run</div>
+      </RouteTabs>,
+    );
+
+    expect(screen.getByRole('button', { name: '工作流运行' })).toBeTruthy();
+  });
+
   it('does not create a tab for the root route before its dashboard redirect', () => {
     const { rerender } = render(
       <RouteTabs pathname="/">

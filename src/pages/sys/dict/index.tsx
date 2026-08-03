@@ -74,10 +74,12 @@ const Dict: React.FC = () => {
                 danger: true,
                 confirm: { title: intl.formatMessage({ id: 'pages.confirm.delete' }) },
                 onClick: async () => {
-                  const { code, message: msg } = await deleteDictInfo(record)
-                  action?.reload()
-                  if (code === 200) message.success(msg)
-                  else message.error(msg)
+                  try {
+                    const { code } = await deleteDictInfo(record)
+                    if (code === 200) action?.reload()
+                  } catch {
+                    // API failures are displayed by the global request handler.
+                  }
                 },
               },
             ]}

@@ -19,7 +19,7 @@ const WorkflowInstancesPage: React.FC = () => {
   const [workflowId, setWorkflowId] = useState<string>()
   const openStart = async () => {
     const result = await getWorkflowList({ status: 1, current: 1, pageSize: 100 })
-    if (result.code !== 200) { message.error(result.message || t('pages.agent.workflow.operationFailed')); return }
+    if (result.code !== 200) return
     setWorkflows(result.data || [])
     setWorkflowId(undefined)
     setStartOpen(true)

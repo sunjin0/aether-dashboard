@@ -67,7 +67,7 @@ const ServiceAccountPage: React.FC = () => {
       allowedWorkflowIds: values.allowedWorkflowIds || [],
       maxStartsPerHour: values.maxStartsPerHour || 0,
     })
-    if (result.code !== 200) return message.error(result.message)
+    if (result.code !== 200) return
     setCreateOpen(false)
     form.resetFields()
     setSecret(result.data)
@@ -103,7 +103,7 @@ const ServiceAccountPage: React.FC = () => {
       return message.error(t('pages.serviceAccount.variablesInvalid'))
     const tokenResult = await issueServiceAccountToken(testAccount!.clientId, values.clientSecret)
     if (tokenResult.code !== 200 || !tokenResult.data?.accessToken)
-      return message.error(tokenResult.message)
+      return
     const result = await startBusinessWorkflow(
       values.workflowId,
       {
@@ -114,9 +114,9 @@ const ServiceAccountPage: React.FC = () => {
       },
       { Authorization: `Bearer ${tokenResult.data.accessToken}` },
     )
-    if (result.code !== 200) return message.error(result.message)
+    if (result.code !== 200) return
     message.success(
-      t('pages.serviceAccount.testSucceeded', { id: result.message || result.data || '-' }),
+      t('pages.serviceAccount.testSucceeded', { id: result.data || '-' }),
     )
     setTestAccount(undefined)
     testForm.resetFields()
@@ -130,7 +130,7 @@ const ServiceAccountPage: React.FC = () => {
       allowedWorkflowIds: values.allowedWorkflowIds || [],
       maxStartsPerHour: values.maxStartsPerHour || 0,
     })
-    if (result.code !== 200) return message.error(result.message)
+    if (result.code !== 200) return
     message.success(t('pages.serviceAccount.updated'))
     setEditAccount(undefined)
     actionRef.current?.reload()
@@ -182,7 +182,7 @@ const ServiceAccountPage: React.FC = () => {
             if (result.code === 200) {
               message.success(t('pages.serviceAccount.updated'))
               actionRef.current?.reload()
-            } else message.error(result.message)
+            }
           }}
         />
       ),
@@ -245,7 +245,7 @@ const ServiceAccountPage: React.FC = () => {
                   if (result.code === 200) {
                     setSecret(result.data)
                     actionRef.current?.reload()
-                  } else message.error(result.message)
+                  }
                 },
               },
               {
@@ -258,7 +258,7 @@ const ServiceAccountPage: React.FC = () => {
                   if (result.code === 200) {
                     message.success(t('pages.serviceAccount.deleted'))
                     actionRef.current?.reload()
-                  } else message.error(result.message)
+                  }
                 },
               },
             ]}

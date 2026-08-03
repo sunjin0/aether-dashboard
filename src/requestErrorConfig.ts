@@ -1,11 +1,27 @@
 ﻿import type { RequestOptions } from '@@/plugin-request/request'
 import type { RequestConfig } from '@umijs/max'
 import { message, notification } from 'antd'
-import { getLocale } from '@@/exports'
+import { getIntl, getLocale } from '@@/exports'
 import { ErrorShowType, ResponseStructure } from '@/services/entity/Common'
 
 const isBlobResponse = (data: unknown): data is Blob =>
   typeof Blob !== 'undefined' && data instanceof Blob
+
+const getApiMessage = (data: unknown): string | undefined => {
+  if (typeof data === 'string' && data.trim()) return data
+  if (!data || typeof data !== 'object') return undefined
+
+  const response = data as Record<string, unknown>
+  for (const key of ['message', 'errorMessage']) {
+    const value = response[key]
+    if (typeof value === 'string' && value.trim()) return value
+  }
+
+  return getApiMessage(response.error)
+}
+
+const getFallbackMessage = (id: 'app.requestError.noResponse' | 'app.requestError.requestFailed') =>
+  getIntl().formatMessage({ id })
 
 /**
  * @name 错误处理
@@ -23,9 +39,10 @@ export const errorConfig: RequestConfig = {
       const { success, data, errorCode, errorMessage, showType } =
         res as unknown as ResponseStructure<any>
       if (!success) {
-        const error: any = new Error(errorMessage)
+        const message = getApiMessage(res) || errorMessage || getFallbackMessage('app.requestError.requestFailed')
+        const error: any = new Error(message)
         error.name = 'BizError'
-        error.info = { errorCode, errorMessage, showType, data }
+        error.info = { errorCode, errorMessage: message, showType, data }
         throw error // 抛出自制的错误
       }
     },
@@ -36,7 +53,9 @@ export const errorConfig: RequestConfig = {
       if (error.name === 'BizError') {
         const errorInfo: ResponseStructure<any> | undefined = error.info
         if (errorInfo) {
-          const { errorMessage, errorCode } = errorInfo
+          const { errorCode } = errorInfo
+          const errorMessage =
+            getApiMessage(errorInfo.data) || errorInfo.errorMessage || getFallbackMessage('app.requestError.requestFailed')
           switch (errorInfo.showType) {
             case ErrorShowType.SILENT:
               // do nothing
@@ -71,7 +90,10 @@ export const errorConfig: RequestConfig = {
         // Axios 的错误
         // 请求成功发出且服务器也响应了状态码，但状态代码超出了 2xx 的范围
         notification.open({
-          description: error.response.data?.message || error.message,
+          description:
+            getApiMessage(error.response.data) ||
+            (typeof error.message === 'string' && error.message.trim()) ||
+            getFallbackMessage('app.requestError.requestFailed'),
           message: error.response.status,
           type: 'error',
         })
@@ -79,10 +101,10 @@ export const errorConfig: RequestConfig = {
         // 请求已经成功发起，但没有收到响应
         // \`error.request\` 在浏览器中是 XMLHttpRequest 的实例，
         // 而在node.js中是 http.ClientRequest 的实例
-        message.error('None response! Please retry.')
+        message.error(getFallbackMessage('app.requestError.noResponse'))
       } else {
         // 发送请求时出了点问题
-        message.error('Request error, please retry.')
+        message.error(getFallbackMessage('app.requestError.requestFailed'))
       }
     },
   },
@@ -113,8 +135,11 @@ export const errorConfig: RequestConfig = {
         return response
       }
       data.success = data.code === 200
-      if (!data?.success) {
-        data.errorMessage = data.message
+      if (data.success) {
+        const apiMessage = getApiMessage(data)
+        if (apiMessage) message.success(apiMessage)
+      } else {
+        data.errorMessage = getApiMessage(data) || getFallbackMessage('app.requestError.requestFailed')
         data.errorCode = data.code
         data.showType = ErrorShowType.NOTIFICATION
       }

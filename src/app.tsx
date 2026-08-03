@@ -11,7 +11,7 @@ import {
 } from '@ant-design/icons'
 import type { Settings as LayoutSettings } from '@ant-design/pro-components'
 import { SettingDrawer } from '@ant-design/pro-components'
-import { RunTimeLayoutConfig } from '@umijs/max'
+import { getIntl, RunTimeLayoutConfig } from '@umijs/max'
 import { history, Link } from '@umijs/max'
 import React from 'react'
 import { message } from 'antd'
@@ -108,7 +108,9 @@ export async function getInitialState(): Promise<{
 // ProLayout 支持的api https://procomponents.ant.design/components/layout
 export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) => {
   return {
-    actionsRender: () => [<SelectLang key="SelectLang" />],
+    actionsRender: () => [
+      <SelectLang key="SelectLang" />,
+    ],
     avatarProps: {
       src: <FileImage value={initialState?.currentUser?.avatar} />,
       title: <AvatarName />,
@@ -168,7 +170,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       const permissionMap = initialState?.currentUser?.permissionMap
       const permissionPath = resolvePagePermission(location.pathname)
       if (permissionPath && permissionMap && !Object.prototype.hasOwnProperty.call(permissionMap, permissionPath)) {
-        message.warning('暂无该页面访问权限')
+        message.warning(getIntl().formatMessage({ id: 'pages.common.noPagePermission' }))
         history.push('/dashboard')
       }
     },
@@ -196,7 +198,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       ? [
         <Link key="openapi" to="/umi/plugin/openapi" target="_blank">
           <LinkOutlined />
-          <span>OpenAPI 文档</span>
+          <span>{getIntl().formatMessage({ id: 'app.openApiDocumentation' })}</span>
         </Link>,
       ]
       : [],

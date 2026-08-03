@@ -39,11 +39,6 @@ const TemporaryUrlPreviewModal: React.FC<TemporaryUrlPreviewModalProps> = ({
       if (response.code === 200 && response.data) {
         setUrl(response.data);
         setOpen(true);
-      } else {
-        message.error(
-          response.message ||
-            intl.formatMessage({ id: 'components.temporaryUrlPreviewModal.getUrlFailed' }),
-        );
       }
     } finally {
       setLoading(false);

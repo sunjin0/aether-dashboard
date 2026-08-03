@@ -58,8 +58,7 @@ export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu, childre
       });
     }
     try {
-      const { message: msg } = await logout();
-      message.success(msg);
+      await logout();
     } catch (e) {
     } finally {
       localStorage.removeItem('token');

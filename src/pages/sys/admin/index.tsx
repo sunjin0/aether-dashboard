@@ -103,10 +103,12 @@ const Admin: React.FC = () => {
                 danger: true,
                 confirm: { title: intl.formatMessage({ id: 'pages.confirm.delete' }) },
                 onClick: async () => {
-                  const { code, message: msg } = await deleteAdminInfo(record)
-                  if (code === 200) message.success(msg)
-                  else message.error(msg)
-                  action?.reload()
+                  try {
+                    const { code } = await deleteAdminInfo(record)
+                    if (code === 200) action?.reload()
+                  } catch {
+                    // API failures are displayed by the global request handler.
+                  }
                 },
               },
             ]}

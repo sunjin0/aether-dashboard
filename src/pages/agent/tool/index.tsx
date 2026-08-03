@@ -95,7 +95,7 @@ const AgentToolPage: React.FC = () => {
     try {
       const result = await getAgentToolStatistics({ toolType, mcpServerId })
       if (result.code === 200) setStatistics(result.data)
-      else message.error(result.message || format('pages.agent.tool.loadStatisticsFailed'))
+      else return
     } finally {
       setStatisticsLoading(false)
     }
@@ -105,9 +105,9 @@ const AgentToolPage: React.FC = () => {
     loadStatistics()
   }, [toolType, mcpServerId])
   useEffect(() => {
-    getAgentToolFacets().then(({ code, data, message: msg }) => {
+    getAgentToolFacets().then(({ code, data }) => {
       if (code === 200 && data) setFacets(data)
-      else message.error(msg || format('pages.agent.tool.loadFacetsFailed'))
+      else return
     })
   }, [])
 
@@ -117,29 +117,32 @@ const AgentToolPage: React.FC = () => {
   }
   const handleDelete = async (record: AgentTool) => {
     if (!record.id) return
-    const result = await deleteAgentToolInfo(record.id)
-    if (result.code === 200) {
-      message.success(result.message || format('pages.agent.tool.deleteSuccess'))
+    try {
+      const result = await deleteAgentToolInfo(record.id)
+      if (result.code === 200) {
       refresh()
       loadStatistics()
-    } else message.error(result.message || format('pages.agent.tool.deleteFailed'))
+      }
+    } catch {
+      // API failures are displayed by the global request handler.
+    }
   }
   const handleStatusChange = async (record: AgentTool) => {
     if (!record.id) return
-    const detail = await getAgentToolInfo(record.id)
-    if (detail.code !== 200 || !detail.data) {
-      message.error(detail.message || format('pages.agent.tool.getDetailFailed'))
-      return
+    try {
+      const detail = await getAgentToolInfo(record.id)
+      if (detail.code !== 200 || !detail.data) return
+      const result = await updateAgentToolInfo({
+        ...detail.data,
+        status: record.status === 1 ? 0 : 1,
+      })
+      if (result.code === 200) {
+        refresh()
+        loadStatistics()
+      }
+    } catch {
+      // API failures are displayed by the global request handler.
     }
-    const result = await updateAgentToolInfo({
-      ...detail.data,
-      status: record.status === 1 ? 0 : 1,
-    })
-    if (result.code === 200) {
-      message.success(result.message || format('pages.agent.tool.operationSuccess'))
-      refresh()
-      loadStatistics()
-    } else message.error(result.message || format('pages.agent.tool.operationFailed'))
   }
 
   const columns: any[] = [

@@ -143,17 +143,14 @@ const DocumentVersionPage: React.FC = () => {
                           title: intl.formatMessage({ id: 'pages.knowledge.document.versionHistory.rollbackConfirm' }),
                         },
                         onClick: async () => {
-                          const response = await rollbackDocumentVersion(record.id!)
-                          if (response.code === 200) {
-                            message.success(
-                              response.message || intl.formatMessage({ id: 'pages.knowledge.document.versionHistory.rollbackQueued' }),
-                            )
-                            const verResp = await getDocumentVersions(documentId!)
-                            setVersions(verResp.data || [])
-                          } else {
-                            message.error(
-                              response.message || intl.formatMessage({ id: 'pages.knowledge.document.versionHistory.rollbackFailed' }),
-                            )
+                          try {
+                            const response = await rollbackDocumentVersion(record.id!)
+                            if (response.code === 200) {
+                              const verResp = await getDocumentVersions(documentId!)
+                              setVersions(verResp.data || [])
+                            }
+                          } catch {
+                            // API failures are displayed by the global request handler.
                           }
                         },
                       },

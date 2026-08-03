@@ -9,7 +9,7 @@ import {
   ProFormDependency,
 } from '@ant-design/pro-components'
 import { Button, Card, Descriptions, Drawer, message, Modal, Space, Table, Tag } from 'antd'
-import { useAccess } from '@umijs/max'
+import { useAccess, useIntl } from '@umijs/max'
 import { getAgentDefinitionOptions } from '@/services/agent/AgentDefinitionController'
 import {
   EvaluationCase,
@@ -29,6 +29,7 @@ import {
 const pct = (v?: number) => (v === undefined ? '-' : `${(v * 100).toFixed(1)}%`)
 export default function EvaluationPage() {
   const access = useAccess()
+  const intl = useIntl()
   const canWrite = Boolean(access['/knowledge/evaluation'])
   const [sets, setSets] = useState<EvaluationSet[]>([]),
     [selected, setSelected] = useState<EvaluationSet>(),
@@ -52,22 +53,22 @@ export default function EvaluationPage() {
       extra={canWrite ? [
         <ModalForm
           key="add"
-          title="新建评测集"
+          title={intl.formatMessage({ id: 'pages.knowledge.evaluation.createSet' })}
           onFinish={async (v) => {
             await saveEvaluationSet(v as EvaluationSet)
             await load()
             return true
           }}
-          trigger={<Button type="primary">新建评测集</Button>}
+          trigger={<Button type="primary">{intl.formatMessage({ id: 'pages.knowledge.evaluation.createSet' })}</Button>}
         >
-          <ProFormText name="name" label="名称" rules={[{ required: true }]} />
+          <ProFormText name="name" label={intl.formatMessage({ id: 'pages.common.name' })} rules={[{ required: true }]} />
           <ProFormSelect
             name="agentDefinitionId"
-            label="Agent"
+            label={intl.formatMessage({ id: 'pages.knowledge.evaluation.agent' })}
             rules={[{ required: true }]}
             request={async () => getAgentDefinitionOptions()}
           />
-          <ProFormTextArea name="description" label="说明" />
+          <ProFormTextArea name="description" label={intl.formatMessage({ id: 'pages.agent.workflow.description' })} />
         </ModalForm>,
       ] : []}
     >
@@ -77,9 +78,9 @@ export default function EvaluationPage() {
         dataSource={sets}
         pagination={false}
         columns={[
-          { title: '名称', dataIndex: 'name' },
-          { title: 'Agent', dataIndex: 'agentDefinitionId' },
-          { title: '操作', render: (_, s) => <Button onClick={() => open(s)}>管理</Button> },
+          { title: intl.formatMessage({ id: 'pages.common.name' }), dataIndex: 'name' },
+          { title: intl.formatMessage({ id: 'pages.knowledge.evaluation.agent' }), dataIndex: 'agentDefinitionId' },
+          { title: intl.formatMessage({ id: 'pages.common.option' }), render: (_, s) => <Button onClick={() => open(s)}>{intl.formatMessage({ id: 'pages.knowledge.evaluation.manage' })}</Button> },
         ]}
       />
       <Drawer
@@ -95,25 +96,25 @@ export default function EvaluationPage() {
               onClick={async () => {
                 await runEvaluation(selected!.id!)
                 await open(selected!)
-                message.success('评测完成')
+                message.success(intl.formatMessage({ id: 'pages.knowledge.evaluation.completed' }))
               }}
             >
-            运行评测
+            {intl.formatMessage({ id: 'pages.knowledge.evaluation.run' })}
             </Button>
             <ModalForm
-              title="新增问题"
+              title={intl.formatMessage({ id: 'pages.knowledge.evaluation.addQuestion' })}
               onFinish={async (v) => {
                 await saveEvaluationCase(selected!.id!, v as EvaluationCase)
                 await open(selected!)
                 return true
               }}
-              trigger={<Button>新增问题</Button>}
+              trigger={<Button>{intl.formatMessage({ id: 'pages.knowledge.evaluation.addQuestion' })}</Button>}
             >
-              <ProFormTextArea name="question" label="问题" rules={[{ required: true }]} />
+              <ProFormTextArea name="question" label={intl.formatMessage({ id: 'pages.knowledge.evaluation.question' })} rules={[{ required: true }]} />
               <ProFormSelect
                 name="documentId"
-                label="正确文档"
-                rules={[{ required: true, message: '请选择正确文档' }]}
+                label={intl.formatMessage({ id: 'pages.knowledge.evaluation.expectedDocument' })}
+                rules={[{ required: true, message: intl.formatMessage({ id: 'pages.knowledge.evaluation.selectExpectedDocument' }) }]}
                 showSearch
                 request={async () =>
                   ((await getEvaluationDocuments()).data || []).map((x) => ({ label: x.title, value: x.id }))
@@ -123,8 +124,8 @@ export default function EvaluationPage() {
                 {({ documentId }) => (
                   <ProFormSelect
                     name="sectionPath"
-                    label="正确章节"
-                    placeholder="不选则以整篇文档为目标"
+                    label={intl.formatMessage({ id: 'pages.knowledge.evaluation.expectedSection' })}
+                    placeholder={intl.formatMessage({ id: 'pages.knowledge.evaluation.expectedSectionPlaceholder' })}
                     disabled={!documentId}
                     request={async () =>
                       documentId
@@ -137,7 +138,7 @@ export default function EvaluationPage() {
             </ModalForm>
           </>}
         </Space>
-        <Card title="最新指标" style={{ marginTop: 16 }}>
+        <Card title={intl.formatMessage({ id: 'pages.knowledge.evaluation.latestMetrics' })} style={{ marginTop: 16 }}>
           <Descriptions
             items={
               runs[0]
@@ -145,7 +146,7 @@ export default function EvaluationPage() {
                   { key: 'r', label: 'Recall@K', children: pct(runs[0].recallAtK) },
                   { key: 'm', label: 'MRR', children: pct(runs[0].mrr) },
                   { key: 'n', label: 'nDCG', children: pct(runs[0].ndcg) },
-                  { key: 'i', label: '失效标注', children: runs[0].invalidCount },
+                  { key: 'i', label: intl.formatMessage({ id: 'pages.knowledge.evaluation.invalidAnnotations' }), children: runs[0].invalidCount },
                 ]
                 : []
             }
@@ -157,22 +158,22 @@ export default function EvaluationPage() {
           dataSource={cases}
           pagination={false}
           columns={[
-            { title: '问题', dataIndex: 'question' },
-            { title: '文档', dataIndex: 'documentId' },
-            { title: '章节', dataIndex: 'sectionPath' },
+             { title: intl.formatMessage({ id: 'pages.knowledge.evaluation.question' }), dataIndex: 'question' },
+             { title: intl.formatMessage({ id: 'pages.knowledge.evaluation.document' }), dataIndex: 'documentId' },
+             { title: intl.formatMessage({ id: 'pages.knowledge.evaluation.section' }), dataIndex: 'sectionPath' },
           ]}
         />
         {compareRunIds.length === 2 && (
-          <Card title="运行对比" size="small" style={{ marginTop: 16 }}>
+          <Card title={intl.formatMessage({ id: 'pages.knowledge.evaluation.runComparison' })} size="small" style={{ marginTop: 16 }}>
             {(() => {
               const [before, after] = compareRunIds.map((id) => runs.find((run) => run.id === id)!)
               const delta = (key: 'recallAtK' | 'mrr' | 'ndcg') => pct((after[key] || 0) - (before[key] || 0))
               return <Descriptions items={[
-                { key: 'before', label: '基线运行', children: new Date(before.startedAt || 0).toLocaleString() },
-                { key: 'after', label: '对比运行', children: new Date(after.startedAt || 0).toLocaleString() },
-                { key: 'recall', label: 'Recall@K 变化', children: delta('recallAtK') },
-                { key: 'mrr', label: 'MRR 变化', children: delta('mrr') },
-                { key: 'ndcg', label: 'nDCG 变化', children: delta('ndcg') },
+                { key: 'before', label: intl.formatMessage({ id: 'pages.knowledge.evaluation.baselineRun' }), children: new Date(before.startedAt || 0).toLocaleString(intl.locale) },
+                { key: 'after', label: intl.formatMessage({ id: 'pages.knowledge.evaluation.comparisonRun' }), children: new Date(after.startedAt || 0).toLocaleString(intl.locale) },
+                { key: 'recall', label: intl.formatMessage({ id: 'pages.knowledge.evaluation.recallChange' }), children: delta('recallAtK') },
+                { key: 'mrr', label: intl.formatMessage({ id: 'pages.knowledge.evaluation.mrrChange' }), children: delta('mrr') },
+                { key: 'ndcg', label: intl.formatMessage({ id: 'pages.knowledge.evaluation.ndcgChange' }), children: delta('ndcg') },
               ]} />
             })()}
           </Card>
@@ -186,30 +187,30 @@ export default function EvaluationPage() {
             type: 'checkbox',
             selectedRowKeys: compareRunIds,
             onChange: (keys) => {
-              if (keys.length > 2) { message.warning('最多选择两次运行进行对比'); return }
+              if (keys.length > 2) { message.warning(intl.formatMessage({ id: 'pages.knowledge.evaluation.maxTwoRuns' })); return }
               setCompareRunIds(keys)
             },
           }}
           columns={[
             {
-              title: '运行时间',
+              title: intl.formatMessage({ id: 'pages.knowledge.evaluation.runTime' }),
               dataIndex: 'startedAt',
-              render: (v) => (v ? new Date(v).toLocaleString() : '-'),
+              render: (v) => (v ? new Date(v).toLocaleString(intl.locale) : '-'),
             },
             { title: 'Recall@K', dataIndex: 'recallAtK', render: pct },
             { title: 'MRR', dataIndex: 'mrr', render: pct },
             { title: 'nDCG', dataIndex: 'ndcg', render: pct },
             {
-              title: '明细',
+              title: intl.formatMessage({ id: 'pages.knowledge.evaluation.details' }),
               render: (_, run) => <Button type="link" onClick={async () => {
                 setResults((await getEvaluationRunResults(selected!.id!, run.id)).data || [])
                 setResultRun(run)
-              }}>查看逐题结果</Button>,
+              }}>{intl.formatMessage({ id: 'pages.knowledge.evaluation.viewQuestionResults' })}</Button>,
             },
           ]}
         />
       </Drawer>
-      <Modal width={1100} footer={null} open={!!resultRun} onCancel={() => setResultRun(undefined)} title={`逐题结果：${resultRun?.startedAt ? new Date(resultRun.startedAt).toLocaleString() : ''}`}>
+      <Modal width={1100} footer={null} open={!!resultRun} onCancel={() => setResultRun(undefined)} title={intl.formatMessage({ id: 'pages.knowledge.evaluation.questionResultsTitle' }, { time: resultRun?.startedAt ? new Date(resultRun.startedAt).toLocaleString(intl.locale) : '' })}>
         <Table<EvaluationRunResult>
           rowKey="id"
           dataSource={results}
@@ -218,20 +219,20 @@ export default function EvaluationPage() {
             expandedRowRender: (item) => <Table
               size="small" rowKey="id" pagination={false} dataSource={item.retrievedChunks || []}
               columns={[
-                { title: '名次', dataIndex: 'rank' },
-                { title: '实际召回文档', dataIndex: 'documentTitle' },
-                { title: '章节', dataIndex: 'sectionPath', render: (v) => v || '—' },
-                { title: '分块', dataIndex: 'chunkIndex' },
+                { title: intl.formatMessage({ id: 'pages.knowledge.evaluation.rank' }), dataIndex: 'rank' },
+                { title: intl.formatMessage({ id: 'pages.knowledge.evaluation.retrievedDocument' }), dataIndex: 'documentTitle' },
+                { title: intl.formatMessage({ id: 'pages.knowledge.evaluation.section' }), dataIndex: 'sectionPath', render: (v) => v || '—' },
+                { title: intl.formatMessage({ id: 'pages.knowledge.evaluation.chunk' }), dataIndex: 'chunkIndex' },
               ]}
             />,
           }}
           columns={[
-            { title: '问题', dataIndex: 'question' },
-            { title: '期望来源', render: (_, item) => <>{item.expectedDocumentTitle || item.expectedDocumentId}<br />{item.expectedSectionPath || '整篇文档'}</> },
+            { title: intl.formatMessage({ id: 'pages.knowledge.evaluation.question' }), dataIndex: 'question' },
+            { title: intl.formatMessage({ id: 'pages.knowledge.evaluation.expectedSource' }), render: (_, item) => <>{item.expectedDocumentTitle || item.expectedDocumentId}<br />{item.expectedSectionPath || intl.formatMessage({ id: 'pages.knowledge.evaluation.entireDocument' })}</> },
             { title: 'Recall@K', dataIndex: 'recallAtK', render: pct },
             { title: 'MRR', dataIndex: 'mrr', render: pct },
             { title: 'nDCG', dataIndex: 'ndcg', render: pct },
-            { title: '状态', dataIndex: 'status', render: (v) => <Tag color={v === 'EVALUATED' ? 'green' : 'default'}>{v}</Tag> },
+            { title: intl.formatMessage({ id: 'pages.common.status' }), dataIndex: 'status', render: (v) => <Tag color={v === 'EVALUATED' ? 'green' : 'default'}>{v}</Tag> },
           ]}
         />
       </Modal>

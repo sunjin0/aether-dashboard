@@ -72,10 +72,12 @@ const Role: React.FC = () => {
                 danger: true,
                 confirm: { title: intl.formatMessage({ id: 'pages.confirm.delete' }) },
                 onClick: async () => {
-                  const { code, message: msg } = await deleteRoleInfo(record)
-                  if (code === 200) message.success(msg)
-                  else message.error(msg)
-                  ref.current?.reload()
+                  try {
+                    const { code } = await deleteRoleInfo(record)
+                    if (code === 200) ref.current?.reload()
+                  } catch {
+                    // API failures are displayed by the global request handler.
+                  }
                 },
               },
             ]}

@@ -87,16 +87,8 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
     try {
       const response = await upload(files, values);
       if (response.code === 200) {
-        message.success(
-          response.message ||
-            intl.formatMessage({ id: 'components.fileUploadModal.uploadSuccess' }),
-        );
         onSuccess?.();
         reset();
-      } else {
-        message.error(
-          response.message || intl.formatMessage({ id: 'components.fileUploadModal.uploadFailed' }),
-        );
       }
     } finally {
       setUploading(false);

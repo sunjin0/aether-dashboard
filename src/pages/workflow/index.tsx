@@ -53,7 +53,7 @@ const WorkflowPage: React.FC = () => {
   const loadTemplates = async () => {
     const result = await getWorkflowTemplates()
     if (result.code === 200) setTemplates(result.data || [])
-    else message.error(result.message || t('pages.agent.workflow.operationFailed'))
+    else return
   }
   const showTemplates = async () => {
     await loadTemplates()
@@ -62,7 +62,7 @@ const WorkflowPage: React.FC = () => {
   const showVersions = async (record: AgentWorkflow) => {
     if (!record.id) return
     const result = await getWorkflowVersions(record.id)
-    if (result.code !== 200) { message.error(result.message || t('pages.agent.workflow.operationFailed')); return }
+    if (result.code !== 200) return
     setVersionWorkflow(record)
     setVersions(result.data || [])
     setCompareVersions([])
@@ -72,7 +72,7 @@ const WorkflowPage: React.FC = () => {
   const showSchedules = async (record: AgentWorkflow) => {
     if (!record.id) return
     const result = await getWorkflowSchedules({ workflowId: record.id })
-    if (result.code !== 200) { message.error(result.message || t('pages.agent.workflow.operationFailed')); return }
+    if (result.code !== 200) return
     setScheduleWorkflow(record)
     setSchedules(result.data || [])
     scheduleForm.resetFields()
@@ -87,14 +87,13 @@ const WorkflowPage: React.FC = () => {
       if (!variables || Array.isArray(variables) || typeof variables !== 'object') throw new Error('not an object')
     } catch { message.error(t('pages.agent.workflow.schedule.variablesInvalid')); return }
     const result = await createWorkflowSchedule({ ...values, workflowId: scheduleWorkflow.id, variables })
-    if (result.code !== 200) { message.error(result.message || t('pages.agent.workflow.operationFailed')); return }
-    message.success(t('pages.agent.workflow.schedule.created'))
+    if (result.code !== 200) return
     await showSchedules(scheduleWorkflow)
   }
   const toggleSchedule = async (schedule: WorkflowSchedule, enabled: boolean) => {
     if (!schedule.id) return
     const result = await setWorkflowScheduleEnabled(schedule.id, enabled)
-    if (result.code !== 200) { message.error(result.message || t('pages.agent.workflow.operationFailed')); return }
+    if (result.code !== 200) return
     setSchedules((current) => current.map((item) => item.id === schedule.id ? { ...item, enabled } : item))
   }
   const compareVersion = async (selectedVersions: number[]) => {
@@ -103,12 +102,12 @@ const WorkflowPage: React.FC = () => {
     const [from, to] = [...selectedVersions].sort((a, b) => a - b)
     const result = await getWorkflowVersionDiff(versionWorkflow.id, from, to)
     if (result.code === 200) setVersionDiff(result.data)
-    else message.error(result.message || t('pages.agent.workflow.operationFailed'))
+    else return
   }
   const downloadWorkflow = async (record: AgentWorkflow) => {
     if (!record.id) return
     const result = await exportWorkflow(record.id)
-    if (result.code !== 200 || !result.data) { message.error(result.message || t('pages.agent.workflow.operationFailed')); return }
+    if (result.code !== 200 || !result.data) return
     const link = document.createElement('a')
     link.href = URL.createObjectURL(new Blob([JSON.stringify(result.data, null, 2)], { type: 'application/json' }))
     link.download = `${record.name || 'workflow'}.json`
@@ -121,9 +120,8 @@ const WorkflowPage: React.FC = () => {
       const payload = JSON.parse(await file.text()) as AgentWorkflow
       const result = await importWorkflow(payload)
       if (result.code === 200 && result.data) {
-        message.success(t('pages.agent.workflow.imported'))
         history.push(`/workflow/workflow/${result.data}`)
-      } else message.error(result.message || t('pages.agent.workflow.operationFailed'))
+      } else return
     } catch {
       message.error(t('pages.agent.workflow.importInvalid'))
     } finally {
@@ -135,19 +133,17 @@ const WorkflowPage: React.FC = () => {
     if (editing?.id) {
       const result = await updateWorkflow(editing.id, { ...editing, ...values })
       if (result.code === 200) {
-        message.success(t('pages.agent.workflow.updated'))
         setOpen(false)
         setEditing(undefined)
         ref.current?.reload()
-      } else message.error(result.message || t('pages.agent.workflow.operationFailed'))
+      } else return
       return
     }
     const result = await createWorkflow(values)
     if (result.code === 200 && result.data) {
-      message.success('草稿已创建')
       setOpen(false)
       history.push(`/workflow/workflow/${result.data}`)
-    } else message.error(result.message || '创建失败')
+    } else return
   }
   const openCreate = () => {
     setEditing(undefined)
@@ -158,7 +154,6 @@ const WorkflowPage: React.FC = () => {
     if (!record.id) return
     const result = await getWorkflow(record.id)
     if (result.code !== 200 || !result.data) {
-      message.error(result.message || t('pages.agent.workflow.operationFailed'))
       return
     }
     setEditing(result.data)
@@ -169,20 +164,18 @@ const WorkflowPage: React.FC = () => {
     if (!record.id) return
     const result = await fn(record.id)
     if (result.code === 200) {
-      message.success(text)
       ref.current?.reload()
-    } else message.error(result.message || '操作失败')
+    } else return
   }
   const createTemplate = async () => {
     if (!templateSource?.id) return
     const values = await templateForm.validateFields()
     const result = await createWorkflowTemplate(templateSource.id, values)
     if (result.code === 200) {
-      message.success(t('pages.agent.workflow.templateCreated'))
       setTemplateSource(undefined)
       templateForm.resetFields()
       await loadTemplates()
-    } else message.error(result.message || t('pages.agent.workflow.operationFailed'))
+    } else return
   }
   const instantiateTemplate = async (template: WorkflowTemplate) => {
     const result = await instantiateWorkflowTemplate(template.id, {
@@ -190,10 +183,9 @@ const WorkflowPage: React.FC = () => {
       description: template.description || '',
     })
     if (result.code === 200 && result.data) {
-      message.success(t('pages.agent.workflow.templateInstantiated'))
       setTemplatesOpen(false)
       history.push(`/workflow/workflow/${result.data}`)
-    } else message.error(result.message || t('pages.agent.workflow.operationFailed'))
+    } else return
   }
   return (
     <PageContainer header={{ title: t('pages.agent.workflow.title'), subTitle: t('pages.agent.workflow.pageDescription'), breadcrumb: undefined }}>

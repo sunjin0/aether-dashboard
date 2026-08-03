@@ -1,5 +1,5 @@
 import { PageContainer } from '@ant-design/pro-components'
-import { useModel } from '@umijs/max'
+import { useIntl, useModel } from '@umijs/max'
 import { Card, theme } from 'antd'
 import React from 'react'
 
@@ -14,6 +14,7 @@ const InfoCard: React.FC<{
   desc: string;
   href: string;
 }> = ({ title, href, index, desc }) => {
+  const intl = useIntl()
   const { useToken } = theme
 
   const { token } = useToken()
@@ -77,7 +78,7 @@ const InfoCard: React.FC<{
         {desc}
       </div>
       <a href={href} target="_blank" rel="noreferrer">
-        了解更多 {'>'}
+        {intl.formatMessage({ id: 'pages.dashboard.learnMore' })} {'>'}
       </a>
     </div>
   )
@@ -86,6 +87,7 @@ const InfoCard: React.FC<{
 const Dashboard: React.FC = () => {
   const { token } = theme.useToken()
   const { initialState } = useModel('@@initialState')
+  const intl = useIntl()
   return (
     <PageContainer>
       <Card
@@ -116,7 +118,7 @@ const Dashboard: React.FC = () => {
               color: token.colorTextHeading,
             }}
           >
-            欢迎使用 Aether Dashboard
+            {intl.formatMessage({ id: 'pages.dashboard.welcome' })}
           </div>
           <p
             style={{
@@ -128,7 +130,7 @@ const Dashboard: React.FC = () => {
               width: '65%',
             }}
           >
-            Aether Dashboard 为智能应用管理提供统一的工作台，帮助团队高效管理模型、智能体、知识库和系统配置。
+            {intl.formatMessage({ id: 'pages.dashboard.introduction' })}
           </p>
           <div
             style={{
@@ -140,20 +142,20 @@ const Dashboard: React.FC = () => {
             <InfoCard
               index={1}
               href="https://umijs.org/docs/introduce/introduce"
-              title="了解 umi"
-              desc="umi 是一个可扩展的企业级前端应用框架,umi 以路由为基础的，同时支持配置式路由和约定式路由，保证路由的功能完备，并以此进行功能扩展。"
+              title={intl.formatMessage({ id: 'pages.dashboard.umi.title' })}
+              desc={intl.formatMessage({ id: 'pages.dashboard.umi.description' })}
             />
             <InfoCard
               index={2}
-              title="了解 ant design"
+              title={intl.formatMessage({ id: 'pages.dashboard.antd.title' })}
               href="https://ant.design"
-              desc="antd 是基于 Ant Design 设计体系的 React UI 组件库，主要用于研发企业级中后台产品。"
+              desc={intl.formatMessage({ id: 'pages.dashboard.antd.description' })}
             />
             <InfoCard
               index={3}
-              title="了解 Pro Components"
+              title={intl.formatMessage({ id: 'pages.dashboard.proComponents.title' })}
               href="https://procomponents.ant.design"
-              desc="ProComponents 是一个基于 Ant Design 做了更高抽象的模板组件，以 一个组件就是一个页面为开发理念，为中后台开发带来更好的体验。"
+              desc={intl.formatMessage({ id: 'pages.dashboard.proComponents.description' })}
             />
           </div>
         </div>

@@ -21,9 +21,9 @@ const WorkflowOperationsPage: React.FC = () => {
     try {
       const [metricResult, letterResult] = await Promise.all([getWorkflowOperationsMetrics(), getWorkflowDeadLetters()])
       if (metricResult.code === 200) setMetrics(metricResult.data)
-      else message.error(metricResult.message || t('pages.agent.workflow.operationFailed'))
+      else return
       if (letterResult.code === 200) setDeadLetters(letterResult.data || [])
-      else message.error(letterResult.message || t('pages.agent.workflow.operationFailed'))
+      else return
     } finally { setLoading(false) }
   }
   useEffect(() => { load() }, [])

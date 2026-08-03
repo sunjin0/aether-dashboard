@@ -61,15 +61,13 @@ const AuthorizationForm = (props: {
         await info()
       }}
       onSuccess={async () => {
-        const { code, message: msg } = await saveRoleAuthorization({
+        const { code } = await saveRoleAuthorization({
           id,
           resourceIds: [...checkedKeys, ...halfCheckedKeys],
         })
         if (code !== 200) {
-          message.error(msg)
           return false
         }
-        message.success(msg)
         onSuccess()
         return true
       }}

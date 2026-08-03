@@ -1,4 +1,4 @@
-import { history, useLocation, useParams } from '@umijs/max'
+import { history, useIntl, useLocation, useParams } from '@umijs/max'
 import { Alert, Button, Result, Spin } from 'antd'
 import React, { useCallback, useEffect, useState } from 'react'
 import { Document, KnowledgeDocumentVersion } from '@/services/entity/Agent'
@@ -13,6 +13,7 @@ const getSafeReturnTo = (search: string, fallback: string) => {
 
 const DocumentReviewPage: React.FC = () => {
   const { documentId } = useParams<{ documentId: string }>()
+  const intl = useIntl()
   const location = useLocation()
   const returnTo = getSafeReturnTo(location.search, '/knowledge/document')
   const [document, setDocument] = useState<Document>()
@@ -40,11 +41,11 @@ const DocumentReviewPage: React.FC = () => {
         setReviewId('')
       }
     } catch {
-      setError('文档审阅信息加载失败，请重试。')
+      setError(intl.formatMessage({ id: 'pages.knowledge.review.loadFailed' }))
     } finally {
       setLoading(false)
     }
-  }, [documentId])
+  }, [documentId, intl])
 
   useEffect(() => {
     load()
@@ -54,15 +55,15 @@ const DocumentReviewPage: React.FC = () => {
     return (
       <Result
         status="404"
-        title="缺少文档标识"
-        extra={<Button onClick={() => history.push(returnTo)}>返回文档管理</Button>}
+        title={intl.formatMessage({ id: 'pages.knowledge.review.missingDocumentId' })}
+        extra={<Button onClick={() => history.push(returnTo)}>{intl.formatMessage({ id: 'pages.knowledge.review.backToDocuments' })}</Button>}
       />
     )
   }
 
   if (loading) {
     return (
-      <Spin spinning tip="正在加载文档审阅...">
+      <Spin spinning tip={intl.formatMessage({ id: 'pages.knowledge.review.loading' })}>
         <div style={{ minHeight: 480 }} />
       </Spin>
     )
@@ -76,7 +77,7 @@ const DocumentReviewPage: React.FC = () => {
         message={error}
         action={
           <Button size="small" onClick={load}>
-            重试
+            {intl.formatMessage({ id: 'pages.common.retry' })}
           </Button>
         }
         style={{ margin: 24 }}
@@ -88,8 +89,8 @@ const DocumentReviewPage: React.FC = () => {
     return (
       <Result
         status="info"
-        title="当前文档暂无可审阅版本"
-        extra={<Button onClick={() => history.push(returnTo)}>返回文档管理</Button>}
+        title={intl.formatMessage({ id: 'pages.knowledge.review.noReviewableVersion' })}
+        extra={<Button onClick={() => history.push(returnTo)}>{intl.formatMessage({ id: 'pages.knowledge.review.backToDocuments' })}</Button>}
       />
     )
   }
@@ -99,7 +100,7 @@ const DocumentReviewPage: React.FC = () => {
       reviewId={reviewId}
       documentVersionId={version.id}
       versionReviewStatus={version.reviewStatus}
-      pageTitle={document?.title || 'AI 审阅工作台'}
+      pageTitle={document?.title || intl.formatMessage({ id: 'pages.knowledge.review.workspaceTitle' })}
       pageSubTitle={version.versionNo ? `v${version.versionNo}` : undefined}
       backPath={returnTo}
       onApplied={load}

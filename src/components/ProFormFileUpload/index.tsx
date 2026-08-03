@@ -118,10 +118,7 @@ const FileUploadControl: React.FC<FileUploadControlProps> = ({
     try {
       const response = await uploadFile(selectedFile);
       if (response.code !== 200 || !response.data?.objectKey) {
-        throw new Error(
-          response.message ||
-            intl.formatMessage({ id: 'components.proFormFileUpload.uploadFailed' }),
-        );
+        throw new Error(intl.formatMessage({ id: 'components.proFormFileUpload.uploadFailed' }));
       }
 
       const result = response.data;

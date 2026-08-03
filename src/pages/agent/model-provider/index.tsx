@@ -30,12 +30,11 @@ const ModelProviderPage: React.FC = () => {
       return
     }
 
-    const { code, message: msg } = await deleteModelProviderInfo(record.id)
-    if (code === 200) {
-      message.success(msg || format('pages.agent.modelProvider.deleteSuccess'))
-      ref.current?.reload()
-    } else {
-      message.error(msg || format('pages.agent.modelProvider.deleteFailed'))
+    try {
+      const { code } = await deleteModelProviderInfo(record.id)
+      if (code === 200) ref.current?.reload()
+    } catch {
+      // API failures are displayed by the global request handler.
     }
   }
 
@@ -46,14 +45,11 @@ const ModelProviderPage: React.FC = () => {
     }
 
     const nextStatus = record.status === 1 ? 0 : 1
-    const { code, message: msg } = await updateModelProviderStatus(record.id, {
-      status: nextStatus,
-    })
-    if (code === 200) {
-      message.success(msg || format('pages.agent.modelProvider.operationSuccess'))
-      ref.current?.reload()
-    } else {
-      message.error(msg || format('pages.agent.modelProvider.operationFailed'))
+    try {
+      const { code } = await updateModelProviderStatus(record.id, { status: nextStatus })
+      if (code === 200) ref.current?.reload()
+    } catch {
+      // API failures are displayed by the global request handler.
     }
   }
 

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { history, useParams } from '@umijs/max'
+import { history, useIntl, useParams } from '@umijs/max'
 import { PageContainer } from '@ant-design/pro-components'
 import { Button, Card, Checkbox, Input, InputNumber, Modal, Popconfirm, Select, Space, Tag, Tooltip, message } from 'antd'
 import {
@@ -54,13 +54,6 @@ const CardTitle: React.FC<{ title: React.ReactNode; tip: React.ReactNode }> = ({
     {title} <FieldTip title={tip} />
   </span>
 )
-const label: Record<string, string> = {
-  start: '开始',
-  agent: '普通 Agent',
-  mcp: 'MCP 工具',
-  human: '人工提问',
-  end: '结束',
-}
 const color: Record<string, string> = {
   start: '#52c41a',
   agent: '#1677ff',
@@ -68,9 +61,11 @@ const color: Record<string, string> = {
   human: '#722ed1',
   end: '#13c2c2',
 }
-const initial: WorkflowNode[] = [
-  { id: 'start', type: 'start', name: '开始', position: { x: 80, y: 260 } },
-  { id: 'end', type: 'end', name: '结束', position: { x: 780, y: 260 } },
+const nodeLabel = (intl: ReturnType<typeof useIntl>, type: string) =>
+  intl.formatMessage({ id: `pages.agent.workflow.run.node.${type}` })
+const initial = (intl: ReturnType<typeof useIntl>): WorkflowNode[] => [
+  { id: 'start', type: 'start', name: nodeLabel(intl, 'start'), position: { x: 80, y: 260 } },
+  { id: 'end', type: 'end', name: nodeLabel(intl, 'end'), position: { x: 780, y: 260 } },
 ]
 const buildArgumentsTemplate = (schema?: string) => {
   if (!schema) return '{}'
@@ -87,13 +82,13 @@ const buildArgumentsTemplate = (schema?: string) => {
     return '{}'
   }
 }
-const validateBeforePublish = (workflowNodes: WorkflowNode[], workflowEdges: Array<{ source: string; target: string }>) => {
+const validateBeforePublish = (intl: ReturnType<typeof useIntl>, workflowNodes: WorkflowNode[], workflowEdges: Array<{ source: string; target: string }>) => {
   const ids = new Set(workflowNodes.map((node) => node.id))
   const starts = workflowNodes.filter((node) => node.type === 'start')
   const ends = workflowNodes.filter((node) => node.type === 'end')
-  if (starts.length !== 1 || ends.length !== 1) return '工作流必须且只能包含一个开始节点和一个结束节点'
-  if (workflowEdges.some((edge) => !ids.has(edge.source) || !ids.has(edge.target))) return '存在指向已删除节点的连线，请删除后再发布'
-  if (workflowEdges.some((edge) => edge.source === ends[0].id)) return '结束节点不能存在输出连线'
+  if (starts.length !== 1 || ends.length !== 1) return intl.formatMessage({ id: 'pages.agent.workflow.editor.validation.startEnd' })
+  if (workflowEdges.some((edge) => !ids.has(edge.source) || !ids.has(edge.target))) return intl.formatMessage({ id: 'pages.agent.workflow.editor.validation.deletedEdge' })
+  if (workflowEdges.some((edge) => edge.source === ends[0].id)) return intl.formatMessage({ id: 'pages.agent.workflow.editor.validation.endOutput' })
   const next = new Map<string, string[]>()
   const previous = new Map<string, string[]>()
   workflowEdges.forEach((edge) => {
@@ -114,9 +109,9 @@ const validateBeforePublish = (workflowNodes: WorkflowNode[], workflowEdges: Arr
   const reachable = traverse(starts[0].id, next)
   const canReachEnd = traverse(ends[0].id, previous)
   const unreachable = workflowNodes.find((node) => !reachable.has(node.id))
-  if (unreachable) return `节点「${unreachable.name || unreachable.id}」从开始节点不可达`
+  if (unreachable) return intl.formatMessage({ id: 'pages.agent.workflow.editor.validation.unreachable' }, { name: unreachable.name || unreachable.id })
   const deadEnd = workflowNodes.find((node) => !canReachEnd.has(node.id))
-  if (deadEnd) return `节点「${deadEnd.name || deadEnd.id}」无法到达结束节点`
+  if (deadEnd) return intl.formatMessage({ id: 'pages.agent.workflow.editor.validation.deadEnd' }, { name: deadEnd.name || deadEnd.id })
   return undefined
 }
 const toFlowNodes = (items: WorkflowNode[]): Node<WorkflowData>[] =>
@@ -127,7 +122,7 @@ const toFlowNodes = (items: WorkflowNode[]): Node<WorkflowData>[] =>
     data: { workflowNode: item },
     deletable: !['start', 'end'].includes(item.type),
   }))
-const toFlowEdges = (items: any[], allNodes?: WorkflowNode[]): Edge[] =>
+const toFlowEdges = (items: any[], defaultBranch: string, allNodes?: WorkflowNode[]): Edge[] =>
   items.map((item, index) => {
     const isLoop = allNodes && item.target && item.source
       ? allNodes.findIndex((n) => n.id === item.target) < allNodes.findIndex((n) => n.id === item.source)
@@ -135,7 +130,7 @@ const toFlowEdges = (items: any[], allNodes?: WorkflowNode[]): Edge[] =>
     const edgeLabel = item.condition
       ? (item.label || item.condition)
       : item.isDefault
-        ? (item.label || '默认')
+        ? (item.label || defaultBranch)
         : item.label
     return {
       id: item.id || `edge_${item.source}_${item.target}_${index}`,
@@ -158,6 +153,7 @@ const toFlowEdges = (items: any[], allNodes?: WorkflowNode[]): Edge[] =>
   })
 
 const WorkflowCanvasNode: React.FC<NodeProps<Node<WorkflowData>>> = ({ data, selected }) => {
+  const intl = useIntl()
   const item = data.workflowNode
   const nodeColor = color[item.type]
   return (
@@ -217,11 +213,11 @@ const WorkflowCanvasNode: React.FC<NodeProps<Node<WorkflowData>>> = ({ data, sel
         }}
       >
         <Tag color={nodeColor} style={{ margin: 0 }}>
-          {label[item.type]}
+          {nodeLabel(intl, item.type)}
         </Tag>
-        <span style={{ color: '#8c8c8c', fontSize: 12 }}>拖拽移动</span>
+        <span style={{ color: '#8c8c8c', fontSize: 12 }}>{intl.formatMessage({ id: 'pages.agent.workflow.editor.dragToMove' })}</span>
       </div>
-      <div style={{ padding: '11px 12px', fontWeight: 600 }}>{item.name || label[item.type]}</div>
+      <div style={{ padding: '11px 12px', fontWeight: 600 }}>{item.name || nodeLabel(intl, item.type)}</div>
     </div>
   )
 }
@@ -230,10 +226,14 @@ const StateMappingEditor: React.FC<{ value?: string; onChange: (value: string) =
   value,
   onChange,
 }) => (
-  <>
+  <StateMappingEditorContent value={value} onChange={onChange} />
+)
+const StateMappingEditorContent: React.FC<{ value?: string; onChange: (value: string) => void }> = ({ value, onChange }) => {
+  const intl = useIntl()
+  return <>
     <label>
-      状态映射（可选）
-      <FieldTip title="$output=整个输出；$json.字段=从 JSON 输出提取字段，写入共享状态" />
+      {intl.formatMessage({ id: 'pages.agent.workflow.editor.stateMapping' })}
+      <FieldTip title={intl.formatMessage({ id: 'pages.agent.workflow.editor.stateMappingTip' })} />
     </label>
     <Input.TextArea
       value={value}
@@ -242,17 +242,18 @@ const StateMappingEditor: React.FC<{ value?: string; onChange: (value: string) =
       placeholder={'{"result":"$output","score":"$json.score"}'}
     />
   </>
-)
+}
 
 const OutputKeySelect: React.FC<{
   value?: string
   onChange: (value?: string) => void
   options: { value: string; label: string }[]
-}> = ({ value, onChange, options }) => (
-  <>
+}> = ({ value, onChange, options }) => {
+  const intl = useIntl()
+  return <>
     <label>
-      输出到共享变量（可选）
-      <FieldTip title="将节点整个输出原样写入该共享状态键（可被后续节点以 ${键名} 引用）；若输出是 JSON 且需要提取字段，请改用下方的状态映射" />
+      {intl.formatMessage({ id: 'pages.agent.workflow.editor.outputKey' })}
+      <FieldTip title={intl.formatMessage({ id: 'pages.agent.workflow.editor.outputKeyTip' })} />
     </label>
     <Select
       style={{ width: '100%' }}
@@ -260,8 +261,8 @@ const OutputKeySelect: React.FC<{
       options={options}
       showSearch
       allowClear
-      notFoundContent="开始变量面板中暂无字段"
-      placeholder="从开始变量中选择共享状态键"
+      notFoundContent={intl.formatMessage({ id: 'pages.agent.workflow.editor.noStartVariables' })}
+      placeholder={intl.formatMessage({ id: 'pages.agent.workflow.editor.selectOutputKey' })}
       filterOption={(input, option) =>
         `${option?.value ?? ''} ${option?.label ?? ''}`
           .toLowerCase()
@@ -270,16 +271,17 @@ const OutputKeySelect: React.FC<{
       onChange={(v) => onChange(v)}
     />
   </>
-)
+}
 
 const InternalKeyInput: React.FC<{
   value?: string
   onChange: (value?: string) => void
-}> = ({ value, onChange }) => (
-  <>
+}> = ({ value, onChange }) => {
+  const intl = useIntl()
+  return <>
     <label>
-      输出到内部变量（可选）
-      <FieldTip title="内部变量不进共享状态面板，但可被后续节点以 ${_变量名} 引用" />
+      {intl.formatMessage({ id: 'pages.agent.workflow.editor.internalKey' })}
+      <FieldTip title={intl.formatMessage({ id: 'pages.agent.workflow.editor.internalKeyTip' })} />
     </label>
     <Input
       style={{ width: '100%' }}
@@ -290,10 +292,10 @@ const InternalKeyInput: React.FC<{
           trimmed ? (trimmed.startsWith('_') ? trimmed : `_${trimmed}`) : undefined,
         )
       }}
-      placeholder="如 input（存为 _input），或直接输入 _input"
+      placeholder={intl.formatMessage({ id: 'pages.agent.workflow.editor.internalKeyPlaceholder' })}
     />
   </>
-)
+}
 
 type CondRow = { variable: string; op: string; value: string; logic: '&&' | '||' }
 const COND_OPS = ['==', '!=', '>', '>=', '<', '<='].map((v) => ({ value: v, label: v }))
@@ -333,11 +335,13 @@ const parseCondition = (expr: string): CondRow[] | null => {
 }
 
 const Editor: React.FC = () => {
+  const intl = useIntl()
+  const t = (id: string, values?: Record<string, string | number>) => intl.formatMessage({ id }, values)
   const { id } = useParams<{ id: string }>()
   const [workflow, setWorkflow] = useState<AgentWorkflow>()
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node<WorkflowData>>(toFlowNodes(initial))
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node<WorkflowData>>(toFlowNodes(initial(intl)))
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(
-    toFlowEdges([{ source: 'start', target: 'end' }]),
+    toFlowEdges([{ source: 'start', target: 'end' }], intl.formatMessage({ id: 'pages.agent.workflow.run.defaultBranch' })),
   )
   const [selectedId, setSelectedId] = useState('start')
   const [schema, setSchema] = useState('[]')
@@ -377,7 +381,7 @@ const Editor: React.FC = () => {
       try {
         const parsedNodes = r.data.nodes ? JSON.parse(r.data.nodes) : []
         const restored =
-          Array.isArray(parsedNodes) && parsedNodes.length > 0 ? parsedNodes : initial
+          Array.isArray(parsedNodes) && parsedNodes.length > 0 ? parsedNodes : initial(intl)
         const parsedEdges = r.data.edges ? JSON.parse(r.data.edges) : []
         const restoredEdges =
           Array.isArray(parsedEdges) && parsedEdges.length > 0
@@ -389,22 +393,22 @@ const Editor: React.FC = () => {
                 target: restored[index + 1].id,
               }))
         setNodes(toFlowNodes(restored))
-        setEdges(toFlowEdges(restoredEdges, restored))
+        setEdges(toFlowEdges(restoredEdges, t('pages.agent.workflow.run.defaultBranch'), restored))
         setSchema(r.data.inputSchema || '[]')
         setOutputSchema(r.data.outputSchema || '[]')
       } catch {
-        message.error('画布数据格式错误')
+        message.error(t('pages.agent.workflow.editor.canvasDataInvalid'))
       }
     })
     getAgentDefinitionOptions().then(setAgentOptions)
     getAgentToolOptions().then(setToolOptions)
-  }, [id, setEdges, setNodes])
+  }, [id, intl, setEdges, setNodes])
   const onConnect = useCallback(
     (connection: Connection) => {
       const source = nodes.find((node) => node.id === connection.source)?.data.workflowNode
       const target = nodes.find((node) => node.id === connection.target)?.data.workflowNode
-      if (source?.type === 'end') { message.warning('结束节点不能连接至其他节点'); return }
-      if (target?.type === 'start') { message.warning('开始节点不能作为后续节点'); return }
+      if (source?.type === 'end') { message.warning(t('pages.agent.workflow.editor.endCannotConnect')); return }
+      if (target?.type === 'start') { message.warning(t('pages.agent.workflow.editor.startCannotFollow')); return }
       setEdges((current) =>
         addEdge(
           {
@@ -417,17 +421,17 @@ const Editor: React.FC = () => {
         ),
       )
     },
-    [nodes, setEdges],
+    [nodes, setEdges, t],
   )
   const add = (type: WorkflowNode['type']) => {
     const item: WorkflowNode = {
       id: `${type}_${Date.now()}`,
       type,
-      name: label[type],
+      name: nodeLabel(intl, type),
       position: { x: 300 + Math.random() * 220, y: 120 + Math.random() * 300 },
       // 开始表单默认为空；不要引用未声明变量，否则用户刚添加 Agent 就无法发布。
-      prompt: type === 'agent' ? '请根据已提供的流程上下文完成任务。' : undefined,
-      question: type === 'human' ? '请补充必要信息' : undefined,
+      prompt: type === 'agent' ? t('pages.agent.workflow.editor.defaultPrompt') : undefined,
+      question: type === 'human' ? t('pages.agent.workflow.editor.defaultQuestion') : undefined,
       argumentsTemplate: type === 'mcp' ? '{}' : undefined,
     }
     setNodes((current) => [...current, ...toFlowNodes([item])])
@@ -581,7 +585,7 @@ const Editor: React.FC = () => {
       JSON.parse(schema)
       JSON.parse(outputSchema)
     } catch {
-      message.error('开始表单字段和最终输出字段必须是合法 JSON 数组')
+      message.error(t('pages.agent.workflow.editor.schemasMustArray'))
       return
     }
     const workflowNodes = nodes.map((node) => ({
@@ -600,7 +604,7 @@ const Editor: React.FC = () => {
       maxIterations: (edge as any).data?.maxIterations,
     }))
     if (publish) {
-      const error = validateBeforePublish(workflowNodes, workflowEdges)
+      const error = validateBeforePublish(intl, workflowNodes, workflowEdges)
       if (error) {
         message.error(error)
         return
@@ -615,36 +619,26 @@ const Editor: React.FC = () => {
       outputSchema,
       maxConcurrentInstances: workflow.maxConcurrentInstances,
     })
-    if (result.code !== 200) {
-      message.error(result.message || '保存失败')
-      return
-    }
+    if (result.code !== 200) return
     if (publish) {
       const validation = await validateWorkflowDraft(id)
-      if (validation.code !== 200) {
-        message.error(validation.message || '草稿校验失败')
-        return
-      }
+      if (validation.code !== 200) return
       const published = await publishWorkflow(id)
-      if (published.code !== 200) {
-        message.error(published.message || '发布校验失败')
-        return
-      }
-      message.success(`已发布 v${published.data}`)
-    } else message.success('草稿已保存')
+      if (published.code !== 200) return
+    }
   }
   const nodeTypes = useMemo(() => ({ workflow: WorkflowCanvasNode }), [])
   return (
     <PageContainer
-      header={{ title: workflow?.name || '工作流编排', breadcrumb: undefined }}
+      header={{ title: workflow?.name || t('components.routeTabs.workflowEditor'), breadcrumb: undefined }}
       extra={
         <Space>
-          <Button onClick={() => history.push('/workflow/workflow')}>返回</Button>
+          <Button onClick={() => history.push('/workflow/workflow')}>{t('pages.agent.workflow.editor.back')}</Button>
           <Button icon={<SaveOutlined />} onClick={() => save(false)}>
-            保存
+            {t('pages.agent.workflow.editor.save')}
           </Button>
           <Button type="primary" icon={<SendOutlined />} onClick={() => save(true)}>
-            发布
+            {t('pages.agent.workflow.action.publish')}
           </Button>
         </Space>
       }
@@ -691,8 +685,8 @@ const Editor: React.FC = () => {
                 style={{ width: 220 }}
                 title={
                   <CardTitle
-                    title="节点库"
-                    tip="点击添加各类节点到画布，流程按连线顺序依次执行；从右/下输出点拖至左/上输入点连接，选中连线后按 Delete 删除。"
+                    title={t('pages.agent.workflow.editor.nodeLibrary')}
+                    tip={t('pages.agent.workflow.editor.nodeLibraryTip')}
                   />
                 }
                 extra={
@@ -705,23 +699,23 @@ const Editor: React.FC = () => {
               >
                 <Space direction="vertical" style={{ width: '100%' }}>
                   <Button icon={<PlusOutlined />} onClick={() => add('agent')}>
-                    普通 Agent
+                    {t('pages.agent.workflow.run.node.agent')}
                   </Button>
                   <Button icon={<PlusOutlined />} onClick={() => add('mcp')}>
-                    MCP 工具
+                    {t('pages.agent.workflow.run.node.mcp')}
                   </Button>
                   <Button icon={<PlusOutlined />} onClick={() => add('human')}>
-                    人工提问
+                    {t('pages.agent.workflow.run.node.human')}
                   </Button>
-                  <Tooltip title="自动根据连接关系重新排列节点">
+                  <Tooltip title={t('pages.agent.workflow.editor.autoArrangeTip')}>
                     <Button icon={<AppstoreOutlined />} onClick={autoArrange}>
-                      自动整理
+                      {t('pages.agent.workflow.editor.autoArrange')}
                     </Button>
                   </Tooltip>
                 </Space>
               </Card>
             ) : (
-              <Tooltip title="展开节点库">
+              <Tooltip title={t('pages.agent.workflow.editor.expandNodeLibrary')}>
                 <Button
                   shape="round"
                   size="large"
@@ -744,7 +738,7 @@ const Editor: React.FC = () => {
                   },
                 }}
                 title={
-                  <CardTitle title="节点属性" tip="选中画布中的节点后，在此编辑节点名称与运行配置。" />
+                  <CardTitle title={t('pages.agent.workflow.editor.nodeProperties')} tip={t('pages.agent.workflow.editor.nodePropertiesTip')} />
                 }
                 extra={
                   <Button
@@ -756,29 +750,29 @@ const Editor: React.FC = () => {
               >
                 {selectedEdgeId ? (
                   <Space direction="vertical" size={14} style={{ width: '100%' }}>
-                    <span style={{ color: '#595959' }}>已选中连线</span>
-                    <span style={{ color: '#8c8c8c', fontSize: 12 }}>双击连线可编辑条件或标签。</span>
-                    <Popconfirm title="删除该连线？" onConfirm={removeSelectedEdge}>
-                      <Button danger icon={<DeleteOutlined />}>删除连线</Button>
+                    <span style={{ color: '#595959' }}>{t('pages.agent.workflow.editor.edgeSelected')}</span>
+                    <span style={{ color: '#8c8c8c', fontSize: 12 }}>{t('pages.agent.workflow.editor.edgeSelectedTip')}</span>
+                    <Popconfirm title={t('pages.agent.workflow.editor.deleteEdgeConfirm')} onConfirm={removeSelectedEdge}>
+                      <Button danger icon={<DeleteOutlined />}>{t('pages.agent.workflow.editor.deleteEdge')}</Button>
                     </Popconfirm>
                   </Space>
                 ) : selected ? (
                   <Space direction="vertical" size={14} style={{ width: '100%' }}>
-                    <label style={{ marginBottom: -6, fontWeight: 500 }}>节点名称</label>
+                    <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.run.nodeName')}</label>
                     <Input
                       value={selected.name}
                       onChange={(e) => updateSelected({ name: e.target.value })}
                     />
                     {selected.type === 'agent' && (
                       <>
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>普通 Agent</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.run.node.agent')}</label>
                         <Select
                           style={{ width: '100%' }}
                           value={selected.resourceId}
                           options={agentOptions}
                           onChange={(resourceId) => updateSelected({ resourceId })}
                         />
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>提示词</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.prompt')}</label>
                         <Input.TextArea
                           value={selected.prompt}
                           rows={5}
@@ -801,7 +795,7 @@ const Editor: React.FC = () => {
                     )}
                     {selected.type === 'mcp' && (
                       <>
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>MCP 工具</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.run.node.mcp')}</label>
                         <Select
                           style={{ width: '100%' }}
                           value={selected.resourceId}
@@ -819,12 +813,12 @@ const Editor: React.FC = () => {
                               })
                           }}
                         />
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>MCP 方法名</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.mcpMethodName')}</label>
                         <Input
                           value={selected.toolName}
                           onChange={(e) => updateSelected({ toolName: e.target.value })}
                         />
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>参数模板</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.argumentsTemplate')}</label>
                         <Input.TextArea
                           value={selected.argumentsTemplate}
                           rows={4}
@@ -848,8 +842,8 @@ const Editor: React.FC = () => {
                     {selected.type === 'human' && (
                       <>
                         <label style={{ marginBottom: -6, fontWeight: 500 }}>
-                          问题
-                          <FieldTip title="人工节点的回答属于节点内部输入，不指定共享/内部变量时不会写入共享状态" />
+                          {t('pages.agent.workflow.editor.question')}
+                          <FieldTip title={t('pages.agent.workflow.editor.questionTip')} />
                         </label>
                         <Input.TextArea
                           value={selected.question}
@@ -857,14 +851,14 @@ const Editor: React.FC = () => {
                           onChange={(e) => updateSelected({ question: e.target.value })}
                         />
                         <label style={{ marginBottom: -6, fontWeight: 500 }}>
-                          多问题配置
-                          <FieldTip title="可选。填写 JSON 数组，每项包含 key、question、required、options；配置后运行时会逐项收集回答。" />
+                          {t('pages.agent.workflow.editor.multiQuestionConfig')}
+                          <FieldTip title={t('pages.agent.workflow.editor.multiQuestionConfigTip')} />
                         </label>
                         <Input.TextArea
                           key={selected.id}
                           defaultValue={selected.questions?.length ? JSON.stringify(selected.questions, null, 2) : ''}
                           rows={6}
-                          placeholder={'[{"key":"requirement","question":"请说明需求","required":true},{"key":"priority","question":"优先级","options":["高","中","低"]}]'}
+                          placeholder={t('pages.agent.workflow.editor.multiQuestionConfigPlaceholder')}
                           onBlur={(e) => {
                             const value = e.target.value.trim()
                             if (!value) { updateSelected({ questions: undefined }); return }
@@ -873,7 +867,7 @@ const Editor: React.FC = () => {
                               if (!Array.isArray(parsed)) throw new Error()
                               updateSelected({ questions: parsed })
                             } catch {
-                              message.warning('多问题配置必须是合法 JSON 数组')
+                              message.warning(t('pages.agent.workflow.editor.multiQuestionConfigInvalid'))
                             }
                           }}
                         />
@@ -893,19 +887,19 @@ const Editor: React.FC = () => {
                       </>
                     )}
                     {!['start', 'end'].includes(selected.type) && (
-                      <Popconfirm title="移除该节点及其连线？" onConfirm={removeSelected}>
+                      <Popconfirm title={t('pages.agent.workflow.editor.removeNodeConfirm')} onConfirm={removeSelected}>
                         <Button danger icon={<DeleteOutlined />}>
-                          删除节点
+                          {t('pages.agent.workflow.editor.deleteNode')}
                         </Button>
                       </Popconfirm>
                     )}
                   </Space>
                 ) : (
-                  <span style={{ color: '#8c8c8c' }}>点击节点编辑属性</span>
+                  <span style={{ color: '#8c8c8c' }}>{t('pages.agent.workflow.editor.selectNodeTip')}</span>
                 )}
               </Card>
             ) : (
-              <Tooltip title="展开节点属性">
+              <Tooltip title={t('pages.agent.workflow.editor.expandNodeProperties')}>
                 <Button
                   shape="round"
                   size="large"
@@ -920,8 +914,8 @@ const Editor: React.FC = () => {
               size="small"
               title={
                 <CardTitle
-                  title="开始变量"
-                  tip="声明流程启动时由用户填写的输入字段，可在节点提示词或参数模板中用 ${字段名} 引用。"
+                  title={t('pages.agent.workflow.editor.startVariables')}
+                  tip={t('pages.agent.workflow.editor.startVariablesTip')}
                 />
               }
               style={{ width: 320 }}
@@ -935,8 +929,8 @@ const Editor: React.FC = () => {
               size="small"
               title={
                 <CardTitle
-                  title="最终输出"
-                  tip="声明业务系统可接收的最终结果变量。发布时会校验每个字段在所有结束路径上都能产生；未声明的内部变量不会进入业务回调。"
+                  title={t('pages.agent.workflow.editor.finalOutput')}
+                  tip={t('pages.agent.workflow.editor.finalOutputTip')}
                 />
               }
               style={{ width: 320 }}
@@ -948,19 +942,19 @@ const Editor: React.FC = () => {
         </ReactFlow>
       </div>
       <Modal
-        title="连线条件设置"
+        title={t('pages.agent.workflow.editor.edgeConditionSettings')}
         open={edgeModalOpen}
         onOk={saveEdgeEdit}
         onCancel={() => setEdgeModalOpen(false)}
-        okText="确定"
-        cancelText="取消"
+        okText={t('pages.common.confirm')}
+        cancelText={t('pages.agent.workflow.editor.cancel')}
         width={480}
       >
         <Space direction="vertical" style={{ width: '100%' }} size="middle">
           <div>
             <label style={{ fontWeight: 600 }}>
-              条件表达式
-              <FieldTip title="变量从共享状态（开始变量）下拉选择；每行 = 变量 + 比较符 + 值；多行以 && / || 连接，条件为空则走默认分支" />
+              {t('pages.agent.workflow.editor.conditionExpression')}
+              <FieldTip title={t('pages.agent.workflow.editor.conditionExpressionTip')} />
             </label>
             <Space direction="vertical" style={{ width: '100%' }} size={6}>
               {condRows.map((row, i) => (
@@ -971,7 +965,7 @@ const Editor: React.FC = () => {
                     value={row.variable || undefined}
                     options={schemaFields}
                     showSearch
-                    placeholder="变量"
+                    placeholder={t('pages.agent.workflow.editor.variable')}
                     onChange={(v) => updateCondRow(i, { variable: v || '' })}
                   />
                   <Select
@@ -985,7 +979,7 @@ const Editor: React.FC = () => {
                     size="small"
                     style={{ flex: 1, minWidth: 0 }}
                     value={row.value}
-                    placeholder='值，如 80 或 "ok"'
+                    placeholder={t('pages.agent.workflow.editor.conditionValuePlaceholder')}
                     onChange={(e) => updateCondRow(i, { value: e.target.value })}
                   />
                   {i > 0 && (
@@ -1015,7 +1009,7 @@ const Editor: React.FC = () => {
                 icon={<PlusOutlined />}
                 onClick={addCondRow}
               >
-                添加条件
+                {t('pages.agent.workflow.editor.addCondition')}
               </Button>
             </Space>
             <Input.TextArea
@@ -1027,15 +1021,15 @@ const Editor: React.FC = () => {
                 const parsed = parseCondition(e.target.value)
                 if (parsed) setCondRows(parsed)
               }}
-              placeholder='高级：可手动编辑，如 ${score} > 80 && ${status} == "ok"'
+              placeholder={t('pages.agent.workflow.editor.advancedConditionPlaceholder')}
             />
           </div>
           <div>
-            <label style={{ fontWeight: 600 }}>标签</label>
+            <label style={{ fontWeight: 600 }}>{t('pages.agent.workflow.editor.label')}</label>
             <Input
               value={edgeLabel}
               onChange={(e) => setEdgeLabel(e.target.value)}
-              placeholder="显示在连线上的文字"
+              placeholder={t('pages.agent.workflow.editor.edgeLabelPlaceholder')}
             />
           </div>
           <div>
@@ -1043,13 +1037,13 @@ const Editor: React.FC = () => {
               checked={edgeIsDefault}
               onChange={(e) => setEdgeIsDefault(e.target.checked)}
             >
-              设为默认分支（所有条件都不满足时走此路径）
+              {t('pages.agent.workflow.editor.defaultBranch')}
             </Checkbox>
           </div>
           <div>
-            <label style={{ fontWeight: 600 }}>最大循环次数</label>
+            <label style={{ fontWeight: 600 }}>{t('pages.agent.workflow.editor.maxIterations')}</label>
             <div style={{ color: '#8c8c8c', fontSize: 12, marginBottom: 4 }}>
-              若此连线指向上游节点（回跳），超过次数将自动终止
+              {t('pages.agent.workflow.editor.maxIterationsTip')}
             </div>
             <InputNumber
               min={1}

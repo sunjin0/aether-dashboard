@@ -21,9 +21,8 @@ const AgentToolTestModal = (props: { toolId?: string; open: boolean; onClose: ()
       return
     }
 
-    getAgentToolInfo(toolId).then(({ code, data, message: msg }) => {
+    getAgentToolInfo(toolId).then(({ code, data }) => {
       if (code !== 200 || !data) {
-        message.error(msg || format('pages.agent.tool.getDetailFailed'))
         return
       }
       setSchema(data.mcpInputSchema || '{}')
@@ -44,11 +43,9 @@ const AgentToolTestModal = (props: { toolId?: string; open: boolean; onClose: ()
         return
       }
       setLoading(true)
-      const { code, data, message: msg } = await testAgentTool(toolId, argumentsValue)
+      const { code, data } = await testAgentTool(toolId, argumentsValue)
       if (code === 200) {
         setResult(data)
-      } else {
-        message.error(msg || format('pages.agent.tool.testFailed'))
       }
     } catch {
       message.error(format('pages.agent.tool.invalidArguments'))

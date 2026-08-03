@@ -96,18 +96,15 @@ const AgentRunPage: React.FC = () => {
           params.startTime = selectedDateRange[0]?.valueOf()
           params.endTime = selectedDateRange[1]?.valueOf()
         }
-        const { code, data, message: msg } = await getAgentRunStatistics(params)
+        const { code, data } = await getAgentRunStatistics(params)
         if (requestToken !== statisticsRequestTokenRef.current) {
           return
         }
         if (code === 200) {
           setStatistics(data)
-        } else {
-          message.error(msg || intl.formatMessage({ id: 'pages.agent.run.loadStatisticsFailed' }))
         }
       } catch {
         if (requestToken === statisticsRequestTokenRef.current) {
-          message.error(intl.formatMessage({ id: 'pages.agent.run.loadStatisticsFailed' }))
         }
       } finally {
         if (requestToken === statisticsRequestTokenRef.current) {
@@ -133,7 +130,7 @@ const AgentRunPage: React.FC = () => {
     setRun(undefined)
     setDetailLoading(true)
     try {
-      const { code, data, message: msg } = await getAgentRunInfo(record.id)
+      const { code, data } = await getAgentRunInfo(record.id)
       if (requestToken !== detailRequestTokenRef.current) {
         return
       }
@@ -141,12 +138,10 @@ const AgentRunPage: React.FC = () => {
         setRun(data)
       } else {
         setRun(undefined)
-        message.error(msg || intl.formatMessage({ id: 'pages.agent.run.loadDetailFailed' }))
       }
     } catch {
       if (requestToken === detailRequestTokenRef.current) {
         setRun(undefined)
-        message.error(intl.formatMessage({ id: 'pages.agent.run.loadDetailFailed' }))
       }
     } finally {
       if (requestToken === detailRequestTokenRef.current) {

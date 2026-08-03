@@ -65,7 +65,7 @@ const AgentToolCallLogPage: React.FC = () => {
     setDrawerOpen(true)
     setDetailLoading(true)
     try {
-      const { code, data, message: msg } = await getAgentToolCallLogInfo(record.id)
+      const { code, data } = await getAgentToolCallLogInfo(record.id)
       if (detailRequestRef.current !== requestId) {
         return
       }
@@ -73,12 +73,10 @@ const AgentToolCallLogPage: React.FC = () => {
         setToolCallLog(data)
       } else {
         setToolCallLog(undefined)
-        message.error(msg || format('pages.agent.toolCallLog.loadDetailFailed'))
       }
     } catch {
       if (detailRequestRef.current === requestId) {
         setToolCallLog(undefined)
-        message.error(format('pages.agent.toolCallLog.loadDetailFailed'))
       }
     } finally {
       if (detailRequestRef.current === requestId) {

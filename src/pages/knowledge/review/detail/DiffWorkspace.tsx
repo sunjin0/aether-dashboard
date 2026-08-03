@@ -330,9 +330,6 @@ const DiffWorkspace: React.FC<Props> = ({
         const taskId = response.data
         const returnTo = backPath
         setSubmitResult(taskId ? { taskId, returnTo } : { taskId: '', returnTo })
-        message.success(
-          intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.submitSuccess' }),
-        )
         setTimeout(() => {
           if (taskId) {
             history.push(`/knowledge/reviews/${taskId}?returnTo=${encodeURIComponent(returnTo)}`)
@@ -340,14 +337,9 @@ const DiffWorkspace: React.FC<Props> = ({
             history.push('/knowledge/reviews')
           }
         }, 1500)
-      } else {
-        message.error(
-          response.message ||
-            intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.submitFailed' }),
-        )
       }
     } catch (error) {
-      message.error(errorText(error))
+      // API failures are displayed by the global request handler.
     } finally {
       setBusy(false)
     }
@@ -550,7 +542,7 @@ const DiffWorkspace: React.FC<Props> = ({
                   color: 'rgba(0,0,0,0.45)',
                 }}
               >
-                <Tag>A</Tag> 接受 <Tag>R</Tag> 忽略 <Tag>N</Tag> 下一条 <Tag>P</Tag> 上一条 <Tag>B</Tag> 批量接受
+                <Tag>A</Tag> {intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.shortcut.accept' })} <Tag>R</Tag> {intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.shortcut.ignore' })} <Tag>N</Tag> {intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.shortcut.next' })} <Tag>P</Tag> {intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.shortcut.previous' })} <Tag>B</Tag> {intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.shortcut.batchAccept' })}
               </div>
             )}
             {diff ? (

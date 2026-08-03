@@ -208,19 +208,13 @@ const ChatDebugPage: React.FC = () => {
   const loadConversations = async () => {
     setLoadingConversations(true)
     try {
-      const {
-        code,
-        data,
-        message: msg,
-      } = await getAgentConversationList({
+      const { code, data } = await getAgentConversationList({
         status: 0,
         current: 1,
         pageSize: 50,
       })
       if (code === 200) {
         setConversations(data || [])
-      } else {
-        message.error(msg || intl.formatMessage({ id: 'pages.agent.chat.loadConversationsFailed' }))
       }
     } finally {
       setLoadingConversations(false)
@@ -230,18 +224,12 @@ const ChatDebugPage: React.FC = () => {
   const loadMessages = async (id: string) => {
     setLoadingMessages(true)
     try {
-      const {
-        code,
-        data,
-        message: msg,
-      } = await getAgentConversationMessages(id, {
+      const { code, data } = await getAgentConversationMessages(id, {
         current: 1,
         pageSize: 100,
       })
       if (code === 200) {
         setConversationMessages(data || [])
-      } else {
-        message.error(msg || intl.formatMessage({ id: 'pages.agent.chat.loadMessagesFailed' }))
       }
     } finally {
       setLoadingMessages(false)
@@ -1015,7 +1003,7 @@ const ChatDebugPage: React.FC = () => {
       const result = await uploadAgentChatAttachments([file])
       const attachment = result.data?.[0]
       if (result.code !== 200 || !attachment) {
-        throw new Error(result.message || intl.formatMessage({ id: 'pages.agent.chat.sendFailed' }))
+        throw new Error(intl.formatMessage({ id: 'pages.agent.chat.sendFailed' }))
       }
       setAttachments((current) =>
         current.map((item) =>

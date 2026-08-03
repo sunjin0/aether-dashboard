@@ -70,7 +70,7 @@ const ModelProviderForm = (props: {
       />
       <ProFormText.Password
         name="apiKey"
-        label="API Key"
+        label={format('pages.agent.modelProvider.apiKey')}
         required={!id}
         rules={[{ required: !id }]}
         fieldProps={{ autoComplete: 'new-password' }}

@@ -59,43 +59,34 @@ const AgentToolBinding: React.FC<AgentToolBindingProps> = ({ agentId, open, setO
         status: 1,
       }
 
-      const { code, message: msg } = await bindToolToAgent(agentId, params)
+      const { code } = await bindToolToAgent(agentId, params)
       if (code === 200) {
-        message.success(msg || intl.formatMessage({ id: 'pages.agent.definition.bindSuccess' }))
         setBindModalVisible(false)
         form.resetFields()
         actionRef.current?.reload()
-      } else {
-        message.error(msg || intl.formatMessage({ id: 'pages.agent.definition.bindFailed' }))
       }
     } catch (error) {
-      message.error(intl.formatMessage({ id: 'pages.agent.definition.checkForm' }))
+      if ('errorFields' in (error as object)) {
+        message.error(intl.formatMessage({ id: 'pages.agent.definition.checkForm' }))
+      }
     }
   }
 
   const handleUnbind = async (toolId: string) => {
-    const { code, message: msg } = await unbindToolFromAgent(agentId, toolId)
-    if (code === 200) {
-      message.success(msg || intl.formatMessage({ id: 'pages.agent.definition.unbindSuccess' }))
-      actionRef.current?.reload()
-    } else {
-      message.error(msg || intl.formatMessage({ id: 'pages.agent.definition.unbindFailed' }))
+    try {
+      const { code } = await unbindToolFromAgent(agentId, toolId)
+      if (code === 200) actionRef.current?.reload()
+    } catch {
+      // API failures are displayed by the global request handler.
     }
   }
 
   const handlePriorityChange = async (toolId: string, newPriority: number) => {
-    const { code, message: msg } = await updateToolPriority(agentId, toolId, {
-      priority: newPriority,
-    })
-    if (code === 200) {
-      message.success(
-        msg || intl.formatMessage({ id: 'pages.agent.definition.priorityUpdateSuccess' }),
-      )
-      actionRef.current?.reload()
-    } else {
-      message.error(
-        msg || intl.formatMessage({ id: 'pages.agent.definition.priorityUpdateFailed' }),
-      )
+    try {
+      const { code } = await updateToolPriority(agentId, toolId, { priority: newPriority })
+      if (code === 200) actionRef.current?.reload()
+    } catch {
+      // API failures are displayed by the global request handler.
     }
   }
 

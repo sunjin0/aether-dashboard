@@ -134,7 +134,10 @@ const ReviewDiffToolbar: React.FC<Props> = ({
               })}
             >
               <Button type="primary" icon={<FileDoneOutlined />} loading={busy} disabled={busy}>
-                保存 {acceptedCount} 项修改
+                {intl.formatMessage(
+                  { id: 'pages.knowledge.review.diffToolbar.saveAcceptedChanges' },
+                  { count: acceptedCount },
+                )}
               </Button>
             </Popconfirm>
           )}

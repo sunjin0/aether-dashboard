@@ -295,20 +295,16 @@ const KnowledgeIndexJobPage: React.FC = () => {
                       },
                       onClick: async () => {
                         if (!record.id) return
-                        const result = await retryIndexJob(record.id)
-                        if (result.code === 200) {
-                          message.success(
-                            result.message ||
-                              intl.formatMessage({ id: 'pages.knowledge.indexJob.retryQueued' }),
-                          )
-                          setStatusTab('running')
-                          setPollingInterval(3000)
-                          actionRef.current?.reload()
-                        } else
-                          message.error(
-                            result.message ||
-                              intl.formatMessage({ id: 'pages.knowledge.indexJob.retryFailed' }),
-                          )
+                        try {
+                          const result = await retryIndexJob(record.id)
+                          if (result.code === 200) {
+                            setStatusTab('running')
+                            setPollingInterval(3000)
+                            actionRef.current?.reload()
+                          }
+                        } catch {
+                          // API failures are displayed by the global request handler.
+                        }
                       },
                     },
                   ]}

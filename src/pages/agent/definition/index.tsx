@@ -39,12 +39,13 @@ const AgentDefinitionPage: React.FC = () => {
       return
     }
 
-    const { code, message: msg } = await deleteAgentDefinitionInfo(record.id)
-    if (code === 200) {
-      message.success(msg || format('pages.agent.definition.deleteSuccess'))
+    try {
+      const { code } = await deleteAgentDefinitionInfo(record.id)
+      if (code === 200) {
       ref.current?.reload()
-    } else {
-      message.error(msg || format('pages.agent.definition.deleteFailed'))
+      }
+    } catch {
+      // API failures are displayed by the global request handler.
     }
   }
 
@@ -54,12 +55,13 @@ const AgentDefinitionPage: React.FC = () => {
       return
     }
 
-    const { code, message: msg } = await copyAgentDefinitionInfo(record.id)
-    if (code === 200) {
-      message.success(msg || format('pages.agent.definition.copySuccess'))
+    try {
+      const { code } = await copyAgentDefinitionInfo(record.id)
+      if (code === 200) {
       ref.current?.reload()
-    } else {
-      message.error(msg || format('pages.agent.definition.copyFailed'))
+      }
+    } catch {
+      // API failures are displayed by the global request handler.
     }
   }
 
@@ -70,14 +72,11 @@ const AgentDefinitionPage: React.FC = () => {
     }
 
     const nextStatus = record.status === 1 ? 2 : 1
-    const { code, message: msg } = await updateAgentDefinitionStatus(record.id, {
-      status: nextStatus,
-    })
-    if (code === 200) {
-      message.success(msg || format('pages.agent.definition.operationSuccess'))
-      ref.current?.reload()
-    } else {
-      message.error(msg || format('pages.agent.definition.operationFailed'))
+    try {
+      const { code } = await updateAgentDefinitionStatus(record.id, { status: nextStatus })
+      if (code === 200) ref.current?.reload()
+    } catch {
+      // API failures are displayed by the global request handler.
     }
   }
 

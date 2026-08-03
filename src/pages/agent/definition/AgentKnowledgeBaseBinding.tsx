@@ -44,16 +44,19 @@ const AgentKnowledgeBaseBinding: React.FC<AgentKnowledgeBaseBindingProps> = ({ a
 
   const bind = async () => {
     const values = await form.validateFields()
-    const response = await addKnowledgeBaseBinding({
-      agentDefinitionId: agentId,
-      knowledgeBaseId: values.knowledgeBaseId,
-      status: 1,
-    })
-    if (response.code === 200) {
-      message.success(response.message || format('pages.agent.definition.bindSuccess'))
-      setBindOpen(false)
-      ref.current?.reload()
-    } else message.error(response.message || format('pages.agent.definition.bindFailed'))
+    try {
+      const response = await addKnowledgeBaseBinding({
+        agentDefinitionId: agentId,
+        knowledgeBaseId: values.knowledgeBaseId,
+        status: 1,
+      })
+      if (response.code === 200) {
+        setBindOpen(false)
+        ref.current?.reload()
+      }
+    } catch {
+      // API failures are displayed by the global request handler.
+    }
   }
 
   const columns: any[] = [
@@ -102,18 +105,14 @@ const AgentKnowledgeBaseBinding: React.FC<AgentKnowledgeBaseBindingProps> = ({ a
               confirm: { title: format('pages.agent.definition.bindingStatusConfirm') },
               onClick: async () => {
                 if (!record.id) return
-                const response = await updateKnowledgeBaseBindingStatus(record.id, {
-                  status: record.status === 1 ? 0 : 1,
-                })
-                if (response.code === 200) {
-                  message.success(
-                    response.message || format('pages.agent.definition.operationSuccess'),
-                  )
-                  ref.current?.reload()
-                } else
-                  message.error(
-                    response.message || format('pages.agent.definition.operationFailed'),
-                  )
+                try {
+                  const response = await updateKnowledgeBaseBindingStatus(record.id, {
+                    status: record.status === 1 ? 0 : 1,
+                  })
+                  if (response.code === 200) ref.current?.reload()
+                } catch {
+                  // API failures are displayed by the global request handler.
+                }
               },
             },
             {
@@ -123,14 +122,12 @@ const AgentKnowledgeBaseBinding: React.FC<AgentKnowledgeBaseBindingProps> = ({ a
               confirm: { title: format('pages.agent.definition.unbindKnowledgeBaseConfirm') },
               onClick: async () => {
                 if (!record.id) return
-                const response = await deleteKnowledgeBaseBinding(record.id)
-                if (response.code === 200) {
-                  message.success(
-                    response.message || format('pages.agent.definition.unbindSuccess'),
-                  )
-                  ref.current?.reload()
-                } else
-                  message.error(response.message || format('pages.agent.definition.unbindFailed'))
+                try {
+                  const response = await deleteKnowledgeBaseBinding(record.id)
+                  if (response.code === 200) ref.current?.reload()
+                } catch {
+                  // API failures are displayed by the global request handler.
+                }
               },
             },
           ]}

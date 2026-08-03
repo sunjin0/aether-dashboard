@@ -48,11 +48,11 @@ const McpServerPage: React.FC = () => {
     if (!server.id) return
     setLoading(true)
     try {
-      const [{ code, data, message: msg }, imported] = await Promise.all([
+      const [{ code, data }, imported] = await Promise.all([
         discoverMcpServerTools(server.id),
         getAgentToolList({ current: 1, pageSize: 1000, mcpServerId: server.id }),
       ])
-      if (code !== 200) return message.error(msg || format('pages.agent.mcpServer.discoverFailed'))
+      if (code !== 200) return
       setTools(data || [])
       setImportedToolNames((imported.data || []).flatMap((tool) => tool.mcpToolName || []))
       setSelectedTools([])
@@ -97,14 +97,13 @@ const McpServerPage: React.FC = () => {
     }
     setLoading(true)
     try {
-      const { code, message: msg } = await importMcpServerTools(
+      const { code } = await importMcpServerTools(
         discoverServer.id,
         selectedTools as string[],
       )
       if (code === 200) {
-        message.success(msg || format('pages.agent.mcpServer.importSuccess'))
         setDiscoverServer(undefined)
-      } else message.error(msg || format('pages.agent.mcpServer.importFailed'))
+      }
     } finally {
       setLoading(false)
     }
@@ -186,12 +185,14 @@ const McpServerPage: React.FC = () => {
                 confirm: { title: format('pages.agent.mcpServer.deleteConfirm') },
                 onClick: async () => {
                   if (!record.id) return
-                  const response = await deleteMcpServer(record.id)
-                  if (response.code === 200) {
-                    message.success(response.message || format('pages.agent.tool.deleteSuccess'))
+                  try {
+                    const response = await deleteMcpServer(record.id)
+                    if (response.code === 200) {
                     ref.current?.reload()
-                  } else
-                    message.error(response.message || format('pages.agent.mcpServer.deleteFailed'))
+                    }
+                  } catch {
+                    // API failures are displayed by the global request handler.
+                  }
                 },
               },
             ]}

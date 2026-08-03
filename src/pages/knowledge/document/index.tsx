@@ -78,14 +78,7 @@ const KnowledgeDocumentPage: React.FC = () => {
     try {
       const response = await reindexDocument(record.id)
       if (response.code === 200) {
-        message.success(
-          response.message || intl.formatMessage({ id: 'pages.knowledge.document.reindexQueued' }),
-        )
         reload()
-      } else {
-        message.error(
-          response.message || intl.formatMessage({ id: 'pages.knowledge.document.reindexFailed' }),
-        )
       }
     } finally {
       setReindexingId(undefined)
@@ -273,18 +266,12 @@ const KnowledgeDocumentPage: React.FC = () => {
                   title: intl.formatMessage({ id: 'pages.knowledge.document.deleteConfirm' }),
                 },
                 onClick: async () => {
-                  const response = await deleteDocument(record.id!)
-                  if (response.code === 200) {
-                    message.success(
-                      response.message ||
-                        intl.formatMessage({ id: 'pages.knowledge.document.deleteSuccess' }),
-                    )
-                    reload()
-                  } else
-                    message.error(
-                      response.message ||
-                        intl.formatMessage({ id: 'pages.knowledge.document.deleteFailed' }),
-                    )
+                  try {
+                    const response = await deleteDocument(record.id!)
+                    if (response.code === 200) reload()
+                  } catch {
+                    // API failures are displayed by the global request handler.
+                  }
                 },
               },
             ]}
@@ -360,7 +347,7 @@ const KnowledgeDocumentPage: React.FC = () => {
                     code: response.code,
                     message: failed.length
                       ? `${files.length - failed.length}/${files.length} uploaded; ${failed.length} failed`
-                      : response.message,
+                      : '',
                   }
                 }}
                 onSuccess={reload}

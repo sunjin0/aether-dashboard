@@ -8,6 +8,7 @@ import {
   PlusOutlined,
   UpOutlined,
 } from '@ant-design/icons'
+import { useIntl } from '@umijs/max'
 
 export interface StartVariableField {
   name: string;
@@ -33,6 +34,7 @@ export interface StartVariablesBuilderProps {
 }
 
 const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, onChange, mode = 'input' }) => {
+  const intl = useIntl()
   const outputMode = mode === 'output'
   const [fields, setFields] = useState<StartVariableField[]>(() => parseFields(value))
   const [jsonMode, setJsonMode] = useState(false)
@@ -50,7 +52,16 @@ const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, on
     const used = new Set(fields.map((f) => f.name))
     const prefix = outputMode ? 'output' : 'input'
     while (used.has(`${prefix}_${n}`)) n += 1
-    emit([...fields, { name: `${prefix}_${n}`, label: `${outputMode ? '输出' : '输入'}${n}` }])
+    emit([
+      ...fields,
+      {
+        name: `${prefix}_${n}`,
+        label: intl.formatMessage(
+          { id: outputMode ? 'pages.agent.workflow.schemaBuilder.defaultOutputLabel' : 'pages.agent.workflow.schemaBuilder.defaultInputLabel' },
+          { number: n },
+        ),
+      },
+    ])
   }
   const remove = (index: number) => emit(fields.filter((_, i) => i !== index))
   const move = (index: number, dir: -1 | 1) => {
@@ -68,7 +79,11 @@ const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, on
           rows={6}
           style={{ fontFamily: 'Consolas, Monaco, monospace', fontSize: 12 }}
           onChange={(e) => onChange?.(e.target.value)}
-          placeholder={outputMode ? '[{"name":"summary","label":"处理摘要"}]' : '[{"name":"input","label":"任务说明","required":true}]'}
+          placeholder={intl.formatMessage({
+            id: outputMode
+              ? 'pages.agent.workflow.schemaBuilder.outputJsonPlaceholder'
+              : 'pages.agent.workflow.schemaBuilder.inputJsonPlaceholder',
+          })}
         />
         <Button
           block
@@ -78,7 +93,7 @@ const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, on
             setFields(parseFields(value))
           }}
         >
-          返回可视化编辑
+          {intl.formatMessage({ id: 'pages.agent.workflow.schemaBuilder.backToVisualEditor' })}
         </Button>
       </Space>
     )
@@ -109,10 +124,24 @@ const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, on
             }}
           />
           {fields.length > 0
-            ? `${fields.length} 个${outputMode ? '最终输出字段' : '开始变量'}`
-            : outputMode ? '暂无最终输出字段，业务回调不会包含流程变量' : '暂无开始变量，启动流程时不显示输入表单'}
+            ? intl.formatMessage(
+                { id: 'pages.agent.workflow.schemaBuilder.fieldCount' },
+                {
+                  count: fields.length,
+                  type: intl.formatMessage({
+                    id: outputMode
+                      ? 'pages.agent.workflow.schemaBuilder.outputFields'
+                      : 'pages.agent.workflow.schemaBuilder.inputVariables',
+                  }),
+                },
+              )
+            : intl.formatMessage({
+                id: outputMode
+                  ? 'pages.agent.workflow.schemaBuilder.noOutputFields'
+                  : 'pages.agent.workflow.schemaBuilder.noInputVariables',
+              })}
         </span>
-        <Tooltip title="切换 JSON 编辑">
+        <Tooltip title={intl.formatMessage({ id: 'pages.agent.workflow.schemaBuilder.switchJsonEditor' })}>
           <Button
             size="small"
             type="text"
@@ -155,7 +184,7 @@ const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, on
                 size="small"
                 style={{ flex: 1, minWidth: 0 }}
                 value={field.name}
-                placeholder="变量名 name"
+                placeholder={intl.formatMessage({ id: 'pages.agent.workflow.schemaBuilder.variableNamePlaceholder' })}
                 status={duplicated ? 'error' : undefined}
                 onChange={(e) => update(index, { name: e.target.value })}
               />
@@ -163,10 +192,10 @@ const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, on
                 size="small"
                 style={{ flex: 1, minWidth: 0 }}
                 value={field.label}
-                placeholder="显示名称 label"
+                placeholder={intl.formatMessage({ id: 'pages.agent.workflow.schemaBuilder.displayNamePlaceholder' })}
                 onChange={(e) => update(index, { label: e.target.value })}
               />
-              <Tooltip title="上移">
+              <Tooltip title={intl.formatMessage({ id: 'pages.agent.workflow.schemaBuilder.moveUp' })}>
                 <Button
                   size="small"
                   type="text"
@@ -175,7 +204,7 @@ const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, on
                   onClick={() => move(index, -1)}
                 />
               </Tooltip>
-              <Tooltip title="下移">
+              <Tooltip title={intl.formatMessage({ id: 'pages.agent.workflow.schemaBuilder.moveDown' })}>
                 <Button
                   size="small"
                   type="text"
@@ -184,7 +213,7 @@ const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, on
                   onClick={() => move(index, 1)}
                 />
               </Tooltip>
-              <Tooltip title="删除">
+              <Tooltip title={intl.formatMessage({ id: 'pages.common.delete' })}>
                 <Button
                   size="small"
                   type="text"
@@ -200,7 +229,7 @@ const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, on
                   size="small"
                   style={{ flex: 1, minWidth: 0 }}
                   value={field.placeholder}
-                  placeholder="占位提示 placeholder（可选）"
+                  placeholder={intl.formatMessage({ id: 'pages.agent.workflow.schemaBuilder.placeholderHint' })}
                   onChange={(e) => update(index, { placeholder: e.target.value })}
                 />
                 <Checkbox
@@ -208,7 +237,7 @@ const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, on
                   checked={!!field.required}
                   onChange={(e) => update(index, { required: e.target.checked })}
                 >
-                  必填
+                  {intl.formatMessage({ id: 'pages.common.required' })}
                 </Checkbox>
               </div>
             )}
@@ -222,7 +251,10 @@ const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, on
                   paddingLeft: 26,
                 }}
               >
-                变量名重复，{'${'}{field.name}{'}'} 引用会冲突
+                {intl.formatMessage(
+                  { id: 'pages.agent.workflow.schemaBuilder.duplicateVariable' },
+                  { name: field.name },
+                )}
               </span>
             )}
           </div>
@@ -235,7 +267,7 @@ const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, on
         style={{ color: '#1677ff' }}
         onClick={add}
       >
-        添加字段
+        {intl.formatMessage({ id: 'pages.agent.workflow.schemaBuilder.addField' })}
       </Button>
     </Space>
   )

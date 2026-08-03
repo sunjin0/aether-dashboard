@@ -123,12 +123,11 @@ const PreferencePage: React.FC = () => {
     try {
       const response = await overrideAdminPreference(overrideId, { value: overrideValue.trim() })
       if (response.code === 200) {
-        message.success(response.message || format('pages.sys.preference.overrideSuccess'))
         setOverrideId(undefined)
         setOverrideRecord(undefined)
         setOverrideValue('')
         refresh()
-      } else message.error(response.message || format('pages.sys.preference.operationFailed'))
+      }
     } finally {
       setOverrideLoading(false)
     }
@@ -256,14 +255,12 @@ const PreferencePage: React.FC = () => {
                 confirm: { title: format('pages.sys.preference.deleteConfirm') },
                 onClick: async () => {
                   if (!record.id) return
-                  const response = await deleteAdminPreference(record.id)
-                  if (response.code === 200) {
-                    message.success(
-                      response.message || format('pages.sys.preference.deleteSuccess'),
-                    )
-                    refresh()
-                  } else
-                    message.error(response.message || format('pages.sys.preference.deleteFailed'))
+                  try {
+                    const response = await deleteAdminPreference(record.id)
+                    if (response.code === 200) refresh()
+                  } catch {
+                    // API failures are displayed by the global request handler.
+                  }
                 },
               },
             ]}

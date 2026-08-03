@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { KnowledgeDocumentVersion, ReviewStatus } from '@/services/entity/Agent'
 import { getDocumentVersions } from '@/services/knowledge/DocumentController'
 import { getLatestAiReview } from '@/services/knowledge/ReviewController'
+import { useIntl } from '@umijs/max'
 import DiffWorkspace from '../review/detail/DiffWorkspace'
 
 interface Props {
@@ -14,6 +15,7 @@ interface Props {
 }
 
 const DocumentReviewDrawer: React.FC<Props> = ({ documentId, open, onClose, onSuccess }) => {
+  const intl = useIntl()
   const [version, setVersion] = useState<KnowledgeDocumentVersion>()
   const [reviewId, setReviewId] = useState('')
   const [loading, setLoading] = useState(false)
@@ -30,7 +32,7 @@ const DocumentReviewDrawer: React.FC<Props> = ({ documentId, open, onClose, onSu
         const versions = (await getDocumentVersions(documentId)).data || []
         const currentVersion = versions[0]
         if (!currentVersion?.id) {
-          if (!cancelled) setError('No document version is available')
+          if (!cancelled) setError(intl.formatMessage({ id: 'pages.knowledge.review.noDocumentVersion' }))
           return
         }
         const latestReview = (await getLatestAiReview(currentVersion.id)).data
@@ -39,7 +41,7 @@ const DocumentReviewDrawer: React.FC<Props> = ({ documentId, open, onClose, onSu
           setReviewId(latestReview?.id || '')
         }
       } catch {
-        if (!cancelled) setError('Failed to load document review status')
+        if (!cancelled) setError(intl.formatMessage({ id: 'pages.knowledge.review.loadStatusFailed' }))
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -48,18 +50,18 @@ const DocumentReviewDrawer: React.FC<Props> = ({ documentId, open, onClose, onSu
     return () => {
       cancelled = true
     }
-  }, [documentId, open, reloadKey])
+  }, [documentId, intl, open, reloadKey])
 
   return (
     <DrawerForm
-      title="文档 AI 审阅"
+      title={intl.formatMessage({ id: 'pages.knowledge.review.documentAiReview' })}
       open={open}
       onOpenChange={(nextOpen) => !nextOpen && onClose()}
       drawerProps={{ destroyOnClose: true, width: '100vw', styles: { body: { padding: 0 } } }}
       submitter={false}
     >
       {loading && (
-        <Spin spinning tip="正在加载文档审阅...">
+        <Spin spinning tip={intl.formatMessage({ id: 'pages.knowledge.review.loading' })}>
           <div style={{ minHeight: 400 }} />
         </Spin>
       )}
@@ -70,7 +72,7 @@ const DocumentReviewDrawer: React.FC<Props> = ({ documentId, open, onClose, onSu
           message={error}
           action={
             <Button size="small" onClick={() => setReloadKey((key) => key + 1)}>
-              重试
+              {intl.formatMessage({ id: 'pages.common.retry' })}
             </Button>
           }
           style={{ margin: 24 }}

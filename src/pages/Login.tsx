@@ -35,10 +35,9 @@ export default () => {
     setSubmitting(true)
     try {
       if (isEmailStep) {
-        const { data, message: msg } = await login(values)
+        const { data } = await login(values)
         localStorage.setItem('token', data.token)
         localStorage.setItem('refreshToken', data.refreshToken)
-        message.success(msg)
         if (initialState?.fetchUserInfo) {
           const currentUser = await initialState.fetchUserInfo()
           flushSync(() => {
@@ -49,8 +48,7 @@ export default () => {
         return true
       }
 
-      const { data, message: msg } = await verify(values)
-      message.success(msg)
+      const { data } = await verify(values)
       setAccount(values.account)
       setVerified(data as boolean)
       return true
@@ -251,7 +249,6 @@ export default () => {
                         },
                         method: 'POST',
                       })
-                      message.success(result.message)
                     }}
                   />
                 </>

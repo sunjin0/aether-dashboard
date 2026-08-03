@@ -46,13 +46,6 @@ const statusColor: Record<string, string> = {
   TIMED_OUT: 'error',
   PENDING: 'default',
 }
-const nodeLabel: Record<string, string> = {
-  start: '开始',
-  agent: '普通 Agent',
-  mcp: 'MCP 工具',
-  human: '人工提问',
-  end: '结束',
-}
 const nodeColor: Record<string, string> = {
   start: '#52c41a',
   agent: '#1677ff',
@@ -72,18 +65,18 @@ const runStatusColor: Record<string, string> = {
 type RunNodeData = { def: Record<string, any>; log?: Record<string, any> }
 type HumanQuestion = { key: string; question: string; required?: boolean; options?: string[] }
 
-const getHumanQuestions = (config: Record<string, any>): HumanQuestion[] => {
+const getHumanQuestions = (intl: ReturnType<typeof useIntl>, config: Record<string, any>): HumanQuestion[] => {
   const raw = Array.isArray(config.questions) ? config.questions : []
   const questions = raw.map((item: any, index: number) => {
     if (typeof item === 'string') return { key: `answer_${index + 1}`, question: item, required: true }
     return {
       key: item?.key || item?.name || `answer_${index + 1}`,
-      question: item?.question || item?.label || `问题 ${index + 1}`,
+      question: item?.question || item?.label || intl.formatMessage({ id: 'pages.agent.workflow.run.questionNumber' }, { number: index + 1 }),
       required: item?.required !== false,
       options: Array.isArray(item?.options) ? item.options : undefined,
     }
   }).filter((item) => item.question)
-  return questions.length ? questions : [{ key: 'answer', question: config.question || '请补充信息', required: true }]
+  return questions.length ? questions : [{ key: 'answer', question: config.question || intl.formatMessage({ id: 'pages.agent.workflow.run.defaultQuestion' }), required: true }]
 }
 
 const formatVarValue = (value: unknown): string => {
@@ -145,14 +138,14 @@ const RunCanvasNode: React.FC<NodeProps<Node<RunNodeData>>> = ({ data, selected 
         }}
       >
         <Tag color={typeColor} style={{ margin: 0 }}>
-          {typeLabel || nodeLabel[def.type] || def.type}
+          {typeLabel || def.type}
         </Tag>
         <Tag color={status === 'PENDING' ? 'default' : statusFill} style={{ margin: 0 }}>
           {statusLabel || status}
         </Tag>
       </div>
       <div style={{ padding: '11px 12px' }}>
-        <div style={{ fontWeight: 600 }}>{def.name || typeLabel || nodeLabel[def.type]}</div>
+        <div style={{ fontWeight: 600 }}>{def.name || typeLabel || def.type}</div>
         {log?.status === 'FAILED' && log.errorMessage && (
           <div style={{ color: '#ff4d4f', fontSize: 12, marginTop: 6 }}>{log.errorMessage}</div>
         )}
@@ -163,7 +156,7 @@ const RunCanvasNode: React.FC<NodeProps<Node<RunNodeData>>> = ({ data, selected 
 
 const RunPage: React.FC = () => {
   const intl = useIntl()
-  const t = (key: string) => intl.formatMessage({ id: key })
+  const t = (key: string, values?: Record<string, string | number>) => intl.formatMessage({ id: key }, values)
   const formatWorkflowStatus = (status?: string) => intl.formatMessage({
     id: `pages.agent.workflow.run.status.${status || 'PENDING'}`,
     defaultMessage: status || '-',
@@ -300,7 +293,7 @@ const RunPage: React.FC = () => {
       const callbackUrl = String(values._callbackUrl || '').trim()
       const hasBusinessFields = !!(businessType || businessId || idempotencyKey || callbackUrl || values._deadlineAt)
       if (hasBusinessFields && (!businessType || !businessId || !idempotencyKey)) {
-        message.error('业务启动需填写业务类型、业务单据 ID 和幂等键')
+        message.error(t('pages.agent.workflow.run.businessStartRequired'))
         return
       }
       const deadlineAt = values._deadlineAt?.valueOf?.()
@@ -308,10 +301,9 @@ const RunPage: React.FC = () => {
         ? await startBusinessWorkflow(id, { variables, businessType, businessId, idempotencyKey, callbackUrl: callbackUrl || undefined, deadlineAt })
         : await startWorkflow(id, variables)
       if (result.code === 200 && result.data) {
-        message.success(t('pages.agent.workflow.run.started'))
         load(result.data)
         loadHistory()
-      } else message.error(result.message || t('pages.agent.workflow.run.startFailed'))
+      }
     } finally {
       setStarting(false)
     }
@@ -329,11 +321,10 @@ const RunPage: React.FC = () => {
           : answerForm.getFieldsValue(),
       )
       if (result.code === 200) {
-        message.success(t('pages.agent.workflow.run.submitted'))
         answerForm.resetFields()
         load(instance.id)
         loadHistory()
-      } else message.error(result.message || t('pages.agent.workflow.run.submitFailed'))
+      }
     } finally {
       setAnswering(false)
     }
@@ -342,10 +333,8 @@ const RunPage: React.FC = () => {
     setActing(true)
     try {
       await action()
-    } catch (error) {
-      // 请求库在 HTTP 异常时会抛出 Promise rejection；必须在操作入口消费，
-      // 否则接口错误会以未处理异常的形式进入浏览器控制台。
-      message.error(error instanceof Error ? error.message : t('pages.agent.workflow.run.startFailed'))
+    } catch {
+      // API failures are displayed by the global request handler.
     } finally {
       setActing(false)
     }
@@ -373,10 +362,9 @@ const RunPage: React.FC = () => {
     try {
       const result = await updateWorkflowVariables(instance.id, variables)
       if (result.code === 200) {
-        message.success(t('pages.agent.workflow.run.variablesUpdated'))
         setVariablesOpen(false)
         load(instance.id)
-      } else message.error(result.message || t('pages.agent.workflow.run.updateFailed'))
+      }
     } finally {
       setSavingVariables(false)
     }
@@ -423,7 +411,7 @@ const RunPage: React.FC = () => {
       const edgeLabel = edge.condition
         ? edge.label || edge.condition
         : edge.isDefault
-          ? edge.label || '默认'
+          ? edge.label || t('pages.agent.workflow.run.defaultBranch')
           : edge.label
       return {
         id: edge.id || `edge_${edge.source}_${edge.target}_${index}`,
@@ -489,14 +477,14 @@ const RunPage: React.FC = () => {
               style={{ marginBottom: 12 }}
               items={[{
                 key: 'business',
-                label: '业务接入（可选）',
+                label: t('pages.agent.workflow.run.businessIntegration'),
                 children: <>
-                  <p style={{ color: '#8c8c8c', fontSize: 12 }}>填写后以业务幂等模式启动；回调地址须命中服务端白名单。</p>
-                  <Form.Item name="_businessType" label="业务类型"><Input placeholder="如 ticket" /></Form.Item>
-                  <Form.Item name="_businessId" label="业务单据 ID"><Input placeholder="如 TICKET-001" /></Form.Item>
-                  <Form.Item name="_idempotencyKey" label="幂等键"><Input placeholder="如 ticket:TICKET-001:created:v1" /></Form.Item>
-                  <Form.Item name="_callbackUrl" label="终态回调地址"><Input placeholder="https://workflow.example.com/callback" /></Form.Item>
-                  <Form.Item name="_deadlineAt" label="人工等待截止时间"><DatePicker showTime style={{ width: '100%' }} /></Form.Item>
+                  <p style={{ color: '#8c8c8c', fontSize: 12 }}>{t('pages.agent.workflow.run.businessIntegrationTip')}</p>
+                  <Form.Item name="_businessType" label={t('pages.agent.workflow.run.businessType')}><Input placeholder={t('pages.agent.workflow.run.businessTypePlaceholder')} /></Form.Item>
+                  <Form.Item name="_businessId" label={t('pages.agent.workflow.run.businessId')}><Input placeholder={t('pages.agent.workflow.run.businessIdPlaceholder')} /></Form.Item>
+                  <Form.Item name="_idempotencyKey" label={t('pages.agent.workflow.run.idempotencyKey')}><Input placeholder={t('pages.agent.workflow.run.idempotencyKeyPlaceholder')} /></Form.Item>
+                  <Form.Item name="_callbackUrl" label={t('pages.agent.workflow.run.callbackUrl')}><Input placeholder="https://workflow.example.com/callback" /></Form.Item>
+                  <Form.Item name="_deadlineAt" label={t('pages.agent.workflow.run.deadlineAt')}><DatePicker showTime style={{ width: '100%' }} /></Form.Item>
                 </>,
               }]}
             />
@@ -529,8 +517,8 @@ const RunPage: React.FC = () => {
             }
           >
             <Descriptions column={2}>
-              <Descriptions.Item label="实例 ID">{instance.id}</Descriptions.Item>
-              <Descriptions.Item label="业务关联">{instance.businessType && instance.businessId ? `${instance.businessType} · ${instance.businessId}` : '-'}</Descriptions.Item>
+              <Descriptions.Item label={t('pages.agent.workflow.run.instanceId')}>{instance.id}</Descriptions.Item>
+              <Descriptions.Item label={t('pages.agent.workflow.run.businessAssociation')}>{instance.businessType && instance.businessId ? `${instance.businessType} · ${instance.businessId}` : '-'}</Descriptions.Item>
               <Descriptions.Item label={t('pages.agent.workflow.run.currentNode')}>
                 {instance.currentNodeId || '-'}
               </Descriptions.Item>
@@ -539,11 +527,11 @@ const RunPage: React.FC = () => {
                 </Descriptions.Item>
             </Descriptions>
             {callbackDeliveries.length > 0 && (
-              <Card size="small" title="业务回调投递" style={{ marginTop: 12 }}>
+              <Card size="small" title={t('pages.agent.workflow.run.callbackDelivery')} style={{ marginTop: 12 }}>
                 <Space direction="vertical" style={{ width: '100%' }}>
                   {callbackDeliveries.map((delivery) => (
                     <Space key={delivery.id} style={{ justifyContent: 'space-between', width: '100%' }} wrap>
-                      <span>{delivery.eventType} · 第 {delivery.attemptCount || 0} 次</span>
+                      <span>{delivery.eventType} · {t('pages.agent.workflow.run.deliveryAttempt', { count: delivery.attemptCount || 0 })}</span>
                       <Space>
                         <Tag color={delivery.status === 'DELIVERED' ? 'success' : delivery.status === 'FAILED' ? 'error' : 'processing'}>{delivery.status}</Tag>
                         {delivery.responseStatus && <span>HTTP {delivery.responseStatus}</span>}
@@ -551,7 +539,7 @@ const RunPage: React.FC = () => {
                           <Button size="small" loading={acting} onClick={() => act(async () => {
                             await retryWorkflowCallback(instance.id, delivery.id)
                             load(instance.id)
-                          })}>重投</Button>
+                          })}>{t('pages.agent.workflow.run.retryDelivery')}</Button>
                         )}
                       </Space>
                       {delivery.errorMessage && <span style={{ color: '#ff4d4f', width: '100%' }}>{delivery.errorMessage}</span>}
@@ -678,9 +666,9 @@ const RunPage: React.FC = () => {
                           const config = node?.interactionConfig ? JSON.parse(node.interactionConfig) : {}
                           return config.type === 'mcp_tool_approval' ? (
                             <>
-                              <p>{config.question || '请确认 MCP 工具调用'}</p>
+                              <p>{config.question || t('pages.agent.workflow.run.confirmMcpToolCall')}</p>
                               {config.arguments && <FormattedContent content={config.arguments} />}
-                              <Form.Item name="decision" rules={[{ required: true, message: '请选择处理方式' }]}>
+                              <Form.Item name="decision" rules={[{ required: true, message: t('pages.agent.workflow.run.selectDecision') }]}>
                                 <Radio.Group>
                                   <Space direction="vertical">
                                     <Radio value="once">{t('pages.agent.workflow.run.mcpOnce')}</Radio>
@@ -692,12 +680,12 @@ const RunPage: React.FC = () => {
                             </>
                           ) : (
                             <>
-                              {getHumanQuestions(config).map((question, index) => (
+                              {getHumanQuestions(intl, config).map((question, index) => (
                                 <Form.Item
                                   key={question.key}
                                   name={question.key}
                                   label={question.question}
-                                  rules={question.required ? [{ required: true, message: '请填写或选择回答' }] : undefined}
+                                  rules={question.required ? [{ required: true, message: t('pages.agent.workflow.run.answerRequired') }] : undefined}
                                 >
                                   {question.options?.length ? (
                                     <Radio.Group>
@@ -714,7 +702,7 @@ const RunPage: React.FC = () => {
                           )
                         })()}
                         <Button type="primary" loading={answering} onClick={answer}>
-                          提交并继续
+                          {t('pages.agent.workflow.run.submitAndContinue')}
                         </Button>
                       </Form>
                     </Card>
@@ -755,7 +743,7 @@ const RunPage: React.FC = () => {
             {['FAILED', 'COMPLETED', 'TERMINATED'].includes(instance.status) && !instance.businessType && !instance.businessId && !instance.idempotencyKey && (
               <Popconfirm title={t('pages.agent.workflow.run.replayConfirm')} onConfirm={() => act(async () => {
                 const result = await replayWorkflow(instance.id)
-                if (result.code !== 200 || !result.data) throw new Error(result.message || t('pages.agent.workflow.run.startFailed'))
+                if (result.code !== 200 || !result.data) return
                 message.success(t('pages.agent.workflow.run.replayed'))
                 await load(result.data)
                 await loadHistory()

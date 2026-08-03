@@ -98,15 +98,16 @@ const AgentConversationPage: React.FC = () => {
       return
     }
 
-    const { code, message: msg } = await closeAgentConversation(record.id)
-    if (code === 200) {
-      message.success(msg || intl.formatMessage({ id: 'pages.agent.conversation.closeSuccess' }))
+    try {
+      const { code } = await closeAgentConversation(record.id)
+      if (code === 200) {
       ref.current?.reload()
       if (record.id === currentId) {
         await loadDetail(record.id)
       }
-    } else {
-      message.error(msg || intl.formatMessage({ id: 'pages.agent.conversation.closeFailed' }))
+      }
+    } catch {
+      // API failures are displayed by the global request handler.
     }
   }
 
@@ -170,9 +171,9 @@ const AgentConversationPage: React.FC = () => {
       return
     }
 
-    const { code, message: msg } = await deleteAgentConversation(record.id)
-    if (code === 200) {
-      message.success(msg || intl.formatMessage({ id: 'pages.agent.conversation.deleteSuccess' }))
+    try {
+      const { code } = await deleteAgentConversation(record.id)
+      if (code === 200) {
       ref.current?.reload()
       if (record.id === currentId) {
         setDrawerOpen(false)
@@ -180,8 +181,9 @@ const AgentConversationPage: React.FC = () => {
         setConversation(undefined)
         setMessages([])
       }
-    } else {
-      message.error(msg || intl.formatMessage({ id: 'pages.agent.conversation.deleteFailed' }))
+      }
+    } catch {
+      // API failures are displayed by the global request handler.
     }
   }
 

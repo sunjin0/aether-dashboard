@@ -137,9 +137,12 @@ export const errorConfig: RequestConfig = {
         return response
       }
       data.success = data.code === 200
+      const skipSuccessMessage = (response as { config?: { skipSuccessMessage?: boolean } }).config?.skipSuccessMessage
       if (data.success) {
-        const apiMessage = getApiMessage(data)
-        if (apiMessage) message.success(apiMessage)
+        if (!skipSuccessMessage) {
+          const apiMessage = getApiMessage(data)
+          if (apiMessage) message.success(apiMessage)
+        }
       } else {
         data.errorMessage = getApiMessage(data) || getFallbackMessage('app.requestError.requestFailed')
         data.errorCode = data.code

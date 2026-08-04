@@ -702,10 +702,10 @@ const Editor: React.FC = () => {
       inputSchema: schema,
       outputSchema,
       maxConcurrentInstances: workflow.maxConcurrentInstances,
-    })
+    }, { skipSuccessMessage: publish })
     if (result.code !== 200) return
     if (publish) {
-      const validation = await validateWorkflowDraft(id)
+      const validation = await validateWorkflowDraft(id, { skipSuccessMessage: true })
       if (validation.code !== 200) return
       const published = await publishWorkflow(id)
       if (published.code !== 200) return

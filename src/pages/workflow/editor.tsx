@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { history, useIntl, useParams } from '@umijs/max'
 import { PageContainer } from '@ant-design/pro-components'
 import { Button, Card, Checkbox, Input, InputNumber, Modal, Popconfirm, Select, Space, Tag, Tooltip, message } from 'antd'
@@ -6,6 +6,7 @@ import {
   AppstoreOutlined,
   DeleteOutlined,
   DownOutlined,
+  HolderOutlined,
   InfoCircleOutlined,
   PlusOutlined,
   SaveOutlined,
@@ -222,25 +223,69 @@ const WorkflowCanvasNode: React.FC<NodeProps<Node<WorkflowData>>> = ({ data, sel
   )
 }
 
-const StateMappingEditor: React.FC<{ value?: string; onChange: (value: string) => void }> = ({
-  value,
-  onChange,
-}) => (
-  <StateMappingEditorContent value={value} onChange={onChange} />
-)
-const StateMappingEditorContent: React.FC<{ value?: string; onChange: (value: string) => void }> = ({ value, onChange }) => {
+type StateMappingRow = { key: string; value: string }
+const parseStateMapping = (value?: string): StateMappingRow[] => {
+  if (!value?.trim()) return []
+  try {
+    const mapping = JSON.parse(value)
+    if (!mapping || Array.isArray(mapping) || typeof mapping !== 'object') return []
+    return Object.entries(mapping).map(([key, mappedValue]) => ({ key, value: String(mappedValue ?? '') }))
+  } catch {
+    return []
+  }
+}
+const StateMappingEditor: React.FC<{ value?: string; onChange: (value: string) => void }> = ({ value, onChange }) => {
   const intl = useIntl()
+  const [rows, setRows] = useState<StateMappingRow[]>(() => parseStateMapping(value))
+  useEffect(() => { setRows(parseStateMapping(value)) }, [value])
+  const updateRows = (next: StateMappingRow[]) => {
+    setRows(next)
+    const mapping = next.reduce<Record<string, string>>((result, row) => {
+      const key = row.key.trim()
+      if (key) result[key] = row.value
+      return result
+    }, {})
+    onChange(Object.keys(mapping).length ? JSON.stringify(mapping) : '')
+  }
   return <>
     <label>
       {intl.formatMessage({ id: 'pages.agent.workflow.editor.stateMapping' })}
       <FieldTip title={intl.formatMessage({ id: 'pages.agent.workflow.editor.stateMappingTip' })} />
     </label>
-    <Input.TextArea
-      value={value}
-      rows={3}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={'{"result":"$output","score":"$json.score"}'}
-    />
+    <Space direction="vertical" size={6} style={{ width: '100%' }}>
+      {rows.map((row, index) => (
+        <Space key={index} size={6} style={{ display: 'flex' }}>
+          <Input
+            style={{ width: 116 }}
+            value={row.key}
+            placeholder={intl.formatMessage({ id: 'pages.agent.workflow.editor.stateMappingKey' })}
+            onChange={(e) => updateRows(rows.map((item, i) => (i === index ? { ...item, key: e.target.value } : item)))}
+          />
+          <Input
+            style={{ flex: 1, minWidth: 0 }}
+            value={row.value}
+            placeholder={intl.formatMessage({ id: 'pages.agent.workflow.editor.stateMappingValue' })}
+            onChange={(e) => updateRows(rows.map((item, i) => (i === index ? { ...item, value: e.target.value } : item)))}
+          />
+          <Button
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+            aria-label={intl.formatMessage({ id: 'pages.agent.workflow.editor.removeStateMapping' })}
+            onClick={() => updateRows(rows.filter((_, i) => i !== index))}
+          />
+        </Space>
+      ))}
+      <Button
+        type="dashed"
+        block
+        size="small"
+        icon={<PlusOutlined />}
+        onClick={() => updateRows([...rows, { key: '', value: '' }])}
+      >
+        {intl.formatMessage({ id: 'pages.agent.workflow.editor.addStateMapping' })}
+      </Button>
+    </Space>
   </>
 }
 
@@ -350,6 +395,10 @@ const Editor: React.FC = () => {
   const [toolOptions, setToolOptions] = useState<any[]>([])
   const [paletteOpen, setPaletteOpen] = useState(true)
   const [propertyOpen, setPropertyOpen] = useState(true)
+  const [startVariablesOpen, setStartVariablesOpen] = useState(true)
+  const [finalOutputOpen, setFinalOutputOpen] = useState(true)
+  const [panelOffsets, setPanelOffsets] = useState<Record<string, { x: number; y: number }>>({})
+  const panelDrag = useRef<{ key: string; x: number; y: number; offsetX: number; offsetY: number } | null>(null)
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
   const [edgeModalOpen, setEdgeModalOpen] = useState(false)
   const [edgeCondition, setEdgeCondition] = useState('')
@@ -358,6 +407,41 @@ const Editor: React.FC = () => {
   const [edgeMaxIter, setEdgeMaxIter] = useState<number>(10)
   const [condRows, setCondRows] = useState<CondRow[]>(() => [EMPTY_COND_ROW()])
   const selected = nodes.find((node) => node.id === selectedId)?.data.workflowNode
+  const panelStyle = (key: string, style?: React.CSSProperties): React.CSSProperties => {
+    const offset = panelOffsets[key] || { x: 0, y: 0 }
+    return { ...style, transform: `translate(${offset.x}px, ${offset.y}px)` }
+  }
+  const startPanelDrag = (key: string) => (event: React.PointerEvent<HTMLSpanElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+    const offset = panelOffsets[key] || { x: 0, y: 0 }
+    panelDrag.current = { key, x: event.clientX, y: event.clientY, offsetX: offset.x, offsetY: offset.y }
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+  const movePanel = (event: React.PointerEvent<HTMLSpanElement>) => {
+    const drag = panelDrag.current
+    if (!drag) return
+    setPanelOffsets((current) => ({
+      ...current,
+      [drag.key]: {
+        x: drag.offsetX + event.clientX - drag.x,
+        y: drag.offsetY + event.clientY - drag.y,
+      },
+    }))
+  }
+  const stopPanelDrag = () => { panelDrag.current = null }
+  const draggablePanelTitle = (key: string, title: React.ReactNode, tip: React.ReactNode) => (
+    <span
+      style={{ display: 'inline-flex', alignItems: 'center', cursor: 'move', touchAction: 'none' }}
+      onPointerDown={startPanelDrag(key)}
+      onPointerMove={movePanel}
+      onPointerUp={stopPanelDrag}
+      onPointerCancel={stopPanelDrag}
+    >
+      <HolderOutlined style={{ color: '#8c8c8c', marginRight: 6 }} />
+      <CardTitle title={title} tip={tip} />
+    </span>
+  )
   const schemaFields = useMemo(() => {
     try {
       const parsed = JSON.parse(schema || '[]')
@@ -682,12 +766,13 @@ const Editor: React.FC = () => {
             {paletteOpen ? (
               <Card
                 size="small"
-                style={{ width: 220 }}
+                style={panelStyle('palette', { width: 220 })}
                 title={
-                  <CardTitle
-                    title={t('pages.agent.workflow.editor.nodeLibrary')}
-                    tip={t('pages.agent.workflow.editor.nodeLibraryTip')}
-                  />
+                  draggablePanelTitle(
+                    'palette',
+                    t('pages.agent.workflow.editor.nodeLibrary'),
+                    t('pages.agent.workflow.editor.nodeLibraryTip'),
+                  )
                 }
                 extra={
                   <Button
@@ -729,7 +814,7 @@ const Editor: React.FC = () => {
             {propertyOpen ? (
               <Card
                 size="small"
-                style={{ width: 380, maxWidth: 'calc(100vw - 48px)' }}
+                style={panelStyle('properties', { width: 380, maxWidth: 'calc(100vw - 48px)' })}
                 styles={{
                   body: {
                     maxHeight: 'calc(100vh - 310px)',
@@ -738,7 +823,11 @@ const Editor: React.FC = () => {
                   },
                 }}
                 title={
-                  <CardTitle title={t('pages.agent.workflow.editor.nodeProperties')} tip={t('pages.agent.workflow.editor.nodePropertiesTip')} />
+                  draggablePanelTitle(
+                    'properties',
+                    t('pages.agent.workflow.editor.nodeProperties'),
+                    t('pages.agent.workflow.editor.nodePropertiesTip'),
+                  )
                 }
                 extra={
                   <Button
@@ -910,34 +999,72 @@ const Editor: React.FC = () => {
             )}
           </Panel>
           <Panel position="bottom-left">
-            <Card
-              size="small"
-              title={
-                <CardTitle
-                  title={t('pages.agent.workflow.editor.startVariables')}
-                  tip={t('pages.agent.workflow.editor.startVariablesTip')}
+            {startVariablesOpen ? (
+              <Card
+                size="small"
+                title={
+                  draggablePanelTitle(
+                    'startVariables',
+                    t('pages.agent.workflow.editor.startVariables'),
+                    t('pages.agent.workflow.editor.startVariablesTip'),
+                  )
+                }
+                extra={
+                  <Button
+                    type="text"
+                    icon={<DownOutlined />}
+                    onClick={() => setStartVariablesOpen(false)}
+                  />
+                }
+                style={panelStyle('startVariables', { width: 320 })}
+                styles={{ body: { maxHeight: 360, overflow: 'auto' } }}
+              >
+                <StartVariablesBuilder value={schema} onChange={setSchema} />
+              </Card>
+            ) : (
+              <Tooltip title={t('pages.agent.workflow.editor.expandStartVariables')}>
+                <Button
+                  shape="round"
+                  size="large"
+                  icon={<DownOutlined rotate={-90} />}
+                  onClick={() => setStartVariablesOpen(true)}
                 />
-              }
-              style={{ width: 320 }}
-              styles={{ body: { maxHeight: 360, overflow: 'auto' } }}
-            >
-              <StartVariablesBuilder value={schema} onChange={setSchema} />
-            </Card>
+              </Tooltip>
+            )}
           </Panel>
           <Panel position="bottom-right">
-            <Card
-              size="small"
-              title={
-                <CardTitle
-                  title={t('pages.agent.workflow.editor.finalOutput')}
-                  tip={t('pages.agent.workflow.editor.finalOutputTip')}
+            {finalOutputOpen ? (
+              <Card
+                size="small"
+                title={
+                  draggablePanelTitle(
+                    'finalOutput',
+                    t('pages.agent.workflow.editor.finalOutput'),
+                    t('pages.agent.workflow.editor.finalOutputTip'),
+                  )
+                }
+                extra={
+                  <Button
+                    type="text"
+                    icon={<DownOutlined />}
+                    onClick={() => setFinalOutputOpen(false)}
+                  />
+                }
+                style={panelStyle('finalOutput', { width: 320 })}
+                styles={{ body: { maxHeight: 360, overflow: 'auto' } }}
+              >
+                <StartVariablesBuilder value={outputSchema} onChange={setOutputSchema} mode="output" />
+              </Card>
+            ) : (
+              <Tooltip title={t('pages.agent.workflow.editor.expandFinalOutput')}>
+                <Button
+                  shape="round"
+                  size="large"
+                  icon={<DownOutlined rotate={90} />}
+                  onClick={() => setFinalOutputOpen(true)}
                 />
-              }
-              style={{ width: 320 }}
-              styles={{ body: { maxHeight: 360, overflow: 'auto' } }}
-            >
-              <StartVariablesBuilder value={outputSchema} onChange={setOutputSchema} mode="output" />
-            </Card>
+              </Tooltip>
+            )}
           </Panel>
         </ReactFlow>
       </div>

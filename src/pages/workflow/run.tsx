@@ -95,11 +95,14 @@ const formatVarValue = (value: unknown): string => {
     }
     return value
   }
-  if (typeof value === 'object' && !Array.isArray(value)) {
+  if (typeof value === 'object') {
     return JSON.stringify(value, null, 2)
   }
   return String(value)
 }
+
+const hasNodeOutput = (log?: Record<string, any>) =>
+  Boolean(log && Object.prototype.hasOwnProperty.call(log, 'outputData') && log.outputData !== undefined && log.outputData !== null)
 
 const RunCanvasNode: React.FC<NodeProps<Node<RunNodeData>>> = ({ data, selected }) => {
   const intl = useIntl()
@@ -277,6 +280,14 @@ const RunPage: React.FC = () => {
       onerror: () => { controller.abort() },
     }).catch(() => undefined)
     return () => controller.abort()
+  }, [instance?.id, instance?.status])
+  useEffect(() => {
+    if (!instance || instance.status !== 'RUNNING') return
+    const timer = window.setInterval(() => {
+      load(instance.id)
+      loadHistory()
+    }, 3000)
+    return () => window.clearInterval(timer)
   }, [instance?.id, instance?.status])
   const start = async () => {
     if (!id) return
@@ -639,8 +650,8 @@ const RunPage: React.FC = () => {
                             </Descriptions.Item>
                           ))}
                           <Descriptions.Item label={t('pages.agent.workflow.run.output')}>
-                            {log?.outputData ? (
-                              <FormattedContent content={formatVarValue(log.outputData)} />
+                            {hasNodeOutput(log) ? (
+                              <FormattedContent content={formatVarValue(log?.outputData)} />
                             ) : (
                               '-'
                             )}
@@ -748,7 +759,7 @@ const RunPage: React.FC = () => {
                 await load(result.data)
                 await loadHistory()
               })}>
-                <Button style={{ marginTop: 16 }} loading={acting}>{t('pages.agent.workflow.run.replay')}</Button>
+                <Button style={{ marginTop: 16, marginLeft: 8 }} loading={acting}>{t('pages.agent.workflow.run.replay')}</Button>
               </Popconfirm>
             )}
           </Card>

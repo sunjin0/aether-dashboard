@@ -289,10 +289,12 @@ const WorkflowPage: React.FC = () => {
       <Modal
         open={open}
         title={editing ? t('pages.common.edit') : t('pages.agent.workflow.new')}
-        onCancel={() => { setOpen(false); setEditing(undefined) }}
+        onCancel={() => { form.resetFields(); setOpen(false); setEditing(undefined) }}
+        afterClose={() => form.resetFields()}
+        destroyOnClose
         onOk={submit}
       >
-        <Form form={form} layout="vertical">
+        <Form form={form} layout="vertical" preserve={false}>
           <Form.Item
             name="name"
             label={t('pages.agent.workflow.name')}

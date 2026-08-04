@@ -54,6 +54,7 @@ export default function EvaluationPage() {
         <ModalForm
           key="add"
           title={intl.formatMessage({ id: 'pages.knowledge.evaluation.createSet' })}
+          modalProps={{ destroyOnClose: true }}
           onFinish={async (v) => {
             await saveEvaluationSet(v as EvaluationSet)
             await load()
@@ -103,6 +104,7 @@ export default function EvaluationPage() {
             </Button>
             <ModalForm
               title={intl.formatMessage({ id: 'pages.knowledge.evaluation.addQuestion' })}
+              modalProps={{ destroyOnClose: true }}
               onFinish={async (v) => {
                 await saveEvaluationCase(selected!.id!, v as EvaluationCase)
                 await open(selected!)

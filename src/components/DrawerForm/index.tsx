@@ -26,6 +26,14 @@ export default (props: Props) => {
       open={open}
       readonly={readonly}
       onOpenChange={(open) => {
+        if (open && !id) {
+          form.resetFields();
+        }
+        if (!open) {
+          // The form instance is owned by the caller, so destroying the drawer alone
+          // does not clear values before the next create operation.
+          form.resetFields();
+        }
         if (setOpen) {
           setOpen(open);
         }

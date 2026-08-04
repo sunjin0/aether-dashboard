@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useIntl } from '@umijs/max';
 import { PageContainer, ProTable, type ActionType } from '@ant-design/pro-components';
-import { Button, Form, Input, Modal, Popconfirm, Select, Switch, TimePicker, message } from 'antd';
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { Button, Card, Form, Input, Modal, Popconfirm, Select, Switch, TimePicker } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import {
   AgentWorkflow,
@@ -50,24 +50,29 @@ const parseScheduleVariable = (value: string) => {
   }
 };
 
-const getWorkflowVariables = (workflow?: AgentWorkflow) => {
+type WorkflowVariable = { name: string; label?: string; placeholder?: string; required?: boolean; default?: unknown };
+const getWorkflowVariables = (workflow?: AgentWorkflow): WorkflowVariable[] => {
   try {
     const fields = JSON.parse(workflow?.publishedInputSchema || workflow?.inputSchema || '[]');
     if (!Array.isArray(fields)) return [];
     return fields
       .filter((field) => field && typeof field === 'object' && field.name)
       .map((field) => ({
-        key: String(field.name),
-        value:
-          field.default === undefined
-            ? ''
-            : typeof field.default === 'string'
-              ? field.default
-              : JSON.stringify(field.default),
+        name: String(field.name),
+        label: field.label ? String(field.label) : undefined,
+        placeholder: field.placeholder ? String(field.placeholder) : undefined,
+        required: field.required === true,
+        default: field.default,
       }));
   } catch {
     return [];
   }
+};
+
+const getScheduleVariables = (variables?: WorkflowSchedule['variables']): Record<string, unknown> => {
+  if (!variables) return {};
+  if (typeof variables === 'object') return variables;
+  try { return JSON.parse(String(variables)); } catch { return {}; }
 };
 
 const WorkflowSchedulePage: React.FC = () => {
@@ -78,6 +83,7 @@ const WorkflowSchedulePage: React.FC = () => {
   const [editing, setEditing] = useState<WorkflowSchedule>();
   const [workflows, setWorkflows] = useState<AgentWorkflow[]>([]);
   const [serviceAccounts, setServiceAccounts] = useState<ServiceAccount[]>([]);
+  const [workflowVariables, setWorkflowVariables] = useState<WorkflowVariable[]>([]);
   const [form] = Form.useForm();
   const workflowId = Form.useWatch('workflowId', form);
   const scheduleType = Form.useWatch('scheduleType', form) || 'DAILY';
@@ -97,10 +103,22 @@ const WorkflowSchedulePage: React.FC = () => {
   }, [open]);
 
   useEffect(() => {
-    if (!open || editing || !workflowId) return;
+    if (!open || !workflowId) {
+      setWorkflowVariables([]);
+      return;
+    }
     getWorkflow(workflowId).then((result) => {
       if (result.code === 200 && result.data) {
-        form.setFieldValue('variables', getWorkflowVariables(result.data));
+        const fields = getWorkflowVariables(result.data);
+        const savedVariables = getScheduleVariables(editing?.variables);
+        setWorkflowVariables(fields);
+        form.setFieldValue(
+          'variables',
+          fields.reduce<Record<string, unknown>>((values, field) => {
+            values[field.name] = savedVariables[field.name] ?? field.default ?? '';
+            return values;
+          }, {}),
+        );
       }
     });
   }, [editing, form, open, workflowId]);
@@ -111,7 +129,7 @@ const WorkflowSchedulePage: React.FC = () => {
       scheduleType: 'DAILY',
       scheduleTime: dayjs().hour(9).minute(0).second(0),
       scheduleWeekday: 'MON',
-      variables: [{ key: '', value: '' }],
+      variables: {},
     });
     setOpen(true);
   };
@@ -129,12 +147,6 @@ const WorkflowSchedulePage: React.FC = () => {
           : fields[2] === '*'
             ? 'HOURLY'
             : 'DAILY';
-    let variables: Record<string, unknown> = {};
-    try {
-      variables = schedule.variables ? JSON.parse(String(schedule.variables)) : {};
-    } catch {
-      variables = {};
-    }
     form.setFieldsValue({
       ...schedule,
       scheduleType,
@@ -143,26 +155,17 @@ const WorkflowSchedulePage: React.FC = () => {
         .minute(Number(fields[1]) || 0)
         .second(0),
       scheduleWeekday: scheduleType === 'WEEKLY' ? fields[5] : 'MON',
-      variables: Object.entries(variables).map(([key, value]) => ({
-        key,
-        value: typeof value === 'string' ? value : JSON.stringify(value),
-      })),
+      variables: {},
     });
     setOpen(true);
   };
 
   const createSchedule = async () => {
     const values = await form.validateFields();
-    const variables: Record<string, unknown> = {};
-    for (const row of values.variables || []) {
-      const key = String(row?.key || '').trim();
-      if (!key) continue;
-      if (Object.prototype.hasOwnProperty.call(variables, key)) {
-        message.error(t('pages.agent.workflow.schedule.duplicateVariable'));
-        return;
-      }
-      variables[key] = parseScheduleVariable(String(row?.value || ''));
-    }
+    const variables = workflowVariables.reduce<Record<string, unknown>>((result, field) => {
+      result[field.name] = parseScheduleVariable(String(values.variables?.[field.name] ?? ''));
+      return result;
+    }, {});
     const payload: WorkflowSchedule = {
       workflowId: values.workflowId,
       name: values.name,
@@ -303,9 +306,12 @@ const WorkflowSchedulePage: React.FC = () => {
         open={open}
         title={editing ? t('pages.common.edit') : t('pages.agent.workflow.schedule.create')}
         onCancel={() => {
+          form.resetFields();
           setOpen(false);
           setEditing(undefined);
         }}
+        afterClose={() => form.resetFields()}
+        destroyOnClose
         onOk={createSchedule}
         width={760}
       >
@@ -407,36 +413,34 @@ const WorkflowSchedulePage: React.FC = () => {
           >
             <Input placeholder="daily-${scheduledAt}" />
           </Form.Item>
-          <Form.List name="variables">
-            {(fields, { add, remove }) => (
-              <Form.Item label={t('pages.agent.workflow.schedule.variables')}>
-                {fields.map((field) => (
-                  <div key={field.key} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                    <Form.Item {...field} name={[field.name, 'key']} noStyle>
-                      <Input placeholder={t('pages.agent.workflow.schedule.variableKey')} />
-                    </Form.Item>
-                    <Form.Item {...field} name={[field.name, 'value']} noStyle>
-                      <Input placeholder={t('pages.agent.workflow.schedule.variableValue')} />
-                    </Form.Item>
-                    <Button
-                      type="text"
-                      danger
-                      icon={<DeleteOutlined />}
-                      onClick={() => remove(field.name)}
-                    />
-                  </div>
-                ))}
-                <Button
-                  type="dashed"
-                  block
-                  icon={<PlusOutlined />}
-                  onClick={() => add({ key: '', value: '' })}
+          {workflowVariables.length > 0 && (
+            <Card
+              size="small"
+              title={t('pages.agent.workflow.schedule.variables')}
+              style={{ marginBottom: 24, background: '#fafcff', borderColor: '#d6e4ff' }}
+              styles={{ body: { padding: '12px 16px 4px' } }}
+            >
+              {workflowVariables.map((field) => (
+                <div
+                  key={field.name}
+                  style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}
                 >
-                  {t('pages.agent.workflow.schedule.addVariable')}
-                </Button>
-              </Form.Item>
-            )}
-          </Form.List>
+                  <span style={{ width: 190, flex: '0 0 auto', textAlign: 'right', fontWeight: 500 }}>
+                    {field.required && <span style={{ color: '#ff4d4f', marginRight: 4 }}>*</span>}
+                    {field.label || field.name}
+                    {field.label && <span style={{ color: '#8c8c8c', marginLeft: 4, fontWeight: 400 }}>({field.name})</span>}
+                  </span>
+                  <Form.Item
+                    name={['variables', field.name]}
+                    rules={field.required ? [{ required: true, message: t('pages.agent.workflow.schedule.variableRequired') }] : undefined}
+                    style={{ flex: 1, marginBottom: 0 }}
+                  >
+                    <Input placeholder={field.placeholder || t('pages.agent.workflow.schedule.variableValue')} />
+                  </Form.Item>
+                </div>
+              ))}
+            </Card>
+          )}
         </Form>
       </Modal>
     </PageContainer>

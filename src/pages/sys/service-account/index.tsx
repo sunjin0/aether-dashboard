@@ -284,7 +284,11 @@ const ServiceAccountPage: React.FC = () => {
                 key="create"
                 type="primary"
                 icon={<PlusOutlined />}
-                onClick={() => setCreateOpen(true)}
+                onClick={() => {
+                  form.resetFields()
+                  form.setFieldsValue({ allowedWorkflowIds: [], maxStartsPerHour: 0 })
+                  setCreateOpen(true)
+                }}
               >
                 {t('pages.serviceAccount.create')}
               </Button>,
@@ -295,14 +299,18 @@ const ServiceAccountPage: React.FC = () => {
       <Modal
         title={t('pages.serviceAccount.create')}
         open={createOpen}
-        onCancel={() => setCreateOpen(false)}
+        onCancel={() => {
+          form.resetFields()
+          setCreateOpen(false)
+        }}
+        afterClose={() => form.resetFields()}
         onOk={submit}
         destroyOnClose
       >
         <Form
           form={form}
           layout="vertical"
-          initialValues={{ allowedWorkflowIds: [], maxStartsPerHour: 0 }}
+          preserve={false}
         >
           <Form.Item
             name="name"
@@ -430,7 +438,11 @@ const ServiceAccountPage: React.FC = () => {
       <Modal
         title={t('pages.serviceAccount.testCall')}
         open={Boolean(testAccount)}
-        onCancel={() => setTestAccount(undefined)}
+        onCancel={() => {
+          testForm.resetFields()
+          setTestAccount(undefined)
+        }}
+        afterClose={() => testForm.resetFields()}
         onOk={runTest}
         okText={t('pages.serviceAccount.runTest')}
         destroyOnClose
@@ -441,7 +453,7 @@ const ServiceAccountPage: React.FC = () => {
           message={t('pages.serviceAccount.testCallTip')}
           style={{ marginBottom: 16 }}
         />
-        <Form form={testForm} layout="vertical">
+        <Form form={testForm} layout="vertical" preserve={false}>
           <Form.Item
             name="clientSecret"
             label={t('pages.serviceAccount.clientSecret')}

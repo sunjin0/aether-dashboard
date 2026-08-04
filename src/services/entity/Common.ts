@@ -19,6 +19,7 @@ export interface ResponseStructure<T> {
   code?: number;
   message?: string;
   data: T;
+  total?: number;
   errorCode?: number;
   errorMessage?: string;
   showType?: ErrorShowType;

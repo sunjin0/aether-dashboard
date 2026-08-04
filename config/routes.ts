@@ -133,6 +133,12 @@ export default [
         component: './workflow/instances',
       },
       {
+        path: '/workflow/schedule',
+        name: '定时任务',
+        exact: true,
+        component: './workflow/schedule',
+      },
+      {
         path: '/workflow/workflow/:id/run',
         name: '工作流运行',
         hideInMenu: true,

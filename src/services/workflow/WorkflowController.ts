@@ -89,6 +89,8 @@ export type WorkflowSchedule = {
   nextFireAt?: number
   lastTriggeredAt?: number
   lastErrorMessage?: string
+  current?: number
+  pageSize?: number
 }
 export const getWorkflowList = (data: AgentWorkflow) => request<ResponseStructure<AgentWorkflow[]>>('/api/agent/workflow/list', { method: 'POST', data })
 export const getWorkflow = (id: string) => request<ResponseStructure<AgentWorkflow>>(`/api/agent/workflow/${id}`)
@@ -111,7 +113,9 @@ export const rotateWorkflowWebhookSecret = (id: string) => request<ResponseStruc
 export const setWorkflowWebhookEnabled = (id: string, enabled: boolean) => request<ResponseStructure<void>>(`/api/agent/workflow/webhooks/${id}/enabled`, { method: 'POST', params: { enabled } })
 export const createWorkflowSchedule = (data: WorkflowSchedule) => request<ResponseStructure<WorkflowSchedule>>('/api/agent/workflow/schedules', { method: 'POST', data })
 export const getWorkflowSchedules = (data: Partial<WorkflowSchedule> = {}) => request<ResponseStructure<WorkflowSchedule[]>>('/api/agent/workflow/schedules/list', { method: 'POST', data })
+export const updateWorkflowSchedule = (id: string, data: WorkflowSchedule) => request<ResponseStructure<void>>(`/api/agent/workflow/schedules/${id}`, { method: 'PUT', data })
 export const setWorkflowScheduleEnabled = (id: string, enabled: boolean) => request<ResponseStructure<void>>(`/api/agent/workflow/schedules/${id}/enabled`, { method: 'POST', params: { enabled } })
+export const deleteWorkflowSchedule = (id: string) => request<ResponseStructure<void>>(`/api/agent/workflow/schedules/${id}`, { method: 'DELETE' })
 export const getWorkflowOperationsMetrics = () => request<ResponseStructure<WorkflowOperationsMetrics>>('/api/agent/workflow/operations/metrics')
 export const getWorkflowDeadLetters = (limit = 50) => request<ResponseStructure<WorkflowDeadLetter[]>>('/api/agent/workflow/operations/dead-letters', { params: { limit } })
 export const startWorkflow = (id: string, variables: Record<string, unknown>) => request<ResponseStructure<string>>(`/api/agent/workflow/${id}/instances`, { method: 'POST', data: { variables } })

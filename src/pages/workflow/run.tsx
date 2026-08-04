@@ -721,9 +721,9 @@ const RunPage: React.FC = () => {
                 )}
               </ReactFlow>
             </div>
-            {instance.status === 'FAILED' && (
+            {['RUNNING', 'WAITING_USER', 'FAILED'].includes(instance.status) && (
               <Space style={{ marginTop: 16 }}>
-                <Button
+                {instance.status === 'FAILED' && <Button
                   type="primary"
                   loading={acting}
                   onClick={() =>
@@ -735,7 +735,7 @@ const RunPage: React.FC = () => {
                   }
                 >
                   {t('pages.agent.workflow.run.retry')}
-                </Button>
+                </Button>}
                 <Button
                   danger
                   loading={acting}

@@ -1,16 +1,14 @@
 import React, { useRef, useState } from 'react'
 import { history, useIntl } from '@umijs/max'
 import { PageContainer, ProTable, type ActionType } from '@ant-design/pro-components'
-import { Button, Descriptions, Form, Input, InputNumber, Modal, Select, Switch, Table, Tag, message } from 'antd'
+import { Button, Descriptions, Form, Input, InputNumber, Modal, Select, Table, Tag, message } from 'antd'
 import { AppstoreOutlined, DownloadOutlined, HistoryOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons'
 import {
   AgentWorkflow,
   createWorkflow,
-  createWorkflowSchedule,
   createWorkflowTemplate,
   deleteWorkflow,
   exportWorkflow,
-  getWorkflowSchedules,
   getWorkflow,
   getWorkflowList,
   getWorkflowTemplates,
@@ -20,10 +18,8 @@ import {
   instantiateWorkflowTemplate,
   offlineWorkflow,
   publishWorkflow,
-  setWorkflowScheduleEnabled,
   updateWorkflow,
   WorkflowTemplate,
-  WorkflowSchedule,
   WorkflowVersion,
   WorkflowVersionDiff,
 } from '@/services/workflow/WorkflowController'
@@ -43,13 +39,9 @@ const WorkflowPage: React.FC = () => {
   const [versions, setVersions] = useState<WorkflowVersion[]>([])
   const [versionDiff, setVersionDiff] = useState<WorkflowVersionDiff>()
   const [compareVersions, setCompareVersions] = useState<number[]>([])
-  const [schedulesOpen, setSchedulesOpen] = useState(false)
-  const [scheduleWorkflow, setScheduleWorkflow] = useState<AgentWorkflow>()
-  const [schedules, setSchedules] = useState<WorkflowSchedule[]>([])
   const importInput = useRef<HTMLInputElement>(null)
   const [form] = Form.useForm()
   const [templateForm] = Form.useForm()
-  const [scheduleForm] = Form.useForm()
   const loadTemplates = async () => {
     const result = await getWorkflowTemplates()
     if (result.code === 200) setTemplates(result.data || [])
@@ -68,33 +60,6 @@ const WorkflowPage: React.FC = () => {
     setCompareVersions([])
     setVersionDiff(undefined)
     setVersionsOpen(true)
-  }
-  const showSchedules = async (record: AgentWorkflow) => {
-    if (!record.id) return
-    const result = await getWorkflowSchedules({ workflowId: record.id })
-    if (result.code !== 200) return
-    setScheduleWorkflow(record)
-    setSchedules(result.data || [])
-    scheduleForm.resetFields()
-    setSchedulesOpen(true)
-  }
-  const createSchedule = async () => {
-    if (!scheduleWorkflow?.id) return
-    const values = await scheduleForm.validateFields()
-    let variables: Record<string, unknown> = {}
-    try {
-      variables = values.variables ? JSON.parse(values.variables) : {}
-      if (!variables || Array.isArray(variables) || typeof variables !== 'object') throw new Error('not an object')
-    } catch { message.error(t('pages.agent.workflow.schedule.variablesInvalid')); return }
-    const result = await createWorkflowSchedule({ ...values, workflowId: scheduleWorkflow.id, variables })
-    if (result.code !== 200) return
-    await showSchedules(scheduleWorkflow)
-  }
-  const toggleSchedule = async (schedule: WorkflowSchedule, enabled: boolean) => {
-    if (!schedule.id) return
-    const result = await setWorkflowScheduleEnabled(schedule.id, enabled)
-    if (result.code !== 200) return
-    setSchedules((current) => current.map((item) => item.id === schedule.id ? { ...item, enabled } : item))
   }
   const compareVersion = async (selectedVersions: number[]) => {
     setCompareVersions(selectedVersions)
@@ -289,11 +254,6 @@ const WorkflowPage: React.FC = () => {
                     onClick: () => showVersions(r),
                   },
                   {
-                    key: 'schedules',
-                    label: t('pages.agent.workflow.schedule.manage'),
-                    onClick: () => showSchedules(r),
-                  },
-                  {
                     key: 'export',
                     label: <><DownloadOutlined /> {t('pages.agent.workflow.export')}</>,
                     onClick: () => downloadWorkflow(r),
@@ -424,51 +384,6 @@ const WorkflowPage: React.FC = () => {
             <Descriptions.Item label={t('pages.agent.workflow.diff.outputSchema')}>{versionDiff.outputSchemaChanged ? t('pages.common.yes') : t('pages.common.no')}</Descriptions.Item>
           </Descriptions>
         )}
-      </Modal>
-      <Modal
-        open={schedulesOpen}
-        title={t('pages.agent.workflow.schedule.manage')}
-        footer={null}
-        width={900}
-        onCancel={() => setSchedulesOpen(false)}
-      >
-        <Form form={scheduleForm} layout="vertical" onFinish={createSchedule}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <Form.Item name="name" label={t('pages.agent.workflow.schedule.name')} rules={[{ required: true }]}>
-              <Input maxLength={128} />
-            </Form.Item>
-            <Form.Item name="serviceAccountId" label={t('pages.agent.workflow.schedule.serviceAccount')} rules={[{ required: true }]}>
-              <Input placeholder={t('pages.agent.workflow.schedule.serviceAccountTip')} />
-            </Form.Item>
-            <Form.Item name="cronExpression" label={t('pages.agent.workflow.schedule.cron')} rules={[{ required: true }]}>
-              <Input placeholder="0 0 9 * * MON-FRI" />
-            </Form.Item>
-            <Form.Item name="businessType" label={t('pages.agent.workflow.schedule.businessType')} rules={[{ required: true }]}>
-              <Input maxLength={64} />
-            </Form.Item>
-          </div>
-          <Form.Item name="businessIdTemplate" label={t('pages.agent.workflow.schedule.businessId')} rules={[{ required: true }]}>
-            <Input placeholder="daily-${scheduledAt}" />
-          </Form.Item>
-          <Form.Item name="variables" label={t('pages.agent.workflow.schedule.variables')} initialValue="{}">
-            <Input.TextArea rows={3} />
-          </Form.Item>
-          <Button type="primary" htmlType="submit">{t('pages.agent.workflow.schedule.create')}</Button>
-        </Form>
-        <Table<WorkflowSchedule>
-          style={{ marginTop: 20 }}
-          rowKey="id"
-          size="small"
-          pagination={false}
-          dataSource={schedules}
-          columns={[
-            { title: t('pages.agent.workflow.schedule.name'), dataIndex: 'name' },
-            { title: t('pages.agent.workflow.schedule.cron'), dataIndex: 'cronExpression' },
-            { title: t('pages.agent.workflow.schedule.nextFireAt'), dataIndex: 'nextFireAt', render: (value) => value ? new Date(Number(value)).toLocaleString() : '-' },
-            { title: t('pages.agent.workflow.schedule.lastError'), dataIndex: 'lastErrorMessage', ellipsis: true },
-            { title: t('pages.agent.workflow.schedule.enabled'), dataIndex: 'enabled', width: 80, render: (_, schedule) => <Switch size="small" checked={!!schedule.enabled} onChange={(enabled) => toggleSchedule(schedule, enabled)} /> },
-          ]}
-        />
       </Modal>
     </PageContainer>
   )

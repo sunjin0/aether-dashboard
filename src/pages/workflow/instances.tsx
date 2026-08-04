@@ -25,12 +25,71 @@ const WorkflowInstancesPage: React.FC = () => {
     setStartOpen(true)
   }
   const columns: ProColumns<WorkflowInstance>[] = [
-    { title: t('pages.agent.workflow.instance.workflow'), dataIndex: 'workflowName', ellipsis: true, render: (_, record) => record.workflowName || record.workflowId },
-    { title: t('pages.agent.workflow.instance.status'), dataIndex: 'status', width: 150, valueType: 'select', valueEnum: Object.fromEntries(Object.keys(statusColor).map((key) => [key, t(`pages.agent.workflow.run.status.${key}`)])), render: (_, record) => <Tag color={statusColor[record.status] || 'default'}>{t(`pages.agent.workflow.run.status.${record.status}`)}</Tag> },
-    { title: t('pages.agent.workflow.instance.business'), dataIndex: 'businessType', ellipsis: true, hideInSearch: true, render: (_, record) => [record.businessType, record.businessId].filter(Boolean).join(' / ') || '-' },
-    { title: t('pages.agent.workflow.instance.error'), dataIndex: 'errorMessage', ellipsis: true, hideInSearch: true },
-    { title: t('pages.agent.workflow.action'), width: 120, valueType: 'option', render: (_, record) => <a onClick={() => history.push(`/workflow/workflow/${record.workflowId}/run?instanceId=${encodeURIComponent(record.id)}`)}><PlayCircleOutlined /> {t('pages.agent.workflow.instance.open')}</a> },
-  ]
+    {
+      title: t('pages.agent.workflow.instance.workflow'),
+      dataIndex: 'workflowName',
+      ellipsis: true,
+      render: (_, record) => record.workflowName || record.workflowId,
+    },
+    {
+      title: t('pages.agent.workflow.instance.status'),
+      dataIndex: 'status',
+      width: 150,
+      valueType: 'select',
+      valueEnum: Object.fromEntries(
+        Object.keys(statusColor).map((key) => [key, t(`pages.agent.workflow.run.status.${key}`)]),
+      ),
+      render: (_, record) => (
+        <Tag color={statusColor[record.status] || 'default'}>
+          {t(`pages.agent.workflow.run.status.${record.status}`)}
+        </Tag>
+      ),
+    },
+    {
+      title: t('pages.agent.workflow.instance.business'),
+      dataIndex: 'businessType',
+      ellipsis: true,
+      hideInSearch: true,
+      render: (_, record) =>
+        [record.businessType, record.businessId].filter(Boolean).join(' / ') || '-',
+    },
+    {
+      title: t('pages.agent.workflow.instance.startedAt'),
+      dataIndex: 'startedAt',
+      valueType: 'dateTime',
+      hideInSearch: true,
+      width: 180,
+    },
+    {
+      title: t('pages.agent.workflow.instance.completedAt'),
+      dataIndex: 'completedAt',
+      valueType: 'dateTime',
+      hideInSearch: true,
+      width: 180,
+    },
+    {
+      title: t('pages.agent.workflow.instance.error'),
+      dataIndex: 'errorMessage',
+      ellipsis: true,
+      hideInSearch: true,
+    },
+    {
+      title: t('pages.agent.workflow.action'),
+      width: 120,
+      valueType: 'option',
+      render: (_, record) => (
+        <a
+          onClick={() =>
+            history.push(
+              `/workflow/workflow/${record.workflowId}/run?instanceId=${encodeURIComponent(record.id)}`,
+            )
+          }
+        >
+          <PlayCircleOutlined /> {t('pages.agent.workflow.instance.open')}
+        </a>
+      ),
+    },
+  ];
   return (
     <PageContainer
       header={{

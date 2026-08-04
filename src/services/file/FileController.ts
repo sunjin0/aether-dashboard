@@ -23,7 +23,11 @@ export const uploadFile = async (file: File): Promise<ResponseStructure<FileUplo
 }
 
 const getFileBlob = async (
-  path: '/api/file/preview' | '/api/file/download',
+  path:
+    | '/api/file/preview'
+    | '/api/file/download'
+    | '/api/file/chat/preview'
+    | '/api/file/chat/download',
   file: FileReference,
 ): Promise<Blob> => {
   try {
@@ -49,6 +53,9 @@ const getFileBlob = async (
 
 export const createFilePreviewUrl = async (file: FileReference): Promise<string> =>
   URL.createObjectURL(await getFileBlob('/api/file/preview', file))
+
+export const createChatAttachmentPreviewUrl = async (file: FileReference): Promise<string> =>
+  URL.createObjectURL(await getFileBlob('/api/file/chat/preview', file))
 
 export const downloadFile = async (file: FileReference): Promise<void> => {
   const url = URL.createObjectURL(await getFileBlob('/api/file/download', file))

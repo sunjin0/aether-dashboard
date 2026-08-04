@@ -1,21 +1,21 @@
-﻿import { Button, message, Modal } from 'antd';
-import React, { useState } from 'react';
-import { useIntl } from '@umijs/max';
+﻿import { Button, message, Modal } from 'antd'
+import React, { useState } from 'react'
+import { useIntl } from '@umijs/max'
 
 export interface TemporaryUrlResult {
-  code?: number;
-  message?: string;
-  data?: string;
+  code?: number
+  message?: string
+  data?: string
 }
 
 interface TemporaryUrlPreviewModalProps {
   /** 每次打开时获取临时 URL，避免前端缓存过期链接。 */
-  getUrl: () => Promise<TemporaryUrlResult>;
-  title?: string;
-  triggerText?: string;
-  disabled?: boolean;
-  width?: number | string;
-  previewHeight?: number | string;
+  getUrl: () => Promise<TemporaryUrlResult>
+  title?: string
+  triggerText?: string
+  disabled?: boolean
+  width?: number | string
+  previewHeight?: number | string
 }
 
 const TemporaryUrlPreviewModal: React.FC<TemporaryUrlPreviewModalProps> = ({
@@ -26,29 +26,32 @@ const TemporaryUrlPreviewModal: React.FC<TemporaryUrlPreviewModalProps> = ({
   width = '90vw',
   previewHeight = '75vh',
 }) => {
-  const intl = useIntl();
-  const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [url, setUrl] = useState<string>();
+  const intl = useIntl()
+  const [loading, setLoading] = useState(false)
+  const [open, setOpen] = useState(false)
+  const [url, setUrl] = useState<string>()
 
   /** 临时链接只在点击预览时请求，并在弹窗关闭后立即丢弃。 */
   const showPreview = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const response = await getUrl();
+      const response = await getUrl()
       if (response.code === 200 && response.data) {
-        setUrl(response.data);
-        setOpen(true);
+        setUrl(response.data)
+        setOpen(true)
       }
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const close = () => {
-    setOpen(false);
-    setUrl(undefined);
-  };
+    if (url?.startsWith('blob:')) {
+      URL.revokeObjectURL(url)
+    }
+    setOpen(false)
+    setUrl(undefined)
+  }
 
   return (
     <>
@@ -83,7 +86,7 @@ const TemporaryUrlPreviewModal: React.FC<TemporaryUrlPreviewModalProps> = ({
         )}
       </Modal>
     </>
-  );
-};
+  )
+}
 
-export default TemporaryUrlPreviewModal;
+export default TemporaryUrlPreviewModal

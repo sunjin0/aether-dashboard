@@ -1,32 +1,34 @@
-import React, { useCallback, useRef, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { Collapse, message, Popover, Tag, Tooltip, Typography } from 'antd';
-import { useIntl } from '@umijs/max';
+import React, { useCallback, useRef, useEffect } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { Collapse, message, Popover, Tag, Tooltip, Typography } from 'antd'
+import { useIntl } from '@umijs/max'
 import {
   CustomerServiceOutlined,
   SettingOutlined,
   ToolOutlined,
   UserOutlined,
-} from '@ant-design/icons';
-import { AgentMessage, AskUserAnswer, KnowledgeSource } from '@/services/entity/Agent';
-import ToolCallCard from '@/components/ToolCallCard';
+} from '@ant-design/icons'
+import { AgentMessage, AskUserAnswer, KnowledgeSource } from '@/services/entity/Agent'
+import ToolCallCard from '@/components/ToolCallCard'
+import TemporaryUrlPreviewModal from '@/components/TemporaryUrlPreviewModal'
 import InteractiveQuestionCard, {
   InteractiveQuestionCardStatus,
-} from '@/components/InteractiveQuestionCard';
-import './index.less';
+} from '@/components/InteractiveQuestionCard'
+import { createChatAttachmentPreviewUrl } from '@/services/file/FileController'
+import './index.less'
 
-const { Text } = Typography;
+const { Text } = Typography
 
-export type AgentMessageBubbleStatus = 'streaming' | 'error' | 'stopped';
+export type AgentMessageBubbleStatus = 'streaming' | 'error' | 'stopped'
 
 export interface AgentMessageBubbleProps {
-  agentMessage: AgentMessage & { reasoningStream?: string; progressMessage?: string };
-  align?: 'left' | 'right';
-  compact?: boolean;
-  status?: AgentMessageBubbleStatus;
-  errorMessage?: string;
-  onQuestionSubmit?: (answers: Record<string, AskUserAnswer>) => void;
+  agentMessage: AgentMessage & { reasoningStream?: string; progressMessage?: string }
+  align?: 'left' | 'right'
+  compact?: boolean
+  status?: AgentMessageBubbleStatus
+  errorMessage?: string
+  onQuestionSubmit?: (answers: Record<string, AskUserAnswer>) => void
 }
 
 const roleIconMap: Record<string, React.ReactNode> = {
@@ -35,44 +37,45 @@ const roleIconMap: Record<string, React.ReactNode> = {
   system: <SettingOutlined />,
   tool: <ToolOutlined />,
   unknown: <UserOutlined />,
-};
+}
 
-const getRole = (role?: string) => (role && roleIconMap[role] ? role : 'unknown');
+const getRole = (role?: string) => (role && roleIconMap[role] ? role : 'unknown')
 
 const getAlign = (message: AgentMessage, align?: 'left' | 'right') => {
   if (align) {
-    return align;
+    return align
   }
-  return message.role === 'user' ? 'right' : 'left';
-};
+  return message.role === 'user' ? 'right' : 'left'
+}
 
 const getAttachments = (value?: string) => {
-  if (!value) return [] as { fileName?: string; size?: number }[];
+  if (!value)
+    return [] as { fileName?: string; size?: number; contentType?: string; objectKey?: string }[]
   try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed : [];
+    const parsed = JSON.parse(value)
+    return Array.isArray(parsed) ? parsed : []
   } catch {
-    return [];
+    return []
   }
-};
+}
 
 const remarkCitations = (sources: KnowledgeSource[], messageId?: string) => () => (tree: any) => {
-  const validIndexes = new Set(sources.map((source) => source.citationIndex));
-  const prefix = messageId ? `${messageId}-` : '';
+  const validIndexes = new Set(sources.map((source) => source.citationIndex))
+  const prefix = messageId ? `${messageId}-` : ''
   const visit = (node: any) => {
     if (node.type === 'link' || !Array.isArray(node.children)) {
-      return;
+      return
     }
     node.children = node.children.reduce((children: any[], child: any) => {
       if (child.type !== 'text') {
-        visit(child);
-        children.push(child);
-        return children;
+        visit(child)
+        children.push(child)
+        return children
       }
-      const parts = child.value.split(/(\u3010\d+\u3011)/g);
+      const parts = child.value.split(/(\u3010\d+\u3011)/g)
       parts.forEach((part: string) => {
-        const match = /^\u3010(\d+)\u3011$/.exec(part);
-        const citationIndex = match ? Number(match[1]) : undefined;
+        const match = /^\u3010(\d+)\u3011$/.exec(part)
+        const citationIndex = match ? Number(match[1]) : undefined
         children.push(
           citationIndex !== undefined && validIndexes.has(citationIndex)
             ? {
@@ -81,38 +84,38 @@ const remarkCitations = (sources: KnowledgeSource[], messageId?: string) => () =
                 children: [{ type: 'text', value: part }],
               }
             : { type: 'text', value: part },
-        );
-      });
-      return children;
-    }, []);
-  };
-  visit(tree);
-};
+        )
+      })
+      return children
+    }, [])
+  }
+  visit(tree)
+}
 
 const formatTime = (
   time: string | number | undefined,
   locale: string,
   formatYesterday: ReturnType<typeof useIntl>['formatMessage'],
 ) => {
-  if (time === undefined) return '';
+  if (time === undefined) return ''
   try {
-    const date = new Date(typeof time === 'number' ? time : time);
-    const now = new Date();
-    const isToday = date.toDateString() === now.toDateString();
+    const date = new Date(typeof time === 'number' ? time : time)
+    const now = new Date()
+    const isToday = date.toDateString() === now.toDateString()
 
     if (isToday) {
-      return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
     }
 
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const isYesterday = date.toDateString() === yesterday.toDateString();
+    const yesterday = new Date(now)
+    yesterday.setDate(yesterday.getDate() - 1)
+    const isYesterday = date.toDateString() === yesterday.toDateString()
 
     if (isYesterday) {
       return formatYesterday(
         { id: 'components.agentMessageBubble.yesterday' },
         { time: date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) },
-      );
+      )
     }
 
     return date.toLocaleDateString(locale, {
@@ -120,57 +123,57 @@ const formatTime = (
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    });
+    })
   } catch {
-    return String(time);
+    return String(time)
   }
-};
+}
 
 const getMessageMeta = (
   message: AgentMessage,
   formatMessage: ReturnType<typeof useIntl>['formatMessage'],
 ) => {
-  const items: { label: string; value: string | number }[] = [];
+  const items: { label: string; value: string | number }[] = []
 
   if (message.model) {
     items.push({
       label: formatMessage({ id: 'components.agentMessageBubble.model' }),
       value: message.model,
-    });
+    })
   }
   if (message.promptTokens !== undefined && message.promptTokens > 0) {
     items.push({
       label: formatMessage({ id: 'components.agentMessageBubble.inputTokens' }),
       value: message.promptTokens,
-    });
+    })
   }
   if (message.completionTokens !== undefined && message.completionTokens > 0) {
     items.push({
       label: formatMessage({ id: 'components.agentMessageBubble.outputTokens' }),
       value: message.completionTokens,
-    });
+    })
   }
   if (message.totalTokens !== undefined && message.totalTokens > 0) {
     items.push({
       label: formatMessage({ id: 'components.agentMessageBubble.totalTokens' }),
       value: message.totalTokens,
-    });
+    })
   }
   if (message.reasoningTokens !== undefined && message.reasoningTokens > 0) {
     items.push({
       label: formatMessage({ id: 'components.agentMessageBubble.reasoningTokens' }),
       value: message.reasoningTokens,
-    });
+    })
   }
   if (message.latencyMs !== undefined && message.latencyMs > 0) {
     items.push({
       label: formatMessage({ id: 'components.agentMessageBubble.latency' }),
       value: `${message.latencyMs}ms`,
-    });
+    })
   }
 
-  return items;
-};
+  return items
+}
 
 const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
   agentMessage,
@@ -180,12 +183,12 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
   errorMessage,
   onQuestionSubmit,
 }) => {
-  const intl = useIntl();
-  const role = getRole(agentMessage.role);
-  const placement = getAlign(agentMessage, align);
-  const metas = getMessageMeta(agentMessage, intl.formatMessage);
-  const reasoningContainerRef = useRef<HTMLDivElement>(null);
-  const contentContainerRef = useRef<HTMLDivElement>(null);
+  const intl = useIntl()
+  const role = getRole(agentMessage.role)
+  const placement = getAlign(agentMessage, align)
+  const metas = getMessageMeta(agentMessage, intl.formatMessage)
+  const reasoningContainerRef = useRef<HTMLDivElement>(null)
+  const contentContainerRef = useRef<HTMLDivElement>(null)
 
   const statusText =
     status === 'error'
@@ -193,7 +196,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
         intl.formatMessage({ id: 'components.agentMessageBubble.generationInterrupted' })
       : status === 'stopped'
         ? intl.formatMessage({ id: 'components.agentMessageBubble.generationStopped' })
-        : undefined;
+        : undefined
 
   const className = [
     'agent-message-bubble',
@@ -204,43 +207,43 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
     status === 'error' ? 'agent-message-bubble-error' : undefined,
   ]
     .filter(Boolean)
-    .join(' ');
+    .join(' ')
 
   const handleCopy = useCallback(
     async (text: string) => {
       try {
-        await navigator.clipboard.writeText(text);
-        message.success(intl.formatMessage({ id: 'components.agentMessageBubble.copied' }));
+        await navigator.clipboard.writeText(text)
+        message.success(intl.formatMessage({ id: 'components.agentMessageBubble.copied' }))
       } catch {
-        message.error(intl.formatMessage({ id: 'components.agentMessageBubble.copyFailed' }));
+        message.error(intl.formatMessage({ id: 'components.agentMessageBubble.copyFailed' }))
       }
     },
     [intl],
-  );
+  )
 
-  const currentReasoning = agentMessage.reasoningContent || agentMessage.reasoningStream || '';
-  const currentContent = agentMessage.content || '';
-  const attachments = getAttachments(agentMessage.attachments);
+  const currentReasoning = agentMessage.reasoningContent || agentMessage.reasoningStream || ''
+  const currentContent = agentMessage.content || ''
+  const attachments = getAttachments(agentMessage.attachments)
 
   useEffect(() => {
     if (reasoningContainerRef.current) {
-      reasoningContainerRef.current.scrollTop = reasoningContainerRef.current.scrollHeight;
+      reasoningContainerRef.current.scrollTop = reasoningContainerRef.current.scrollHeight
     }
-  }, [currentReasoning]);
+  }, [currentReasoning])
 
   useEffect(() => {
     if (contentContainerRef.current) {
-      contentContainerRef.current.scrollTop = contentContainerRef.current.scrollHeight;
+      contentContainerRef.current.scrollTop = contentContainerRef.current.scrollHeight
     }
-  }, [currentContent]);
+  }, [currentContent])
 
   // messageType=answer 是后端内部消息，前端默认不渲染为独立聊天气泡
   if (agentMessage.messageType === 'answer') {
-    return null;
+    return null
   }
 
   const renderContent = () => {
-    const messageIdPrefix = agentMessage.id || `msg-${Math.random().toString(36).substr(2, 9)}`;
+    const messageIdPrefix = agentMessage.id || `msg-${Math.random().toString(36).substr(2, 9)}`
     if (agentMessage.messageType === 'interaction' && agentMessage.questionConfig) {
       const questionStatus: InteractiveQuestionCardStatus =
         agentMessage.interactionStatus === 'answered'
@@ -251,7 +254,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
               ? 'expired'
               : status === 'streaming'
                 ? 'submitting'
-                : 'pending';
+                : 'pending'
 
       return (
         <InteractiveQuestionCard
@@ -260,7 +263,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
           status={questionStatus}
           onSubmit={onQuestionSubmit}
         />
-      );
+      )
     }
 
     if (
@@ -275,9 +278,9 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
             {agentMessage.progressMessage ||
               intl.formatMessage({ id: 'components.agentMessageBubble.generating' })}
           </Text>
-        );
+        )
       }
-      return null;
+      return null
     }
 
     return (
@@ -328,7 +331,22 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
           <div className="agent-message-bubble-attachments">
             {attachments.map((attachment, index) => (
               <Tag key={`${attachment.fileName || 'file'}-${index}`}>
-                {attachment.fileName || 'file'}
+                {attachment.objectKey ? (
+                  <TemporaryUrlPreviewModal
+                    title={attachment.fileName}
+                    triggerText={attachment.fileName || 'file'}
+                    getUrl={async () => ({
+                      code: 200,
+                       data: await createChatAttachmentPreviewUrl({
+                        objectKey: attachment.objectKey || '',
+                        fileName: attachment.fileName,
+                        contentType: attachment.contentType,
+                      }),
+                    })}
+                  />
+                ) : (
+                  attachment.fileName || 'file'
+                )}
               </Tag>
             ))}
           </div>
@@ -423,8 +441,8 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
           </section>
         )}
       </>
-    );
-  };
+    )
+  }
 
   return (
     <div className={className}>
@@ -465,7 +483,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default AgentMessageBubble;
+export default AgentMessageBubble

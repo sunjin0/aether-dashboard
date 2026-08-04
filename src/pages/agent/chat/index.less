@@ -427,13 +427,36 @@
   gap: 6px;
   padding: 0 2px 6px;
 
+  .@{chat-prefix}-attachment-item {
+    display: flex;
+    min-width: 180px;
+    max-width: 300px;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 6px 3px 8px;
+    border-radius: 9px;
+    background: #f2f4f7;
+
+    .ant-progress {
+      width: 76px;
+      margin: 0;
+    }
+
+    .ant-btn-link {
+      height: 24px;
+      padding: 0;
+      font-size: 12px;
+    }
+  }
+
   .ant-tag {
-    max-width: 240px;
+    min-width: 0;
+    max-width: 190px;
     margin: 0;
     overflow: hidden;
     border: 0;
     border-radius: 9px;
-    background: #f2f4f7;
+    background: transparent;
     color: #5b6578;
     line-height: 26px;
     text-overflow: ellipsis;

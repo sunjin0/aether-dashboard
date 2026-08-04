@@ -7,6 +7,7 @@ import {
   Input,
   List,
   message,
+  Progress,
   Select,
   Spin,
   Tag,
@@ -14,7 +15,7 @@ import {
   Typography,
   Upload,
 } from 'antd'
-import type { UploadFile } from 'antd/es/upload/interface'
+import type { RcFile, UploadFile, UploadProps } from 'antd/es/upload/interface'
 import {
   ArrowDownOutlined,
   ArrowUpOutlined,
@@ -56,6 +57,8 @@ import {
 } from '@/services/entity/Agent'
 import { Option } from '@/services/entity/Common'
 import AgentMessageBubble from '@/components/AgentMessageBubble'
+import TemporaryUrlPreviewModal from '@/components/TemporaryUrlPreviewModal'
+import { createChatAttachmentPreviewUrl } from '@/services/file/FileController'
 import {
   cancelDeepRun,
   getDeepRunTasks,
@@ -112,6 +115,7 @@ const ChatDebugPage: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [attachments, setAttachments] = useState<ChatAttachmentFile[]>([])
+  const attachmentsRef = useRef<ChatAttachmentFile[]>([])
   const [loadingAgents, setLoadingAgents] = useState(false)
   const [loadingConversations, setLoadingConversations] = useState(false)
   const [loadingMessages, setLoadingMessages] = useState(false)
@@ -199,7 +203,7 @@ const ChatDebugPage: React.FC = () => {
     setLoadingAgents(true)
     try {
       const options = await getAgentDefinitionOptions()
-      setAgents(options.map((item) => ({ id: String(item.value), name: item.label } as any)))
+      setAgents(options.map((item) => ({ id: String(item.value), name: item.label }) as any))
     } finally {
       setLoadingAgents(false)
     }
@@ -241,6 +245,10 @@ const ChatDebugPage: React.FC = () => {
     loadConversations()
     getOptionList('Agent_Reasoning_Effort').then(setReasoningEffortOptions)
   }, [])
+
+  useEffect(() => {
+    attachmentsRef.current = attachments
+  }, [attachments])
 
   useEffect(() => {
     if (!showScrollBottom) {
@@ -347,6 +355,7 @@ const ChatDebugPage: React.FC = () => {
     }
     setConversationId(undefined)
     setMessages([])
+    attachmentsRef.current = []
     setAttachments([])
     resetDeepProgress()
     resetConversationTurnState()
@@ -707,13 +716,13 @@ const ChatDebugPage: React.FC = () => {
       content: content || intl.formatMessage({ id: 'pages.agent.chat.analyzeAttachments' }),
       attachments: recognizedAttachments.length
         ? JSON.stringify(
-          recognizedAttachments.map(({ fileName, size, contentType, objectKey }) => ({
-            fileName,
-            size,
-            contentType,
-            objectKey,
-          })),
-        )
+            recognizedAttachments.map(({ fileName, size, contentType, objectKey }) => ({
+              fileName,
+              size,
+              contentType,
+              objectKey,
+            })),
+          )
         : undefined,
     }
     const assistantClientId = createClientId('assistant')
@@ -737,20 +746,21 @@ const ChatDebugPage: React.FC = () => {
     setSending(true)
     setChatTurnState('streaming')
     setInput('')
+    attachmentsRef.current = []
     setAttachments([])
     setMessages((current) => [...current, userMessage, assistantMessage])
 
     try {
       const payload: any = conversationId
         ? {
-          agentId: sendAgentId,
-          conversationId,
-          message: content || intl.formatMessage({ id: 'pages.agent.chat.analyzeAttachments' }),
-        }
+            agentId: sendAgentId,
+            conversationId,
+            message: content || intl.formatMessage({ id: 'pages.agent.chat.analyzeAttachments' }),
+          }
         : {
-          agentId: sendAgentId,
-          message: content || intl.formatMessage({ id: 'pages.agent.chat.analyzeAttachments' }),
-        }
+            agentId: sendAgentId,
+            message: content || intl.formatMessage({ id: 'pages.agent.chat.analyzeAttachments' }),
+          }
       if (recognizedAttachments.length) {
         payload.attachments = userMessage.attachments
         payload.attachmentContent = recognizedAttachments
@@ -954,10 +964,10 @@ const ChatDebugPage: React.FC = () => {
   const groupedConversations = useMemo(() => {
     const filtered = searchText
       ? conversations.filter(
-        (item) =>
-          item.title?.toLowerCase().includes(searchText.toLowerCase()) ||
+          (item) =>
+            item.title?.toLowerCase().includes(searchText.toLowerCase()) ||
             item.id?.toLowerCase().includes(searchText.toLowerCase()),
-      )
+        )
       : conversations
 
     const groups: Record<string, AgentConversation[]> = {}
@@ -979,15 +989,25 @@ const ChatDebugPage: React.FC = () => {
   const inputDisabled =
     sending || chatTurnState === 'waiting_user' || chatTurnState === 'submitting_answer'
 
-  const handleAttachmentUpload = async (file: UploadFile['originFileObj']) => {
-    if (!file) return Upload.LIST_IGNORE
+  const removeAttachment = (uid: string) => {
+    attachmentsRef.current = attachmentsRef.current.filter((item) => item.uid !== uid)
+    setAttachments((current) => current.filter((item) => item.uid !== uid))
+  }
+
+  const handleAttachmentUpload: NonNullable<UploadProps['customRequest']> = async (options) => {
+    const file = options.file as RcFile
+    if (!file) return
     if (file.size > 10 * 1024 * 1024) {
       message.error(intl.formatMessage({ id: 'pages.agent.chat.attachmentTooLarge' }))
-      return Upload.LIST_IGNORE
+      options.onError?.(
+        new Error(intl.formatMessage({ id: 'pages.agent.chat.attachmentTooLarge' })),
+      )
+      return
     }
-    if (attachments.length >= 3) {
+    if (attachmentsRef.current.length >= 3) {
       message.error(intl.formatMessage({ id: 'pages.agent.chat.attachmentLimit' }))
-      return Upload.LIST_IGNORE
+      options.onError?.(new Error(intl.formatMessage({ id: 'pages.agent.chat.attachmentLimit' })))
+      return
     }
 
     const pending: ChatAttachmentFile = {
@@ -996,29 +1016,40 @@ const ChatDebugPage: React.FC = () => {
       size: file.size,
       type: file.type,
       status: 'uploading',
+      percent: 0,
       originFileObj: file,
     }
+    attachmentsRef.current = [...attachmentsRef.current, pending]
     setAttachments((current) => [...current, pending])
     try {
-      const result = await uploadAgentChatAttachments([file])
+      const result = await uploadAgentChatAttachments([file], (percent) => {
+        setAttachments((current) =>
+          current.map((item) => (item.uid === file.uid ? { ...item, percent } : item)),
+        )
+        options.onProgress?.({ percent })
+      })
       const attachment = result.data?.[0]
       if (result.code !== 200 || !attachment) {
         throw new Error(intl.formatMessage({ id: 'pages.agent.chat.sendFailed' }))
       }
       setAttachments((current) =>
         current.map((item) =>
-          item.uid === file.uid ? { ...item, status: 'done', attachment } : item,
+          item.uid === file.uid ? { ...item, status: 'done', percent: 100, attachment } : item,
         ),
       )
-    } catch (error) {
-      setAttachments((current) => current.filter((item) => item.uid !== file.uid))
-      message.error(
-        error instanceof Error
-          ? error.message
-          : intl.formatMessage({ id: 'pages.agent.chat.sendFailed' }),
+      attachmentsRef.current = attachmentsRef.current.map((item) =>
+        item.uid === file.uid ? { ...item, status: 'done', percent: 100, attachment } : item,
       )
+      options.onSuccess?.(result)
+    } catch (error) {
+      const uploadError =
+        error instanceof Error
+          ? error
+          : new Error(intl.formatMessage({ id: 'pages.agent.chat.sendFailed' }))
+      removeAttachment(file.uid)
+      options.onError?.(uploadError)
+      message.error(uploadError.message)
     }
-    return false
   }
 
   return (
@@ -1169,35 +1200,52 @@ const ChatDebugPage: React.FC = () => {
           </div>
 
           {deepRunTasks.length > 0 && (
-            <section className="agent-chat-task-plan" aria-label={intl.formatMessage({ id: 'pages.agent.chat.deepTaskPlan' })}>
+            <section
+              className="agent-chat-task-plan"
+              aria-label={intl.formatMessage({ id: 'pages.agent.chat.deepTaskPlan' })}
+            >
               <div className="agent-chat-task-plan-header">
                 <Text strong>{intl.formatMessage({ id: 'pages.agent.chat.deepTaskPlan' })}</Text>
                 <div>
-                  <Text type="secondary">{intl.formatMessage({ id: 'pages.agent.chat.deepRunning' })}</Text>
-                  <Button type="text" size="small" onClick={() => setTaskPlanCollapsed((value) => !value)}>
-                    {intl.formatMessage({ id: taskPlanCollapsed ? 'pages.agent.chat.deepTaskPlan.expand' : 'pages.agent.chat.deepTaskPlan.collapse' })}
+                  <Text type="secondary">
+                    {intl.formatMessage({ id: 'pages.agent.chat.deepRunning' })}
+                  </Text>
+                  <Button
+                    type="text"
+                    size="small"
+                    onClick={() => setTaskPlanCollapsed((value) => !value)}
+                  >
+                    {intl.formatMessage({
+                      id: taskPlanCollapsed
+                        ? 'pages.agent.chat.deepTaskPlan.expand'
+                        : 'pages.agent.chat.deepTaskPlan.collapse',
+                    })}
                   </Button>
                 </div>
               </div>
-              {!taskPlanCollapsed && <div className="agent-chat-deep-task-list">
-                {deepRunTasks.map((task) => (
-                  <div className="agent-chat-deep-task" key={task.id}>
-                    {task.status === 'completed' ? (
-                      <CheckCircleFilled className="agent-chat-deep-task-completed" />
-                    ) : task.status === 'failed' ? (
-                      <CloseCircleFilled className="agent-chat-deep-task-failed" />
-                    ) : task.status === 'running' ? (
-                      <LoadingOutlined spin className="agent-chat-deep-task-running" />
-                    ) : (
-                      <span className="agent-chat-deep-task-pending" />
-                    )}
-                    <span>{task.title}</span>
-                    <Text type="secondary" className="agent-chat-deep-task-status">
-                      {intl.formatMessage({ id: `pages.agent.chat.deepTaskStatus.${task.status}` })}
-                    </Text>
-                  </div>
-                ))}
-              </div>}
+              {!taskPlanCollapsed && (
+                <div className="agent-chat-deep-task-list">
+                  {deepRunTasks.map((task) => (
+                    <div className="agent-chat-deep-task" key={task.id}>
+                      {task.status === 'completed' ? (
+                        <CheckCircleFilled className="agent-chat-deep-task-completed" />
+                      ) : task.status === 'failed' ? (
+                        <CloseCircleFilled className="agent-chat-deep-task-failed" />
+                      ) : task.status === 'running' ? (
+                        <LoadingOutlined spin className="agent-chat-deep-task-running" />
+                      ) : (
+                        <span className="agent-chat-deep-task-pending" />
+                      )}
+                      <span>{task.title}</span>
+                      <Text type="secondary" className="agent-chat-deep-task-status">
+                        {intl.formatMessage({
+                          id: `pages.agent.chat.deepTaskStatus.${task.status}`,
+                        })}
+                      </Text>
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
           )}
 
@@ -1214,9 +1262,9 @@ const ChatDebugPage: React.FC = () => {
                       <h2>
                         {currentAgent
                           ? intl.formatMessage(
-                            { id: 'pages.agent.chat.startChatWithAgent' },
-                            { name: currentAgent.name },
-                          )
+                              { id: 'pages.agent.chat.startChatWithAgent' },
+                              { name: currentAgent.name },
+                            )
                           : intl.formatMessage({ id: 'pages.agent.chat.selectAgentToStart' })}
                       </h2>
                       <p>{intl.formatMessage({ id: 'pages.agent.chat.welcomeHint' })}</p>
@@ -1253,46 +1301,49 @@ const ChatDebugPage: React.FC = () => {
                           {item.clientId === streamingAssistantIdRef.current &&
                             item.streamStatus === 'streaming' &&
                             deepRunSteps.length > 0 && (
-                            <div
-                              aria-live="polite"
-                              style={{
-                                marginTop: 8,
-                                padding: '8px 12px',
-                                background: '#f6f8fa',
-                                borderRadius: 6,
-                              }}
-                            >
-                              <Text type="secondary" style={{ fontSize: 12 }}>
-                                <LoadingOutlined spin />{' '}
-                                {intl.formatMessage({ id: 'pages.agent.chat.deepRunning' })}
-                              </Text>
-                              {deepRunSteps.slice(-4).map((step, stepIndex) => {
-                                if (step.eventType === 'message.delta') {
-                                  return null
-                                }
-                                const displayText = getDeepStepDisplayText(step, intl.formatMessage)
-                                return displayText ? (
-                                  <div
-                                    key={step.eventId || `${step.occurredAt || 0}-${stepIndex}`}
-                                    style={{ fontSize: 12, marginTop: 2 }}
-                                  >
-                                    <Text type="secondary">{displayText}</Text>
-                                  </div>
-                                ) : (
-                                  <div
-                                    key={step.eventId || `${step.occurredAt || 0}-${stepIndex}`}
-                                    style={{ fontSize: 12, marginTop: 2 }}
-                                  >
-                                    <Text type="secondary">
-                                      {intl.formatMessage({
-                                        id: 'pages.agent.chat.deepStepFallback',
-                                      })}
-                                    </Text>
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          )}
+                              <div
+                                aria-live="polite"
+                                style={{
+                                  marginTop: 8,
+                                  padding: '8px 12px',
+                                  background: '#f6f8fa',
+                                  borderRadius: 6,
+                                }}
+                              >
+                                <Text type="secondary" style={{ fontSize: 12 }}>
+                                  <LoadingOutlined spin />{' '}
+                                  {intl.formatMessage({ id: 'pages.agent.chat.deepRunning' })}
+                                </Text>
+                                {deepRunSteps.slice(-4).map((step, stepIndex) => {
+                                  if (step.eventType === 'message.delta') {
+                                    return null
+                                  }
+                                  const displayText = getDeepStepDisplayText(
+                                    step,
+                                    intl.formatMessage,
+                                  )
+                                  return displayText ? (
+                                    <div
+                                      key={step.eventId || `${step.occurredAt || 0}-${stepIndex}`}
+                                      style={{ fontSize: 12, marginTop: 2 }}
+                                    >
+                                      <Text type="secondary">{displayText}</Text>
+                                    </div>
+                                  ) : (
+                                    <div
+                                      key={step.eventId || `${step.occurredAt || 0}-${stepIndex}`}
+                                      style={{ fontSize: 12, marginTop: 2 }}
+                                    >
+                                      <Text type="secondary">
+                                        {intl.formatMessage({
+                                          id: 'pages.agent.chat.deepStepFallback',
+                                        })}
+                                      </Text>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            )}
                         </React.Fragment>
                       ))}
                       <div ref={messageEndRef} />
@@ -1316,19 +1367,28 @@ const ChatDebugPage: React.FC = () => {
               {!!attachments.length && (
                 <div className="agent-chat-attachment-list">
                   {attachments.map((file) => (
-                    <Tag
-                      key={file.uid}
-                      closable={file.status !== 'uploading'}
-                      onClose={() =>
-                        setAttachments((current) => current.filter((item) => item.uid !== file.uid))
-                      }
-                    >
-                      <PaperClipOutlined />
-                      {file.name}
-                      {file.status === 'uploading'
-                        ? ` · ${intl.formatMessage({ id: 'pages.agent.chat.uploading' })}`
-                        : ''}
-                    </Tag>
+                    <div className="agent-chat-attachment-item" key={file.uid}>
+                      <Tag closable onClose={() => removeAttachment(file.uid)}>
+                        <PaperClipOutlined />
+                        {file.name}
+                      </Tag>
+                      {file.status === 'uploading' ? (
+                        <Progress percent={Math.round(file.percent || 0)} size="small" />
+                      ) : (
+                        <TemporaryUrlPreviewModal
+                          title={file.name}
+                          triggerText={intl.formatMessage({ id: 'pages.common.preview' })}
+                          getUrl={async () => ({
+                            code: 200,
+                            data: file.attachment
+                              ? await createChatAttachmentPreviewUrl(file.attachment)
+                              : file.originFileObj
+                                ? URL.createObjectURL(file.originFileObj)
+                                : '',
+                          })}
+                        />
+                      )}
+                    </div>
                   ))}
                 </div>
               )}
@@ -1356,10 +1416,8 @@ const ChatDebugPage: React.FC = () => {
                     accept=".txt,.md,.pdf,.docx,.xlsx,.png,.jpg,.jpeg,.webp"
                     fileList={attachments}
                     disabled={inputDisabled}
-                    beforeUpload={handleAttachmentUpload}
-                    onRemove={(file) => {
-                      setAttachments((current) => current.filter((item) => item.uid !== file.uid))
-                    }}
+                    customRequest={handleAttachmentUpload}
+                    onRemove={(file) => removeAttachment(file.uid)}
                     showUploadList={false}
                   >
                     <Tooltip title={intl.formatMessage({ id: 'pages.agent.chat.attachFile' })}>

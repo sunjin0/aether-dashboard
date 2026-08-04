@@ -18,16 +18,16 @@ import {
 } from '@/services/entity/Agent'
 
 export interface StreamAgentChatOptions {
-  signal?: AbortSignal;
-  onMessage?: (chunk: string, data: AgentStreamMessageData) => void;
-  onReasoning?: (chunk: string, data: AgentStreamReasoningData) => void;
-  onToolCall?: (data: AgentStreamToolCallData) => void;
-  onAccepted?: (data: AgentStreamAcceptedData) => void;
-  onRunStep?: (data: AgentStreamRunStepData) => void;
-  onProgress?: (data: { stage?: string; message?: string }) => void;
-  onQuestion?: (data: AgentStreamQuestionData) => void;
-  onDone?: (data: AgentStreamDoneData) => void;
-  onError?: (data: AgentStreamErrorData) => void;
+  signal?: AbortSignal
+  onMessage?: (chunk: string, data: AgentStreamMessageData) => void
+  onReasoning?: (chunk: string, data: AgentStreamReasoningData) => void
+  onToolCall?: (data: AgentStreamToolCallData) => void
+  onAccepted?: (data: AgentStreamAcceptedData) => void
+  onRunStep?: (data: AgentStreamRunStepData) => void
+  onProgress?: (data: { stage?: string; message?: string }) => void
+  onQuestion?: (data: AgentStreamQuestionData) => void
+  onDone?: (data: AgentStreamDoneData) => void
+  onError?: (data: AgentStreamErrorData) => void
 }
 
 const dispatchStreamEvent = (event: EventSourceMessage, options: StreamAgentChatOptions) => {
@@ -137,10 +137,7 @@ export const streamAgentChat = async (
  * Subscribe to an already-created Deep Run. The server replays persisted steps
  * before sending live events, so fetch-event-source retries are safe.
  */
-export const streamDeepRun = async (
-  runId: string,
-  options: StreamAgentChatOptions = {},
-) => {
+export const streamDeepRun = async (runId: string, options: StreamAgentChatOptions = {}) => {
   const token = localStorage.getItem('token')
   await fetchEventSource(`/api/agent/deep-runs/${encodeURIComponent(runId)}/stream`, {
     headers: {
@@ -167,10 +164,19 @@ export const streamDeepRun = async (
 /** 上传文件并完成文本识别；聊天请求仅携带该接口返回的识别结果。 */
 export const uploadAgentChatAttachments = async (
   files: File[],
+  onProgress?: (percent: number) => void,
 ): Promise<ResponseStructure<AgentChatAttachment[]>> => {
   const data = new FormData()
   files.forEach((file) => data.append('files', file))
-  return request('/api/agent/chat/attachment', { method: 'POST', data })
+  return request('/api/agent/chat/attachment', {
+    method: 'POST',
+    data,
+    onUploadProgress: (event) => {
+      if (event.total) {
+        onProgress?.(Math.round((event.loaded / event.total) * 100))
+      }
+    },
+  })
 }
 
 /**

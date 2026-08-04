@@ -18,8 +18,9 @@ const Footer: React.FC<FooterProps> = ({ fixed = false }) => {
               right: 0,
               bottom: 0,
               left: 0,
-              zIndex: 10,
-              height: 56,
+               zIndex: 10,
+               boxSizing: 'border-box',
+               height: 56,
               padding: '16px 0',
             }
           : {}),

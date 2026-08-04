@@ -16,6 +16,7 @@ describe('Footer', () => {
       position: 'fixed',
       bottom: 0,
       background: 'none',
+      boxSizing: 'border-box',
     });
     expect(mockDefaultFooter.mock.calls[0][0].className).toBe('fixed-footer');
   });

@@ -1,7 +1,8 @@
-import { Tabs } from 'antd';
-import type { TabsProps } from 'antd';
+import { Button, Dropdown, Tabs } from 'antd';
+import type { MenuProps, TabsProps } from 'antd';
+import { CloseOutlined, DownOutlined, ReloadOutlined } from '@ant-design/icons';
 import { history, useIntl } from '@umijs/max';
-import { KeepAlive } from 'react-activation';
+import { KeepAlive, useAliveController } from 'react-activation';
 import React, { useEffect, useState } from 'react';
 import './index.less';
 
@@ -93,6 +94,7 @@ const RouteTabs = ({ pathname, children }: RouteTabsProps) => {
   const [tabs, setTabs] = useState<RouteTab[]>(() => [
     getTab(routePath, routeMenus, intl.formatMessage),
   ]);
+  const { drop, refresh } = useAliveController();
 
   useEffect(() => {
     const updateMenus = () => {
@@ -114,8 +116,10 @@ const RouteTabs = ({ pathname, children }: RouteTabsProps) => {
   }, [menus, routePath]);
 
   const closeTab = (targetKey: string) => {
+    if (targetKey === '/dashboard') return;
     const targetIndex = tabs.findIndex((tab) => tab.key === targetKey);
     const nextTabs = tabs.filter((tab) => tab.key !== targetKey);
+    drop(targetKey);
     setTabs(nextTabs);
 
     if (targetKey === routePath && nextTabs.length > 0) {
@@ -123,11 +127,35 @@ const RouteTabs = ({ pathname, children }: RouteTabsProps) => {
     }
   };
 
+  const refreshTab = () => {
+    refresh(routePath);
+  };
+
+  const closeOtherTabs = () => {
+    const nextTabs = tabs.filter((tab) => tab.key === '/dashboard' || tab.key === routePath);
+    tabs
+      .filter((tab) => !nextTabs.some((nextTab) => nextTab.key === tab.key))
+      .forEach((tab) => drop(tab.key));
+    setTabs(nextTabs);
+  };
+
+  const closeAllTabs = () => {
+    tabs.filter((tab) => tab.key !== '/dashboard').forEach((tab) => drop(tab.key));
+    setTabs((previousTabs) => previousTabs.filter((tab) => tab.key === '/dashboard'));
+    if (routePath !== '/dashboard') history.push('/dashboard');
+  };
+
   const items: TabsProps['items'] = tabs.map((tab) => ({
     key: tab.key,
     label: getRouteLabel(tab.key, menus, intl.formatMessage),
     closable: tab.closable,
   }));
+  const actionItems: MenuProps['items'] = [
+    { key: 'refresh', icon: <ReloadOutlined />, label: intl.formatMessage({ id: 'components.routeTabs.refresh' }) },
+    { type: 'divider' },
+    { key: 'closeOthers', icon: <CloseOutlined />, label: intl.formatMessage({ id: 'components.routeTabs.closeOthers' }) },
+    { key: 'closeAll', icon: <CloseOutlined />, label: intl.formatMessage({ id: 'components.routeTabs.closeAll' }) },
+  ];
 
   return (
     <>
@@ -138,6 +166,22 @@ const RouteTabs = ({ pathname, children }: RouteTabsProps) => {
             hideAdd
             items={items}
             type="editable-card"
+            tabBarExtraContent={
+              <Dropdown
+                menu={{
+                  items: actionItems,
+                  onClick: ({ key }) => {
+                    if (key === 'refresh') refreshTab();
+                    if (key === 'closeOthers') closeOtherTabs();
+                    if (key === 'closeAll') closeAllTabs();
+                  },
+                }}
+              >
+                <Button className="route-tabs-actions" size="small" type="text">
+                  {intl.formatMessage({ id: 'components.routeTabs.actions' })} <DownOutlined />
+                </Button>
+              </Dropdown>
+            }
             onChange={(key) => history.push(key)}
             onEdit={(targetKey, action) => {
               if (action === 'remove') {

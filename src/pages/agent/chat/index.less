@@ -477,6 +477,8 @@
   display: flex;
   min-width: 0;
   align-items: center;
+  flex: 1;
+  flex-wrap: wrap;
   gap: 4px;
 
   .ant-select {
@@ -512,11 +514,15 @@
 }
 
 .@{chat-prefix}-send-btn {
+  box-sizing: border-box;
   width: 36px;
   min-width: 36px;
   height: 36px;
+  padding: 0;
+  flex: 0 0 36px;
   flex-shrink: 0;
   border: 0;
+  border-radius: 50%;
   background: @primary;
   box-shadow: none;
 

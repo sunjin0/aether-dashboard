@@ -14,12 +14,16 @@ jest.mock('@umijs/max', () => ({
         'components.routeTabs.humanReview': '人工审批',
         'components.routeTabs.workflowEditor': '工作流编排',
         'components.routeTabs.workflowRun': '工作流运行',
+        'components.routeTabs.actions': '标签操作',
+        'components.routeTabs.refresh': '刷新当前页',
+        'components.routeTabs.closeOthers': '关闭其他标签',
+        'components.routeTabs.closeAll': '关闭全部标签',
       })[id] || id,
   }),
 }));
 
 jest.mock('antd', () => ({
-  Tabs: ({ activeKey, items, onChange, onEdit }: any) => (
+  Tabs: ({ activeKey, items, onChange, onEdit, tabBarExtraContent }: any) => (
     <div>
       {items.map((item: any) => (
         <div key={item.key}>
@@ -33,12 +37,30 @@ jest.mock('antd', () => ({
           )}
         </div>
       ))}
+      {tabBarExtraContent}
+    </div>
+  ),
+  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+  Dropdown: ({ children, menu }: any) => (
+    <div>
+      {children}
+      {menu.items.map((item: any) =>
+        item.type === 'divider' ? null : (
+          <button key={item.key} onClick={() => menu.onClick({ key: item.key })}>
+            {item.label}
+          </button>
+        ),
+      )}
     </div>
   ),
 }));
 
+const mockDrop = jest.fn();
+const mockRefresh = jest.fn();
+
 jest.mock('react-activation', () => ({
   KeepAlive: ({ children }: any) => <>{children}</>,
+  useAliveController: () => ({ drop: mockDrop, refresh: mockRefresh }),
 }));
 
 describe('RouteTabs', () => {
@@ -202,5 +224,38 @@ describe('RouteTabs', () => {
 
     expect(history.push).toHaveBeenCalledWith('/dashboard');
     expect(screen.queryByRole('button', { name: '短信管理（接口）' })).toBeNull();
+    expect(mockDrop).toHaveBeenCalledWith('/msg/sms');
+  });
+
+  it('refreshes the active tab through the keep-alive controller', () => {
+    render(
+      <RouteTabs pathname="/dashboard">
+        <div>Dashboard</div>
+      </RouteTabs>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '刷新当前页' }));
+
+    expect(mockRefresh).toHaveBeenCalledWith('/dashboard');
+  });
+
+  it('closes all non-dashboard tabs and returns to the dashboard', () => {
+    setRouteMenus(menus);
+    const { rerender } = render(
+      <RouteTabs pathname="/dashboard">
+        <div>Dashboard</div>
+      </RouteTabs>,
+    );
+
+    rerender(
+      <RouteTabs pathname="/msg/sms">
+        <div>SMS</div>
+      </RouteTabs>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '关闭全部标签' }));
+
+    expect(mockDrop).toHaveBeenCalledWith('/msg/sms');
+    expect(history.push).toHaveBeenCalledWith('/dashboard');
   });
 });

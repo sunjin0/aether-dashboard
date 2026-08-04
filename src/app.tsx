@@ -85,7 +85,9 @@ export async function getInitialState(): Promise<{
       const { data } = await info()
       return data
     } catch (error) {
-      history.push(loginPath)
+      if (history.location.pathname !== loginPath) {
+        history.replace(loginPath)
+      }
     }
     return undefined
   }

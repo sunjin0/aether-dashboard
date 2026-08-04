@@ -9,7 +9,7 @@ import {
   updateToolPriority,
 } from '@/services/agent/AgentDefinitionController'
 import { getAgentToolOptions } from '@/services/agent/ToolController'
-import { AgentToolBinding, BindToolRequest, AgentTool } from '@/services/entity/Agent'
+import { AgentToolBinding as AgentToolBindingEntity, BindToolRequest, AgentTool } from '@/services/entity/Agent'
 import { useIntl } from '@umijs/max'
 import TableActionMenu from '@/components/TableActionMenu'
 
@@ -126,7 +126,7 @@ const AgentToolBinding: React.FC<AgentToolBindingProps> = ({ agentId, open, setO
       width: 120,
       key: 'option',
       fixed: 'right',
-      render: (_: any, record: AgentToolBinding) => (
+      render: (_: any, record: AgentToolBindingEntity) => (
         <TableActionMenu
           items={[
             {
@@ -146,7 +146,7 @@ const AgentToolBinding: React.FC<AgentToolBindingProps> = ({ agentId, open, setO
 
   return (
     <>
-      <ProTable<AgentToolBinding>
+      <ProTable<AgentToolBindingEntity>
         actionRef={actionRef}
         rowKey="toolId"
         request={async () => {

@@ -29,6 +29,8 @@ const getFallbackMessage = (id: 'app.requestError.noResponse' | 'app.requestErro
  * @doc https://umijs.org/docs/max/request#配置
  */
 export const errorConfig: RequestConfig = {
+  // Initial-state loading depends on API responses; fail instead of leaving the app's bootstrap spinner forever.
+  timeout: 15_000,
   // 错误处理： umi@3 的错误处理方案。
   errorConfig: {
     // 错误抛出

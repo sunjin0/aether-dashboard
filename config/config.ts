@@ -161,12 +161,6 @@ export default defineConfig({
       projectName: 'swagger',
     },
   ],
-  /**
-   * @name 是否开启 mako
-   * @description 使用 mako 极速研发
-   * @doc https://umijs.org/docs/api/config#mako
-   */
-  mako: {},
   esbuildMinifyIIFE: true,
   requestRecord: {},
 });

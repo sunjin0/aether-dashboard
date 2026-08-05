@@ -67,6 +67,10 @@ const getRouteLabel = (
     return formatMessage({ id: 'components.routeTabs.versionHistory' });
   if (/^\/knowledge\/reviews\/[^/]+$/.test(pathname))
     return formatMessage({ id: 'components.routeTabs.humanReview' });
+  if (/^\/knowledge\/evaluation\/sets\/[^/]+\/runs\/[^/]+$/.test(pathname))
+    return formatMessage({ id: 'components.routeTabs.evaluationRun' });
+  if (/^\/knowledge\/evaluation\/sets\/[^/]+$/.test(pathname))
+    return formatMessage({ id: 'components.routeTabs.evaluationWorkspace' });
   if (/^\/(?:agent\/workflow|workflow\/workflow)\/[^/]+\/run$/.test(pathname))
     return formatMessage({ id: 'components.routeTabs.workflowRun' });
   if (/^\/(?:agent\/workflow|workflow\/workflow)\/[^/]+$/.test(pathname))
@@ -151,10 +155,22 @@ const RouteTabs = ({ pathname, children }: RouteTabsProps) => {
     closable: tab.closable,
   }));
   const actionItems: MenuProps['items'] = [
-    { key: 'refresh', icon: <ReloadOutlined />, label: intl.formatMessage({ id: 'components.routeTabs.refresh' }) },
+    {
+      key: 'refresh',
+      icon: <ReloadOutlined />,
+      label: intl.formatMessage({ id: 'components.routeTabs.refresh' }),
+    },
     { type: 'divider' },
-    { key: 'closeOthers', icon: <CloseOutlined />, label: intl.formatMessage({ id: 'components.routeTabs.closeOthers' }) },
-    { key: 'closeAll', icon: <CloseOutlined />, label: intl.formatMessage({ id: 'components.routeTabs.closeAll' }) },
+    {
+      key: 'closeOthers',
+      icon: <CloseOutlined />,
+      label: intl.formatMessage({ id: 'components.routeTabs.closeOthers' }),
+    },
+    {
+      key: 'closeAll',
+      icon: <CloseOutlined />,
+      label: intl.formatMessage({ id: 'components.routeTabs.closeAll' }),
+    },
   ];
 
   return (

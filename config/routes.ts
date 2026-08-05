@@ -201,7 +201,19 @@ export default [
         name: '索引任务',
         component: './knowledge/index-job',
       },
-      { path: '/knowledge/evaluation', name: '检索评测', component: './knowledge/evaluation' },
+      {
+        path: '/knowledge/evaluation/sets/:setId/runs/:runId',
+        name: '评测运行详情',
+        hideInMenu: true,
+        component: './knowledge/evaluation/run',
+      },
+      {
+        path: '/knowledge/evaluation/sets/:setId',
+        name: '评测集工作台',
+        hideInMenu: true,
+        component: './knowledge/evaluation/set',
+      },
+      { path: '/knowledge/evaluation', name: '检索评测', exact: true, component: './knowledge/evaluation' },
     ],
   },
   {

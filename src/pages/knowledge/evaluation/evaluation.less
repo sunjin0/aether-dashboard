@@ -1,0 +1,49 @@
+.evaluation-page {
+  .evaluation-card + .evaluation-card {
+    margin-top: 16px;
+  }
+
+  .evaluation-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .evaluation-toolbar-actions {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .evaluation-metric-card .ant-descriptions-view {
+    background: #fafcff;
+    border-radius: 8px;
+    padding: 8px 16px;
+  }
+
+  .evaluation-table .ant-table-cell {
+    vertical-align: top;
+  }
+}
+
+@media (max-width: 768px) {
+  .evaluation-page {
+    .evaluation-toolbar {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .evaluation-toolbar-actions {
+      justify-content: flex-start;
+    }
+
+    .evaluation-metric-card .ant-descriptions-item {
+      padding-bottom: 8px;
+    }
+  }
+}

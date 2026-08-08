@@ -113,6 +113,11 @@ export default [
         name: '工具调用日志',
         component: './agent/tool-call-log',
       },
+      {
+        path: '/agent/skill',
+        name: '技能管理',
+        component: './agent/skill',
+      },
     ],
   },
   {

@@ -935,3 +935,212 @@ export interface MessageStatistics {
   totalTokens: number;
   avgLatencyMs: number;
 }
+
+/**
+ * @description 智能体技能主记录
+ */
+export interface AgentSkill {
+  id?: string;
+  name?: string;
+  code?: string;
+  description?: string;
+  category?: string;
+  /** 技能状态：0-草稿/未启用，1-启用，2-停用 */
+  status?: 0 | 1 | 2;
+  /** 当前最新已发布版本 ID，不影响 Agent 已固定安装的旧版本 */
+  currentVersionId?: string;
+  icon?: string;
+  tags?: string;
+  createdAt?: number;
+  updatedAt?: number;
+}
+
+/**
+ * @description 智能体技能查询参数
+ */
+export interface AgentSkillSearchParams extends AgentSkill {
+  current?: number;
+  pageSize?: number;
+}
+
+/**
+ * @description 技能版本快照；status=0 草稿可编辑，status=1 发布后不可变
+ */
+export interface AgentSkillVersion {
+  id?: string;
+  skillId?: string;
+  versionNo?: number;
+  /** 领域指令 Markdown */
+  instruction?: string;
+  /** Skill 输入 JSON Schema */
+  inputSchema?: string;
+  /** Skill 输出 JSON Schema */
+  outputSchema?: string;
+  toolPolicy?: string;
+  status?: 0 | 1;
+  changeNote?: string;
+  publishedAt?: number;
+  publishedBy?: string;
+  createdAt?: number;
+}
+
+/**
+ * @description 技能版本声明的工具依赖（只能收窄 Agent 已授权工具范围）
+ */
+export interface AgentSkillToolBinding {
+  id?: string;
+  skillVersionId?: string;
+  toolId?: string;
+  /** 是否必需；必需工具不可用时请求前拒绝 */
+  required?: boolean;
+  priority?: number;
+}
+
+/**
+ * @description 技能版本声明的知识库范围（只能收窄 Agent 已授权知识库）
+ */
+export interface AgentSkillKnowledgeBinding {
+  id?: string;
+  skillVersionId?: string;
+  knowledgeBaseId?: string;
+}
+
+/**
+ * @description 技能版本冻结的资源元数据
+ */
+export interface AgentSkillResource {
+  id?: string;
+  skillVersionId?: string;
+  name?: string;
+  type?: 'MARKDOWN' | 'SCRIPT' | 'TEMPLATE' | string;
+  language?: string;
+  objectKey?: string;
+  contentSha256?: string;
+  size?: number;
+  purpose?: string;
+  status?: 0 | 1;
+}
+
+/**
+ * @description 智能体技能详情
+ */
+export interface AgentSkillDetail {
+  skill?: AgentSkill;
+  /** 可编辑草稿，为空表示无草稿 */
+  draft?: AgentSkillVersion;
+  /** 当前已发布版本 */
+  currentVersion?: AgentSkillVersion;
+  tools?: AgentSkillToolBinding[];
+  knowledgeBases?: AgentSkillKnowledgeBinding[];
+  resources?: AgentSkillResource[];
+}
+
+/**
+ * @description 技能草稿工具依赖项
+ */
+export interface AgentSkillToolDto {
+  toolId: string;
+  required?: boolean;
+  priority?: number;
+}
+
+/**
+ * @description 创建/编辑技能草稿请求
+ */
+export interface AgentSkillDraftDto {
+  name?: string;
+  code?: string;
+  description?: string;
+  category?: string;
+  icon?: string;
+  tags?: string;
+  instruction?: string;
+  inputSchema?: string;
+  outputSchema?: string;
+  toolPolicy?: string;
+  changeNote?: string;
+  tools?: AgentSkillToolDto[];
+  knowledgeBaseIds?: string[];
+}
+
+/**
+ * @description 将已发布技能版本安装到 Agent 的请求
+ */
+export interface AgentSkillInstallDto {
+  skillVersionId: string;
+  priority?: number;
+  status?: number;
+  configOverrides?: string;
+}
+
+/**
+ * @description 更新 Agent 已安装技能请求
+ */
+export interface AgentSkillBindingUpdateDto {
+  skillVersionId?: string;
+  priority?: number;
+  status?: number;
+  configOverrides?: string;
+}
+
+/**
+ * @description Agent 已安装的技能版本绑定
+ */
+export interface AgentDefinitionSkillBinding {
+  id?: string;
+  agentDefinitionId?: string;
+  skillId?: string;
+  skillVersionId?: string;
+  priority?: number;
+  status?: 0 | 1;
+  configOverrides?: string;
+  createdAt?: number;
+  updatedAt?: number;
+}
+
+/**
+ * @description 技能提示词合成预览请求
+ */
+export interface AgentSkillPreviewDto {
+  /** key 为技能编码，value 为运行时输入参数 */
+  skillInputs?: Record<string, Record<string, any>>;
+}
+
+/**
+ * @description 技能提示词合成预览结果
+ */
+export interface AgentSkillPreviewVo {
+  skillId?: string;
+  skillCode?: string;
+  skillName?: string;
+  versionNo?: number;
+  /** 0-草稿预览，1-已发布版本预览 */
+  versionStatus?: 0 | 1;
+  /** 合成的 [Installed Skill] 指令段落 */
+  prompt?: string;
+  tools?: AgentSkillPreviewToolItem[];
+  knowledgeBaseIds?: string[];
+  resources?: AgentSkillPreviewResourceItem[];
+  /** 粗略 token 估算 */
+  estimatedTokens?: number;
+}
+
+export interface AgentSkillPreviewToolItem {
+  toolId?: string;
+  toolName?: string;
+  toolCode?: string;
+  required?: boolean;
+  priority?: number;
+  /** 工具当前是否可用 */
+  available?: boolean;
+}
+
+export interface AgentSkillPreviewResourceItem {
+  resourceId?: string;
+  name?: string;
+  type?: string;
+  language?: string;
+  size?: number;
+  purpose?: string;
+  contentSha256?: string;
+}

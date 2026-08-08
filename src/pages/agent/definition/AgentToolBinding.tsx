@@ -131,6 +131,7 @@ const AgentToolBinding: React.FC<AgentToolBindingProps> = ({ agentId, open, setO
           items={[
             {
               key: 'unbind',
+              primary: true,
               label: intl.formatMessage({ id: 'pages.agent.tool.unbind' }),
               danger: true,
               confirm: { title: intl.formatMessage({ id: 'pages.agent.tool.unbindConfirm' }) },

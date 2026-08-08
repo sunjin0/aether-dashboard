@@ -28,6 +28,8 @@ export interface Option {
   id?: number;
   label: string;
   value: string | number;
+  code?: string;
+  status?: number;
   children?: Option[];
   disabled?: boolean;
   isLeaf?: boolean;

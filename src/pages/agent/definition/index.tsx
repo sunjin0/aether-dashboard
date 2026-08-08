@@ -6,6 +6,7 @@ import { FormattedMessage, history, useAccess, useIntl } from '@@/exports'
 import AgentDefinitionForm from '@/pages/agent/definition/AgentDefinitionForm'
 import AgentToolBinding from '@/pages/agent/definition/AgentToolBinding'
 import AgentKnowledgeBaseBinding from '@/pages/agent/definition/AgentKnowledgeBaseBinding'
+import AgentSkillBinding from '@/pages/agent/definition/AgentSkillBinding'
 import {
   copyAgentDefinitionInfo,
   deleteAgentDefinitionInfo,
@@ -32,6 +33,7 @@ const AgentDefinitionPage: React.FC = () => {
   const [toolBindingVisible, setToolBindingVisible] = useState(false)
   const [currentAgentId, setCurrentAgentId] = useState<string>('')
   const [knowledgeBaseBindingVisible, setKnowledgeBaseBindingVisible] = useState(false)
+  const [skillBindingVisible, setSkillBindingVisible] = useState(false)
 
   const handleDelete = async (record: AgentDefinition) => {
     if (!record.id) {
@@ -153,7 +155,7 @@ const AgentDefinitionPage: React.FC = () => {
     {
       title: format('pages.common.option'),
       valueType: 'option',
-      width: 250,
+      width: 350,
       key: 'option',
       fixed: 'right',
       render: (_: any, record: AgentDefinition) =>
@@ -184,6 +186,15 @@ const AgentDefinitionPage: React.FC = () => {
                 onClick: () => {
                   setCurrentAgentId(record.id || '')
                   setKnowledgeBaseBindingVisible(true)
+                },
+              },
+              {
+                key: 'skill',
+                label: format('pages.agent.skill.manage'),
+                primary: true,
+                onClick: () => {
+                  setCurrentAgentId(record.id || '')
+                  setSkillBindingVisible(true)
                 },
               },
               {
@@ -286,6 +297,23 @@ const AgentDefinitionPage: React.FC = () => {
           agentId={currentAgentId}
           open={knowledgeBaseBindingVisible}
           setOpen={setKnowledgeBaseBindingVisible}
+        />
+      </Modal>
+      <Modal
+        title={format('pages.agent.skill.manage')}
+        open={skillBindingVisible}
+        onCancel={() => {
+          setSkillBindingVisible(false)
+          setCurrentAgentId('')
+        }}
+        footer={null}
+        width={900}
+        destroyOnClose
+      >
+        <AgentSkillBinding
+          agentId={currentAgentId}
+          open={skillBindingVisible}
+          setOpen={setSkillBindingVisible}
         />
       </Modal>
     </PageContainer>

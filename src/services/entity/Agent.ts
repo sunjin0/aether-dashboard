@@ -748,6 +748,7 @@ export interface AgentTool {
   name?: string;
   code?: string;
   description?: string;
+  icon?: string;
   toolType?: string;
   mcpServerId?: string;
   mcpServerName?: string;
@@ -951,6 +952,12 @@ export interface AgentSkill {
   currentVersionId?: string;
   icon?: string;
   tags?: string;
+  hasDraft?: boolean;
+  currentVersionNo?: number;
+  installedAgentCount?: number;
+  toolCount?: number;
+  knowledgeBaseCount?: number;
+  resourceCount?: number;
   createdAt?: number;
   updatedAt?: number;
 }
@@ -1123,6 +1130,23 @@ export interface AgentSkillPreviewVo {
   resources?: AgentSkillPreviewResourceItem[];
   /** 粗略 token 估算 */
   estimatedTokens?: number;
+}
+
+/** 发布前只读检查结果；blockers 不为空时不可发布。 */
+export interface AgentSkillPublishCheck {
+  ready: boolean;
+  draftVersionId?: string;
+  estimatedTokens?: number;
+  blockers: string[];
+  warnings: string[];
+}
+
+export interface AgentSkillStatistics {
+  totalCount: number;
+  enabledCount: number;
+  draftCount: number;
+  publishedCount: number;
+  boundAgentCount: number;
 }
 
 export interface AgentSkillPreviewToolItem {

@@ -11,6 +11,7 @@ import {
   Select,
   Space,
   Spin,
+  Steps,
   Switch,
   Typography,
 } from 'antd'
@@ -29,6 +30,7 @@ import { Option } from '@/services/entity/Common'
 import { loadKnowledgeBaseOptions, loadToolOptions } from './options'
 import { getOptionList } from '@/services/sys/DictController'
 import SchemaFields from './SchemaFields'
+import SystemIconPicker from '@/components/SystemIconPicker'
 
 interface SkillFormProps {
   /** 技能 ID，为空表示新建技能 */
@@ -67,6 +69,7 @@ const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen,
   const [tagOptions, setTagOptions] = useState<Option[]>([])
   const [toolPolicyOptions, setToolPolicyOptions] = useState<Option[]>([])
   const [optionsFailed, setOptionsFailed] = useState(false)
+  const [activeStep, setActiveStep] = useState(0)
   const optionsInited = useRef(false)
 
   useEffect(() => {
@@ -88,6 +91,7 @@ const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen,
   useEffect(() => {
     if (!open) return
     form.resetFields()
+    setActiveStep(0)
     setOptionsFailed(false)
     // 选项接口仅首次打开时请求，之后复用缓存，避免反复请求。
     if (!optionsInited.current) {
@@ -185,6 +189,16 @@ const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen,
     }
   }
 
+  const handleNext = async () => {
+    const fields = activeStep === 0 ? ['name', 'code'] : activeStep === 1 ? ['instruction'] : []
+    try {
+      await form.validateFields(fields)
+      setActiveStep((current) => Math.min(current + 1, 2))
+    } catch {
+      // 当前步骤的必填项尚未完成。
+    }
+  }
+
   return (
     <Modal
       title={format(id ? 'pages.agent.skill.editDraft' : 'pages.agent.skill.create')}
@@ -192,12 +206,29 @@ const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen,
       onOk={handleSubmit}
       confirmLoading={submitting}
       onCancel={() => setOpen(false)}
+      footer={[
+        <Button key="cancel" onClick={() => setOpen(false)}>{format('pages.common.cancel')}</Button>,
+        activeStep > 0 && <Button key="back" onClick={() => setActiveStep((current) => current - 1)}>{format('pages.agent.skill.previousStep')}</Button>,
+        activeStep < 2
+          ? <Button key="next" type="primary" onClick={handleNext}>{format('pages.agent.skill.nextStep')}</Button>
+          : <Button key="save" type="primary" loading={submitting} onClick={handleSubmit}>{format('pages.agent.skill.saveDraft')}</Button>,
+      ]}
       width={960}
       destroyOnClose={false}
       bodyStyle={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}
     >
       <Spin spinning={detailLoading}>
         <Form form={form} layout="vertical">
+          <Steps
+            current={activeStep}
+            size="small"
+            style={{ marginBottom: 20 }}
+            items={[
+              { title: format('pages.agent.skill.stepBasic'), description: format('pages.agent.skill.stepBasicHint') },
+              { title: format('pages.agent.skill.stepBehavior'), description: format('pages.agent.skill.stepBehaviorHint') },
+              { title: format('pages.agent.skill.stepDependencies'), description: format('pages.agent.skill.stepDependenciesHint') },
+            ]}
+          />
           {optionsFailed && (
             <Alert
               type="warning"
@@ -207,6 +238,7 @@ const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen,
             />
           )}
 
+          <div hidden={activeStep !== 0}>
           <Text strong style={{ display: 'block', marginBottom: 8 }}>
             {format('pages.agent.skill.basicInfo')}
           </Text>
@@ -242,8 +274,8 @@ const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen,
                 placeholder={format('pages.agent.skill.categoryPlaceholder')}
               />
             </Form.Item>
-            <Form.Item name="icon" label={format('pages.agent.skill.icon')} style={{ width: 180 }}>
-              <Input placeholder={format('pages.agent.skill.iconPlaceholder')} />
+            <Form.Item name="icon" label={format('pages.agent.skill.icon')} style={{ width: 280 }}>
+              <SystemIconPicker />
             </Form.Item>
           </Space>
           <Form.Item name="tags" label={format('pages.agent.skill.tags')}>
@@ -261,11 +293,17 @@ const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen,
               placeholder={format('pages.agent.skill.descriptionPlaceholder')}
             />
           </Form.Item>
+          </div>
 
+          <div hidden={activeStep !== 1}>
           <Text strong style={{ display: 'block', margin: '16px 0 8px' }}>
             {format('pages.agent.skill.sectionContent')}
           </Text>
-          <Form.Item name="instruction" label={format('pages.agent.skill.instruction')}>
+          <Form.Item
+            name="instruction"
+            label={format('pages.agent.skill.instruction')}
+            rules={[{ required: true, message: format('pages.agent.skill.requiredInstruction') }]}
+          >
             <Input.TextArea
               rows={5}
               placeholder={format('pages.agent.skill.instructionPlaceholder')}
@@ -287,7 +325,9 @@ const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen,
           <Form.Item name="changeNote" label={format('pages.agent.skill.changeNote')}>
             <Input placeholder={format('pages.agent.skill.changeNotePlaceholder')} />
           </Form.Item>
+          </div>
 
+          <div hidden={activeStep !== 2}>
           <Text strong style={{ display: 'block', margin: '16px 0 8px' }}>
             {format('pages.agent.skill.sectionDependencies')}
           </Text>
@@ -368,6 +408,7 @@ const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen,
               )}
             </Form.List>
           </Form.Item>
+          </div>
         </Form>
       </Spin>
     </Modal>

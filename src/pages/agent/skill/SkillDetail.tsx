@@ -4,6 +4,7 @@ import { useIntl } from '@umijs/max'
 import { getSkillDetail } from '@/services/agent/SkillController'
 import { AgentSkillDetail } from '@/services/entity/Agent'
 import { loadKnowledgeBaseOptions, loadToolOptions } from './options'
+import { SystemIcon } from '@/components/SystemIconPicker'
 
 interface SkillDetailProps {
   id?: string;
@@ -123,6 +124,9 @@ const SkillDetail: React.FC<SkillDetailProps> = ({ id, open, setOpen }) => {
               </Descriptions.Item>
               <Descriptions.Item label={format('pages.agent.skill.category')}>
                 {detail.skill.category || '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label={format('pages.agent.skill.icon')}>
+                <Space><SystemIcon name={detail.skill.icon} />{detail.skill.icon || '-'}</Space>
               </Descriptions.Item>
               <Descriptions.Item label={format('pages.agent.skill.status')}>
                 {detail.skill.status === 1 ? (

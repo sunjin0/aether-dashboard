@@ -16,6 +16,7 @@ import { Form, Segmented } from 'antd'
 import { useIntl } from '@umijs/max'
 import JsonDisplay from '@/components/JsonDisplay'
 import React, { useState } from 'react'
+import SystemIconPicker from '@/components/SystemIconPicker'
 
 const AgentToolForm = (props: {
   id?: string;
@@ -79,6 +80,9 @@ const AgentToolForm = (props: {
         rules={[{ required: true }]}
       />
       <ProFormTextArea name="description" label={format('pages.common.description')} />
+      <Form.Item name="icon" label={format('pages.agent.skill.icon')}>
+        <SystemIconPicker />
+      </Form.Item>
       <ProFormSelect
         name="toolType"
         label={format('pages.agent.tool.businessType')}

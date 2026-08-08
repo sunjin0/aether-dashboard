@@ -169,8 +169,10 @@ const AgentSkillBinding: React.FC<AgentSkillBindingProps> = ({ agentId, open }) 
       title: format('pages.agent.skill.versionNo'),
       dataIndex: 'skillVersionId',
       width: 100,
-      render: (value?: string) =>
-        value && versionMap[value] != null ? `v${versionMap[value]}` : '-',
+      render: (value: React.ReactNode) => {
+        const versionId = typeof value === 'string' ? value : undefined
+        return versionId && versionMap[versionId] != null ? `v${versionMap[versionId]}` : '-'
+      },
     },
     {
       title: format('pages.agent.tool.priority'),
@@ -181,7 +183,7 @@ const AgentSkillBinding: React.FC<AgentSkillBindingProps> = ({ agentId, open }) 
       title: format('pages.common.status'),
       dataIndex: 'status',
       width: 110,
-      render: (value?: number) =>
+      render: (value: React.ReactNode) =>
         value === 1 ? (
           <Tag color="green">{format('pages.common.enabled')}</Tag>
         ) : (

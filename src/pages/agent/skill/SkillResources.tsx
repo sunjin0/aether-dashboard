@@ -8,7 +8,6 @@ import {
   message,
   Modal,
   Popconfirm,
-  Select,
   Space,
   Table,
   Tag,
@@ -18,11 +17,13 @@ import {
 import { useIntl } from '@umijs/max'
 import {
   getSkillResources,
+  getSkillDetail,
   previewSkill,
   removeSkillResource,
   uploadSkillResource,
 } from '@/services/agent/SkillController'
 import { AgentSkillPreviewVo, AgentSkillResource } from '@/services/entity/Agent'
+import { loadKnowledgeBaseOptions } from './options'
 
 interface SkillResourcesProps {
   id?: string;
@@ -31,12 +32,6 @@ interface SkillResourcesProps {
 }
 
 const { Paragraph, Text } = Typography
-
-const TYPE_OPTIONS = [
-  { label: 'MARKDOWN', value: 'MARKDOWN' },
-  { label: 'SCRIPT', value: 'SCRIPT' },
-  { label: 'TEMPLATE', value: 'TEMPLATE' },
-]
 
 const formatSize = (size?: number) => {
   if (size == null) return '-'
@@ -53,7 +48,8 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
   const [resources, setResources] = useState<AgentSkillResource[]>([])
   const [uploading, setUploading] = useState(false)
   const [purpose, setPurpose] = useState<string>()
-  const [type, setType] = useState<string>()
+  const [editable, setEditable] = useState(false)
+  const [knowledgeBaseNames, setKnowledgeBaseNames] = useState<Record<string, string>>({})
   const [preview, setPreview] = useState<AgentSkillPreviewVo>()
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewLoading, setPreviewLoading] = useState(false)
@@ -70,9 +66,15 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
     if (!open || !id) return
     setResources([])
     setPreview(undefined)
+    setPreviewOpen(false)
+    setPurpose(undefined)
     setLoading(true)
-    getSkillResources(id)
-      .then(({ data }) => setResources(data || []))
+    Promise.all([getSkillResources(id), getSkillDetail(id), loadKnowledgeBaseOptions()])
+      .then(([resourcesRes, detailRes, knowledgeBases]) => {
+        setResources(resourcesRes.data || [])
+        setEditable(Boolean(detailRes.data?.draft?.id))
+        setKnowledgeBaseNames(Object.fromEntries(knowledgeBases.map((item) => [String(item.value), item.label])))
+      })
       .finally(() => setLoading(false))
   }, [id, open])
 
@@ -80,9 +82,10 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
     if (!id) return
     setUploading(true)
     try {
-      const { code } = await uploadSkillResource(id, file, purpose, type)
+      const { code } = await uploadSkillResource(id, file, purpose)
       if (code === 200) {
         message.success(format('pages.agent.skill.resourceUploadSuccess'))
+        setPurpose(undefined)
         load()
       }
     } catch {
@@ -165,7 +168,7 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
       key: 'option',
       width: 90,
       render: (_: unknown, record: AgentSkillResource) =>
-        record.id ? (
+        editable && record.id ? (
           <Popconfirm
             title={format('pages.agent.skill.resourceDeleteConfirm')}
             onConfirm={() => handleDelete(record.id as string)}
@@ -218,7 +221,10 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
       <Drawer
         title={format('pages.agent.skill.resourceManage')}
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={() => {
+          setPreviewOpen(false)
+          setOpen(false)
+        }}
         width={860}
         destroyOnClose
       >
@@ -226,7 +232,7 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
           <Upload
             accept=".md,.js,.py,.sh,.html,.hbs,.tpl,.ftl"
             showUploadList={false}
-            disabled={uploading}
+            disabled={uploading || !editable}
             beforeUpload={(file) => {
               handleUpload(file)
               return false
@@ -242,14 +248,7 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
             value={purpose}
             onChange={(e) => setPurpose(e.target.value)}
           />
-          <Select
-            style={{ width: 160 }}
-            allowClear
-            placeholder={format('pages.agent.skill.resourceTypePlaceholder')}
-            options={TYPE_OPTIONS}
-            value={type}
-            onChange={setType}
-          />
+          <Text type="secondary">{format('pages.agent.skill.resourceTypeAuto')}</Text>
           <Button loading={previewLoading} onClick={handlePreview}>
             {format('pages.agent.skill.preview')}
           </Button>
@@ -263,6 +262,7 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
           columns={columns}
           locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} /> }}
         />
+        {!editable && <Text type="secondary">{format('pages.agent.skill.resourceReadonly')}</Text>}
       </Drawer>
 
       <Modal
@@ -271,6 +271,8 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
         onCancel={() => setPreviewOpen(false)}
         footer={null}
         width={720}
+        zIndex={1100}
+        destroyOnClose
       >
         {preview ? (
           <Space direction="vertical" size="middle" style={{ width: '100%' }}>
@@ -316,7 +318,7 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
                 {(preview.knowledgeBaseIds || []).length === 0 ? (
                   <Text type="secondary">-</Text>
                 ) : (
-                  (preview.knowledgeBaseIds || []).map((item) => <Tag key={item}>{item}</Tag>)
+                  (preview.knowledgeBaseIds || []).map((item) => <Tag key={item}>{knowledgeBaseNames[item] || item}</Tag>)
                 )}
               </Space>
             </div>

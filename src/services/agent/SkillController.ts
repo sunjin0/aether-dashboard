@@ -9,6 +9,8 @@ import {
   AgentSkillInstallDto,
   AgentSkillPreviewDto,
   AgentSkillPreviewVo,
+  AgentSkillPublishCheck,
+  AgentSkillStatistics,
   AgentSkillResource,
   AgentSkillSearchParams,
   AgentSkillVersion,
@@ -34,6 +36,10 @@ export const getSkillOptions = async (): Promise<Option[]> => {
     method: 'GET',
   })
   return data || []
+}
+
+export const getSkillStatistics = async (): Promise<ResponseStructure<AgentSkillStatistics>> => {
+  return request('/api/agent/skill/statistics', { method: 'GET' })
 }
 
 /**
@@ -77,9 +83,11 @@ export const updateSkillDraft = async (
  */
 export const createNextSkillDraft = async (
   id: string,
+  options?: { skipErrorHandler?: boolean },
 ): Promise<ResponseStructure<string>> => {
   return request(`/api/agent/skill/${id}/draft`, {
     method: 'POST',
+    ...options,
   })
 }
 
@@ -93,6 +101,13 @@ export const publishSkill = async (
   return request(`/api/agent/skill/${id}/versions/${versionId}/publish`, {
     method: 'POST',
   })
+}
+
+/** 获取发布前检查项；发布接口仍会在服务端二次校验。 */
+export const getSkillPublishCheck = async (
+  id: string,
+): Promise<ResponseStructure<AgentSkillPublishCheck>> => {
+  return request(`/api/agent/skill/${id}/publish-check`, { method: 'GET' })
 }
 
 /**

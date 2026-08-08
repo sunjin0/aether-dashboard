@@ -34,6 +34,7 @@ import {
 import './index.less'
 import { getOptionList } from '@/services/sys/DictController'
 import TableActionMenu from '@/components/TableActionMenu'
+import { SystemIcon } from '@/components/SystemIconPicker'
 const toolTypesMap = [
   { value: 'knowledge', icon: <DatabaseOutlined /> },
   { value: 'ops', icon: <ToolOutlined /> },
@@ -155,7 +156,7 @@ const AgentToolPage: React.FC = () => {
         return (
           <div className="tool-name-cell">
             <span className={`tool-icon tool-icon-${record.toolType || 'general'}`}>
-              {meta?.icon || <AppstoreOutlined />}
+              <SystemIcon name={record.icon} fallback={meta?.icon || <AppstoreOutlined />} />
             </span>
             <div>
               <strong>{record.name || '-'}</strong>

@@ -139,6 +139,32 @@ const AgentSkillBinding: React.FC<AgentSkillBindingProps> = ({ agentId, open }) 
     }
   }
 
+  /** 发布新版本不会隐式影响生产 Agent；管理员在这里显式升级到该 Skill 最新发布版本。 */
+  const handleUpgradeToLatest = async (record: AgentDefinitionSkillBinding) => {
+    if (!record.id || !record.skillId) return
+    try {
+      const { data } = await getSkillVersions(record.skillId)
+      const published = (data || []).filter((item: AgentSkillVersion) => item.status === 1 && item.id)
+        .sort((left: AgentSkillVersion, right: AgentSkillVersion) => (right.versionNo || 0) - (left.versionNo || 0))
+      const latest = published[0]
+      if (!latest?.id || latest.id === record.skillVersionId) {
+        Modal.info({ title: '无需升级', content: '当前已安装最新发布版本。' })
+        return
+      }
+      Modal.confirm({
+        title: '升级 Skill 版本',
+        content: `将该 Agent 的 Skill 从 v${versionMap[record.skillVersionId || ''] || '?'} 升级到 v${latest.versionNo || '?'}。升级不会变更其他 Agent。`,
+        okText: '升级到最新版',
+        onOk: async () => {
+          const { code } = await updateSkillBinding(agentId, record.id as string, { skillVersionId: latest.id })
+          if (code === 200) ref.current?.reload()
+        },
+      })
+    } catch {
+      // API failures are displayed by the global request handler.
+    }
+  }
+
 
   const handleUninstall = async (record: AgentDefinitionSkillBinding) => {
     if (!record.id) return
@@ -216,6 +242,11 @@ const AgentSkillBinding: React.FC<AgentSkillBindingProps> = ({ agentId, open }) 
               danger: true,
               confirm: { title: format('pages.agent.skill.uninstallConfirm') },
               onClick: () => handleUninstall(record),
+            },
+            {
+              key: 'upgrade',
+              label: '升级到最新版',
+              onClick: () => handleUpgradeToLatest(record),
             },
           ]}
         />

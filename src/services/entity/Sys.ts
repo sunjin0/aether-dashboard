@@ -25,6 +25,17 @@ export interface Dict {
   updatedAt?: string;
   sortNum?: number;
 }
+
+export interface Config {
+  id?: string;
+  code?: string;
+  parent?: string;
+  name?: string;
+  value?: string;
+  remark?: string;
+  sortNum?: number;
+  children?: Config[];
+}
 /**
  *@description 角色查询参数
  * @since 2025-07-17

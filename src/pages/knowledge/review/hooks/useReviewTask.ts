@@ -1,4 +1,4 @@
-import { useModel } from '@umijs/max'
+import { useIntl, useModel } from '@umijs/max'
 import { message } from 'antd'
 import { useCallback, useEffect, useState } from 'react'
 import type { KnowledgeReviewTaskDetail } from '@/services/entity/Agent'
@@ -29,6 +29,7 @@ interface UseReviewTaskReturn {
 }
 
 export const useReviewTask = ({ taskId, open, onSuccess }: UseReviewTaskOptions): UseReviewTaskReturn => {
+  const intl = useIntl()
   const { initialState } = useModel('@@initialState')
   const [data, setData] = useState<KnowledgeReviewTaskDetail>()
   const [loading, setLoading] = useState(false)
@@ -78,7 +79,7 @@ export const useReviewTask = ({ taskId, open, onSuccess }: UseReviewTaskOptions)
     async (kind: 'claim' | 'approve' | 'reject') => {
       if (!taskId) return
       if (kind === 'reject' && !comment.trim()) {
-        message.warning('请填写驳回原因')
+        message.warning(intl.formatMessage({ id: 'pages.knowledge.review.rejectReasonRequired' }))
         return
       }
       setActing(true)
@@ -90,7 +91,7 @@ export const useReviewTask = ({ taskId, open, onSuccess }: UseReviewTaskOptions)
               ? await approveReviewTask(taskId, comment)
               : await rejectReviewTask(taskId, comment)
         if (response.code === 200) {
-          message.success('操作成功')
+          message.success(intl.formatMessage({ id: 'pages.knowledge.review.operationSuccess' }))
           onSuccess?.()
           if (kind === 'claim') {
             setClaimedByCurrentUser(true)
@@ -107,7 +108,7 @@ export const useReviewTask = ({ taskId, open, onSuccess }: UseReviewTaskOptions)
         setActing(false)
       }
     },
-    [taskId, comment, onSuccess, load],
+    [taskId, comment, onSuccess, load, intl],
   )
 
   return { data, loading, acting, comment, setComment, canDecide, act, refresh: load, getUserName }

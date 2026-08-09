@@ -329,17 +329,17 @@ const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen,
             <SchemaFields />
           </Form.Item>
           <Text strong style={{ display: 'block', margin: '16px 0 8px' }}>Skill 发现配置</Text>
-          <Form.Item name="routingSummary" label="何时使用此 Skill" rules={[{ required: true, message: '请填写不超过 200 字的发现摘要' }]}>
-            <Input.TextArea maxLength={200} rows={2} placeholder="描述用户什么需求时应激活此 Skill；不要重复完整指令。" />
+          <Form.Item name="routingSummary" label={format('pages.agent.skill.routingSummary')} rules={[{ required: true, message: format('pages.agent.skill.routingSummaryRequired') }]}>
+            <Input.TextArea maxLength={200} rows={2} placeholder={format('pages.agent.skill.routingSummaryPlaceholder')} />
           </Form.Item>
-          <Form.Item name="triggerTerms" label="触发词">
-            <Input placeholder="多个词用逗号分隔，例如：退款，退货，取消订单" />
+          <Form.Item name="triggerTerms" label={format('pages.agent.skill.triggerTerms')}>
+            <Input placeholder={format('pages.agent.skill.triggerTermsPlaceholder')} />
           </Form.Item>
-          <Form.Item name="excludeTerms" label="排除词">
-            <Input placeholder="多个词用逗号分隔，例如：安全，账号登录" />
+          <Form.Item name="excludeTerms" label={format('pages.agent.skill.excludeTerms')}>
+            <Input placeholder={format('pages.agent.skill.excludeTermsPlaceholder')} />
           </Form.Item>
-          <Form.Item name="routingExamples" label="典型请求示例">
-            <Input.TextArea rows={3} placeholder="每行一条，最多 5 条；例如：\n我想申请退款\n订单取消后什么时候到账" />
+          <Form.Item name="routingExamples" label={format('pages.agent.skill.routingExamples')}>
+            <Input.TextArea rows={3} placeholder={format('pages.agent.skill.routingExamplesPlaceholder')} />
           </Form.Item>
           <Form.Item name="toolPolicy" label={format('pages.agent.skill.toolPolicy')}>
             <Select

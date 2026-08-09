@@ -55,6 +55,7 @@ const pagePermissionPaths = [
   '/sys/role',
   '/sys/resource',
   '/sys/dict',
+  '/sys/config',
   '/sys/preference',
   '/message/sms',
   '/message/email',

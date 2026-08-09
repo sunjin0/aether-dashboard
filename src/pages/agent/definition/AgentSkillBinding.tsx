@@ -148,13 +148,13 @@ const AgentSkillBinding: React.FC<AgentSkillBindingProps> = ({ agentId, open }) 
         .sort((left: AgentSkillVersion, right: AgentSkillVersion) => (right.versionNo || 0) - (left.versionNo || 0))
       const latest = published[0]
       if (!latest?.id || latest.id === record.skillVersionId) {
-        Modal.info({ title: '无需升级', content: '当前已安装最新发布版本。' })
+        Modal.info({ title: format('pages.agent.skill.upgradeNotNeeded'), content: format('pages.agent.skill.upgradeNotNeededHint') })
         return
       }
       Modal.confirm({
-        title: '升级 Skill 版本',
-        content: `将该 Agent 的 Skill 从 v${versionMap[record.skillVersionId || ''] || '?'} 升级到 v${latest.versionNo || '?'}。升级不会变更其他 Agent。`,
-        okText: '升级到最新版',
+        title: format('pages.agent.skill.upgradeVersion'),
+        content: format('pages.agent.skill.upgradeConfirm', { current: String(versionMap[record.skillVersionId || ''] || '?'), latest: String(latest.versionNo || '?') }),
+        okText: format('pages.agent.skill.upgradeLatest'),
         onOk: async () => {
           const { code } = await updateSkillBinding(agentId, record.id as string, { skillVersionId: latest.id })
           if (code === 200) ref.current?.reload()
@@ -246,7 +246,7 @@ const AgentSkillBinding: React.FC<AgentSkillBindingProps> = ({ agentId, open }) 
             {
               key: 'upgrade',
               primary: true,
-              label: '升级到最新版',
+              label: format('pages.agent.skill.upgradeLatest'),
               onClick: () => handleUpgradeToLatest(record),
             },
           ]}

@@ -320,7 +320,7 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
   }
 
   const generateResourceDraft = async () => {
-    if (!id || !studioProviderId || !studioPrompt.trim()) { message.warning('请选择 AI 服务商并填写生成要求'); return }
+    if (!id || !studioProviderId || !studioPrompt.trim()) { message.warning(format('pages.agent.skill.studio.providerRequired')); return }
     setStudioLoading(true)
     try {
       const { data } = await generateSkillResource(id, { providerId: studioProviderId, type: (studioResource.type || 'MARKDOWN') as 'MARKDOWN' | 'TEMPLATE' | 'SCRIPT', name: studioResource.name, purpose: studioResource.purpose, prompt: studioPrompt })
@@ -331,14 +331,14 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
   const saveResourceDraft = async () => {
     if (!id || !studioContent.trim() || !studioResource.name) return
     const type = studioResource.type as 'MARKDOWN' | 'TEMPLATE' | 'SCRIPT'
-    if (inferResourceType(studioResource.name) !== type) { message.error('文件名后缀需与资源类型匹配'); return }
+    if (inferResourceType(studioResource.name) !== type) { message.error(format('pages.agent.skill.studio.typeMismatch')); return }
     setStudioLoading(true)
     try {
       const file = new File([studioContent], studioResource.name, { type: type === 'MARKDOWN' ? 'text/markdown' : 'text/plain' })
       const { code } = studioResource.id
         ? await updateSkillResource(id, String(studioResource.id), file, studioResource.purpose, type)
         : await uploadSkillResource(id, file, studioResource.purpose, type)
-      if (code === 200) { message.success('资源草稿已保存'); setStudioOpen(false); load() }
+      if (code === 200) { message.success(format('pages.agent.skill.studio.saveSuccess')); setStudioOpen(false); load() }
     } finally { setStudioLoading(false) }
   }
 
@@ -501,7 +501,7 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
             </Space>
           </Space>
         </Card>
-        <Card size="small" title="AI 在线生成" style={{ marginBottom: 16 }}>
+        <Card size="small" title={format('pages.agent.skill.studio.generate')} style={{ marginBottom: 16 }}>
           <Text type="secondary">通过已配置的 AI 服务商生成资源草稿；请先查看、编辑和测试内容，再保存到当前 Skill 草稿。</Text>
           <div style={{ marginTop: 12 }}><Button disabled={!editable} icon={<RobotOutlined />} onClick={() => openResourceStudio()}>生成资源草稿</Button></div>
         </Card>
@@ -539,7 +539,7 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
         ) : resourcePreview?.type === 'TEMPLATE' ? (
           <div className="skill-resource-preview skill-resource-preview-template">
             <div className="skill-resource-preview-template-header">模板渲染预览 · 使用示例简历数据</div>
-            {resourcePreviewLoading ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="正在加载资源内容" /> : (
+            {resourcePreviewLoading ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={format('pages.agent.skill.studio.loadingContent')} /> : (
               <div className="skill-resource-preview-template-canvas">
                 <iframe title={`${resourcePreview.name} 模板预览`} sandbox="" srcDoc={templatePreviewHtml(resourcePreviewContent)} />
               </div>
@@ -548,7 +548,7 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
         ) : (
           <div className="skill-resource-preview skill-resource-preview-code">
             <div className="skill-resource-preview-code-header">{resourcePreview?.type === 'SCRIPT' ? '脚本源码' : '模板源码'}</div>
-            {resourcePreviewLoading ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="正在加载资源内容" /> : (
+            {resourcePreviewLoading ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={format('pages.agent.skill.studio.loadingContent')} /> : (
               <Editor
                 height="calc(60vh - 38px)"
                 language={previewLanguage(resourcePreview)}
@@ -561,20 +561,20 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
         )}
       </Modal>
 
-      <Modal open={studioOpen} title="资源在线编辑与 AI 生成" width={900} zIndex={1200} destroyOnClose
+      <Modal open={studioOpen} title={format('pages.agent.skill.studio.title')} width={900} zIndex={1200} destroyOnClose
         onCancel={() => setStudioOpen(false)}
         footer={<Space><Button onClick={() => setStudioOpen(false)}>取消</Button><Button type="primary" disabled={!editable} loading={studioLoading} onClick={saveResourceDraft}>{studioResource.id ? format('pages.common.edit') : format('pages.agent.skill.resourceSaveAsNew')}</Button></Space>}>
         <Form layout="vertical">
           <Row gutter={12}>
-            <Col span={8}><Form.Item label="资源类型"><Select disabled={!editable} value={studioResource.type} options={['MARKDOWN', 'TEMPLATE', 'SCRIPT'].map((value) => ({ value, label: format(`pages.agent.skill.resourceType.${value.toLowerCase()}`) }))} onChange={(type) => setStudioResource({ ...studioResource, type })} /></Form.Item></Col>
-            <Col span={8}><Form.Item label="文件名"><Input disabled={!editable} value={studioResource.name} placeholder="例如：resume-template.hbs" onChange={(event) => setStudioResource({ ...studioResource, name: event.target.value })} /></Form.Item></Col>
-            <Col span={8}><Form.Item label="用途"><Input disabled={!editable} value={studioResource.purpose} onChange={(event) => setStudioResource({ ...studioResource, purpose: event.target.value })} /></Form.Item></Col>
+            <Col span={8}><Form.Item label={format('pages.agent.skill.studio.type')}><Select disabled={!editable} value={studioResource.type} options={['MARKDOWN', 'TEMPLATE', 'SCRIPT'].map((value) => ({ value, label: format(`pages.agent.skill.resourceType.${value.toLowerCase()}`) }))} onChange={(type) => setStudioResource({ ...studioResource, type })} /></Form.Item></Col>
+            <Col span={8}><Form.Item label={format('pages.agent.skill.studio.fileName')}><Input disabled={!editable} value={studioResource.name} placeholder={format('pages.agent.skill.studio.fileNamePlaceholder')} onChange={(event) => setStudioResource({ ...studioResource, name: event.target.value })} /></Form.Item></Col>
+            <Col span={8}><Form.Item label={format('pages.agent.skill.studio.purpose')}><Input disabled={!editable} value={studioResource.purpose} onChange={(event) => setStudioResource({ ...studioResource, purpose: event.target.value })} /></Form.Item></Col>
           </Row>
-          {editable && <Card size="small" title="AI 生成 / 测试" style={{ marginBottom: 16 }}>
-            <Row gutter={12}><Col span={8}><Select showSearch loading={providerLoading} value={studioProviderId || undefined} placeholder="选择 AI 服务商" optionFilterProp="label" options={providerOptions} onChange={(value) => setStudioProviderId(String(value))} /></Col><Col span={16}><Input.TextArea rows={2} value={studioPrompt} placeholder="描述要生成或改进的资源内容；AI 输出会先显示在下方编辑区。" onChange={(event) => setStudioPrompt(event.target.value)} /></Col></Row>
+          {editable && <Card size="small" title={format('pages.agent.skill.studio.generateTest')} style={{ marginBottom: 16 }}>
+            <Row gutter={12}><Col span={8}><Select showSearch loading={providerLoading} value={studioProviderId || undefined} placeholder={format('pages.agent.skill.studio.selectProvider')} optionFilterProp="label" options={providerOptions} onChange={(value) => setStudioProviderId(String(value))} /></Col><Col span={16}><Input.TextArea rows={2} value={studioPrompt} placeholder={format('pages.agent.skill.studio.promptPlaceholder')} onChange={(event) => setStudioPrompt(event.target.value)} /></Col></Row>
             <Button style={{ marginTop: 12 }} icon={<RobotOutlined />} loading={studioLoading} onClick={generateResourceDraft}>生成并测试草稿</Button>
           </Card>}
-          <Form.Item label="资源内容"><Input.TextArea rows={16} readOnly={!editable} value={studioContent} onChange={(event) => setStudioContent(event.target.value)} /></Form.Item>
+          <Form.Item label={format('pages.agent.skill.studio.content')}><Input.TextArea rows={16} readOnly={!editable} value={studioContent} onChange={(event) => setStudioContent(event.target.value)} /></Form.Item>
         </Form>
       </Modal>
 

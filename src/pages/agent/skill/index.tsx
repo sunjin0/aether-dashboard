@@ -91,7 +91,7 @@ const SkillPage: React.FC = () => {
   const saveRoutingConfig = async () => {
     const values = await routingForm.validateFields()
     const { code } = await updateSkillRoutingConfig(values)
-    if (code === 200) { message.success('路由配置已保存；后续发布的 Skill 将异步建立向量索引。'); setRoutingConfigOpen(false) }
+    if (code === 200) { message.success(format('pages.agent.skill.routingSaved')); setRoutingConfigOpen(false) }
   }
 
   /** 打开编辑：无草稿时先基于最新发布版本创建草稿 */
@@ -223,34 +223,34 @@ const SkillPage: React.FC = () => {
       ),
     },
     {
-      title: '能力装配',
+      title: format('pages.agent.skill.assembly'),
       key: 'assembly',
       hideInSearch: true,
       width: 230,
       render: (_: unknown, record: AgentSkill) => (
         <div className="skill-assembly-cell">
-          <span>{(record.category && categoryNames[record.category]) || record.category || '未分类'}</span>
+          <span>{(record.category && categoryNames[record.category]) || record.category || format('pages.agent.skill.uncategorized')}</span>
           <Space size={[4, 4]} wrap>
-            <Tag>工具 {record.toolCount || 0}</Tag>
-            <Tag>知识库 {record.knowledgeBaseCount || 0}</Tag>
-            <Tag>资源 {record.resourceCount || 0}</Tag>
+            <Tag>{format('pages.agent.skill.toolCount', { count: String(record.toolCount || 0) })}</Tag>
+            <Tag>{format('pages.agent.skill.knowledgeBaseCount', { count: String(record.knowledgeBaseCount || 0) })}</Tag>
+            <Tag>{format('pages.agent.skill.resourceCount', { count: String(record.resourceCount || 0) })}</Tag>
           </Space>
         </div>
       ),
     },
     {
-      title: '版本交付',
+      title: format('pages.agent.skill.delivery'),
       key: 'delivery',
       hideInSearch: true,
       width: 280,
       render: (_: unknown, record: AgentSkill) => (
         <div className="skill-delivery-cell">
           <Space size={[4, 4]} wrap>
-            {record.hasDraft ? <Tag color="orange">待发布草稿</Tag> : <Tag>无待发布草稿</Tag>}
-            {record.currentVersionNo ? <Tag color="blue">已发布 v{record.currentVersionNo}</Tag> : <Tag>尚未发布</Tag>}
-            {record.status === 2 && <Tag>已停用</Tag>}
+            {record.hasDraft ? <Tag color="orange">{format('pages.agent.skill.draftPending')}</Tag> : <Tag>{format('pages.agent.skill.noDraftPending')}</Tag>}
+            {record.currentVersionNo ? <Tag color="blue">{format('pages.agent.skill.publishedVersion', { version: String(record.currentVersionNo) })}</Tag> : <Tag>{format('pages.agent.skill.unpublished')}</Tag>}
+            {record.status === 2 && <Tag>{format('pages.agent.skill.deactivated')}</Tag>}
           </Space>
-          <small>已安装到 {record.installedAgentCount || 0} 个 Agent</small>
+          <small>{format('pages.agent.skill.installedAgentCount', { count: String(record.installedAgentCount || 0) })}</small>
         </div>
       ),
     },
@@ -338,7 +338,7 @@ const SkillPage: React.FC = () => {
           <p>Skill 的重点不是工具数量，而是将指令、知识、资源与权限以可审计版本交付给 Agent。</p>
           <ol><li>配置草稿</li><li>发布检查</li><li>冻结版本</li><li>安装到 Agent</li></ol>
         </div>
-        {write && <Space><Button onClick={openRoutingConfig}>路由配置</Button><Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => { setFormId(undefined); setFormInitial(null); setFormOpen(true) }}>创建 Skill 草稿</Button></Space>}
+        {write && <Space><Button onClick={openRoutingConfig}>{format('pages.agent.skill.routingConfig')}</Button><Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => { setFormId(undefined); setFormInitial(null); setFormOpen(true) }}>{format('pages.agent.skill.createDraft')}</Button></Space>}
       </section>
       <Spin spinning={statisticsLoading}>
         <section className="skill-release-overview">
@@ -349,7 +349,7 @@ const SkillPage: React.FC = () => {
         </section>
       </Spin>
       <main className="skill-table-panel">
-        <div className="skill-filter-bar"><Input allowClear prefix={<SearchOutlined />} placeholder={format('pages.agent.skill.searchPlaceholder')} value={keyword} onChange={(event) => setKeyword(event.target.value)} onPressEnter={reload} /><Select value={filterStatus} placeholder="全部交付状态" allowClear options={[{ label: '待发布草稿', value: 0 }, { label: format('pages.common.enabled'), value: 1 }, { label: format('pages.common.disabled'), value: 2 }]} onChange={(value) => changeFilter(() => setFilterStatus(value as 0 | 1 | 2 | undefined))} /><Select value={filterCategory} placeholder={format('pages.agent.skill.allCategories')} allowClear options={categoryOptions} onChange={(value) => changeFilter(() => setFilterCategory(value))} /><Button icon={<ReloadOutlined />} onClick={refreshPage}>{format('pages.common.refresh')}</Button></div>
+        <div className="skill-filter-bar"><Input allowClear prefix={<SearchOutlined />} placeholder={format('pages.agent.skill.searchPlaceholder')} value={keyword} onChange={(event) => setKeyword(event.target.value)} onPressEnter={reload} /><Select value={filterStatus} placeholder={format('pages.agent.skill.allDeliveryStatuses')} allowClear options={[{ label: format('pages.agent.skill.draftPending'), value: 0 }, { label: format('pages.common.enabled'), value: 1 }, { label: format('pages.common.disabled'), value: 2 }]} onChange={(value) => changeFilter(() => setFilterStatus(value as 0 | 1 | 2 | undefined))} /><Select value={filterCategory} placeholder={format('pages.agent.skill.allCategories')} allowClear options={categoryOptions} onChange={(value) => changeFilter(() => setFilterCategory(value))} /><Button icon={<ReloadOutlined />} onClick={refreshPage}>{format('pages.common.refresh')}</Button></div>
         <ProTable<AgentSkill>
           className="skill-center-table"
           actionRef={ref}
@@ -377,10 +377,10 @@ const SkillPage: React.FC = () => {
       <SkillDetail id={detailId} open={detailOpen} setOpen={setDetailOpen} />
       <SkillVersions id={versionsId} open={versionsOpen} setOpen={setVersionsOpen} />
       <SkillResources id={resourcesId} open={resourcesOpen} setOpen={setResourcesOpen} />
-      <Modal title="Skill 路由配置" open={routingConfigOpen} onCancel={() => setRoutingConfigOpen(false)} onOk={saveRoutingConfig} confirmLoading={routingConfigLoading} destroyOnClose>
+      <Modal title={format('pages.agent.skill.routingConfig')} open={routingConfigOpen} onCancel={() => setRoutingConfigOpen(false)} onOk={saveRoutingConfig} confirmLoading={routingConfigLoading} destroyOnClose>
         <Form form={routingForm} layout="vertical">
-          <Form.Item name="embeddingProviderId" label="嵌入模型 Provider" extra="可选。用于向量召回候选；留空时仅使用触发/排除词和路由模型。">
-            <Select allowClear showSearch optionFilterProp="label" options={routingProviders} placeholder="选择已启用的 Embedding Provider" />
+          <Form.Item name="embeddingProviderId" label={format('pages.agent.skill.routingProvider')} extra={format('pages.agent.skill.routingHint')}>
+            <Select allowClear showSearch optionFilterProp="label" options={routingProviders} placeholder={format('pages.agent.skill.routingProviderPlaceholder')} />
           </Form.Item>
         </Form>
       </Modal>

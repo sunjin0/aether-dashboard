@@ -5,6 +5,7 @@ import { getSkillDetail } from '@/services/agent/SkillController'
 import { AgentSkillDetail } from '@/services/entity/Agent'
 import { loadKnowledgeBaseOptions, loadToolOptions } from './options'
 import { SystemIcon } from '@/components/SystemIconPicker'
+import { getOptionList } from '@/services/sys/DictController'
 
 interface SkillDetailProps {
   id?: string;
@@ -14,6 +15,15 @@ interface SkillDetailProps {
 
 const { Paragraph, Text } = Typography
 
+/** Skill 标签在服务端以逗号分隔的稳定 code 保存，展示层统一解析为字典文本。 */
+const splitTags = (value?: string): string[] =>
+  value
+    ? value
+        .split(/[,，、\s]+/)
+        .map((item) => item.trim())
+        .filter(Boolean)
+    : []
+
 const SkillDetail: React.FC<SkillDetailProps> = ({ id, open, setOpen }) => {
   const intl = useIntl()
   const format = (key: string, values?: Record<string, string>) =>
@@ -22,6 +32,9 @@ const SkillDetail: React.FC<SkillDetailProps> = ({ id, open, setOpen }) => {
   const [detail, setDetail] = useState<AgentSkillDetail>({})
   const [toolNames, setToolNames] = useState<Record<string, string>>({})
   const [kbNames, setKbNames] = useState<Record<string, string>>({})
+  const [categoryNames, setCategoryNames] = useState<Record<string, string>>({})
+  const [tagNames, setTagNames] = useState<Record<string, string>>({})
+  const [toolPolicyNames, setToolPolicyNames] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (!open || !id) return
@@ -31,14 +44,26 @@ const SkillDetail: React.FC<SkillDetailProps> = ({ id, open, setOpen }) => {
       getSkillDetail(id),
       loadToolOptions(),
       loadKnowledgeBaseOptions(),
+      getOptionList('Agent_Skill_Category'),
+      getOptionList('Agent_Skill_Tag'),
+      getOptionList('Agent_Skill_Tool_Policy'),
     ])
-      .then(([detailRes, tools, bases]) => {
+      .then(([detailRes, tools, bases, categories, tags, policies]) => {
         setDetail(detailRes.data || {})
         setToolNames(
           Object.fromEntries(tools.map((item) => [String(item.value), item.label])),
         )
         setKbNames(
           Object.fromEntries(bases.map((item) => [String(item.value), item.label])),
+        )
+        setCategoryNames(
+          Object.fromEntries(categories.map((item) => [String(item.value), item.label])),
+        )
+        setTagNames(
+          Object.fromEntries(tags.map((item) => [String(item.value), item.label])),
+        )
+        setToolPolicyNames(
+          Object.fromEntries(policies.map((item) => [String(item.value), item.label])),
         )
       })
       .finally(() => setLoading(false))
@@ -78,7 +103,8 @@ const SkillDetail: React.FC<SkillDetailProps> = ({ id, open, setOpen }) => {
       title: format('pages.agent.skill.resourceType'),
       dataIndex: 'type',
       width: 140,
-      render: (value: string) => value || '-',
+      render: (value: string) =>
+        value ? format(`pages.agent.skill.resourceType.${value.toLowerCase()}`) : '-',
     },
     {
       title: format('pages.agent.skill.resourceSize'),
@@ -123,7 +149,7 @@ const SkillDetail: React.FC<SkillDetailProps> = ({ id, open, setOpen }) => {
                 {detail.skill.code}
               </Descriptions.Item>
               <Descriptions.Item label={format('pages.agent.skill.category')}>
-                {detail.skill.category || '-'}
+                {(detail.skill.category && categoryNames[detail.skill.category]) || detail.skill.category || '-'}
               </Descriptions.Item>
               <Descriptions.Item label={format('pages.agent.skill.icon')}>
                 <Space><SystemIcon name={detail.skill.icon} />{detail.skill.icon || '-'}</Space>
@@ -136,7 +162,13 @@ const SkillDetail: React.FC<SkillDetailProps> = ({ id, open, setOpen }) => {
                 )}
               </Descriptions.Item>
               <Descriptions.Item label={format('pages.agent.skill.tags')} span={2}>
-                {detail.skill.tags || '-'}
+                {splitTags(detail.skill.tags).length ? (
+                  <Space size={[4, 4]} wrap>
+                    {splitTags(detail.skill.tags).map((tag) => (
+                      <Tag key={tag}>{tagNames[tag] || tag}</Tag>
+                    ))}
+                  </Space>
+                ) : '-'}
               </Descriptions.Item>
               <Descriptions.Item label={format('pages.agent.skill.description')} span={2}>
                 {detail.skill.description || '-'}
@@ -157,7 +189,10 @@ const SkillDetail: React.FC<SkillDetailProps> = ({ id, open, setOpen }) => {
                 </Paragraph>
               </Descriptions.Item>
               <Descriptions.Item label={format('pages.agent.skill.toolPolicy')}>
-                {(detail.draft || detail.currentVersion)?.toolPolicy || '-'}
+                {(() => {
+                  const policy = (detail.draft || detail.currentVersion)?.toolPolicy
+                  return (policy && toolPolicyNames[policy]) || policy || '-'
+                })()}
               </Descriptions.Item>
             </Descriptions>
 

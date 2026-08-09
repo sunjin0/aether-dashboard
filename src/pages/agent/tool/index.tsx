@@ -9,11 +9,12 @@ import {
   FolderOpenOutlined,
   GlobalOutlined,
   PlusOutlined,
+  ReloadOutlined,
   SearchOutlined,
   ToolOutlined,
 } from '@ant-design/icons'
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
-import { Button, Input, message, Progress, Select, Spin, Switch, Tag } from 'antd'
+import { Button, Input, message, Progress, Select, Space, Spin, Switch, Tag } from 'antd'
 import { history, useAccess, useIntl } from '@@/exports'
 import AgentToolForm from '@/pages/agent/tool/AgentToolForm'
 import AgentToolTestModal from '@/pages/agent/tool/AgentToolTestModal'
@@ -102,14 +103,22 @@ const AgentToolPage: React.FC = () => {
     }
   }
 
+  const loadFacets = () => {
+    getAgentToolFacets().then(({ code, data }) => {
+      if (code === 200 && data) setFacets(data)
+    })
+  }
+  const refreshPage = () => {
+    refresh()
+    loadStatistics()
+    loadFacets()
+  }
+
   useEffect(() => {
     loadStatistics()
   }, [toolType, mcpServerId])
   useEffect(() => {
-    getAgentToolFacets().then(({ code, data }) => {
-      if (code === 200 && data) setFacets(data)
-      else return
-    })
+    loadFacets()
   }, [])
 
   const changeFilter = (callback: () => void) => {
@@ -441,18 +450,21 @@ const AgentToolPage: React.FC = () => {
               }))}
               onChange={(value) => changeFilter(() => setMcpServerId(value))}
             />
-            {write && (
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => {
-                  setId(undefined)
-                  setOpen(true)
-                }}
-              >
-                {format('pages.agent.tool.add')}
-              </Button>
-            )}
+            <Space className="tool-filter-actions">
+              <Button icon={<ReloadOutlined />} onClick={refreshPage}>{format('pages.common.refresh')}</Button>
+              {write && (
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => {
+                    setId(undefined)
+                    setOpen(true)
+                  }}
+                >
+                  {format('pages.agent.tool.add')}
+                </Button>
+              )}
+            </Space>
           </div>
           <ProTable<AgentTool>
             className="tool-center-table"

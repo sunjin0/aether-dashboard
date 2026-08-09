@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { AppstoreOutlined, CheckCircleFilled, FileTextOutlined, LinkOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons'
+import { AppstoreOutlined, CheckCircleFilled, FileTextOutlined, LinkOutlined, PlusOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons'
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
 import { Button, Input, List, message, Modal, Select, Space, Spin, Tag, Typography } from 'antd'
 import { FormattedMessage, history, useAccess, useIntl } from '@@/exports'
@@ -62,6 +62,10 @@ const SkillPage: React.FC = () => {
   }, [])
 
   const reload = () => ref.current?.reload()
+  const refreshPage = () => {
+    reload()
+    loadStatistics()
+  }
   const loadStatistics = () => {
     setStatisticsLoading(true)
     getSkillStatistics().then(({ data }) => setStatistics(data)).finally(() => setStatisticsLoading(false))
@@ -323,7 +327,7 @@ const SkillPage: React.FC = () => {
         </section>
       </Spin>
       <main className="skill-table-panel">
-        <div className="skill-filter-bar"><Input allowClear prefix={<SearchOutlined />} placeholder={format('pages.agent.skill.searchPlaceholder')} value={keyword} onChange={(event) => setKeyword(event.target.value)} onPressEnter={reload} /><Select value={filterStatus} placeholder="全部交付状态" allowClear options={[{ label: '待发布草稿', value: 0 }, { label: format('pages.common.enabled'), value: 1 }, { label: format('pages.common.disabled'), value: 2 }]} onChange={(value) => changeFilter(() => setFilterStatus(value as 0 | 1 | 2 | undefined))} /><Select value={filterCategory} placeholder={format('pages.agent.skill.allCategories')} allowClear options={categoryOptions} onChange={(value) => changeFilter(() => setFilterCategory(value))} /></div>
+        <div className="skill-filter-bar"><Input allowClear prefix={<SearchOutlined />} placeholder={format('pages.agent.skill.searchPlaceholder')} value={keyword} onChange={(event) => setKeyword(event.target.value)} onPressEnter={reload} /><Select value={filterStatus} placeholder="全部交付状态" allowClear options={[{ label: '待发布草稿', value: 0 }, { label: format('pages.common.enabled'), value: 1 }, { label: format('pages.common.disabled'), value: 2 }]} onChange={(value) => changeFilter(() => setFilterStatus(value as 0 | 1 | 2 | undefined))} /><Select value={filterCategory} placeholder={format('pages.agent.skill.allCategories')} allowClear options={categoryOptions} onChange={(value) => changeFilter(() => setFilterCategory(value))} /><Button icon={<ReloadOutlined />} onClick={refreshPage}>{format('pages.common.refresh')}</Button></div>
         <ProTable<AgentSkill>
           className="skill-center-table"
           actionRef={ref}

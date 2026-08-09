@@ -1132,6 +1132,18 @@ export interface AgentSkillPreviewVo {
   estimatedTokens?: number;
 }
 
+/** 声明式产物执行配置；平台不接受命令、镜像、挂载或网络参数。 */
+export interface AgentSkillExecutionConfig {
+  skillVersionId?: string;
+  enabled?: boolean;
+  entryResourceId?: string;
+  runtime?: 'PYTHON' | 'NODE' | string;
+  outputFormats?: string[] | string;
+  timeoutSeconds?: number;
+  maxOutputFiles?: number;
+  maxOutputBytes?: number;
+}
+
 /** 发布前只读检查结果；blockers 不为空时不可发布。 */
 export interface AgentSkillPublishCheck {
   ready: boolean;

@@ -12,6 +12,7 @@ import {
   AgentSkillPublishCheck,
   AgentSkillStatistics,
   AgentSkillResource,
+  AgentSkillExecutionConfig,
   AgentSkillSearchParams,
   AgentSkillVersion,
 } from '@/services/entity/Agent'
@@ -215,6 +216,42 @@ export const getSkillResources = async (
   })
 }
 
+export interface AgentSkillResourceGenerateParams {
+  providerId: string
+  model?: string
+  type: 'MARKDOWN' | 'TEMPLATE' | 'SCRIPT'
+  name?: string
+  purpose?: string
+  prompt: string
+}
+
+export interface AgentSkillResourceGenerateResult {
+  name: string
+  type: 'MARKDOWN' | 'TEMPLATE' | 'SCRIPT'
+  purpose?: string
+  content: string
+  model?: string
+}
+
+export const getSkillResourceContent = async (id: string, resourceId: string): Promise<ResponseStructure<string>> =>
+  request(`/api/agent/skill/${id}/resources/${resourceId}/content`, { method: 'GET' })
+
+export const generateSkillResource = async (
+  id: string,
+  params: AgentSkillResourceGenerateParams,
+): Promise<ResponseStructure<AgentSkillResourceGenerateResult>> =>
+  request(`/api/agent/skill/${id}/resources/generate`, { method: 'POST', data: params })
+
+export const updateSkillResource = async (
+  id: string, resourceId: string, file: File, purpose?: string, type?: string,
+): Promise<ResponseStructure<AgentSkillResource>> => {
+  const formData = new FormData()
+  formData.append('file', file)
+  if (purpose) formData.append('purpose', purpose)
+  if (type) formData.append('type', type)
+  return request(`/api/agent/skill/${id}/resources/${resourceId}`, { method: 'PUT', data: formData })
+}
+
 /**
  * @description 删除草稿技能资源
  */
@@ -239,3 +276,9 @@ export const previewSkill = async (
     data: params,
   })
 }
+
+export const getSkillExecutionConfig = async (id: string): Promise<ResponseStructure<AgentSkillExecutionConfig>> =>
+  request(`/api/agent/skill/${id}/execution-config`, { method: 'GET' })
+
+export const updateSkillExecutionConfig = async (id: string, params: AgentSkillExecutionConfig): Promise<ResponseStructure<void>> =>
+  request(`/api/agent/skill/${id}/execution-config`, { method: 'PUT', data: params })

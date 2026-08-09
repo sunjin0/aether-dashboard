@@ -984,6 +984,10 @@ export interface AgentSkillVersion {
   /** Skill 输出 JSON Schema */
   outputSchema?: string;
   toolPolicy?: string;
+  routingSummary?: string;
+  triggerTerms?: string | string[];
+  excludeTerms?: string | string[];
+  routingExamples?: string | string[];
   status?: 0 | 1;
   changeNote?: string;
   publishedAt?: number;
@@ -1065,6 +1069,10 @@ export interface AgentSkillDraftDto {
   inputSchema?: string;
   outputSchema?: string;
   toolPolicy?: string;
+  routingSummary?: string;
+  triggerTerms?: string[];
+  excludeTerms?: string[];
+  routingExamples?: string[];
   changeNote?: string;
   tools?: AgentSkillToolDto[];
   knowledgeBaseIds?: string[];

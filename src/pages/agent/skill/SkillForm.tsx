@@ -54,6 +54,12 @@ const splitTags = (value?: string): string[] =>
     : []
 
 const joinTags = (value?: string[]): string => (value || []).join(',')
+const parseRoutingList = (value?: string | string[]): string[] => {
+  if (Array.isArray(value)) return value
+  try { return value ? JSON.parse(value) : [] } catch { return [] }
+}
+const parseRoutingTerms = (value?: string | string[]): string[] =>
+  Array.isArray(value) ? value : (value || '').split(/[,，、\n]+/).map((item) => item.trim()).filter(Boolean)
 
 const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen, onSuccess }) => {
   const intl = useIntl()
@@ -118,6 +124,10 @@ const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen,
           tags: splitTags(data.skill?.tags),
           description: data.skill?.description,
           instruction: data.draft?.instruction,
+          routingSummary: data.draft?.routingSummary,
+          triggerTerms: parseRoutingList(data.draft?.triggerTerms).join('，'),
+          excludeTerms: parseRoutingList(data.draft?.excludeTerms).join('，'),
+          routingExamples: parseRoutingList(data.draft?.routingExamples).join('\n'),
           inputSchema: data.draft?.inputSchema,
           outputSchema: data.draft?.outputSchema,
           toolPolicy: data.draft?.toolPolicy,
@@ -163,6 +173,9 @@ const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen,
     const params: AgentSkillDraftDto = {
       ...values,
       tags: joinTags(values.tags as unknown as string[]),
+      triggerTerms: parseRoutingTerms(values.triggerTerms),
+      excludeTerms: parseRoutingTerms(values.excludeTerms),
+      routingExamples: parseRoutingTerms(values.routingExamples),
       tools: (values.tools || []).filter((item) => Boolean(item.toolId)),
     }
     setSubmitting(true)
@@ -314,6 +327,19 @@ const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen,
           </Form.Item>
           <Form.Item name="outputSchema" label={format('pages.agent.skill.outputSchema')}>
             <SchemaFields />
+          </Form.Item>
+          <Text strong style={{ display: 'block', margin: '16px 0 8px' }}>Skill 发现配置</Text>
+          <Form.Item name="routingSummary" label="何时使用此 Skill" rules={[{ required: true, message: '请填写不超过 200 字的发现摘要' }]}>
+            <Input.TextArea maxLength={200} rows={2} placeholder="描述用户什么需求时应激活此 Skill；不要重复完整指令。" />
+          </Form.Item>
+          <Form.Item name="triggerTerms" label="触发词">
+            <Input placeholder="多个词用逗号分隔，例如：退款，退货，取消订单" />
+          </Form.Item>
+          <Form.Item name="excludeTerms" label="排除词">
+            <Input placeholder="多个词用逗号分隔，例如：安全，账号登录" />
+          </Form.Item>
+          <Form.Item name="routingExamples" label="典型请求示例">
+            <Input.TextArea rows={3} placeholder="每行一条，最多 5 条；例如：\n我想申请退款\n订单取消后什么时候到账" />
           </Form.Item>
           <Form.Item name="toolPolicy" label={format('pages.agent.skill.toolPolicy')}>
             <Select

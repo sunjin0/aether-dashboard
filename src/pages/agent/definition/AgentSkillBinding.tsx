@@ -221,7 +221,7 @@ const AgentSkillBinding: React.FC<AgentSkillBindingProps> = ({ agentId, open }) 
       valueType: 'option',
       key: 'option',
       fixed: 'right',
-      width: 160,
+      width: 300,
       render: (_: unknown, record: AgentDefinitionSkillBinding) => (
         <TableActionMenu
           items={[
@@ -245,6 +245,7 @@ const AgentSkillBinding: React.FC<AgentSkillBindingProps> = ({ agentId, open }) 
             },
             {
               key: 'upgrade',
+              primary: true,
               label: '升级到最新版',
               onClick: () => handleUpgradeToLatest(record),
             },

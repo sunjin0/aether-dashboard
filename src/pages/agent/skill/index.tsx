@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { AppstoreOutlined, CheckCircleFilled, FileTextOutlined, LinkOutlined, PlusOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons'
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
-import { Button, Input, List, message, Modal, Select, Space, Spin, Tag, Typography } from 'antd'
+import { Button, Form, Input, List, message, Modal, Select, Space, Spin, Tag, Typography } from 'antd'
 import { FormattedMessage, history, useAccess, useIntl } from '@@/exports'
 import SkillForm from '@/pages/agent/skill/SkillForm'
 import SkillDetail from '@/pages/agent/skill/SkillDetail'
@@ -13,9 +13,12 @@ import {
   getSkillList,
   getSkillPublishCheck,
   getSkillStatistics,
+  getSkillRoutingConfig,
   publishSkill,
+  updateSkillRoutingConfig,
   updateSkillStatus,
 } from '@/services/agent/SkillController'
+import { getEmbeddingProviderOptions } from '@/services/agent/ModelProviderController'
 import { AgentSkill, AgentSkillDetail, AgentSkillSearchParams, AgentSkillStatistics } from '@/services/entity/Agent'
 import { getOptionList } from '@/services/sys/DictController'
 import TableActionMenu from '@/components/TableActionMenu'
@@ -47,6 +50,10 @@ const SkillPage: React.FC = () => {
   const [keyword, setKeyword] = useState('')
   const [filterCategory, setFilterCategory] = useState<string>()
   const [filterStatus, setFilterStatus] = useState<0 | 1 | 2>()
+  const [routingConfigOpen, setRoutingConfigOpen] = useState(false)
+  const [routingProviders, setRoutingProviders] = useState<{ label: string; value: string }[]>([])
+  const [routingConfigLoading, setRoutingConfigLoading] = useState(false)
+  const [routingForm] = Form.useForm<{ embeddingProviderId?: string }>()
 
   useEffect(() => {
     getOptionList('Agent_Skill_Category')
@@ -71,6 +78,21 @@ const SkillPage: React.FC = () => {
     getSkillStatistics().then(({ data }) => setStatistics(data)).finally(() => setStatisticsLoading(false))
   }
   useEffect(() => { loadStatistics() }, [])
+
+  const openRoutingConfig = async () => {
+    setRoutingConfigLoading(true)
+    try {
+      const [config, providers] = await Promise.all([getSkillRoutingConfig(), getEmbeddingProviderOptions()])
+      routingForm.setFieldsValue({ embeddingProviderId: config.data?.embeddingProviderId })
+      setRoutingProviders(providers.data || [])
+      setRoutingConfigOpen(true)
+    } finally { setRoutingConfigLoading(false) }
+  }
+  const saveRoutingConfig = async () => {
+    const values = await routingForm.validateFields()
+    const { code } = await updateSkillRoutingConfig(values)
+    if (code === 200) { message.success('路由配置已保存；后续发布的 Skill 将异步建立向量索引。'); setRoutingConfigOpen(false) }
+  }
 
   /** 打开编辑：无草稿时先基于最新发布版本创建草稿 */
   const handleEdit = async (record: AgentSkill) => {
@@ -316,7 +338,7 @@ const SkillPage: React.FC = () => {
           <p>Skill 的重点不是工具数量，而是将指令、知识、资源与权限以可审计版本交付给 Agent。</p>
           <ol><li>配置草稿</li><li>发布检查</li><li>冻结版本</li><li>安装到 Agent</li></ol>
         </div>
-        {write && <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => { setFormId(undefined); setFormInitial(null); setFormOpen(true) }}>创建 Skill 草稿</Button>}
+        {write && <Space><Button onClick={openRoutingConfig}>路由配置</Button><Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => { setFormId(undefined); setFormInitial(null); setFormOpen(true) }}>创建 Skill 草稿</Button></Space>}
       </section>
       <Spin spinning={statisticsLoading}>
         <section className="skill-release-overview">
@@ -355,6 +377,13 @@ const SkillPage: React.FC = () => {
       <SkillDetail id={detailId} open={detailOpen} setOpen={setDetailOpen} />
       <SkillVersions id={versionsId} open={versionsOpen} setOpen={setVersionsOpen} />
       <SkillResources id={resourcesId} open={resourcesOpen} setOpen={setResourcesOpen} />
+      <Modal title="Skill 路由配置" open={routingConfigOpen} onCancel={() => setRoutingConfigOpen(false)} onOk={saveRoutingConfig} confirmLoading={routingConfigLoading} destroyOnClose>
+        <Form form={routingForm} layout="vertical">
+          <Form.Item name="embeddingProviderId" label="嵌入模型 Provider" extra="可选。用于向量召回候选；留空时仅使用触发/排除词和路由模型。">
+            <Select allowClear showSearch optionFilterProp="label" options={routingProviders} placeholder="选择已启用的 Embedding Provider" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </PageContainer>
   )
 }

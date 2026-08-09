@@ -43,6 +43,12 @@ export const getSkillStatistics = async (): Promise<ResponseStructure<AgentSkill
   return request('/api/agent/skill/statistics', { method: 'GET' })
 }
 
+export const getSkillRoutingConfig = async (): Promise<ResponseStructure<{ embeddingProviderId?: string }>> =>
+  request('/api/agent/skill/routing-config', { method: 'GET' })
+
+export const updateSkillRoutingConfig = async (params: { embeddingProviderId?: string }): Promise<ResponseStructure<void>> =>
+  request('/api/agent/skill/routing-config', { method: 'PUT', data: params })
+
 /**
  * @description 获取智能体技能详情
  */

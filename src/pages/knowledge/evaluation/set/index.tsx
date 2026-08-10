@@ -59,8 +59,18 @@ import {
   updateEvaluationCaseStatuses,
   setEvaluationRunBaseline,
 } from '@/services/knowledge/EvaluationController'
+import { getModelProviderOptions } from '@/services/agent/ModelProviderController'
 import '../evaluation.less'
 const pct = (v?: number) => (v === undefined ? '-' : `${(v * 100).toFixed(1)}%`)
+type RetrievalConfigSnapshot = {
+  knowledgeBases?: Array<{
+    name?: string
+    scope?: string
+    embeddingProviderId?: string
+    retrievalConfig?: Record<string, unknown> | string
+  }>
+  providers?: Array<{ id?: string; name?: string }>
+}
 export default function EvaluationPage() {
   const access = useAccess()
   const intl = useIntl()
@@ -85,6 +95,8 @@ export default function EvaluationPage() {
     [versions, setVersions] = useState<EvaluationSetVersion[]>([]),
     [trend, setTrend] = useState<EvaluationRun[]>([]),
     [runVersionId, setRunVersionId] = useState<string>(),
+    [configRun, setConfigRun] = useState<EvaluationRun>(),
+    [providerOptionNames, setProviderOptionNames] = useState<Record<string, string>>({}),
     [workspaceTab, setWorkspaceTab] = useState<'dataset' | 'runs'>('dataset'),
     [startingRun, setStartingRun] = useState(false),
     [labelCase, setLabelCase] = useState<EvaluationCase>(),
@@ -98,6 +110,73 @@ export default function EvaluationPage() {
   const importInputRef = useRef<HTMLInputElement>(null)
   const healthIssue = (code: string) =>
     intl.formatMessage({ id: `pages.knowledge.evaluation.health.${code}` })
+  const parseRetrievalConfig = (snapshot?: string): RetrievalConfigSnapshot | undefined => {
+    if (!snapshot) return undefined
+    try {
+      return JSON.parse(snapshot)
+    } catch {
+      return undefined
+    }
+  }
+  const renderRetrievalConfig = (run?: EvaluationRun) => {
+    const snapshot = parseRetrievalConfig(run?.retrievalConfigSnapshot)
+    if (!snapshot?.knowledgeBases?.length) {
+      return <Alert type="info" showIcon message={intl.formatMessage({ id: 'pages.knowledge.evaluation.configSnapshotUnavailable' })} />
+    }
+    const providerNames = new Map(snapshot.providers?.map((provider) => [provider.id, provider.name]))
+    Object.entries(providerOptionNames).forEach(([id, name]) => providerNames.set(id, name))
+    const providerName = (id?: string) =>
+      id ? providerNames.get(id) || intl.formatMessage({ id: 'pages.knowledge.evaluation.providerUnavailable' }) : '-'
+    const value = (input: unknown) => {
+      if (typeof input === 'boolean') return intl.formatMessage({ id: input ? 'pages.common.yes' : 'pages.common.no' })
+      return input === undefined || input === null || input === '' ? '-' : String(input)
+    }
+    const field = (key: string, input: unknown) => ({
+      key,
+      label: intl.formatMessage({ id: `pages.knowledge.base.form.retrieval.${key}` }),
+      children: value(input),
+    })
+    return (
+      <Space direction="vertical" size={12} style={{ display: 'flex' }}>
+        {snapshot.knowledgeBases.map((base, index) => {
+          let config: Record<string, unknown> = {}
+          if (typeof base.retrievalConfig === 'string') {
+            try {
+              config = JSON.parse(base.retrievalConfig)
+            } catch {
+              config = {}
+            }
+          } else config = base.retrievalConfig || {}
+          const fields = [
+            field('embeddingProvider', providerName(base.embeddingProviderId)),
+            field('topK', config.topK),
+            field('minSimilarity', config.minSimilarity),
+            field('maxChunksPerDocument', config.maxChunksPerDocument),
+            field('hybridEnabled', config.hybridEnabled),
+            field('strictGrounding', config.strictGrounding),
+            field('vectorWeight', config.vectorWeight),
+            field('minLexicalScore', config.minLexicalScore),
+            field('authorityScore', config.authorityScore),
+            field('authorityWeight', config.authorityWeight),
+            field('freshnessWeight', config.freshnessWeight),
+            field('rerankEnabled', config.rerankEnabled),
+            field('rerankProvider', providerName(config.rerankProviderId as string | undefined)),
+            field('rerankModel', config.rerankModel),
+            field('rerankTopN', config.rerankTopN),
+          ].filter((item) => item.children !== '-')
+          return (
+            <Card
+              key={`${base.name || 'knowledge-base'}-${index}`}
+              size="small"
+              title={base.name || intl.formatMessage({ id: 'pages.knowledge.evaluation.knowledgeBase' })}
+            >
+              <Descriptions column={2} size="small" items={fields} />
+            </Card>
+          )
+        })}
+      </Space>
+    )
+  }
   useEffect(() => {
     if (!setId) return
     setSelected(undefined)
@@ -822,6 +901,21 @@ export default function EvaluationPage() {
                           >
                             {intl.formatMessage({ id: 'pages.knowledge.evaluation.viewQuestionResults' })}
                           </Button>
+                          <Button
+                            type="link"
+                            onClick={async () => {
+                              setConfigRun(run)
+                              const providers = await getModelProviderOptions()
+                              setProviderOptionNames(
+                                providers.reduce<Record<string, string>>((names, provider) => {
+                                  names[String(provider.value)] = provider.label
+                                  return names
+                                }, {}),
+                              )
+                            }}
+                          >
+                            {intl.formatMessage({ id: 'pages.knowledge.evaluation.viewRetrievalConfig' })}
+                          </Button>
                           {canWrite && (
                             <Popconfirm
                               title={intl.formatMessage({
@@ -973,6 +1067,15 @@ export default function EvaluationPage() {
             )}
           </>
         )}
+      </Modal>
+      <Modal
+        width={860}
+        open={!!configRun}
+        footer={null}
+        onCancel={() => setConfigRun(undefined)}
+        title={intl.formatMessage({ id: 'pages.knowledge.evaluation.retrievalConfigSnapshot' })}
+      >
+        <div style={{ maxHeight: '60vh', overflow: 'auto' }}>{renderRetrievalConfig(configRun)}</div>
       </Modal>
       <Modal
         width={760}

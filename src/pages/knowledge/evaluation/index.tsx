@@ -1,14 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActionType,
-  ModalForm,
+  DrawerForm,
   PageContainer,
   ProFormSelect,
   ProFormText,
   ProFormTextArea,
   ProTable,
 } from '@ant-design/pro-components';
-import { Button, Popconfirm, Space } from 'antd';
+import { ArrowRightOutlined, PlusOutlined } from '@ant-design/icons';
+import { Badge, Button, Popconfirm, Space, Tag, Typography } from 'antd';
 import { history, useAccess, useIntl } from '@umijs/max';
 import { getAgentDefinitionOptions } from '@/services/agent/AgentDefinitionController';
 import { Option } from '@/services/entity/Common';
@@ -21,9 +22,15 @@ import {
 } from '@/services/knowledge/EvaluationController';
 import './evaluation.less';
 
+const { Paragraph, Text } = Typography;
+
+type EvaluationSetForm = Pick<EvaluationSet, 'name' | 'agentDefinitionId' | 'description' | 'status'>;
+
 export default function EvaluationSetListPage() {
   const access = useAccess();
   const intl = useIntl();
+  const format = (id: string, values?: Record<string, string | number>) =>
+    intl.formatMessage({ id }, values);
   const canWrite = Boolean(access['/knowledge/evaluation']);
   const actionRef = useRef<ActionType>();
   const [agentOptions, setAgentOptions] = useState<Option[]>([]);
@@ -32,13 +39,67 @@ export default function EvaluationSetListPage() {
     getAgentDefinitionOptions().then(setAgentOptions);
   }, []);
 
+  const agentName = (agentId?: string) =>
+    agentOptions.find((item) => String(item.value) === agentId)?.label || agentId || '-';
+
+  const formFields = () => (
+    <>
+      <ProFormText
+        name="name"
+        label={format('pages.common.name')}
+        placeholder={format('pages.knowledge.evaluation.setNamePlaceholder')}
+        rules={[{ required: true }]}
+      />
+      <ProFormSelect
+        name="agentDefinitionId"
+        label={format('pages.knowledge.evaluation.agent')}
+        placeholder={format('pages.knowledge.evaluation.selectAgent')}
+        rules={[{ required: true }]}
+        fieldProps={{ showSearch: true, optionFilterProp: 'label' }}
+        request={getAgentDefinitionOptions}
+      />
+      <ProFormTextArea
+        name="description"
+        label={format('pages.agent.workflow.description')}
+        placeholder={format('pages.knowledge.evaluation.descriptionPlaceholder')}
+        fieldProps={{ autoSize: { minRows: 3, maxRows: 6 }, maxLength: 255, showCount: true }}
+      />
+    </>
+  );
+
   return (
-    <PageContainer className="evaluation-page">
+    <PageContainer className="evaluation-page" title={format('menu.knowledge.evaluation')}>
+      <section className="evaluation-intro" aria-label={format('pages.knowledge.evaluation.workflowTitle')}>
+        <div className="evaluation-intro-copy">
+          <Text className="evaluation-eyebrow">{format('pages.knowledge.evaluation.workspace')}</Text>
+          <h2>{format('pages.knowledge.evaluation.workflowTitle')}</h2>
+          <Paragraph>{format('pages.knowledge.evaluation.workflowDescription')}</Paragraph>
+        </div>
+        <div className="evaluation-flow" aria-label={format('pages.knowledge.evaluation.workflowTitle')}>
+          {[
+            ['01', 'pages.knowledge.evaluation.flow.prepare', 'pages.knowledge.evaluation.flow.prepareHint'],
+            ['02', 'pages.knowledge.evaluation.flow.release', 'pages.knowledge.evaluation.flow.releaseHint'],
+            ['03', 'pages.knowledge.evaluation.flow.measure', 'pages.knowledge.evaluation.flow.measureHint'],
+          ].map(([index, title, hint], itemIndex) => (
+            <React.Fragment key={index}>
+              {itemIndex > 0 && <ArrowRightOutlined className="evaluation-flow-arrow" />}
+              <div className="evaluation-flow-step">
+                <span>{index}</span>
+                <strong>{format(title)}</strong>
+                <small>{format(hint)}</small>
+              </div>
+            </React.Fragment>
+          ))}
+        </div>
+      </section>
+
       <ProTable<EvaluationSet>
-        className="evaluation-card evaluation-table"
+        className="evaluation-card evaluation-set-table"
         actionRef={actionRef}
         rowKey="id"
-        search={{ labelWidth: 'auto' }}
+        search={{ labelWidth: 'auto', defaultCollapsed: false }}
+        headerTitle={format('pages.knowledge.evaluation.sets')}
+        options={{ density: false, fullScreen: true, reload: true, setting: true }}
         request={async (params) => {
           const response = await getEvaluationSets({
             current: params.current,
@@ -46,161 +107,108 @@ export default function EvaluationSetListPage() {
             name: params.name,
             agentDefinitionId: params.agentDefinitionId,
           });
-          return {
-            data: response.data || [],
-            total: response.total || 0,
-            success: response.code === 200,
-          };
+          return { data: response.data || [], total: response.total || 0, success: response.code === 200 };
         }}
-        pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `${total}` }}
+        pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => format('pages.knowledge.evaluation.setTotal', { total }) }}
         toolBarRender={() => [
           canWrite ? (
-            <ModalForm
+            <DrawerForm<EvaluationSetForm>
               key="add"
-              title={intl.formatMessage({ id: 'pages.knowledge.evaluation.createSet' })}
-              modalProps={{ destroyOnClose: true }}
+              title={format('pages.knowledge.evaluation.createSet')}
+              width={520}
+              drawerProps={{ destroyOnClose: true }}
               onFinish={async (values) => {
                 await saveEvaluationSet(values as EvaluationSet);
                 actionRef.current?.reload();
                 return true;
               }}
-              trigger={
-                <Button type="primary">
-                  {intl.formatMessage({ id: 'pages.knowledge.evaluation.createSet' })}
-                </Button>
-              }
+              trigger={<Button type="primary" icon={<PlusOutlined />}>{format('pages.knowledge.evaluation.createSet')}</Button>}
             >
-              <ProFormText
-                name="name"
-                label={intl.formatMessage({ id: 'pages.common.name' })}
-                rules={[{ required: true }]}
-              />
-              <ProFormSelect
-                name="agentDefinitionId"
-                label={intl.formatMessage({ id: 'pages.knowledge.evaluation.agent' })}
-                rules={[{ required: true }]}
-                request={getAgentDefinitionOptions}
-              />
-              <ProFormTextArea
-                name="description"
-                label={intl.formatMessage({ id: 'pages.agent.workflow.description' })}
-              />
-            </ModalForm>
+              {formFields()}
+            </DrawerForm>
           ) : null,
         ]}
         columns={[
-          { title: intl.formatMessage({ id: 'pages.common.name' }), dataIndex: 'name' },
           {
-            title: intl.formatMessage({ id: 'pages.knowledge.evaluation.agent' }),
+            title: format('pages.knowledge.evaluation.setIdentity'),
+            dataIndex: 'name',
+            width: 320,
+            render: (_, record) => (
+              <div className="evaluation-set-identity">
+                <strong>{record.name}</strong>
+                <span>{record.description || format('pages.knowledge.evaluation.noDescription')}</span>
+              </div>
+            ),
+          },
+          {
+            title: format('pages.knowledge.evaluation.targetAgent'),
             dataIndex: 'agentDefinitionId',
             valueType: 'select',
             fieldProps: { options: agentOptions, showSearch: true, optionFilterProp: 'label' },
-            render: (_, record) =>
-              agentOptions.find((item) => String(item.value) === record.agentDefinitionId)?.label ||
-              '-',
+            render: (_, record) => <span className="evaluation-agent-name">{agentName(record.agentDefinitionId)}</span>,
           },
           {
-            title: intl.formatMessage({ id: 'pages.agent.workflow.description' }),
-            dataIndex: 'description',
-            search: false,
-            ellipsis: true,
-          },
-          {
-            title: intl.formatMessage({ id: 'pages.common.status' }),
+            title: format('pages.knowledge.evaluation.readiness'),
             dataIndex: 'status',
             search: false,
-            valueEnum: {
-              1: {
-                text: intl.formatMessage({ id: 'pages.knowledge.evaluation.enabled' }),
-                status: 'Success',
-              },
-              0: {
-                text: intl.formatMessage({ id: 'pages.knowledge.evaluation.disabled' }),
-                status: 'Default',
-              },
-            },
-          },
-          {
-            title: intl.formatMessage({ id: 'pages.common.createTime' }),
-            dataIndex: 'createdAt',
-            valueType: 'dateTime',
-            search: false,
             width: 180,
+            render: (value) => value === 1 ? (
+              <Badge status="success" text={format('pages.knowledge.evaluation.readyToManage')} />
+            ) : (
+              <Badge status="default" text={format('pages.knowledge.evaluation.paused')} />
+            ),
           },
           {
-            title: intl.formatMessage({ id: 'pages.common.updateTime' }),
+            title: format('pages.knowledge.evaluation.lastUpdated'),
             dataIndex: 'updatedAt',
             valueType: 'dateTime',
             search: false,
             width: 180,
           },
           {
-            title: intl.formatMessage({ id: 'pages.common.option' }),
+            title: format('pages.common.option'),
             search: false,
+            fixed: 'right',
+            width: 260,
             render: (_, record) => (
-              <Space>
-                <Button
-                  type="link"
-                  onClick={() => history.push(`/knowledge/evaluation/sets/${record.id}`)}
-                >
-                  {intl.formatMessage({ id: 'pages.knowledge.evaluation.manage' })}
+              <Space size={4} wrap>
+                <Button type="link" onClick={() => history.push(`/knowledge/evaluation/sets/${record.id}`)}>
+                  {format('pages.knowledge.evaluation.openWorkbench')}
                 </Button>
                 {canWrite && (
-                  <ModalForm<EvaluationSet>
-                    title={intl.formatMessage({ id: 'pages.common.edit' })}
+                  <DrawerForm<EvaluationSetForm>
+                    title={format('pages.knowledge.evaluation.editSet')}
                     initialValues={record}
-                    modalProps={{ destroyOnClose: true }}
+                    width={520}
+                    drawerProps={{ destroyOnClose: true }}
                     onFinish={async (values) => {
-                      await updateEvaluationSet(record.id!, values);
+                      await updateEvaluationSet(record.id!, values as EvaluationSet);
                       actionRef.current?.reload();
                       return true;
                     }}
-                    trigger={
-                      <Button type="link">{intl.formatMessage({ id: 'pages.common.edit' })}</Button>
-                    }
+                    trigger={<Button type="link">{format('pages.common.edit')}</Button>}
                   >
-                    <ProFormText
-                      name="name"
-                      label={intl.formatMessage({ id: 'pages.common.name' })}
-                      rules={[{ required: true }]}
-                    />
-                    <ProFormSelect
-                      name="agentDefinitionId"
-                      label={intl.formatMessage({ id: 'pages.knowledge.evaluation.agent' })}
-                      rules={[{ required: true }]}
-                      request={getAgentDefinitionOptions}
-                    />
-                    <ProFormTextArea
-                      name="description"
-                      label={intl.formatMessage({ id: 'pages.agent.workflow.description' })}
-                    />
+                    {formFields()}
                     <ProFormSelect
                       name="status"
-                      label={intl.formatMessage({ id: 'pages.common.status' })}
+                      label={format('pages.common.status')}
                       options={[
-                        {
-                          label: intl.formatMessage({ id: 'pages.knowledge.evaluation.enabled' }),
-                          value: 1,
-                        },
-                        {
-                          label: intl.formatMessage({ id: 'pages.knowledge.evaluation.disabled' }),
-                          value: 0,
-                        },
+                        { label: format('pages.knowledge.evaluation.enabled'), value: 1 },
+                        { label: format('pages.knowledge.evaluation.disabled'), value: 0 },
                       ]}
                     />
-                  </ModalForm>
+                  </DrawerForm>
                 )}
                 {canWrite && (
                   <Popconfirm
-                    title={intl.formatMessage({ id: 'pages.common.delete' })}
+                    title={format('pages.knowledge.evaluation.deleteSetConfirm')}
+                    description={format('pages.knowledge.evaluation.deleteSetHint')}
                     onConfirm={async () => {
                       await deleteEvaluationSet(record.id!);
                       actionRef.current?.reloadAndRest?.();
                     }}
                   >
-                    <Button type="link" danger>
-                      {intl.formatMessage({ id: 'pages.common.delete' })}
-                    </Button>
+                    <Button type="link" danger>{format('pages.common.delete')}</Button>
                   </Popconfirm>
                 )}
               </Space>

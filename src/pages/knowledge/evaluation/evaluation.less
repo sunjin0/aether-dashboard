@@ -1,29 +1,294 @@
 .evaluation-page {
+  // The route tabs and footer are fixed. Keep long workbench tables in the document flow
+  // instead of allowing an ancestor's computed height to clip their final rows.
+  min-height: calc(100vh - 136px);
+  height: auto;
+  overflow: visible;
+
+  .ant-pro-page-container-children-container {
+    min-height: 0;
+    padding-bottom: 96px;
+    overflow: visible;
+  }
+
+  .ant-page-header { padding-bottom: 12px; }
+  .evaluation-intro {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    border: 1px solid #d6e4ff;
+    border-radius: 10px;
+    background: linear-gradient(120deg, #f0f7ff 0%, #fafcff 58%, #f6ffed 100%);
+  }
+
+  .evaluation-intro-copy {
+    flex: 1 1 320px;
+    min-width: 0;
+
+    h2 {
+      margin: 4px 0 8px;
+      color: rgba(0, 0, 0, 0.88);
+      font-size: 20px;
+      line-height: 28px;
+    }
+
+    .ant-typography {
+      max-width: 600px;
+      margin-bottom: 0;
+      color: rgba(0, 0, 0, 0.56);
+    }
+  }
+
+  .evaluation-eyebrow {
+    color: #1677ff;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .evaluation-flow {
+    display: flex;
+    flex: 0 1 auto;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .evaluation-flow-step {
+    display: grid;
+    grid-template-columns: auto minmax(76px, 1fr);
+    column-gap: 8px;
+    align-items: center;
+    min-width: 130px;
+
+    > span {
+      grid-row: span 2;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #1677ff;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    strong { color: rgba(0, 0, 0, 0.88); font-size: 13px; }
+    small { color: rgba(0, 0, 0, 0.45); font-size: 12px; line-height: 18px; }
+  }
+
+  .evaluation-flow-arrow { color: #91caff; font-size: 13px; }
+
+  .evaluation-set-identity {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+
+    strong { color: rgba(0, 0, 0, 0.88); }
+    span { overflow: hidden; color: rgba(0, 0, 0, 0.45); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+  }
+
+  .evaluation-agent-name { color: rgba(0, 0, 0, 0.72); }
+
   .evaluation-card + .evaluation-card {
     margin-top: 16px;
   }
 
-  .evaluation-toolbar {
+  .evaluation-workbench-hero {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: 24px;
+    padding: 20px 24px;
     margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #d6e4ff;
+    border-radius: 12px;
+    background: linear-gradient(120deg, #edf6ff 0%, #f8fbff 58%, #fff 100%);
+    box-shadow: 0 8px 24px rgba(22, 119, 255, .07);
+
+    &::after { position: absolute; top: -80px; right: 13%; width: 190px; height: 190px; border: 32px solid rgba(22, 119, 255, .05); border-radius: 50%; content: ''; pointer-events: none; }
   }
 
-  .evaluation-toolbar-actions {
+  .evaluation-workbench-stages {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin: 18px 0 12px;
+  }
+
+  .evaluation-stage {
     display: flex;
-    flex: 1;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid #edf0f5;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, .025);
+    transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+
+    &:hover { border-color: #91caff; transform: translateY(-1px); box-shadow: 0 7px 18px rgba(22, 119, 255, .08); }
+
+    &.is-ready { border-color: #b7eb8f; background: #f6ffed; }
+    &.is-blocked { border-color: #ffccc7; background: #fff2f0; }
+  }
+
+  .evaluation-stage-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e6f4ff, #bae0ff);
+    color: #1677ff;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .evaluation-stage > div {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 2px;
+
+    small { color: rgba(0, 0, 0, 0.45); font-size: 12px; }
+    strong { color: rgba(0, 0, 0, 0.88); font-size: 14px; }
+    span { color: rgba(0, 0, 0, 0.55); font-size: 12px; }
+  }
+
+  .evaluation-workbench-identity {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1 1 300px;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    color: rgba(0, 0, 0, 0.45);
+    font-size: 13px;
+    line-height: 20px;
+
+    > span:last-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    h2 {
+      margin: 0;
+      color: rgba(0, 0, 0, 0.88);
+      font-size: 20px;
+      line-height: 28px;
+    }
+  }
+
+  .evaluation-workbench-kicker {
+    color: #1677ff;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .evaluation-workbench-actions {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 0 1 auto;
     align-items: center;
     justify-content: flex-end;
     gap: 8px;
     flex-wrap: wrap;
+
+    .ant-btn { border-radius: 7px; }
+    .ant-select-selector { border-radius: 7px !important; }
+  }
+
+  .evaluation-workbench-tabs {
+    margin: 12px 0 18px;
+    padding: 4px;
+    border: 1px solid #e6f4ff;
+    border-radius: 10px;
+    background: #f7fbff;
+
+    .ant-tabs-nav { margin-bottom: 0; }
+    .ant-tabs-nav::before, .ant-tabs-ink-bar { display: none; }
+    .ant-tabs-tab { min-width: 156px; padding: 8px 16px; margin: 0 !important; border-radius: 7px; color: rgba(0, 0, 0, .55); font-weight: 500; transition: all .2s ease; }
+    .ant-tabs-tab-active { background: #fff; box-shadow: 0 2px 8px rgba(22, 119, 255, .12); }
+  }
+
+  .evaluation-run-actions,
+  .evaluation-dataset-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .evaluation-workbench-divider {
+    height: 30px;
+    margin: 0 4px;
+  }
+
+  .evaluation-progress-card {
+    margin-top: 16px;
+    border-color: #bae0ff;
+    border-radius: 10px;
+    background: linear-gradient(100deg, #f0f8ff, #fff);
+  }
+
+  .evaluation-run-history-card .ant-card-extra {
+    color: rgba(0, 0, 0, 0.45);
+    font-size: 12px;
+  }
+
+  .evaluation-card {
+    overflow: hidden;
+    border-radius: 10px;
+    box-shadow: 0 3px 14px rgba(0, 0, 0, .035);
+
+    .ant-card-head { min-height: 52px; padding: 0 20px; border-bottom-color: #f0f2f5; }
+    .ant-card-head-title { padding: 15px 0; font-weight: 600; }
+    .ant-card-body { padding: 18px 20px; }
+  }
+
+  .evaluation-overview-grid {
+    display: grid;
+    grid-template-columns: minmax(250px, 0.8fr) minmax(440px, 1.2fr);
+    gap: 16px;
+    margin-bottom: 16px;
+
+    .evaluation-card {
+      margin-top: 0;
+    }
   }
 
   .evaluation-metric-card .ant-descriptions-view {
-    background: #fafcff;
-    border-radius: 8px;
-    padding: 8px 16px;
+    padding: 4px 0;
+  }
+
+  .evaluation-metric-card .ant-descriptions-item-label {
+    color: rgba(0, 0, 0, 0.45);
+  }
+
+  .evaluation-metric-card .ant-descriptions-item-content {
+    color: #1677ff;
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  .evaluation-trend-card .ant-card-body {
+    padding: 0 12px 8px;
   }
 
   .evaluation-table .ant-table-cell {
@@ -33,14 +298,37 @@
 
 @media (max-width: 768px) {
   .evaluation-page {
-    .evaluation-toolbar {
+    .evaluation-intro { align-items: flex-start; flex-direction: column; padding: 18px; }
+    .evaluation-flow { width: 100%; justify-content: space-between; gap: 4px; }
+    .evaluation-flow-step { grid-template-columns: auto; min-width: 0; flex: 1; row-gap: 4px; }
+    .evaluation-flow-step > span { grid-row: auto; }
+    .evaluation-flow-step small { display: none; }
+    .evaluation-flow-arrow { display: none; }
+    .evaluation-workbench-hero {
       align-items: stretch;
       flex-direction: column;
+      padding: 18px;
     }
 
-    .evaluation-toolbar-actions {
+    .evaluation-workbench-actions {
       justify-content: flex-start;
     }
+
+    .evaluation-workbench-tabs {
+      margin-top: 4px;
+
+      .ant-tabs-tab { min-width: 0; flex: 1; justify-content: center; }
+    }
+
+    .evaluation-workbench-divider {
+      display: none;
+    }
+
+    .evaluation-overview-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .evaluation-workbench-stages { grid-template-columns: 1fr; }
 
     .evaluation-metric-card .ant-descriptions-item {
       padding-bottom: 8px;

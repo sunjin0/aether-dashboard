@@ -106,6 +106,8 @@ export interface ReviewConfig {
   aiReviewRequired: boolean;
   blockOnCriticalIssues: boolean;
   requireDifferentApprover: boolean;
+  /** Optional administrator exclusively responsible for manual review tasks. */
+  manualReviewerId?: string;
   reviewModelProviderId: string;
   reviewModel?: string;
 }

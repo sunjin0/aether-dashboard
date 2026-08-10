@@ -1,11 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react'
 import {
   PageContainer,
-  ModalForm,
+  DrawerForm,
   ProFormSelect,
   ProFormTextArea,
   ProFormDependency,
-} from '@ant-design/pro-components';
+} from '@ant-design/pro-components'
 import {
   Alert,
   Button,
@@ -19,8 +19,10 @@ import {
   Space,
   Table,
   Tag,
-} from 'antd';
-import { history, useAccess, useIntl, useParams } from '@umijs/max';
+  Tabs,
+  Tooltip,
+} from 'antd'
+import { history, useAccess, useIntl, useParams } from '@umijs/max'
 import {
   EvaluationCase,
   EvaluationHealth,
@@ -32,21 +34,18 @@ import {
   EvaluationRun,
   EvaluationSet,
   EvaluationSetVersion,
+  batchDeleteEvaluationCaseLabels,
+  batchDeleteEvaluationCases,
   deleteEvaluationCaseLabel,
   deleteEvaluationCase,
   exportEvaluationCases,
   getEvaluationCases,
-  getEvaluationRuns,
   getEvaluationDocuments,
   getEvaluationDocumentSections,
   getEvaluationDocumentChunks,
   getEvaluationCaseLabels,
-  getEvaluationSetHealth,
-  getEvaluationSetVersions,
-  getEvaluationTrend,
   importEvaluationCases,
-  getEvaluationSets,
-  getEvaluationSet,
+  getEvaluationWorkbench,
   cancelEvaluationRun,
   compareEvaluationRuns,
   createEvaluationRun,
@@ -59,18 +58,23 @@ import {
   updateEvaluationCase,
   updateEvaluationCaseStatuses,
   setEvaluationRunBaseline,
-} from '@/services/knowledge/EvaluationController';
-import '../evaluation.less';
-const pct = (v?: number) => (v === undefined ? '-' : `${(v * 100).toFixed(1)}%`);
+} from '@/services/knowledge/EvaluationController'
+import '../evaluation.less'
+const pct = (v?: number) => (v === undefined ? '-' : `${(v * 100).toFixed(1)}%`)
 export default function EvaluationPage() {
-  const access = useAccess();
-  const intl = useIntl();
-  const { setId } = useParams<{ setId: string }>();
+  const access = useAccess()
+  const intl = useIntl()
+  const { setId } = useParams<{ setId: string }>()
   const evaluationStatus = (value?: string) =>
-    intl.formatMessage({ id: `pages.knowledge.evaluation.status.${value || 'UNKNOWN'}` });
+    intl.formatMessage({ id: `pages.knowledge.evaluation.status.${value || 'UNKNOWN'}` })
   const targetType = (value?: string) =>
-    intl.formatMessage({ id: `pages.knowledge.evaluation.targetType.${value || 'DOCUMENT'}` });
-  const canWrite = Boolean(access['/knowledge/evaluation']);
+    intl.formatMessage({ id: `pages.knowledge.evaluation.targetType.${value || 'DOCUMENT'}` })
+  const metricTitle = (metric: 'recallAtK' | 'mrr' | 'ndcg') => (
+    <Tooltip title={intl.formatMessage({ id: `pages.knowledge.evaluation.metric.${metric}.tip` })}>
+      <span>{intl.formatMessage({ id: `pages.knowledge.evaluation.metric.${metric}` })}</span>
+    </Tooltip>
+  )
+  const canWrite = Boolean(access['/knowledge/evaluation'])
   const [selected, setSelected] = useState<EvaluationSet>(),
     [runs, setRuns] = useState<EvaluationRun[]>([]),
     [cases, setCases] = useState<EvaluationCase[]>([]),
@@ -81,54 +85,76 @@ export default function EvaluationPage() {
     [versions, setVersions] = useState<EvaluationSetVersion[]>([]),
     [trend, setTrend] = useState<EvaluationRun[]>([]),
     [runVersionId, setRunVersionId] = useState<string>(),
+    [workspaceTab, setWorkspaceTab] = useState<'dataset' | 'runs'>('dataset'),
+    [startingRun, setStartingRun] = useState(false),
     [labelCase, setLabelCase] = useState<EvaluationCase>(),
     [labels, setLabels] = useState<EvaluationLabel[]>([]),
+    [labelIds, setLabelIds] = useState<React.Key[]>([]),
     [editingCase, setEditingCase] = useState<EvaluationCase>(),
     [caseIds, setCaseIds] = useState<React.Key[]>([]),
     [importItems, setImportItems] = useState<EvaluationCaseTransfer[]>([]),
-    [importPreview, setImportPreview] = useState<EvaluationImportPreview>();
-  const selectedRef = useRef<EvaluationSet>();
-  const importInputRef = useRef<HTMLInputElement>(null);
+    [importPreview, setImportPreview] = useState<EvaluationImportPreview>()
+  const selectedRef = useRef<EvaluationSet>()
+  const importInputRef = useRef<HTMLInputElement>(null)
   const healthIssue = (code: string) =>
-    intl.formatMessage({ id: `pages.knowledge.evaluation.health.${code}` });
+    intl.formatMessage({ id: `pages.knowledge.evaluation.health.${code}` })
   useEffect(() => {
-    if (!setId) return;
-    getEvaluationSet(setId)
-      .then((response) => response.data && open(response.data))
-      .catch(() => history.replace('/knowledge/evaluation'));
-  }, []);
-  const open = async (s: EvaluationSet) => {
-    selectedRef.current = s;
-    setSelected(s);
-    setCases((await getEvaluationCases(s.id!)).data || []);
-    setRuns((await getEvaluationRuns(s.id!)).data || []);
-    setHealth((await getEvaluationSetHealth(s.id!)).data);
-    setVersions((await getEvaluationSetVersions(s.id!)).data || []);
-    setTrend((await getEvaluationTrend(s.id!)).data || []);
-    setCompareRunIds([]);
-    setComparison(undefined);
-    setCaseIds([]);
-  };
+    if (!setId) return
+    setSelected(undefined)
+    setCases([])
+    setRuns([])
+    setHealth(undefined)
+    setVersions([])
+    setTrend([])
+    setProgress(undefined)
+    setCompareRunIds([])
+    setComparison(undefined)
+    selectedRef.current = undefined
+    open(setId)
+      .catch(() => history.replace('/knowledge/evaluation'))
+  }, [setId])
+  const open = async (source: string | EvaluationSet) => {
+    const id = typeof source === 'string' ? source : source.id!
+    const [nextCases, nextWorkbench] = await Promise.all([
+      getEvaluationCases(id),
+      getEvaluationWorkbench(id),
+    ])
+    const workbench = nextWorkbench.data
+    if (!workbench) return
+    if (selectedRef.current && selectedRef.current.id !== id) return
+    selectedRef.current = workbench.evaluationSet
+    setSelected(workbench.evaluationSet)
+    setCases(nextCases.data || [])
+    setRuns(workbench.runs || [])
+    setHealth(workbench.health)
+    setVersions(workbench.versions || [])
+    setTrend(workbench.trend || [])
+    setCompareRunIds([])
+    setComparison(undefined)
+    setCaseIds([])
+  }
   useEffect(() => {
-    if (!selected || !progress || progress.finished) return undefined;
-    const timer = window.setInterval(async () => {
-      const current = selectedRef.current;
-      if (!current) return;
-      const next = (await getEvaluationRunProgress(current.id!, progress.runId)).data;
-      setProgress(next);
+    if (!selected || !progress || progress.finished) return undefined
+    let cancelled = false
+    let timer: number | undefined
+    const poll = async () => {
+      const current = selectedRef.current
+      if (!current) return
+      const next = (await getEvaluationRunProgress(current.id!, progress.runId)).data
+      if (cancelled || selectedRef.current?.id !== current.id) return
+      setProgress(next)
       if (next?.finished) {
-        const [nextRuns, nextTrend, nextHealth] = await Promise.all([
-          getEvaluationRuns(current.id!),
-          getEvaluationTrend(current.id!),
-          getEvaluationSetHealth(current.id!),
-        ]);
-        setRuns(nextRuns.data || []);
-        setTrend(nextTrend.data || []);
-        setHealth(nextHealth.data);
+        await open(current)
+        return
       }
-    }, 3000);
-    return () => window.clearInterval(timer);
-  }, [selected, progress?.runId, progress?.finished]);
+      timer = window.setTimeout(poll, 3000)
+    }
+    timer = window.setTimeout(poll, 3000)
+    return () => {
+      cancelled = true
+      if (timer) window.clearTimeout(timer)
+    }
+  }, [selected, progress?.runId, progress?.finished])
   return (
     <PageContainer
       className="evaluation-page"
@@ -137,114 +163,139 @@ export default function EvaluationPage() {
     >
       {selected && (
         <>
-          <div className="evaluation-toolbar">
-            <Tag color={health?.healthy ? 'success' : 'warning'}>
-              {health?.healthy
-                ? intl.formatMessage(
+          <section className="evaluation-workbench-hero">
+            <div className="evaluation-workbench-identity">
+              <span className="evaluation-workbench-kicker">{intl.formatMessage({ id: 'pages.knowledge.evaluation.workspace' })}</span>
+              <h2>{selected.name}</h2>
+              <Tag
+                style={{
+                  width: 200,
+                }}
+                color={health?.healthy ? 'processing' : 'warning'}>
+                {health?.healthy
+                  ? intl.formatMessage(
                     { id: 'pages.knowledge.evaluation.datasetHealthy' },
                     { count: health.enabledCaseCount },
                   )
-                : intl.formatMessage({ id: 'pages.knowledge.evaluation.datasetBlockingIssues' })}
-            </Tag>
-            <div className="evaluation-toolbar-actions">
-              {canWrite && (
+                  : intl.formatMessage({ id: 'pages.knowledge.evaluation.datasetBlockingIssues' })}
+              </Tag>
+              <span>{selected.description || selected.agentDefinitionId}</span>
+            </div>
+            <div className="evaluation-workbench-actions">
+              {canWrite && workspaceTab === 'runs' && (
                 <>
-                  <Button
-                    type="primary"
-                    onClick={async () => {
-                      const response = await createEvaluationRun(selected!.id!, runVersionId);
-                      const runId = response.data;
-                      if (!runId) return;
-                      setProgress((await getEvaluationRunProgress(selected!.id!, runId)).data);
-                      setRuns((await getEvaluationRuns(selected!.id!)).data || []);
-                      message.success(
-                        intl.formatMessage({ id: 'pages.knowledge.evaluation.runStarted' }),
-                      );
-                    }}
-                  >
-                    {intl.formatMessage({ id: 'pages.knowledge.evaluation.run' })}
-                  </Button>
-                  <Select
-                    allowClear
-                    value={runVersionId}
-                    onChange={setRunVersionId}
-                    placeholder={intl.formatMessage({
-                      id: 'pages.knowledge.evaluation.currentDraft',
-                    })}
-                    style={{ width: 160 }}
-                    options={versions.map((version) => ({
-                      value: version.id,
-                      label: intl.formatMessage(
-                        { id: 'pages.knowledge.evaluation.version' },
-                        { version: version.versionNo },
-                      ),
-                    }))}
-                  />
-                  <Popconfirm
-                    title={intl.formatMessage({
-                      id: 'pages.knowledge.evaluation.publishVersionConfirm',
-                    })}
-                    onConfirm={async () => {
-                      await publishEvaluationSetVersion(selected!.id!);
-                      await open(selected!);
-                      message.success(
-                        intl.formatMessage({ id: 'pages.knowledge.evaluation.versionPublished' }),
-                      );
-                    }}
-                  >
-                    <Button>
-                      {intl.formatMessage({ id: 'pages.knowledge.evaluation.publishVersion' })}
+                  <div className="evaluation-run-actions">
+                    <Select
+                      allowClear
+                      value={runVersionId}
+                      onChange={setRunVersionId}
+                      placeholder={intl.formatMessage({
+                        id: 'pages.knowledge.evaluation.currentDraft',
+                      })}
+                      style={{ width: 160 }}
+                      options={versions.map((version) => ({
+                        value: version.id,
+                        label: intl.formatMessage(
+                          { id: 'pages.knowledge.evaluation.version' },
+                          { version: version.versionNo },
+                        ),
+                      }))}
+                    />
+                    <Button
+                      type="primary"
+                      loading={startingRun}
+                      disabled={Boolean(progress && !progress.finished)}
+                      onClick={async () => {
+                        if (startingRun) return
+                        setStartingRun(true)
+                        try {
+                          const response = await createEvaluationRun(selected!.id!, runVersionId)
+                          const runId = response.data
+                          if (!runId) return
+                          setProgress((await getEvaluationRunProgress(selected!.id!, runId)).data)
+                          await open(selected!)
+                          message.success(
+                            intl.formatMessage({ id: 'pages.knowledge.evaluation.runStarted' }),
+                          )
+                        } finally {
+                          setStartingRun(false)
+                        }
+                      }}
+                    >
+                      {intl.formatMessage({ id: 'pages.knowledge.evaluation.run' })}
                     </Button>
-                  </Popconfirm>
-                  <Button
-                    onClick={async () => {
-                      const items = (await exportEvaluationCases(selected!.id!)).data || [];
-                      const link = document.createElement('a');
-                      link.href = URL.createObjectURL(
-                        new Blob([JSON.stringify(items, null, 2)], { type: 'application/json' }),
-                      );
-                      link.download = `${selected!.name || 'evaluation-cases'}.json`;
-                      link.click();
-                      URL.revokeObjectURL(link.href);
-                    }}
-                  >
-                    {intl.formatMessage({ id: 'pages.knowledge.evaluation.exportCases' })}
-                  </Button>
-                  <Button onClick={() => importInputRef.current?.click()}>
-                    {intl.formatMessage({ id: 'pages.knowledge.evaluation.importCases' })}
-                  </Button>
+                  </div>
+                </>
+              )}
+              {canWrite && workspaceTab === 'dataset' && (
+                <>
+                  <div className="evaluation-dataset-actions">
+                    <Popconfirm
+                      title={intl.formatMessage({
+                        id: 'pages.knowledge.evaluation.publishVersionConfirm',
+                      })}
+                      onConfirm={async () => {
+                        await publishEvaluationSetVersion(selected!.id!)
+                        await open(selected!)
+                        message.success(
+                          intl.formatMessage({ id: 'pages.knowledge.evaluation.versionPublished' }),
+                        )
+                      }}
+                    >
+                      <Button>
+                        {intl.formatMessage({ id: 'pages.knowledge.evaluation.publishVersion' })}
+                      </Button>
+                    </Popconfirm>
+                    <Button
+                      onClick={async () => {
+                        const items = (await exportEvaluationCases(selected!.id!)).data || []
+                        const link = document.createElement('a')
+                        link.href = URL.createObjectURL(
+                          new Blob([JSON.stringify(items, null, 2)], { type: 'application/json' }),
+                        )
+                        link.download = `${selected!.name || 'evaluation-cases'}.json`
+                        link.click()
+                        URL.revokeObjectURL(link.href)
+                      }}
+                    >
+                      {intl.formatMessage({ id: 'pages.knowledge.evaluation.exportCases' })}
+                    </Button>
+                    <Button onClick={() => importInputRef.current?.click()}>
+                      {intl.formatMessage({ id: 'pages.knowledge.evaluation.importCases' })}
+                    </Button>
+                  </div>
                   <input
                     ref={importInputRef}
                     type="file"
                     accept="application/json,.json"
                     style={{ display: 'none' }}
                     onChange={async (event) => {
-                      const file = event.target.files?.[0];
-                      event.target.value = '';
-                      if (!file) return;
+                      const file = event.target.files?.[0]
+                      event.target.value = ''
+                      if (!file) return
                       try {
-                        const items = JSON.parse(await file.text()) as EvaluationCaseTransfer[];
-                        if (!Array.isArray(items)) throw new Error('Invalid import');
+                        const items = JSON.parse(await file.text()) as EvaluationCaseTransfer[]
+                        if (!Array.isArray(items)) throw new Error('Invalid import')
                         const preview = (await previewEvaluationCaseImport(selected!.id!, items))
-                          .data;
-                        setImportItems(items);
-                        setImportPreview(preview);
+                          .data
+                        setImportItems(items)
+                        setImportPreview(preview)
                       } catch {
                         message.error(
                           intl.formatMessage({
                             id: 'pages.knowledge.evaluation.invalidImportFile',
                           }),
-                        );
+                        )
                       }
                     }}
                   />
-                  <ModalForm
+                  <DrawerForm
                     title={intl.formatMessage({ id: 'pages.knowledge.evaluation.addQuestion' })}
-                    modalProps={{ destroyOnClose: true }}
+                    drawerProps={{ destroyOnClose: true }}
                     onFinish={async (v) => {
-                      await saveEvaluationCase(selected!.id!, v as EvaluationCase);
-                      await open(selected!);
-                      return true;
+                      await saveEvaluationCase(selected!.id!, v as EvaluationCase)
+                      await open(selected!)
+                      return true
                     }}
                     trigger={
                       <Button>
@@ -292,424 +343,535 @@ export default function EvaluationPage() {
                           request={async () =>
                             documentId
                               ? ((await getEvaluationDocumentSections(documentId)).data || []).map(
-                                  (x) => ({ label: x, value: x }),
-                                )
+                                (x) => ({ label: x, value: x }),
+                              )
                               : []
                           }
                         />
                       )}
                     </ProFormDependency>
-                  </ModalForm>
+                  </DrawerForm>
                 </>
               )}
             </div>
-          </div>
-          {health && (
-            <Alert
-              style={{ marginTop: 16 }}
-              type={health.healthy ? 'success' : 'error'}
-              showIcon
-              message={
-                health.healthy
-                  ? intl.formatMessage(
-                      { id: 'pages.knowledge.evaluation.datasetHealthy' },
-                      { count: health.enabledCaseCount },
-                    )
-                  : intl.formatMessage({ id: 'pages.knowledge.evaluation.datasetBlockingIssues' })
-              }
-              description={
-                health.issues.map((issue) => healthIssue(issue.code)).join(' ') || undefined
-              }
-            />
+          </section>
+          <section className="evaluation-workbench-stages" aria-label={intl.formatMessage({ id: 'pages.knowledge.evaluation.workbenchStages' })}>
+            <div className={`evaluation-stage ${health?.healthy ? 'is-ready' : 'is-blocked'}`}>
+              <span className="evaluation-stage-number">01</span>
+              <div>
+                <small>{intl.formatMessage({ id: 'pages.knowledge.evaluation.stage.dataset' })}</small>
+                <strong>
+                  {health?.healthy
+                    ? intl.formatMessage({ id: 'pages.knowledge.evaluation.stage.datasetReady' })
+                    : intl.formatMessage({ id: 'pages.knowledge.evaluation.stage.datasetBlocked' })}
+                </strong>
+                <span>
+                  {intl.formatMessage(
+                    { id: 'pages.knowledge.evaluation.stage.datasetSummary' },
+                    { count: health?.enabledCaseCount || 0 },
+                  )}
+                </span>
+              </div>
+            </div>
+            <div className="evaluation-stage">
+              <span className="evaluation-stage-number">02</span>
+              <div>
+                <small>{intl.formatMessage({ id: 'pages.knowledge.evaluation.stage.version' })}</small>
+                <strong>
+                  {versions[0]
+                    ? intl.formatMessage({ id: 'pages.knowledge.evaluation.stage.versionPublished' }, { version: versions[0].versionNo })
+                    : intl.formatMessage({ id: 'pages.knowledge.evaluation.stage.versionMissing' })}
+                </strong>
+                <span>{intl.formatMessage({ id: 'pages.knowledge.evaluation.stage.versionSummary' }, { count: versions.length })}</span>
+              </div>
+            </div>
+            <div className="evaluation-stage">
+              <span className="evaluation-stage-number">03</span>
+              <div>
+                <small>{intl.formatMessage({ id: 'pages.knowledge.evaluation.stage.run' })}</small>
+                <strong>
+                  {runs[0]
+                    ? evaluationStatus(runs[0].status)
+                    : intl.formatMessage({ id: 'pages.knowledge.evaluation.stage.runMissing' })}
+                </strong>
+                <span>{intl.formatMessage({ id: 'pages.knowledge.evaluation.stage.runSummary' }, { count: runs.length })}</span>
+              </div>
+            </div>
+          </section>
+          <Tabs
+            className="evaluation-workbench-tabs"
+            activeKey={workspaceTab}
+            onChange={(key) => setWorkspaceTab(key as 'dataset' | 'runs')}
+            items={[
+              { key: 'dataset', label: intl.formatMessage({ id: 'pages.knowledge.evaluation.workspaceTab.dataset' }) },
+              { key: 'runs', label: intl.formatMessage({ id: 'pages.knowledge.evaluation.workspaceTab.runs' }) },
+            ]}
+          />
+          {workspaceTab === 'dataset' && (
+            <>
+              {health && (
+                <Alert
+                  style={{ marginTop: 16, marginBottom: 16 }}
+                  type={health.healthy ? 'success' : 'error'}
+                  showIcon
+                  message={
+                    health.healthy
+                      ? intl.formatMessage(
+                        { id: 'pages.knowledge.evaluation.datasetHealthy' },
+                        { count: health.enabledCaseCount },
+                      )
+                      : intl.formatMessage({ id: 'pages.knowledge.evaluation.datasetBlockingIssues' })
+                  }
+                  description={
+                    health.issues
+                      .map((issue) =>
+                        [healthIssue(issue.code), issue.message, issue.evaluationCaseId]
+                          .filter(Boolean)
+                          .join(': '),
+                      )
+                      .join(' ') || undefined
+                  }
+                />
+              )}
+            </>
           )}
-          {progress && !progress.finished && (
-            <Card
-              size="small"
-              style={{ marginTop: 16 }}
-              title={intl.formatMessage({ id: 'pages.knowledge.evaluation.progress' })}
-              extra={
-                <Space>
-                  <Tag color="processing">{evaluationStatus(progress.status)}</Tag>
-                  <Button
-                    size="small"
-                    onClick={async () => {
-                      await cancelEvaluationRun(selected!.id!, progress.runId);
-                      setProgress(
-                        (await getEvaluationRunProgress(selected!.id!, progress.runId)).data,
-                      );
-                    }}
-                  >
-                    {intl.formatMessage({ id: 'pages.knowledge.evaluation.cancel' })}
-                  </Button>
-                </Space>
-              }
-            >
-              <Progress
-                percent={
-                  progress.total
-                    ? Math.round(
-                        ((progress.succeeded +
+          {workspaceTab === 'runs' && (
+            <>
+              {progress && !progress.finished && (
+                <Card
+                  className="evaluation-progress-card"
+                  size="small"
+                  style={{ marginTop: 16, marginBottom: 16 }}
+                  title={intl.formatMessage({ id: 'pages.knowledge.evaluation.progress' })}
+                  extra={
+                    <Space>
+                      <Tag color="processing">{evaluationStatus(progress.status)}</Tag>
+                      <Button
+                        size="small"
+                        onClick={async () => {
+                          await cancelEvaluationRun(selected!.id!, progress.runId)
+                          setProgress(
+                            (await getEvaluationRunProgress(selected!.id!, progress.runId)).data,
+                          )
+                        }}
+                      >
+                        {intl.formatMessage({ id: 'pages.knowledge.evaluation.cancel' })}
+                      </Button>
+                    </Space>
+                  }
+                >
+                  <Progress
+                    percent={
+                      progress.total
+                        ? Math.round(
+                          ((progress.succeeded +
                           progress.failed +
                           progress.invalid +
                           progress.cancelled) /
                           progress.total) *
                           100,
-                      )
-                    : 100
-                }
-              />
-              <Descriptions
-                size="small"
-                column={4}
-                items={[
-                  {
-                    key: 'q',
-                    label: intl.formatMessage({ id: 'pages.knowledge.evaluation.queued' }),
-                    children: progress.queued,
-                  },
-                  {
-                    key: 'r',
-                    label: intl.formatMessage({ id: 'pages.knowledge.evaluation.running' }),
-                    children: progress.running,
-                  },
-                  {
-                    key: 's',
-                    label: intl.formatMessage({ id: 'pages.knowledge.evaluation.succeeded' }),
-                    children: progress.succeeded,
-                  },
-                  {
-                    key: 'f',
-                    label: intl.formatMessage({ id: 'pages.knowledge.evaluation.failed' }),
-                    children: progress.failed,
-                  },
-                ]}
-              />
-            </Card>
-          )}
-          <Card
-            className="evaluation-card evaluation-metric-card"
-            title={intl.formatMessage({ id: 'pages.knowledge.evaluation.latestMetrics' })}
-          >
-            <Descriptions
-              items={
-                runs[0]
-                  ? [
-                      { key: 'r', label: 'Recall@K', children: pct(runs[0].recallAtK) },
-                      { key: 'm', label: 'MRR', children: pct(runs[0].mrr) },
-                      { key: 'n', label: 'nDCG', children: pct(runs[0].ndcg) },
+                        )
+                        : 100
+                    }
+                  />
+                  <Descriptions
+                    size="small"
+                    column={4}
+                    items={[
                       {
-                        key: 'i',
-                        label: intl.formatMessage({
-                          id: 'pages.knowledge.evaluation.invalidAnnotations',
-                        }),
-                        children: runs[0].invalidCount,
+                        key: 'q',
+                        label: intl.formatMessage({ id: 'pages.knowledge.evaluation.queued' }),
+                        children: progress.queued,
                       },
-                    ]
-                  : []
-              }
-            />
-          </Card>
-          <Card
-            className="evaluation-card"
-            title={intl.formatMessage({ id: 'pages.knowledge.evaluation.trend' })}
-            size="small"
-          >
-            <Table<EvaluationRun>
-              rowKey="id"
-              size="small"
-              pagination={false}
-              dataSource={trend}
-              columns={[
-                {
-                  title: intl.formatMessage({ id: 'pages.knowledge.evaluation.runTime' }),
-                  dataIndex: 'startedAt',
-                  render: (value) => (value ? new Date(value).toLocaleString(intl.locale) : '-'),
-                },
-                { title: 'Recall@K', dataIndex: 'recallAtK', render: pct },
-                { title: 'MRR', dataIndex: 'mrr', render: pct },
-                { title: 'nDCG', dataIndex: 'ndcg', render: pct },
-                {
-                  title: intl.formatMessage({ id: 'pages.common.status' }),
-                  dataIndex: 'status',
-                  render: evaluationStatus,
-                },
-              ]}
-            />
-          </Card>
-          <Card
-            className="evaluation-card"
-            title={intl.formatMessage({ id: 'pages.knowledge.evaluation.addQuestion' })}
-            size="small"
-            extra={
-              canWrite && (
-                <Space wrap>
-                  <Button
-                    onClick={async () => {
-                      if (!caseIds.length)
-                        return message.warning(
-                          intl.formatMessage({ id: 'pages.knowledge.evaluation.noCasesSelected' }),
-                        );
-                      await updateEvaluationCaseStatuses(selected!.id!, caseIds.map(String), 1);
-                      await open(selected!);
-                    }}
-                  >
-                    {intl.formatMessage({ id: 'pages.knowledge.evaluation.enableSelected' })}
-                  </Button>
-                  <Button
-                    onClick={async () => {
-                      if (!caseIds.length)
-                        return message.warning(
-                          intl.formatMessage({ id: 'pages.knowledge.evaluation.noCasesSelected' }),
-                        );
-                      await updateEvaluationCaseStatuses(selected!.id!, caseIds.map(String), 0);
-                      await open(selected!);
-                    }}
-                  >
-                    {intl.formatMessage({ id: 'pages.knowledge.evaluation.disableSelected' })}
-                  </Button>
-                </Space>
-              )
-            }
-          >
-            <Table
-              rowKey="id"
-              className="evaluation-table"
-              dataSource={cases}
-              pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `${total}` }}
-              rowSelection={
-                canWrite ? { selectedRowKeys: caseIds, onChange: setCaseIds } : undefined
-              }
-              columns={[
-                {
-                  title: intl.formatMessage({ id: 'pages.knowledge.evaluation.question' }),
-                  dataIndex: 'question',
-                },
-                {
-                  title: intl.formatMessage({ id: 'pages.knowledge.evaluation.document' }),
-                  dataIndex: 'documentId',
-                },
-                {
-                  title: intl.formatMessage({ id: 'pages.knowledge.evaluation.section' }),
-                  dataIndex: 'sectionPath',
-                },
-                {
-                  title: intl.formatMessage({ id: 'pages.knowledge.evaluation.labels' }),
-                  render: (_, item) => (
-                    <Button
-                      type="link"
-                      onClick={async () => {
-                        setLabelCase(item);
-                        setLabels(
-                          (await getEvaluationCaseLabels(selected!.id!, item.id!)).data || [],
-                        );
-                      }}
-                    >
-                      {intl.formatMessage({ id: 'pages.knowledge.evaluation.manageLabels' })}
-                    </Button>
-                  ),
-                },
-                {
-                  title: intl.formatMessage({ id: 'pages.common.status' }),
-                  dataIndex: 'status',
-                  render: (value) => (
-                    <Tag color={value === 1 ? 'green' : 'default'}>
-                      {intl.formatMessage({
-                        id:
+                      {
+                        key: 'r',
+                        label: intl.formatMessage({ id: 'pages.knowledge.evaluation.running' }),
+                        children: progress.running,
+                      },
+                      {
+                        key: 's',
+                        label: intl.formatMessage({ id: 'pages.knowledge.evaluation.succeeded' }),
+                        children: progress.succeeded,
+                      },
+                      {
+                        key: 'f',
+                        label: intl.formatMessage({ id: 'pages.knowledge.evaluation.failed' }),
+                        children: progress.failed,
+                      },
+                    ]}
+                  />
+                </Card>
+              )}
+              <div className="evaluation-overview-grid">
+                <Card
+                  className="evaluation-card evaluation-metric-card"
+                  title={intl.formatMessage({ id: 'pages.knowledge.evaluation.latestMetrics' })}
+                >
+                  <Descriptions
+                    layout="vertical"
+                    column={2}
+                    items={
+                      runs[0]
+                        ? [
+                          { key: 'r', label: metricTitle('recallAtK'), children: pct(runs[0].recallAtK) },
+                          { key: 'm', label: metricTitle('mrr'), children: pct(runs[0].mrr) },
+                          { key: 'n', label: metricTitle('ndcg'), children: pct(runs[0].ndcg) },
+                          {
+                            key: 'i',
+                            label: intl.formatMessage({
+                              id: 'pages.knowledge.evaluation.invalidAnnotations',
+                            }),
+                            children: runs[0].invalidCount,
+                          },
+                        ]
+                        : []
+                    }
+                  />
+                </Card>
+                <Card
+                  className="evaluation-card evaluation-trend-card"
+                  title={intl.formatMessage({ id: 'pages.knowledge.evaluation.trend' })}
+                  size="small"
+                >
+                  <Table<EvaluationRun>
+                    rowKey="id"
+                    size="small"
+                    pagination={false}
+                    dataSource={trend}
+                    columns={[
+                      {
+                        title: intl.formatMessage({ id: 'pages.knowledge.evaluation.runTime' }),
+                        dataIndex: 'startedAt',
+                        render: (value) =>
+                          value ? new Date(value).toLocaleString(intl.locale) : '-',
+                      },
+                      { title: metricTitle('recallAtK'), dataIndex: 'recallAtK', render: pct },
+                      { title: metricTitle('mrr'), dataIndex: 'mrr', render: pct },
+                      { title: metricTitle('ndcg'), dataIndex: 'ndcg', render: pct },
+                    ]}
+                  />
+                </Card>
+              </div>
+            </>
+          )}
+          {workspaceTab === 'dataset' && (
+            <>
+              <Card
+                className="evaluation-card"
+                title={intl.formatMessage({ id: 'pages.knowledge.evaluation.datasetCases' })}
+                size="small"
+                extra={
+                  canWrite && (
+                    <Space wrap>
+                      <Button
+                        onClick={async () => {
+                          if (!caseIds.length)
+                            return message.warning(
+                              intl.formatMessage({ id: 'pages.knowledge.evaluation.noCasesSelected' }),
+                            )
+                          await updateEvaluationCaseStatuses(selected!.id!, caseIds.map(String), 1)
+                          await open(selected!)
+                        }}
+                      >
+                        {intl.formatMessage({ id: 'pages.knowledge.evaluation.enableSelected' })}
+                      </Button>
+                      <Button
+                        onClick={async () => {
+                          if (!caseIds.length)
+                            return message.warning(
+                              intl.formatMessage({ id: 'pages.knowledge.evaluation.noCasesSelected' }),
+                            )
+                          await updateEvaluationCaseStatuses(selected!.id!, caseIds.map(String), 0)
+                          await open(selected!)
+                        }}
+                      >
+                        {intl.formatMessage({ id: 'pages.knowledge.evaluation.disableSelected' })}
+                      </Button>
+                      <Popconfirm
+                        title={intl.formatMessage({ id: 'pages.knowledge.evaluation.batchDeleteCasesConfirm' })}
+                        disabled={!caseIds.length}
+                        onConfirm={async () => {
+                          await batchDeleteEvaluationCases(selected!.id!, caseIds.map(String))
+                          await open(selected!)
+                          message.success(
+                            intl.formatMessage({ id: 'pages.knowledge.evaluation.casesDeleted' }),
+                          )
+                        }}
+                      >
+                        <Button danger disabled={!caseIds.length}>
+                          {intl.formatMessage({ id: 'pages.knowledge.evaluation.batchDelete' })}
+                        </Button>
+                      </Popconfirm>
+                    </Space>
+                  )
+                }
+              >
+                <Table
+                  rowKey="id"
+                  className="evaluation-table"
+                  dataSource={cases}
+                  pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `${total}` }}
+                  rowSelection={
+                    canWrite ? { selectedRowKeys: caseIds, onChange: setCaseIds } : undefined
+                  }
+                  columns={[
+                    {
+                      title: intl.formatMessage({ id: 'pages.knowledge.evaluation.question' }),
+                      dataIndex: 'question',
+                    },
+                    {
+                      title: intl.formatMessage({ id: 'pages.knowledge.evaluation.document' }),
+                      dataIndex: 'documentId',
+                    },
+                    {
+                      title: intl.formatMessage({ id: 'pages.knowledge.evaluation.section' }),
+                      dataIndex: 'sectionPath',
+                    },
+                    {
+                      title: intl.formatMessage({ id: 'pages.knowledge.evaluation.labels' }),
+                      render: (_, item) => (
+                        <Button
+                          type="link"
+                          onClick={async () => {
+                            setLabelCase(item)
+                            setLabelIds([])
+                            setLabels(
+                              (await getEvaluationCaseLabels(selected!.id!, item.id!)).data || [],
+                            )
+                          }}
+                        >
+                          {intl.formatMessage({ id: 'pages.knowledge.evaluation.manageLabels' })}
+                        </Button>
+                      ),
+                    },
+                    {
+                      title: intl.formatMessage({ id: 'pages.common.status' }),
+                      dataIndex: 'status',
+                      render: (value) => (
+                        <Tag color={value === 1 ? 'green' : 'default'}>
+                          {intl.formatMessage({
+                            id:
                           value === 1
                             ? 'pages.knowledge.evaluation.enabled'
                             : 'pages.knowledge.evaluation.disabled',
-                      })}
-                    </Tag>
-                  ),
-                },
-                {
-                  title: intl.formatMessage({ id: 'pages.common.option' }),
-                  render: (_, item) =>
-                    canWrite && (
-                      <Space>
-                        <Button type="link" onClick={() => setEditingCase(item)}>
-                          {intl.formatMessage({ id: 'pages.common.edit' })}
-                        </Button>
-                        <Popconfirm
-                          title={intl.formatMessage({
-                            id: 'pages.knowledge.evaluation.deleteQuestionConfirm',
                           })}
+                        </Tag>
+                      ),
+                    },
+                    {
+                      title: intl.formatMessage({ id: 'pages.common.option' }),
+                      render: (_, item) =>
+                        canWrite && (
+                          <Space>
+                            <Button type="link" onClick={() => setEditingCase(item)}>
+                              {intl.formatMessage({ id: 'pages.common.edit' })}
+                            </Button>
+                            <Popconfirm
+                              title={intl.formatMessage({
+                                id: 'pages.knowledge.evaluation.deleteQuestionConfirm',
+                              })}
                           onConfirm={async () => {
-                            await deleteEvaluationCase(selected!.id!, item.id!);
-                            await open(selected!);
+                            await deleteEvaluationCase(selected!.id!, item.id!)
+                            setCaseIds((current) => current.filter((id) => id !== item.id))
+                            await open(selected!)
+                            message.success(
+                              intl.formatMessage({ id: 'pages.knowledge.evaluation.questionDeleted' }),
+                            )
                           }}
-                        >
-                          <Button type="link" danger>
-                            {intl.formatMessage({ id: 'pages.common.delete' })}
-                          </Button>
-                        </Popconfirm>
-                      </Space>
-                    ),
-                },
-              ]}
-            />
-          </Card>
-          {compareRunIds.length === 2 && comparison && (
-            <Card
-              className="evaluation-card"
-              title={intl.formatMessage({ id: 'pages.knowledge.evaluation.runComparison' })}
-              size="small"
-            >
-              {!comparison.comparable && (
-                <Alert
-                  type="warning"
-                  showIcon
-                  message={
-                    comparison.nonComparableReason ||
-                    intl.formatMessage({ id: 'pages.knowledge.evaluation.nonComparable' })
-                  }
-                  style={{ marginBottom: 12 }}
+                            >
+                              <Button type="link" danger>
+                                {intl.formatMessage({ id: 'pages.common.delete' })}
+                              </Button>
+                            </Popconfirm>
+                          </Space>
+                        ),
+                    },
+                  ]}
                 />
-              )}
-              <Descriptions
-                items={[
-                  {
-                    key: 'recall',
-                    label: intl.formatMessage({ id: 'pages.knowledge.evaluation.recallChange' }),
-                    children: pct(comparison.metrics.recallAtKDelta),
-                  },
-                  {
-                    key: 'mrr',
-                    label: intl.formatMessage({ id: 'pages.knowledge.evaluation.mrrChange' }),
-                    children: pct(comparison.metrics.mrrDelta),
-                  },
-                  {
-                    key: 'ndcg',
-                    label: intl.formatMessage({ id: 'pages.knowledge.evaluation.ndcgChange' }),
-                    children: pct(comparison.metrics.ndcgDelta),
-                  },
-                ]}
-              />
-            </Card>
+              </Card>
+            </>
           )}
-          <Table
-            rowKey="id"
-            className="evaluation-card evaluation-table"
-            dataSource={runs}
-            pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `${total}` }}
-            rowSelection={{
-              type: 'checkbox',
-              selectedRowKeys: compareRunIds,
-              onChange: async (keys) => {
-                if (keys.length > 2) {
-                  message.warning(
-                    intl.formatMessage({ id: 'pages.knowledge.evaluation.maxTwoRuns' }),
-                  );
-                  return;
-                }
-                setCompareRunIds(keys);
-                if (keys.length === 2) {
-                  const response = await compareEvaluationRuns(
-                    selected!.id!,
-                    String(keys[0]),
-                    String(keys[1]),
-                  );
-                  setComparison(response.data);
-                } else setComparison(undefined);
-              },
-            }}
-            columns={[
-              {
-                title: intl.formatMessage({ id: 'pages.knowledge.evaluation.runTime' }),
-                dataIndex: 'startedAt',
-                render: (v) => (v ? new Date(v).toLocaleString(intl.locale) : '-'),
-              },
-              { title: 'Recall@K', dataIndex: 'recallAtK', render: pct },
-              { title: 'MRR', dataIndex: 'mrr', render: pct },
-              { title: 'nDCG', dataIndex: 'ndcg', render: pct },
-              {
-                title: intl.formatMessage({ id: 'pages.common.status' }),
-                dataIndex: 'status',
-                render: (value) => (
-                  <Tag
-                    color={
-                      value === 'SUCCEEDED'
-                        ? 'green'
-                        : value === 'RUNNING'
-                          ? 'processing'
-                          : 'default'
-                    }
-                  >
-                    {evaluationStatus(value)}
-                  </Tag>
-                ),
-              },
-              {
-                title: intl.formatMessage({ id: 'pages.knowledge.evaluation.baseline' }),
-                dataIndex: 'isBaseline',
-                render: (value) =>
-                  value ? (
-                    <Tag color="gold">
-                      {intl.formatMessage({ id: 'pages.knowledge.evaluation.baseline' })}
-                    </Tag>
-                  ) : (
-                    '-'
-                  ),
-              },
-              {
-                title: intl.formatMessage({ id: 'pages.knowledge.evaluation.details' }),
-                render: (_, run) => (
-                  <Space>
-                    <Button
-                      type="link"
-                      onClick={() =>
-                        history.push(`/knowledge/evaluation/sets/${selected!.id}/runs/${run.id}`)
+          {workspaceTab === 'runs' && (
+            <>
+              {compareRunIds.length === 2 && comparison && (
+                <Card
+                  className="evaluation-card"
+                  title={intl.formatMessage({ id: 'pages.knowledge.evaluation.runComparison' })}
+                  size="small"
+                >
+                  {!comparison.comparable && (
+                    <Alert
+                      type="warning"
+                      showIcon
+                      message={
+                        comparison.nonComparableReason ||
+                    intl.formatMessage({ id: 'pages.knowledge.evaluation.nonComparable' })
                       }
-                    >
-                      {intl.formatMessage({ id: 'pages.knowledge.evaluation.viewQuestionResults' })}
-                    </Button>
-                    {canWrite && (
-                      <Popconfirm
-                        title={intl.formatMessage({
-                          id: 'pages.knowledge.evaluation.setBaselineConfirm',
-                        })}
-                        onConfirm={async () => {
-                          await setEvaluationRunBaseline(selected!.id!, run.id);
-                          await open(selected!);
-                        }}
-                      >
-                        <Button
-                          type="link"
-                          disabled={run.status !== 'SUCCEEDED' && run.status !== 'PARTIAL_FAILED'}
+                      style={{ marginBottom: 12 }}
+                    />
+                  )}
+                  <Descriptions
+                    items={[
+                      {
+                        key: 'recall',
+                        label: intl.formatMessage({ id: 'pages.knowledge.evaluation.recallChange' }),
+                        children: pct(comparison.metrics.recallAtKDelta),
+                      },
+                      {
+                        key: 'mrr',
+                        label: intl.formatMessage({ id: 'pages.knowledge.evaluation.mrrChange' }),
+                        children: pct(comparison.metrics.mrrDelta),
+                      },
+                      {
+                        key: 'ndcg',
+                        label: intl.formatMessage({ id: 'pages.knowledge.evaluation.ndcgChange' }),
+                        children: pct(comparison.metrics.ndcgDelta),
+                      },
+                    ]}
+                  />
+                </Card>
+              )}
+              <Card
+                className="evaluation-card evaluation-run-history-card"
+                title={intl.formatMessage({ id: 'pages.knowledge.evaluation.runHistory' })}
+                extra={intl.formatMessage({ id: 'pages.knowledge.evaluation.runHistoryHint' })}
+              >
+                <Table
+                  rowKey="id"
+                  className="evaluation-table"
+                  dataSource={runs}
+                  pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `${total}` }}
+                  rowSelection={{
+                    type: 'checkbox',
+                    selectedRowKeys: compareRunIds,
+                    onChange: async (keys) => {
+                      if (keys.length > 2) {
+                        message.warning(
+                          intl.formatMessage({ id: 'pages.knowledge.evaluation.maxTwoRuns' }),
+                        )
+                        return
+                      }
+                      setCompareRunIds(keys)
+                      if (keys.length === 2) {
+                        const selectedRuns = runs.filter((run) => keys.includes(run.id!))
+                        const baseline = selectedRuns.find((run) => run.isBaseline)
+                        const candidate = selectedRuns.find((run) => run.id !== baseline?.id)
+                        if (!baseline || !candidate) {
+                          setComparison(undefined)
+                          message.warning(
+                            intl.formatMessage({ id: 'pages.knowledge.evaluation.compareRequiresBaseline' }),
+                          )
+                          return
+                        }
+                        const response = await compareEvaluationRuns(
+                    selected!.id!,
+                    baseline.id!,
+                    candidate.id!,
+                        )
+                        setComparison(response.data)
+                      } else setComparison(undefined)
+                    },
+                  }}
+                  columns={[
+                    {
+                      title: intl.formatMessage({ id: 'pages.knowledge.evaluation.runTime' }),
+                      dataIndex: 'startedAt',
+                      render: (v) => (v ? new Date(v).toLocaleString(intl.locale) : '-'),
+                    },
+                    { title: metricTitle('recallAtK'), dataIndex: 'recallAtK', render: pct },
+                    { title: metricTitle('mrr'), dataIndex: 'mrr', render: pct },
+                    { title: metricTitle('ndcg'), dataIndex: 'ndcg', render: pct },
+                    {
+                      title: intl.formatMessage({ id: 'pages.common.status' }),
+                      dataIndex: 'status',
+                      render: (value) => (
+                        <Tag
+                          color={
+                            value === 'SUCCEEDED'
+                              ? 'green'
+                              : value === 'RUNNING'
+                                ? 'processing'
+                                : 'default'
+                          }
                         >
-                          {intl.formatMessage({ id: 'pages.knowledge.evaluation.setBaseline' })}
-                        </Button>
-                      </Popconfirm>
-                    )}
-                    {canWrite && run.status === 'FAILED' && (
-                      <Button
-                        type="link"
-                        onClick={async () => {
-                          await retryEvaluationRunFailures(selected!.id!, run.id);
-                          setProgress((await getEvaluationRunProgress(selected!.id!, run.id)).data);
-                        }}
-                      >
-                        {intl.formatMessage({ id: 'pages.knowledge.evaluation.retryFailures' })}
-                      </Button>
-                    )}
-                  </Space>
-                ),
-              },
-            ]}
-          />
+                          {evaluationStatus(value)}
+                        </Tag>
+                      ),
+                    },
+                    {
+                      title: intl.formatMessage({ id: 'pages.knowledge.evaluation.baseline' }),
+                      dataIndex: 'isBaseline',
+                      render: (value) =>
+                        value ? (
+                          <Tag color="gold">
+                            {intl.formatMessage({ id: 'pages.knowledge.evaluation.baseline' })}
+                          </Tag>
+                        ) : (
+                          '-'
+                        ),
+                    },
+                    {
+                      title: intl.formatMessage({ id: 'pages.knowledge.evaluation.details' }),
+                      render: (_, run) => (
+                        <Space>
+                          <Button
+                            type="link"
+                            onClick={() =>
+                              history.push(`/knowledge/evaluation/sets/${selected!.id}/runs/${run.id}`)
+                            }
+                          >
+                            {intl.formatMessage({ id: 'pages.knowledge.evaluation.viewQuestionResults' })}
+                          </Button>
+                          {canWrite && (
+                            <Popconfirm
+                              title={intl.formatMessage({
+                                id: 'pages.knowledge.evaluation.setBaselineConfirm',
+                              })}
+                              onConfirm={async () => {
+                                await setEvaluationRunBaseline(selected!.id!, run.id)
+                                await open(selected!)
+                              }}
+                            >
+                              <Button
+                                type="link"
+                                disabled={run.status !== 'SUCCEEDED' && run.status !== 'PARTIAL_FAILED'}
+                              >
+                                {intl.formatMessage({ id: 'pages.knowledge.evaluation.setBaseline' })}
+                              </Button>
+                            </Popconfirm>
+                          )}
+                          {canWrite && run.status === 'FAILED' && (
+                            <Button
+                              type="link"
+                              onClick={async () => {
+                                await retryEvaluationRunFailures(selected!.id!, run.id)
+                                setProgress((await getEvaluationRunProgress(selected!.id!, run.id)).data)
+                              }}
+                            >
+                              {intl.formatMessage({ id: 'pages.knowledge.evaluation.retryFailures' })}
+                            </Button>
+                          )}
+                        </Space>
+                      ),
+                    },
+                  ]}
+                />
+              </Card>
+            </>
+          )}
         </>
       )}
-      <ModalForm<EvaluationCase>
+      <DrawerForm<EvaluationCase>
         open={!!editingCase}
         onOpenChange={(open) => !open && setEditingCase(undefined)}
         initialValues={editingCase}
         title={intl.formatMessage({ id: 'pages.knowledge.evaluation.editQuestion' })}
-        modalProps={{ destroyOnClose: true }}
+        drawerProps={{ destroyOnClose: true }}
         onFinish={async (value) => {
-          await updateEvaluationCase(selected!.id!, editingCase!.id!, value);
-          await open(selected!);
-          setEditingCase(undefined);
-          return true;
+          await updateEvaluationCase(selected!.id!, editingCase!.id!, value)
+          await open(selected!)
+          setEditingCase(undefined)
+          return true
         }}
       >
         <ProFormTextArea
@@ -738,15 +900,15 @@ export default function EvaluationPage() {
               request={async () =>
                 documentId
                   ? ((await getEvaluationDocumentSections(documentId)).data || []).map((value) => ({
-                      label: value,
-                      value,
-                    }))
+                    label: value,
+                    value,
+                  }))
                   : []
               }
             />
           )}
         </ProFormDependency>
-      </ModalForm>
+      </DrawerForm>
       <Modal
         open={!!importPreview}
         title={intl.formatMessage({ id: 'pages.knowledge.evaluation.importPreview' })}
@@ -756,15 +918,15 @@ export default function EvaluationPage() {
             <Button
               type="primary"
               onClick={async () => {
-                const response = await importEvaluationCases(selected!.id!, importItems);
-                await open(selected!);
-                setImportPreview(undefined);
+                const response = await importEvaluationCases(selected!.id!, importItems)
+                await open(selected!)
+                setImportPreview(undefined)
                 message.success(
                   intl.formatMessage(
                     { id: 'pages.knowledge.evaluation.importCompleted' },
                     { count: response.data || 0 },
                   ),
-                );
+                )
               }}
             >
               {intl.formatMessage({ id: 'pages.knowledge.evaluation.confirmImport' })}
@@ -780,9 +942,9 @@ export default function EvaluationPage() {
               message={
                 importPreview.valid
                   ? intl.formatMessage(
-                      { id: 'pages.knowledge.evaluation.importValid' },
-                      { count: importPreview.acceptedCount },
-                    )
+                    { id: 'pages.knowledge.evaluation.importValid' },
+                    { count: importPreview.acceptedCount },
+                  )
                   : intl.formatMessage({ id: 'pages.knowledge.evaluation.importInvalid' })
               }
             />
@@ -829,6 +991,9 @@ export default function EvaluationPage() {
               size="small"
               pagination={false}
               dataSource={labels}
+              rowSelection={
+                canWrite ? { selectedRowKeys: labelIds, onChange: setLabelIds } : undefined
+              }
               columns={[
                 {
                   title: intl.formatMessage({ id: 'pages.knowledge.evaluation.type' }),
@@ -858,12 +1023,12 @@ export default function EvaluationPage() {
                           id: 'pages.knowledge.evaluation.deleteLabelConfirm',
                         })}
                         onConfirm={async () => {
-                          await deleteEvaluationCaseLabel(selected!.id!, labelCase.id!, label.id!);
+                          await deleteEvaluationCaseLabel(selected!.id!, labelCase.id!, label.id!)
                           setLabels(
                             (await getEvaluationCaseLabels(selected!.id!, labelCase.id!)).data ||
                               [],
-                          );
-                          await open(selected!);
+                          )
+                          await open(selected!)
                         }}
                       >
                         <Button type="link" danger>
@@ -877,19 +1042,43 @@ export default function EvaluationPage() {
               ]}
             />
             {canWrite && (
-              <ModalForm<EvaluationLabel>
+              <Space style={{ marginTop: 16 }} wrap>
+                <Popconfirm
+                  title={intl.formatMessage({ id: 'pages.knowledge.evaluation.batchDeleteLabelsConfirm' })}
+                  disabled={!labelIds.length}
+                  onConfirm={async () => {
+                    await batchDeleteEvaluationCaseLabels(
+                      selected!.id!,
+                      labelCase.id!,
+                      labelIds.map(String),
+                    )
+                    setLabelIds([])
+                    setLabels(
+                      (await getEvaluationCaseLabels(selected!.id!, labelCase.id!)).data || [],
+                    )
+                    await open(selected!)
+                    message.success(
+                      intl.formatMessage({ id: 'pages.knowledge.evaluation.labelsDeleted' }),
+                    )
+                  }}
+                >
+                  <Button danger disabled={!labelIds.length}>
+                    {intl.formatMessage({ id: 'pages.knowledge.evaluation.batchDelete' })}
+                  </Button>
+                </Popconfirm>
+              <DrawerForm<EvaluationLabel>
                 title={intl.formatMessage({ id: 'pages.knowledge.evaluation.addPositiveLabel' })}
-                modalProps={{ destroyOnClose: true }}
+                drawerProps={{ destroyOnClose: true }}
                 onFinish={async (value) => {
-                  await saveEvaluationCaseLabel(selected!.id!, labelCase.id!, value);
+                  await saveEvaluationCaseLabel(selected!.id!, labelCase.id!, value)
                   setLabels(
                     (await getEvaluationCaseLabels(selected!.id!, labelCase.id!)).data || [],
-                  );
-                  await open(selected!);
-                  return true;
+                  )
+                  await open(selected!)
+                  return true
                 }}
                 trigger={
-                  <Button style={{ marginTop: 16 }}>
+                  <Button>
                     {intl.formatMessage({ id: 'pages.knowledge.evaluation.addLabel' })}
                   </Button>
                 }
@@ -927,8 +1116,8 @@ export default function EvaluationPage() {
                           request={async () =>
                             documentId
                               ? ((await getEvaluationDocumentSections(documentId)).data || []).map(
-                                  (value) => ({ label: value, value }),
-                                )
+                                (value) => ({ label: value, value }),
+                              )
                               : []
                           }
                           rules={[{ required: true }]}
@@ -942,11 +1131,11 @@ export default function EvaluationPage() {
                           request={async () =>
                             documentId
                               ? ((await getEvaluationDocumentChunks(documentId)).data || []).map(
-                                  (item) => ({
-                                    label: `#${item.chunkIndex ?? '-'} ${item.sectionPath || ''}`,
-                                    value: item.id,
-                                  }),
-                                )
+                                (item) => ({
+                                  label: `#${item.chunkIndex ?? '-'} ${item.sectionPath || ''}`,
+                                  value: item.id,
+                                }),
+                              )
                               : []
                           }
                           rules={[{ required: true }]}
@@ -955,11 +1144,12 @@ export default function EvaluationPage() {
                     </>
                   )}
                 </ProFormDependency>
-              </ModalForm>
+              </DrawerForm>
+              </Space>
             )}
           </>
         )}
       </Modal>
     </PageContainer>
-  );
+  )
 }

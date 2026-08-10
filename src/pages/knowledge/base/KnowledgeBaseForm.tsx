@@ -8,6 +8,7 @@ import {
   getEmbeddingProviderOptions,
   getReviewModelProviderOptions,
 } from '@/services/agent/ModelProviderController'
+import { getAdminOptions } from '@/services/sys/AdminController'
 import {
   ProCard,
   ProFormSelect,
@@ -18,7 +19,8 @@ import {
   ProFormDependency,
 } from '@ant-design/pro-components'
 import { useIntl } from '@umijs/max'
-import { Col, Form, Row } from 'antd'
+import { QuestionCircleOutlined } from '@ant-design/icons'
+import { Col, Form, Row, Tooltip } from 'antd'
 import './KnowledgeBaseForm.less'
 
 interface KnowledgeBaseFormProps {
@@ -31,6 +33,14 @@ interface KnowledgeBaseFormProps {
 const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen, onSuccess }) => {
   const [form] = Form.useForm()
   const intl = useIntl()
+  const retrievalLabel = (field: string) => (
+    <span>
+      {intl.formatMessage({ id: `pages.knowledge.base.form.retrieval.${field}` })}
+      <Tooltip title={intl.formatMessage({ id: `pages.knowledge.base.form.retrieval.${field}.tip` })}>
+        <QuestionCircleOutlined style={{ marginLeft: 4, color: 'rgba(0, 0, 0, 0.45)' }} />
+      </Tooltip>
+    </span>
+  )
 
   return (
     <DrawerForm
@@ -124,7 +134,7 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
       >
         <ProFormSelect
           name="embeddingProviderId"
-          label={intl.formatMessage({ id: 'pages.knowledge.base.form.embeddingProvider' })}
+          label={retrievalLabel('embeddingProvider')}
           rules={[
             {
               required: true,
@@ -138,35 +148,35 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
         />
         <div className="knowledge-base-form-section-title">{intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.retrievalSettings' })}</div>
         <Row gutter={16}>
-          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'topK']} label={intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.topK' })} initialValue={5} min={1} max={20} /></Col>
-          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'minSimilarity']} label={intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.minSimilarity' })} initialValue={0.3} min={-1} max={1} fieldProps={{ step: 0.05 }} /></Col>
-          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'maxChunksPerDocument']} label={intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.maxChunksPerDocument' })} initialValue={2} min={1} max={10} /></Col>
+          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'topK']} label={retrievalLabel('topK')} initialValue={5} min={1} max={20} /></Col>
+          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'minSimilarity']} label={retrievalLabel('minSimilarity')} initialValue={0.3} min={-1} max={1} fieldProps={{ step: 0.05 }} /></Col>
+          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'maxChunksPerDocument']} label={retrievalLabel('maxChunksPerDocument')} initialValue={2} min={1} max={10} /></Col>
         </Row>
         <Row gutter={16} className="knowledge-base-form-switches">
-          <Col xs={24} md={12}><ProFormSwitch name={['retrievalConfig', 'hybridEnabled']} label={intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.hybridEnabled' })} initialValue /></Col>
-          <Col xs={24} md={12}><ProFormSwitch name={['retrievalConfig', 'strictGrounding']} label={intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.strictGrounding' })} initialValue={false} /></Col>
+          <Col xs={24} md={12}><ProFormSwitch name={['retrievalConfig', 'hybridEnabled']} label={retrievalLabel('hybridEnabled')} initialValue /></Col>
+          <Col xs={24} md={12}><ProFormSwitch name={['retrievalConfig', 'strictGrounding']} label={retrievalLabel('strictGrounding')} initialValue={false} /></Col>
         </Row>
         <ProFormDependency name={['retrievalConfig', 'hybridEnabled']}>
           {({ retrievalConfig }) => retrievalConfig?.hybridEnabled ? (
             <Row gutter={16}>
-              <Col xs={24} md={12}><ProFormDigit name={['retrievalConfig', 'vectorWeight']} label={intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.vectorWeight' })} initialValue={0.7} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col>
-              <Col xs={24} md={12}><ProFormDigit name={['retrievalConfig', 'minLexicalScore']} label={intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.minLexicalScore' })} initialValue={0.05} min={0} max={1} fieldProps={{ step: 0.01 }} /></Col>
+              <Col xs={24} md={12}><ProFormDigit name={['retrievalConfig', 'vectorWeight']} label={retrievalLabel('vectorWeight')} initialValue={0.7} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col>
+              <Col xs={24} md={12}><ProFormDigit name={['retrievalConfig', 'minLexicalScore']} label={retrievalLabel('minLexicalScore')} initialValue={0.05} min={0} max={1} fieldProps={{ step: 0.01 }} /></Col>
             </Row>
           ) : null}
         </ProFormDependency>
         <div className="knowledge-base-form-section-title">{intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.rankingSettings' })}</div>
         <Row gutter={16}>
-          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'authorityScore']} label={intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.authorityScore' })} initialValue={0} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col>
-          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'authorityWeight']} label={intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.authorityWeight' })} initialValue={0} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col>
-          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'freshnessWeight']} label={intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.freshnessWeight' })} initialValue={0} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col>
+          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'authorityScore']} label={retrievalLabel('authorityScore')} initialValue={0} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col>
+          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'authorityWeight']} label={retrievalLabel('authorityWeight')} initialValue={0} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col>
+          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'freshnessWeight']} label={retrievalLabel('freshnessWeight')} initialValue={0} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col>
         </Row>
-        <ProFormSwitch name={['retrievalConfig', 'rerankEnabled']} label={intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.rerankEnabled' })} initialValue={false} />
+        <ProFormSwitch name={['retrievalConfig', 'rerankEnabled']} label={retrievalLabel('rerankEnabled')} initialValue={false} />
         <ProFormDependency name={['retrievalConfig', 'rerankEnabled']}>
           {({ retrievalConfig }) => retrievalConfig?.rerankEnabled ? (
             <Row gutter={16}>
-               <Col xs={24} md={8}><ProFormSelect name={['retrievalConfig', 'rerankProviderId']} label={intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.rerankProvider' })} request={getReviewModelProviderOptions} rules={[{ required: true }]} /></Col>
-               <Col xs={24} md={8}><ProFormText name={['retrievalConfig', 'rerankModel']} label={intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.rerankModel' })} /></Col>
-               <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'rerankTopN']} label={intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.rerankTopN' })} initialValue={5} min={1} max={20} /></Col>
+               <Col xs={24} md={8}><ProFormSelect name={['retrievalConfig', 'rerankProviderId']} label={retrievalLabel('rerankProvider')} request={getReviewModelProviderOptions} rules={[{ required: true }]} /></Col>
+               <Col xs={24} md={8}><ProFormText name={['retrievalConfig', 'rerankModel']} label={retrievalLabel('rerankModel')} /></Col>
+               <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'rerankTopN']} label={retrievalLabel('rerankTopN')} initialValue={5} min={1} max={20} /></Col>
             </Row>
           ) : null}
         </ProFormDependency>
@@ -212,6 +222,17 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
             />
           </Col>
         </Row>
+        <ProFormSelect
+          name={['reviewConfig', 'manualReviewerId']}
+          label={intl.formatMessage({ id: 'pages.knowledge.base.form.manualReviewer' })}
+          tooltip={intl.formatMessage({ id: 'pages.knowledge.base.form.manualReviewerTooltip' })}
+          request={getAdminOptions}
+          fieldProps={{
+            allowClear: true,
+            showSearch: true,
+            optionFilterProp: 'label',
+          }}
+        />
         <ProFormSelect
           name={['reviewConfig', 'reviewModelProviderId']}
           label={intl.formatMessage({ id: 'pages.knowledge.base.form.reviewModelProvider' })}

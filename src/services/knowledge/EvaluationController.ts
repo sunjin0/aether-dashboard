@@ -97,6 +97,13 @@ export interface EvaluationRunComparison {
     ndcgDelta?: number;
   };
 }
+export interface EvaluationWorkbench {
+  evaluationSet: EvaluationSet;
+  health: EvaluationHealth;
+  versions: EvaluationSetVersion[];
+  runs: EvaluationRun[];
+  trend: EvaluationRun[];
+}
 export interface EvaluationDocument {
   id: string;
   title: string;
@@ -141,6 +148,10 @@ export const getEvaluationSet = (id: string) =>
   request<ResponseStructure<EvaluationSet>>(`/api/knowledge/evaluation/sets/${id}`, {
     method: 'GET',
   });
+export const getEvaluationWorkbench = (id: string) =>
+  request<ResponseStructure<EvaluationWorkbench>>(`/api/knowledge/evaluation/sets/${id}/workbench`, {
+    method: 'GET',
+  });
 export const saveEvaluationSet = (data: EvaluationSet) =>
   request<ResponseStructure<string>>('/api/knowledge/evaluation/sets', { method: 'POST', data });
 export const updateEvaluationSet = (id: string, data: EvaluationSet) =>
@@ -164,6 +175,11 @@ export const updateEvaluationCase = (setId: string, caseId: string, data: Evalua
 export const deleteEvaluationCase = (setId: string, caseId: string) =>
   request<ResponseStructure<void>>(`/api/knowledge/evaluation/sets/${setId}/cases/${caseId}`, {
     method: 'DELETE',
+  });
+export const batchDeleteEvaluationCases = (setId: string, ids: string[]) =>
+  request<ResponseStructure<void>>(`/api/knowledge/evaluation/sets/${setId}/cases/batch-delete`, {
+    method: 'POST',
+    data: { ids },
   });
 export const updateEvaluationCaseStatuses = (setId: string, caseIds: string[], status: number) =>
   request<ResponseStructure<void>>(`/api/knowledge/evaluation/sets/${setId}/cases/batch-status`, {
@@ -199,6 +215,11 @@ export const deleteEvaluationCaseLabel = (setId: string, caseId: string, labelId
   request<ResponseStructure<void>>(
     `/api/knowledge/evaluation/sets/${setId}/cases/${caseId}/labels/${labelId}`,
     { method: 'DELETE' },
+  );
+export const batchDeleteEvaluationCaseLabels = (setId: string, caseId: string, ids: string[]) =>
+  request<ResponseStructure<void>>(
+    `/api/knowledge/evaluation/sets/${setId}/cases/${caseId}/labels/batch-delete`,
+    { method: 'POST', data: { ids } },
   );
 export const getEvaluationSetHealth = (id: string) =>
   request<ResponseStructure<EvaluationHealth>>(`/api/knowledge/evaluation/sets/${id}/health`, {
@@ -268,8 +289,12 @@ export const getEvaluationDocumentChunks = (id: string) =>
     `/api/knowledge/evaluation/documents/${id}/chunks`,
     { method: 'GET' },
   );
-export const getEvaluationRunResults = (setId: string, runId: string) =>
+export const getEvaluationRunResults = (
+  setId: string,
+  runId: string,
+  params?: { current?: number; pageSize?: number; status?: string; question?: string },
+) =>
   request<ResponseStructure<EvaluationRunResult[]>>(
     `/api/knowledge/evaluation/sets/${setId}/runs/${runId}/results`,
-    { method: 'GET' },
+    { method: 'GET', params },
   );

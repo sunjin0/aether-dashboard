@@ -221,7 +221,7 @@ const PreferencePage: React.FC = () => {
     {
       title: format('pages.common.option'),
       key: 'option',
-      width: 180,
+      width: 200,
       fixed: 'right',
       render: (_: unknown, record: AdminPreference) =>
         write && (

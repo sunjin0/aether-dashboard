@@ -1,31 +1,43 @@
-import React, { useEffect, useState } from 'react';
-import { PageContainer } from '@ant-design/pro-components';
-import { Card, Select, Table, Tag } from 'antd';
-import { history, useIntl, useParams } from '@umijs/max';
+import React, { useEffect, useState } from 'react'
+import { PageContainer } from '@ant-design/pro-components'
+import { Card, Input, Select, Table, Tag, Tooltip } from 'antd'
+import { history, useIntl, useParams } from '@umijs/max'
 import {
   EvaluationRunResult,
   getEvaluationRunResults,
-} from '@/services/knowledge/EvaluationController';
-import '../evaluation.less';
+} from '@/services/knowledge/EvaluationController'
+import '../evaluation.less'
 
-const pct = (value?: number) => (value === undefined ? '-' : `${(value * 100).toFixed(1)}%`);
+const pct = (value?: number) => (value === undefined ? '-' : `${(value * 100).toFixed(1)}%`)
 
 export default function EvaluationRunDetailPage() {
-  const intl = useIntl();
-  const { setId, runId } = useParams<{ setId: string; runId: string }>();
-  const [results, setResults] = useState<EvaluationRunResult[]>([]);
-  const [status, setStatus] = useState<string>();
+  const intl = useIntl()
+  const { setId, runId } = useParams<{ setId: string; runId: string }>()
+  const [results, setResults] = useState<EvaluationRunResult[]>([])
+  const [status, setStatus] = useState<string>()
+  const [question, setQuestion] = useState<string>()
+  const [current, setCurrent] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [total, setTotal] = useState(0)
   const evaluationStatus = (value?: string) =>
-    intl.formatMessage({ id: `pages.knowledge.evaluation.status.${value || 'UNKNOWN'}` });
+    intl.formatMessage({ id: `pages.knowledge.evaluation.status.${value || 'UNKNOWN'}` })
   const targetType = (value?: string) =>
-    intl.formatMessage({ id: `pages.knowledge.evaluation.targetType.${value || 'DOCUMENT'}` });
+    intl.formatMessage({ id: `pages.knowledge.evaluation.targetType.${value || 'DOCUMENT'}` })
   const evaluationError = (code?: string) =>
-    code ? intl.formatMessage({ id: `pages.knowledge.evaluation.error.${code}` }) : '-';
+    code ? intl.formatMessage({ id: `pages.knowledge.evaluation.error.${code}` }) : '-'
+  const metricTitle = (metric: 'recallAtK' | 'mrr' | 'ndcg') => (
+    <Tooltip title={intl.formatMessage({ id: `pages.knowledge.evaluation.metric.${metric}.tip` })}>
+      <span>{intl.formatMessage({ id: `pages.knowledge.evaluation.metric.${metric}` })}</span>
+    </Tooltip>
+  )
 
   useEffect(() => {
-    if (!setId || !runId) return;
-    getEvaluationRunResults(setId, runId).then((response) => setResults(response.data || []));
-  }, [setId, runId]);
+    if (!setId || !runId) return
+    getEvaluationRunResults(setId, runId, { current, pageSize, status, question }).then((response) => {
+      setResults(response.data || [])
+      setTotal(Number(response.total || 0))
+    })
+  }, [setId, runId, current, pageSize, status, question])
 
   return (
     <PageContainer
@@ -37,23 +49,46 @@ export default function EvaluationRunDetailPage() {
       onBack={() => history.push(`/knowledge/evaluation/sets/${setId}`)}
     >
       <Card className="evaluation-card">
-        <Select
-          allowClear
-          value={status}
-          onChange={setStatus}
-          placeholder={intl.formatMessage({ id: 'pages.knowledge.evaluation.allResults' })}
-          style={{ width: 180, marginBottom: 16 }}
-          options={['EVALUATED', 'RETRIEVAL_ERROR', 'INVALID_LABEL'].map((value) => ({
-            value,
-            label: evaluationStatus(value),
-          }))}
-        />
+        <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+          <Select
+            allowClear
+            value={status}
+            onChange={(value) => {
+              setStatus(value)
+              setCurrent(1)
+            }}
+            placeholder={intl.formatMessage({ id: 'pages.knowledge.evaluation.allResults' })}
+            style={{ width: 180 }}
+            options={['EVALUATED', 'RETRIEVAL_ERROR', 'INVALID_LABEL'].map((value) => ({
+              value,
+              label: evaluationStatus(value),
+            }))}
+          />
+          <Input.Search
+            allowClear
+            style={{ width: 280 }}
+            placeholder={intl.formatMessage({ id: 'pages.knowledge.evaluation.searchQuestion' })}
+            onSearch={(value) => {
+              setQuestion(value || undefined)
+              setCurrent(1)
+            }}
+          />
+        </div>
         <Table<EvaluationRunResult>
           className="evaluation-table"
           rowKey="id"
           scroll={{ x: 1000 }}
-          dataSource={status ? results.filter((item) => item.status === status) : results}
-          pagination={{ pageSize: 10, showSizeChanger: true }}
+          dataSource={results}
+          pagination={{
+            current,
+            pageSize,
+            total,
+            showSizeChanger: true,
+            onChange: (nextCurrent, nextPageSize) => {
+              setCurrent(nextPageSize !== pageSize ? 1 : nextCurrent)
+              setPageSize(nextPageSize)
+            },
+          }}
           expandable={{
             expandedRowRender: (item) => (
               <Table
@@ -102,9 +137,9 @@ export default function EvaluationRunDetailPage() {
                 </>
               ),
             },
-            { title: 'Recall@K', dataIndex: 'recallAtK', render: pct },
-            { title: 'MRR', dataIndex: 'mrr', render: pct },
-            { title: 'nDCG', dataIndex: 'ndcg', render: pct },
+            { title: metricTitle('recallAtK'), dataIndex: 'recallAtK', render: pct },
+            { title: metricTitle('mrr'), dataIndex: 'mrr', render: pct },
+            { title: metricTitle('ndcg'), dataIndex: 'ndcg', render: pct },
             {
               title: intl.formatMessage({ id: 'pages.knowledge.evaluation.target' }),
               render: (_, item) => (
@@ -138,5 +173,5 @@ export default function EvaluationRunDetailPage() {
         />
       </Card>
     </PageContainer>
-  );
+  )
 }

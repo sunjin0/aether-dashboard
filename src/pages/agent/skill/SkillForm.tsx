@@ -6,7 +6,6 @@ import {
   Form,
   Input,
   InputNumber,
-  message,
   Modal,
   Select,
   Space,
@@ -145,7 +144,7 @@ const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen,
         getSkillDetail(id)
           .then(({ data }) => applyDetail(data))
           .catch(() => {
-            message.error(format('pages.agent.skill.loadFailed'))
+            // API failures are displayed by the global request handler.
           })
           .finally(() => setDetailLoading(false))
       }
@@ -183,14 +182,12 @@ const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen,
       if (id) {
         const { code } = await updateSkillDraft(id, params)
         if (code === 200) {
-          message.success(format('pages.agent.skill.updateSuccess'))
           setOpen(false)
           onSuccess()
         }
       } else {
         const { code } = await createSkillDraft(params)
         if (code === 200) {
-          message.success(format('pages.agent.skill.createSuccess'))
           setOpen(false)
           onSuccess()
         }

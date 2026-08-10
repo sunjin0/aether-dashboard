@@ -7,7 +7,7 @@ import { KnowledgeBase, KnowledgeBaseSearchParams } from '@/services/entity/Agen
 import { PlusOutlined } from '@ant-design/icons'
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
 import { history, useAccess, useIntl } from '@@/exports'
-import { Alert, Button, message, Popconfirm, Tag } from 'antd'
+import { Alert, Button, Tag } from 'antd'
 import React, { useRef, useState } from 'react'
 import { getIndexStatus, getSwitchStatus } from '@/pages/agent/knowledge-base/status'
 import TableActionMenu from '@/components/TableActionMenu'
@@ -135,9 +135,6 @@ const KnowledgeBasePage: React.FC = () => {
                 onClick: () => {
                   if (record.id != null) {
                     deleteKnowledgeBase(record.id).then(() => {
-                      message.success(
-                        intl.formatMessage({ id: 'pages.knowledge.base.deleteSuccess' }),
-                      )
                       ref.current?.reload()
                     })
                   }

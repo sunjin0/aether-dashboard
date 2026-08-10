@@ -170,7 +170,6 @@ const AgentToolCallLogPage: React.FC = () => {
           try {
             return await getAgentToolCallLogList(normalizeSearchParams(params))
           } catch {
-            message.error(format('pages.agent.toolCallLog.loadListFailed'))
             return { data: [], total: 0, success: false }
           }
         }}

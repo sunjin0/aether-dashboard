@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { ActionType, PageContainer, ProForm, ProFormDigit, ProFormText, ProFormTextArea, ProFormTreeSelect, ProTable } from '@ant-design/pro-components'
 import { history, useAccess, useIntl } from '@@/exports'
-import { Button, Form, message, Popconfirm, Space, Tag, Typography } from 'antd'
+import { Button, Form, Popconfirm, Space, Tag, Typography } from 'antd'
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
 import type { DataNode } from 'antd/es/tree'
 import { Config } from '@/services/entity/Sys'
@@ -68,7 +68,6 @@ const ConfigPage: React.FC = () => {
     const payload = { ...values, id: editing?.id, code: editing?.code || values.code?.trim() }
     const { code } = editing ? await updateConfig(payload) : await addConfig(payload)
     if (code === 200) {
-      message.success(editing ? format('pages.sys.config.updateSuccess') : format('pages.sys.config.createSuccess'))
       await reloadParentTree()
       ref.current?.reload()
       return true
@@ -80,7 +79,6 @@ const ConfigPage: React.FC = () => {
     if (!record.id) return
     const { code } = await deleteConfig(record.id)
     if (code === 200) {
-      message.success(format('pages.sys.config.deleteSuccess'))
       await reloadParentTree()
       ref.current?.reload()
     }

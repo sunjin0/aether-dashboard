@@ -91,7 +91,6 @@ export const useReviewTask = ({ taskId, open, onSuccess }: UseReviewTaskOptions)
               ? await approveReviewTask(taskId, comment)
               : await rejectReviewTask(taskId, comment)
         if (response.code === 200) {
-          message.success(intl.formatMessage({ id: 'pages.knowledge.review.operationSuccess' }))
           onSuccess?.()
           if (kind === 'claim') {
             setClaimedByCurrentUser(true)

@@ -1,6 +1,6 @@
 import { PageContainer } from '@ant-design/pro-components'
 import { history, useIntl, useLocation } from '@umijs/max'
-import { Alert, Button, Checkbox, Col, Empty, message, Modal, Result, Row, Space, Spin, Tag } from 'antd'
+import { Alert, Button, Checkbox, Col, Empty, Modal, Result, Row, Space, Spin, Tag } from 'antd'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { AiReviewDiffIssue } from '@/services/entity/Agent'
 import { startAiReview, submitReview } from '@/services/knowledge/ReviewController'
@@ -46,24 +46,6 @@ const DiffWorkspace: React.FC<Props> = ({
   onReviewStatusChange,
 }) => {
   const intl = useIntl()
-  const errorText = (error: unknown) => {
-    const value = error as {
-      response?: { status?: number; data?: { message?: string; code?: number } };
-      status?: number;
-      message?: string;
-    }
-    const statusCode = value?.response?.status || value?.status
-    if (statusCode === 409)
-      return intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.error.conflict' })
-    if (statusCode === 404)
-      return intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.error.notFound' })
-    if (statusCode === 400)
-      return intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.error.badRequest' })
-    return (
-      value?.message ||
-      intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.error.unknown' })
-    )
-  }
   const localizedSeverity = (severity: string) =>
     intl.formatMessage({ id: severityLabelKey[severity] || severity })
   const localizedIssueType = (type?: string) =>
@@ -220,12 +202,9 @@ const DiffWorkspace: React.FC<Props> = ({
     try {
       await accept(issue, replacement)
       setJustApplied(false)
-      message.success(
-        intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.acceptSuccess' }),
-      )
       selectNextPendingIssue(issue.id)
-    } catch (error) {
-      message.error(errorText(error))
+    } catch {
+      // API failures are displayed by the global request handler.
     } finally {
       setBusy(false)
       setReplacementIssue(undefined)
@@ -236,12 +215,9 @@ const DiffWorkspace: React.FC<Props> = ({
     setBusy(true)
     try {
       await reject(issue)
-      message.success(
-        intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.ignoreSuccess' }),
-      )
       selectNextPendingIssue(issue.id)
-    } catch (error) {
-      message.error(errorText(error))
+    } catch {
+      // API failures are displayed by the global request handler.
     } finally {
       setBusy(false)
     }
@@ -252,11 +228,8 @@ const DiffWorkspace: React.FC<Props> = ({
     try {
       await unaccept(issue)
       setJustApplied(false)
-      message.success(
-        intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.unacceptSuccess' }),
-      )
-    } catch (error) {
-      message.error(errorText(error))
+    } catch {
+      // API failures are displayed by the global request handler.
     } finally {
       setBusy(false)
     }
@@ -269,11 +242,8 @@ const DiffWorkspace: React.FC<Props> = ({
       await acceptBatch(batchSelection)
       setJustApplied(false)
       setBatchModalOpen(false)
-      message.success(
-        intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.batchAcceptSuccess' }),
-      )
-    } catch (error) {
-      message.error(errorText(error))
+    } catch {
+      // API failures are displayed by the global request handler.
     } finally {
       setBusy(false)
     }
@@ -285,15 +255,12 @@ const DiffWorkspace: React.FC<Props> = ({
     try {
       const result = await applyAccepted()
       setJustApplied(true)
-      message.success(
-        intl.formatMessage({ id: 'pages.knowledge.review.diffWorkspace.applySuccess' }),
-      )
       if (result?.reviewStatus) {
         onReviewStatusChange?.(result.reviewStatus)
       }
       onApplied?.()
-    } catch (error) {
-      message.error(errorText(error))
+    } catch {
+      // API failures are displayed by the global request handler.
     } finally {
       setBusy(false)
     }

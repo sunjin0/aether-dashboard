@@ -755,7 +755,6 @@ const RunPage: React.FC = () => {
               <Popconfirm title={t('pages.agent.workflow.run.replayConfirm')} onConfirm={() => act(async () => {
                 const result = await replayWorkflow(instance.id)
                 if (result.code !== 200 || !result.data) return
-                message.success(t('pages.agent.workflow.run.replayed'))
                 await load(result.data)
                 await loadHistory()
               })}>

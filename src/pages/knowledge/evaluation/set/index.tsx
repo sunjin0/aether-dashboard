@@ -293,9 +293,6 @@ export default function EvaluationPage() {
                           if (!runId) return
                           setProgress((await getEvaluationRunProgress(selected!.id!, runId)).data)
                           await open(selected!)
-                          message.success(
-                            intl.formatMessage({ id: 'pages.knowledge.evaluation.runStarted' }),
-                          )
                         } finally {
                           setStartingRun(false)
                         }
@@ -316,9 +313,6 @@ export default function EvaluationPage() {
                       onConfirm={async () => {
                         await publishEvaluationSetVersion(selected!.id!)
                         await open(selected!)
-                        message.success(
-                          intl.formatMessage({ id: 'pages.knowledge.evaluation.versionPublished' }),
-                        )
                       }}
                     >
                       <Button>
@@ -672,9 +666,6 @@ export default function EvaluationPage() {
                         onConfirm={async () => {
                           await batchDeleteEvaluationCases(selected!.id!, caseIds.map(String))
                           await open(selected!)
-                          message.success(
-                            intl.formatMessage({ id: 'pages.knowledge.evaluation.casesDeleted' }),
-                          )
                         }}
                       >
                         <Button danger disabled={!caseIds.length}>
@@ -753,9 +744,6 @@ export default function EvaluationPage() {
                             await deleteEvaluationCase(selected!.id!, item.id!)
                             setCaseIds((current) => current.filter((id) => id !== item.id))
                             await open(selected!)
-                            message.success(
-                              intl.formatMessage({ id: 'pages.knowledge.evaluation.questionDeleted' }),
-                            )
                           }}
                             >
                               <Button type="link" danger>
@@ -1012,15 +1000,9 @@ export default function EvaluationPage() {
             <Button
               type="primary"
               onClick={async () => {
-                const response = await importEvaluationCases(selected!.id!, importItems)
+                await importEvaluationCases(selected!.id!, importItems)
                 await open(selected!)
                 setImportPreview(undefined)
-                message.success(
-                  intl.formatMessage(
-                    { id: 'pages.knowledge.evaluation.importCompleted' },
-                    { count: response.data || 0 },
-                  ),
-                )
               }}
             >
               {intl.formatMessage({ id: 'pages.knowledge.evaluation.confirmImport' })}
@@ -1160,9 +1142,6 @@ export default function EvaluationPage() {
                       (await getEvaluationCaseLabels(selected!.id!, labelCase.id!)).data || [],
                     )
                     await open(selected!)
-                    message.success(
-                      intl.formatMessage({ id: 'pages.knowledge.evaluation.labelsDeleted' }),
-                    )
                   }}
                 >
                   <Button danger disabled={!labelIds.length}>

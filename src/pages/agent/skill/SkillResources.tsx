@@ -251,13 +251,10 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
     }
     setUploading(true)
     try {
-      const { code } = await uploadSkillResource(id, file, purpose, resourceType)
-      if (code === 200) {
-        message.success(format('pages.agent.skill.resourceUploadSuccess'))
-        setResourceType(undefined)
-        setPurpose(undefined)
-        load()
-      }
+      await uploadSkillResource(id, file, purpose, resourceType)
+      setResourceType(undefined)
+      setPurpose(undefined)
+      load()
     } catch {
       // API failures are displayed by the global request handler.
     } finally {
@@ -272,11 +269,10 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
       // The API contract is an array. Older records may still return a JSON
       // string (for example, `["pdf"]`), so normalize it before sending it
       // back instead of serializing that string a second time.
-      const { code } = await updateSkillExecutionConfig(id, {
+      await updateSkillExecutionConfig(id, {
         ...executionConfig,
         outputFormats: parseOutputFormats(executionConfig.outputFormats),
       })
-      if (code === 200) message.success(format('pages.agent.skill.executionSaved'))
     } finally { setSavingConfig(false) }
   }
 
@@ -285,7 +281,6 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
     try {
       const { code } = await removeSkillResource(id, resourceId)
       if (code === 200) {
-        message.success(format('pages.agent.skill.resourceDeleteSuccess'))
         load()
       }
     } catch {
@@ -338,7 +333,7 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
       const { code } = studioResource.id
         ? await updateSkillResource(id, String(studioResource.id), file, studioResource.purpose, type)
         : await uploadSkillResource(id, file, studioResource.purpose, type)
-      if (code === 200) { message.success(format('pages.agent.skill.studio.saveSuccess')); setStudioOpen(false); load() }
+      if (code === 200) { setStudioOpen(false); load() }
     } finally { setStudioLoading(false) }
   }
 

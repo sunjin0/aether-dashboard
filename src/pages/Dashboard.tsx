@@ -12,7 +12,7 @@ import {
   RobotOutlined,
   ThunderboltOutlined,
 } from '@ant-design/icons'
-import { Alert, Badge, Button, Card, Col, Empty, List, message, Progress, Row, Skeleton, Space, Statistic, Tag, Typography } from 'antd'
+import { Alert, Badge, Button, Card, Col, Empty, List, Progress, Row, Skeleton, Space, Statistic, Tag, Typography } from 'antd'
 import dayjs from 'dayjs'
 import { getWorkbenchOverview, WorkbenchItem, WorkbenchOverview } from '@/services/workbench/WorkbenchController'
 import './Dashboard.less'
@@ -49,11 +49,9 @@ const Dashboard: React.FC = () => {
         setOverview(result.data)
       } else {
         setLoadFailed(true)
-        message.error(result.message || t('pages.workbench.loadFailed'))
       }
     } catch {
       setLoadFailed(true)
-      message.error(t('pages.workbench.loadFailed'))
     } finally {
       setLoading(false)
     }

@@ -50,20 +50,12 @@ const AgentConversationPage: React.FC = () => {
         setConversation(detailResult.data)
       } else {
         setConversation(undefined)
-        message.error(
-          detailResult.message ||
-            intl.formatMessage({ id: 'pages.agent.conversation.loadDetailFailed' }),
-        )
       }
 
       if (messageResult.code === 200) {
         setMessages(messageResult.data || [])
       } else {
         setMessages([])
-        message.error(
-          messageResult.message ||
-            intl.formatMessage({ id: 'pages.agent.conversation.loadMessagesFailed' }),
-        )
       }
 
       if (lifecycleResult.code === 200) {

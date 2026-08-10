@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import DrawerForm from '@/components/DrawerForm'
 import { useIntl } from '@umijs/max'
-import { Form, message } from 'antd'
+import { Form } from 'antd'
 import {
   ProFormRadio,
   ProFormSelect,
@@ -39,9 +39,6 @@ const ResourceForm = (props: {
           }
           return res
         } catch {
-          message.error(
-            intl.formatMessage({ id: 'pages.common.load.failed', defaultMessage: '加载失败' }),
-          )
           return {
             data: {},
             success: false,

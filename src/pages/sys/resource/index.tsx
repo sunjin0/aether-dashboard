@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react'
 
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
 import { useIntl } from '@umijs/max'
-import { Button, message } from 'antd'
+import { Button } from 'antd'
 import TableActionMenu from '@/components/TableActionMenu'
 import ResourceForm from '@/pages/sys/resource/ResourceForm'
 import { FormattedMessage } from '@@/plugin-locale'
@@ -109,9 +109,6 @@ const Resource: React.FC = () => {
           try {
             return await getResourceList(params)
           } catch {
-            message.error(
-              intl.formatMessage({ id: 'pages.common.load.failed', defaultMessage: '加载失败' }),
-            )
             return { data: [], total: 0, success: false }
           }
         }}

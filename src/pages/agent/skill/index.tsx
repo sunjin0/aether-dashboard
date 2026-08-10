@@ -91,7 +91,7 @@ const SkillPage: React.FC = () => {
   const saveRoutingConfig = async () => {
     const values = await routingForm.validateFields()
     const { code } = await updateSkillRoutingConfig(values)
-    if (code === 200) { message.success(format('pages.agent.skill.routingSaved')); setRoutingConfigOpen(false) }
+    if (code === 200) setRoutingConfigOpen(false)
   }
 
   /** 打开编辑：无草稿时先基于最新发布版本创建草稿 */
@@ -104,7 +104,6 @@ const SkillPage: React.FC = () => {
       const { data } = await getSkillDetail(record.id)
       if (!data?.draft) {
         await createNextSkillDraft(record.id)
-        message.success(format('pages.agent.skill.nextDraftCreated'))
         setFormInitial(null)
       } else {
         setFormInitial(data)
@@ -126,26 +125,17 @@ const SkillPage: React.FC = () => {
       // 列表数据可能落后于版本状态；先读取详情可避免让用户撞上无意义的 409。
       const { data: detail } = await getSkillDetail(record.id)
       if (detail?.draft) {
-        message.info(format('pages.agent.skill.editableDraftOpened'))
         setFormInitial(detail)
         setFormId(record.id)
         setFormOpen(true)
         return
       }
-      const { code } = await createNextSkillDraft(record.id, { skipErrorHandler: true })
+      const { code } = await createNextSkillDraft(record.id)
       if (code === 200) {
-        message.success(format('pages.agent.skill.nextDraftCreated'))
         reload()
       }
-    } catch (error: any) {
-      const errorCode = error?.info?.errorCode
-      const errorMessage = error?.info?.errorMessage || error?.message || ''
-      if (errorCode === 409 && errorMessage.includes('editable draft')) {
-        message.info(format('pages.agent.skill.editableDraftOpened'))
-        await handleEdit(record)
-        return
-      }
-      message.error(errorMessage || format('pages.agent.skill.nextDraftFailed'))
+    } catch {
+      // API failures are displayed by the global request handler.
     }
   }
 
@@ -157,16 +147,11 @@ const SkillPage: React.FC = () => {
     try {
       const { data: check } = await getSkillPublishCheck(record.id)
       if (!check?.draftVersionId) {
-        message.warning(format('pages.agent.skill.noDraftToPublish'))
         return
       }
       const blockers = check.blockers || []
       const warnings = check.warnings || []
       if (blockers.length) {
-        Modal.error({
-          title: format('pages.agent.skill.publishBlocked'),
-          content: <List size="small" dataSource={blockers} renderItem={(item) => <List.Item>{item}</List.Item>} />,
-        })
         return
       }
       Modal.confirm({
@@ -181,7 +166,6 @@ const SkillPage: React.FC = () => {
         onOk: async () => {
           const { code } = await publishSkill(record.id as string, check.draftVersionId as string)
           if (code === 200) {
-            message.success(format('pages.agent.skill.publishSuccess'))
             reload()
             loadStatistics()
           }

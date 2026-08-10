@@ -1,6 +1,6 @@
 import { PageContainer, ProTable } from '@ant-design/pro-components'
 import { history, useIntl, useLocation } from '@umijs/max'
-import { Button, Input, message, Modal, Space, Tabs, Tag } from 'antd'
+import { Button, Input, Modal, Space, Tabs, Tag } from 'antd'
 import TableActionMenu from '@/components/TableActionMenu'
 import React, { useMemo, useRef, useState } from 'react'
 import type { ActionType } from '@ant-design/pro-components'
@@ -78,7 +78,6 @@ const KnowledgeReviewPage: React.FC = () => {
       } else {
         await rejectReviewTask(taskId, '')
       }
-      message.success(intl.formatMessage({ id: 'pages.knowledge.review.detail.actionSuccess' }))
       actionRef.current?.reload()
     } catch {
       // The global request error handler has already shown the failure.
@@ -90,28 +89,9 @@ const KnowledgeReviewPage: React.FC = () => {
     setBatchActing(true)
     const tasks = [...selectedRowKeys]
     setSelectedRowKeys([])
-    let successCount = 0
-    let failCount = 0
-    Promise.allSettled(tasks.map((id) => approveReviewTask(String(id)))).then((results) => {
-      results.forEach((r) => {
-        if (r.status === 'fulfilled' && r.value.code === 200) successCount++
-        else failCount++
-      })
-    }).finally(() => {
+    Promise.allSettled(tasks.map((id) => approveReviewTask(String(id)))).finally(() => {
       setBatchActing(false)
       actionRef.current?.reload()
-      if (failCount === 0) {
-        message.success(
-          intl.formatMessage({ id: 'pages.knowledge.review.detail.actionSuccess' }),
-        )
-      } else {
-        message.warning(
-          intl.formatMessage(
-            { id: 'pages.knowledge.review.detail.batchPartialSuccess' },
-            { success: successCount, failed: failCount },
-          ),
-        )
-      }
     })
   }
 
@@ -134,28 +114,9 @@ const KnowledgeReviewPage: React.FC = () => {
         setBatchActing(true)
         const tasks = [...selectedRowKeys]
         setSelectedRowKeys([])
-        let successCount = 0
-        let failCount = 0
-        Promise.allSettled(tasks.map((id) => rejectReviewTask(String(id), rejectReason))).then((results) => {
-          results.forEach((r) => {
-            if (r.status === 'fulfilled' && r.value.code === 200) successCount++
-            else failCount++
-          })
-        }).finally(() => {
+        Promise.allSettled(tasks.map((id) => rejectReviewTask(String(id), rejectReason))).finally(() => {
           setBatchActing(false)
           actionRef.current?.reload()
-          if (failCount === 0) {
-            message.success(
-              intl.formatMessage({ id: 'pages.knowledge.review.detail.actionSuccess' }),
-            )
-          } else {
-            message.warning(
-              intl.formatMessage(
-                { id: 'pages.knowledge.review.detail.batchPartialSuccess' },
-                { success: successCount, failed: failCount },
-              ),
-            )
-          }
         })
       },
     })

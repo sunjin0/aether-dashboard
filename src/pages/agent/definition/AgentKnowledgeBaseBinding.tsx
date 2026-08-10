@@ -8,7 +8,7 @@ import { getKnowledgeBaseOptions } from '@/services/knowledge/KnowledgeBaseContr
 import { KnowledgeBaseBinding } from '@/services/entity/Agent'
 import { PlusOutlined } from '@ant-design/icons'
 import { ActionType, ProTable } from '@ant-design/pro-components'
-import { Button, Form, message, Modal, Select, Tag } from 'antd'
+import { Button, Form, Modal, Select, Tag } from 'antd'
 import React, { useEffect, useRef, useState } from 'react'
 import { getSwitchStatus } from '@/pages/agent/knowledge-base/status'
 import TableActionMenu from '@/components/TableActionMenu'
@@ -35,8 +35,8 @@ const AgentKnowledgeBaseBinding: React.FC<AgentKnowledgeBaseBindingProps> = ({ a
   const openBindingForm = async () => {
     try {
       setOptions((await getKnowledgeBaseOptions(1, 2)).map((item) => ({ label: item.label, value: String(item.value) })))
-    } catch (error) {
-      message.error(format('pages.agent.knowledgeBase.loadFailed'))
+    } catch {
+      // API failures are displayed by the global request handler.
     }
     form.resetFields()
     setBindOpen(true)

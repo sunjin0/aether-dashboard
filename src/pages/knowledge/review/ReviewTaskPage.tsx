@@ -1,7 +1,7 @@
 import { PageContainer } from '@ant-design/pro-components'
 import MDEditor from '@uiw/react-md-editor'
 import { useIntl } from '@umijs/max'
-import { Alert, Button, Card, Col, Descriptions, message, Row, Space, Spin, Tag, Tooltip, Typography } from 'antd'
+import { Alert, Button, Card, Col, Descriptions, Row, Space, Spin, Tag, Tooltip, Typography } from 'antd'
 import React, { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { useReviewTask } from '@/pages/knowledge/review/hooks/useReviewTask'
@@ -97,10 +97,7 @@ const ReviewTaskPage: React.FC<Props> = ({ taskId, onClose, onSuccess }) => {
   const handleSaveDraft = async () => {
     if (!taskId || editedContent === undefined) return
     try {
-      const res = await editReviewTaskContent(taskId, { content: editedContent, expectedChecksum: data?.version?.contentChecksum ?? '' })
-      if (res.code === 200) {
-        message.success(intl.formatMessage({ id: 'pages.knowledge.review.detail.saveDraftSuccess' }))
-      }
+      await editReviewTaskContent(taskId, { content: editedContent, expectedChecksum: data?.version?.contentChecksum ?? '' })
     } catch { /* handled globally */ }
   }
 

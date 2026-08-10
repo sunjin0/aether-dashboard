@@ -115,9 +115,6 @@ const ServiceAccountPage: React.FC = () => {
       { Authorization: `Bearer ${tokenResult.data.accessToken}` },
     )
     if (result.code !== 200) return
-    message.success(
-      t('pages.serviceAccount.testSucceeded', { id: result.data || '-' }),
-    )
     setTestAccount(undefined)
     testForm.resetFields()
     actionRef.current?.reload()
@@ -131,7 +128,6 @@ const ServiceAccountPage: React.FC = () => {
       maxStartsPerHour: values.maxStartsPerHour || 0,
     })
     if (result.code !== 200) return
-    message.success(t('pages.serviceAccount.updated'))
     setEditAccount(undefined)
     actionRef.current?.reload()
   }
@@ -180,7 +176,6 @@ const ServiceAccountPage: React.FC = () => {
           onChange={async (enabled) => {
             const result = await setServiceAccountEnabled(record.id, enabled)
             if (result.code === 200) {
-              message.success(t('pages.serviceAccount.updated'))
               actionRef.current?.reload()
             }
           }}
@@ -256,7 +251,6 @@ const ServiceAccountPage: React.FC = () => {
                 onClick: async () => {
                   const result = await deleteServiceAccount(record.id)
                   if (result.code === 200) {
-                    message.success(t('pages.serviceAccount.deleted'))
                     actionRef.current?.reload()
                   }
                 },

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { DeleteOutlined, EyeOutlined, PlusOutlined, RobotOutlined, SaveOutlined } from '@ant-design/icons'
+import { DeleteOutlined, EyeOutlined, PlusOutlined, RobotOutlined } from '@ant-design/icons'
 import {
   Button,
   Card,
@@ -7,20 +7,18 @@ import {
   Empty,
   Form,
   Input,
-  InputNumber,
   message,
   Modal,
   Popconfirm,
-  Row,
-  Col,
   Space,
   Select,
-  Switch,
   Table,
   Tag,
   Typography,
   Upload,
-} from 'antd'
+  Col,
+  Row,
+} from 'antd';
 import { useIntl } from '@umijs/max'
 import Editor from '@monaco-editor/react'
 import {
@@ -29,13 +27,11 @@ import {
   previewSkill,
   removeSkillResource,
   uploadSkillResource,
-  getSkillExecutionConfig,
   getSkillResourceContent,
   generateSkillResource,
-  updateSkillExecutionConfig,
   updateSkillResource,
 } from '@/services/agent/SkillController'
-import { AgentSkillExecutionConfig, AgentSkillPreviewVo, AgentSkillResource } from '@/services/entity/Agent'
+import { AgentSkillPreviewVo, AgentSkillResource } from '@/services/entity/Agent'
 import { Option } from '@/services/entity/Common'
 import MarkdownText from '@/components/MarkdownText'
 import { getModelCatalogOptions } from '@/services/agent/ModelProviderController'
@@ -63,17 +59,6 @@ const inferResourceType = (fileName: string): 'MARKDOWN' | 'SCRIPT' | 'TEMPLATE'
   if (name.endsWith('.js') || name.endsWith('.py')) return 'SCRIPT'
   if (['.html', '.hbs', '.tpl', '.ftl'].some((extension) => name.endsWith(extension))) return 'TEMPLATE'
   return undefined
-}
-
-const parseOutputFormats = (value?: string | string[]) => {
-  if (Array.isArray(value)) return value
-  if (!value) return []
-  try {
-    const parsed = JSON.parse(value)
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
 }
 
 const previewLanguage = (resource?: AgentSkillResource) => {
@@ -189,8 +174,6 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
   const [preview, setPreview] = useState<AgentSkillPreviewVo>()
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewLoading, setPreviewLoading] = useState(false)
-  const [executionConfig, setExecutionConfig] = useState<AgentSkillExecutionConfig>({ enabled: false, timeoutSeconds: 60, maxOutputFiles: 3, maxOutputBytes: 52428800 })
-  const [savingConfig, setSavingConfig] = useState(false)
   const [studioOpen, setStudioOpen] = useState(false)
   const [studioLoading, setStudioLoading] = useState(false)
   const [studioResource, setStudioResource] = useState<Partial<AgentSkillResource>>({ type: 'MARKDOWN' })
@@ -221,18 +204,11 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
     setPurpose(undefined)
     setLoading(true)
     setProviderLoading(true)
-    Promise.all([getSkillResources(id), getSkillDetail(id), loadKnowledgeBaseOptions(), getSkillExecutionConfig(id), getModelCatalogOptions('CHAT,MULTIMODAL')])
-      .then(([resourcesRes, detailRes, knowledgeBases, configRes, providers]) => {
+    Promise.all([getSkillResources(id), getSkillDetail(id), loadKnowledgeBaseOptions(), getModelCatalogOptions('CHAT,MULTIMODAL')])
+      .then(([resourcesRes, detailRes, knowledgeBases, providers]) => {
         setResources(resourcesRes.data || [])
         setEditable(Boolean(detailRes.data?.draft?.id))
         setKnowledgeBaseNames(Object.fromEntries(knowledgeBases.map((item) => [String(item.value), item.label])))
-        setExecutionConfig({
-          enabled: false,
-          timeoutSeconds: 60,
-          maxOutputFiles: 3,
-          maxOutputBytes: 50 * 1024 * 1024,
-          ...(configRes.data || {}),
-        })
         setProviderOptions(providers)
       })
       .finally(() => { setLoading(false); setProviderLoading(false) })
@@ -260,20 +236,6 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
     } finally {
       setUploading(false)
     }
-  }
-
-  const saveExecutionConfig = async () => {
-    if (!id || !editable) return
-    setSavingConfig(true)
-    try {
-      // The API contract is an array. Older records may still return a JSON
-      // string (for example, `["pdf"]`), so normalize it before sending it
-      // back instead of serializing that string a second time.
-      await updateSkillExecutionConfig(id, {
-        ...executionConfig,
-        outputFormats: parseOutputFormats(executionConfig.outputFormats),
-      })
-    } finally { setSavingConfig(false) }
   }
 
   const handleDelete = async (resourceId: string) => {
@@ -453,23 +415,6 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
         width={860}
         destroyOnClose
       >
-        <Card size="small" title={format('pages.agent.skill.executionConfig')} style={{ marginBottom: 16 }}>
-          <Space direction="vertical" style={{ width: '100%' }} size="middle">
-            <Text type="secondary">{format('pages.agent.skill.executionHint')}</Text>
-            <Space><Text>{format('pages.agent.skill.executionEnabled')}</Text><Switch disabled={!editable} checked={Boolean(executionConfig.enabled)} onChange={(enabled) => setExecutionConfig({ ...executionConfig, enabled })} /></Space>
-            <Form layout="vertical" disabled={!editable || !executionConfig.enabled}>
-              <Row gutter={12}>
-                <Col xs={24} md={12}><Form.Item label={format('pages.agent.skill.executionEntry')}><Select value={executionConfig.entryResourceId} placeholder={format('pages.agent.skill.executionEntry')} options={resources.filter((item) => item.type === 'SCRIPT').map((item) => ({ value: item.id, label: item.name }))} onChange={(entryResourceId) => setExecutionConfig({ ...executionConfig, entryResourceId })} /></Form.Item></Col>
-                <Col xs={24} md={12}><Form.Item label={format('pages.agent.skill.executionRuntime')}><Select value={executionConfig.runtime} placeholder={format('pages.agent.skill.executionRuntime')} options={[{ value: 'PYTHON', label: 'Python' }, { value: 'NODE', label: 'Node.js' }]} onChange={(runtime) => setExecutionConfig({ ...executionConfig, runtime })} /></Form.Item></Col>
-                <Col xs={24} md={12}><Form.Item label={format('pages.agent.skill.executionOutputs')}><Select mode="multiple" value={parseOutputFormats(executionConfig.outputFormats)} placeholder={format('pages.agent.skill.executionOutputs')} options={['pdf', 'docx', 'xlsx'].map((value) => ({ value, label: value.toUpperCase() }))} onChange={(outputFormats) => setExecutionConfig({ ...executionConfig, outputFormats })} /></Form.Item></Col>
-                <Col xs={8} md={4}><Form.Item label={format('pages.agent.skill.executionTimeout')}><InputNumber style={{ width: '100%' }} min={1} max={60} value={executionConfig.timeoutSeconds} addonAfter="s" onChange={(timeoutSeconds) => setExecutionConfig({ ...executionConfig, timeoutSeconds: timeoutSeconds || undefined })} /></Form.Item></Col>
-                <Col xs={8} md={4}><Form.Item label={format('pages.agent.skill.executionMaxFiles')}><InputNumber style={{ width: '100%' }} min={1} max={3} value={executionConfig.maxOutputFiles} onChange={(maxOutputFiles) => setExecutionConfig({ ...executionConfig, maxOutputFiles: maxOutputFiles || undefined })} /></Form.Item></Col>
-                <Col xs={8} md={4}><Form.Item label={format('pages.agent.skill.executionMaxSize')}><InputNumber style={{ width: '100%' }} min={1} max={50} value={Math.round((executionConfig.maxOutputBytes || 50 * 1024 * 1024) / 1024 / 1024)} addonAfter="MB" onChange={(maxOutputMegabytes) => setExecutionConfig({ ...executionConfig, maxOutputBytes: (maxOutputMegabytes || 1) * 1024 * 1024 })} /></Form.Item></Col>
-              </Row>
-            </Form>
-            <Button disabled={!editable} loading={savingConfig} icon={<SaveOutlined />} onClick={saveExecutionConfig}>{format('pages.agent.skill.executionSave')}</Button>
-          </Space>
-        </Card>
         <Card size="small" title={format('pages.agent.skill.resourceUploadPanel')} style={{ marginBottom: 16 }}>
           <Space direction="vertical" style={{ width: '100%' }} size="middle">
             <Text type="secondary">{format('pages.agent.skill.resourceUploadHint')}</Text>

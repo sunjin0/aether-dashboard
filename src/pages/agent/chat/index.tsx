@@ -308,17 +308,26 @@ const ChatDebugPage: React.FC = () => {
       const existingIndex = currentEvents.findIndex((current) => current.id === event.id)
       const executionEvents =
         existingIndex < 0
-          ? [...currentEvents, event]
+          ? [...currentEvents.slice(-39), event]
           : currentEvents.map((current, index) => (index === existingIndex ? { ...current, ...event } : current))
       return { ...item, executionEvents }
     })
   }
 
   const appendToolCallEvents = (assistantClientId: string, data: AgentStreamToolCallData) => {
-    const toolCalls = data.toolCalls?.length ? data.toolCalls : [data]
+    const toolCalls = (data.toolCalls?.length ? data.toolCalls : [data]).filter(
+      (toolCall) =>
+        toolCall &&
+        typeof toolCall === 'object' &&
+        Boolean(toolCall.toolName || toolCall.name || toolCall.function?.name || toolCall.toolCallId || toolCall.id),
+    )
     toolCalls.forEach((toolCall, index) => {
       const toolName = toolCall.toolName || toolCall.name || toolCall.function?.name
-      const toolCallId = toolCall.toolCallId || toolCall.id || `${Date.now()}-${index}`
+      // 流式工具参数会拆成多个片段；没有稳定调用标识和工具名的片段不是独立执行事件。
+      if (!toolName && !toolCall.toolCallId && !toolCall.id) {
+        return
+      }
+      const toolCallId = toolCall.toolCallId || toolCall.id || toolName || `unknown-${index}`
       const argumentsValue = toolCall.arguments || toolCall.function?.arguments
       appendExecutionEvent(assistantClientId, {
         id: `tool-${toolCallId}`,
@@ -326,11 +335,9 @@ const ChatDebugPage: React.FC = () => {
           ? intl.formatMessage({ id: 'pages.agent.chat.execution.toolCalling' }, { toolName })
           : intl.formatMessage({ id: 'pages.agent.chat.execution.toolCallingUnknown' }),
         detail:
-          typeof argumentsValue === 'string'
-            ? argumentsValue
-            : argumentsValue
-              ? JSON.stringify(argumentsValue)
-              : undefined,
+          typeof argumentsValue === 'object' && argumentsValue
+            ? JSON.stringify(argumentsValue)
+            : undefined,
         status: 'running',
       })
     })

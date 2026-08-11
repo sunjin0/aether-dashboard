@@ -20,7 +20,7 @@ import {
 } from '@ant-design/pro-components'
 import { useIntl } from '@umijs/max'
 import { QuestionCircleOutlined } from '@ant-design/icons'
-import { Col, Form, Row, Tooltip } from 'antd'
+import { Card, Col, Form, Row, Tooltip } from 'antd'
 import './KnowledgeBaseForm.less'
 
 interface KnowledgeBaseFormProps {
@@ -146,40 +146,34 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
           request={async () => (await getEmbeddingProviderOptions()).data || []}
           fieldProps={{ showSearch: true, optionFilterProp: 'label' }}
         />
-        <div className="knowledge-base-form-section-title">{intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.retrievalSettings' })}</div>
-        <Row gutter={16}>
-          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'topK']} label={retrievalLabel('topK')} initialValue={5} min={1} max={20} /></Col>
-          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'minSimilarity']} label={retrievalLabel('minSimilarity')} initialValue={0.3} min={-1} max={1} fieldProps={{ step: 0.05 }} /></Col>
-          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'maxChunksPerDocument']} label={retrievalLabel('maxChunksPerDocument')} initialValue={2} min={1} max={10} /></Col>
-        </Row>
-        <Row gutter={16} className="knowledge-base-form-switches">
-          <Col xs={24} md={12}><ProFormSwitch name={['retrievalConfig', 'hybridEnabled']} label={retrievalLabel('hybridEnabled')} initialValue /></Col>
-          <Col xs={24} md={12}><ProFormSwitch name={['retrievalConfig', 'strictGrounding']} label={retrievalLabel('strictGrounding')} initialValue={false} /></Col>
-        </Row>
-        <ProFormDependency name={['retrievalConfig', 'hybridEnabled']}>
-          {({ retrievalConfig }) => retrievalConfig?.hybridEnabled ? (
+        <div className="knowledge-base-retrieval-grid">
+          <Card size="small" title={intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.retrievalSettings' })} className="knowledge-base-retrieval-card">
             <Row gutter={16}>
-              <Col xs={24} md={12}><ProFormDigit name={['retrievalConfig', 'vectorWeight']} label={retrievalLabel('vectorWeight')} initialValue={0.7} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col>
-              <Col xs={24} md={12}><ProFormDigit name={['retrievalConfig', 'minLexicalScore']} label={retrievalLabel('minLexicalScore')} initialValue={0.05} min={0} max={1} fieldProps={{ step: 0.01 }} /></Col>
+              <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'topK']} label={retrievalLabel('topK')} initialValue={5} min={1} max={20} /></Col>
+              <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'minSimilarity']} label={retrievalLabel('minSimilarity')} initialValue={0.3} min={-1} max={1} fieldProps={{ step: 0.05 }} /></Col>
+              <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'maxChunksPerDocument']} label={retrievalLabel('maxChunksPerDocument')} initialValue={2} min={1} max={10} /></Col>
+              <Col xs={24}><ProFormSwitch name={['retrievalConfig', 'strictGrounding']} label={retrievalLabel('strictGrounding')} initialValue={false} /></Col>
             </Row>
-          ) : null}
-        </ProFormDependency>
-        <div className="knowledge-base-form-section-title">{intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.rankingSettings' })}</div>
-        <Row gutter={16}>
-          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'authorityScore']} label={retrievalLabel('authorityScore')} initialValue={0} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col>
-          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'authorityWeight']} label={retrievalLabel('authorityWeight')} initialValue={0} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col>
-          <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'freshnessWeight']} label={retrievalLabel('freshnessWeight')} initialValue={0} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col>
-        </Row>
-        <ProFormSwitch name={['retrievalConfig', 'rerankEnabled']} label={retrievalLabel('rerankEnabled')} initialValue={false} />
-        <ProFormDependency name={['retrievalConfig', 'rerankEnabled']}>
-          {({ retrievalConfig }) => retrievalConfig?.rerankEnabled ? (
-            <Row gutter={16}>
-               <Col xs={24} md={8}><ProFormSelect name={['retrievalConfig', 'rerankProviderId']} label={retrievalLabel('rerankProvider')} request={getReviewModelProviderOptions} rules={[{ required: true }]} /></Col>
-               <Col xs={24} md={8}><ProFormText name={['retrievalConfig', 'rerankModel']} label={retrievalLabel('rerankModel')} /></Col>
-               <Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'rerankTopN']} label={retrievalLabel('rerankTopN')} initialValue={5} min={1} max={20} /></Col>
+          </Card>
+          <Card size="small" title={intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.queryEnhancement' })} className="knowledge-base-retrieval-card">
+            <Row gutter={16} className="knowledge-base-form-switches">
+              <Col xs={24} md={12}><ProFormSwitch name={['retrievalConfig', 'hybridEnabled']} label={retrievalLabel('hybridEnabled')} initialValue /></Col>
+              <Col xs={24} md={12}><ProFormSwitch name={['retrievalConfig', 'queryRewriteEnabled']} label={retrievalLabel('queryRewriteEnabled')} initialValue={false} /></Col>
             </Row>
-          ) : null}
-        </ProFormDependency>
+            <ProFormDependency name={['retrievalConfig', 'hybridEnabled']}>
+              {({ retrievalConfig }) => retrievalConfig?.hybridEnabled ? <Row gutter={16}><Col xs={24} md={12}><ProFormDigit name={['retrievalConfig', 'vectorWeight']} label={retrievalLabel('vectorWeight')} initialValue={0.7} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col><Col xs={24} md={12}><ProFormDigit name={['retrievalConfig', 'minLexicalScore']} label={retrievalLabel('minLexicalScore')} initialValue={0.05} min={0} max={1} fieldProps={{ step: 0.01 }} /></Col></Row> : null}
+            </ProFormDependency>
+            <ProFormDependency name={['retrievalConfig', 'queryRewriteEnabled']}>
+              {({ retrievalConfig }) => retrievalConfig?.queryRewriteEnabled ? <Row gutter={16}><Col xs={24} md={12}><ProFormSelect name={['retrievalConfig', 'queryRewriteProviderId']} label={retrievalLabel('queryRewriteProvider')} request={getReviewModelProviderOptions} rules={[{ required: true }]} /></Col><Col xs={24} md={12}><ProFormText name={['retrievalConfig', 'queryRewriteModel']} label={retrievalLabel('queryRewriteModel')} /></Col></Row> : null}
+            </ProFormDependency>
+          </Card>
+          <Card size="small" title={intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.rankingSettings' })} className="knowledge-base-retrieval-card">
+            <Row gutter={16}><Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'authorityScore']} label={retrievalLabel('authorityScore')} initialValue={0} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col><Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'authorityWeight']} label={retrievalLabel('authorityWeight')} initialValue={0} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col><Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'freshnessWeight']} label={retrievalLabel('freshnessWeight')} initialValue={0} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col><Col xs={24}><ProFormSwitch name={['retrievalConfig', 'rerankEnabled']} label={retrievalLabel('rerankEnabled')} initialValue={false} /></Col></Row>
+            <ProFormDependency name={['retrievalConfig', 'rerankEnabled']}>
+              {({ retrievalConfig }) => retrievalConfig?.rerankEnabled ? <Row gutter={16}><Col xs={24} md={8}><ProFormSelect name={['retrievalConfig', 'rerankProviderId']} label={retrievalLabel('rerankProvider')} request={getReviewModelProviderOptions} rules={[{ required: true }]} /></Col><Col xs={24} md={8}><ProFormText name={['retrievalConfig', 'rerankModel']} label={retrievalLabel('rerankModel')} /></Col><Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'rerankTopN']} label={retrievalLabel('rerankTopN')} initialValue={5} min={1} max={20} /></Col></Row> : null}
+            </ProFormDependency>
+          </Card>
+        </div>
       </ProCard>
 
       <ProCard

@@ -43,6 +43,23 @@
   padding-top: 2px;
 }
 
+.knowledge-base-retrieval-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.knowledge-base-retrieval-card {
+  border-color: #e7edf6;
+  border-radius: 8px;
+
+  :global {
+    .ant-card-head { min-height: 40px; padding: 0 14px; border-bottom-color: #eef2f6; }
+    .ant-card-head-title { padding: 10px 0; color: #334155; font-size: 13px; }
+    .ant-card-body { padding: 14px 14px 0; }
+    .ant-form-item { margin-bottom: 16px; }
+  }
+}
+
 :global(.knowledge-base-form-drawer) {
   .ant-drawer-body {
     padding: 20px 24px 96px;

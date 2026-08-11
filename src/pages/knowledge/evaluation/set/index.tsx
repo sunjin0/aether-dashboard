@@ -147,15 +147,22 @@ export default function EvaluationPage() {
               config = {}
             }
           } else config = base.retrievalConfig || {}
-          const fields = [
+          const retrievalFields = [
             field('embeddingProvider', providerName(base.embeddingProviderId)),
             field('topK', config.topK),
             field('minSimilarity', config.minSimilarity),
             field('maxChunksPerDocument', config.maxChunksPerDocument),
-            field('hybridEnabled', config.hybridEnabled),
             field('strictGrounding', config.strictGrounding),
+          ].filter((item) => item.children !== '-')
+          const enhancementFields = [
+            field('hybridEnabled', config.hybridEnabled),
+            field('queryRewriteEnabled', config.queryRewriteEnabled ?? false),
+            field('queryRewriteProvider', providerName(config.queryRewriteProviderId as string | undefined)),
+            field('queryRewriteModel', config.queryRewriteModel),
             field('vectorWeight', config.vectorWeight),
             field('minLexicalScore', config.minLexicalScore),
+          ].filter((item) => item.children !== '-')
+          const rankingFields = [
             field('authorityScore', config.authorityScore),
             field('authorityWeight', config.authorityWeight),
             field('freshnessWeight', config.freshnessWeight),
@@ -170,7 +177,20 @@ export default function EvaluationPage() {
               size="small"
               title={base.name || intl.formatMessage({ id: 'pages.knowledge.evaluation.knowledgeBase' })}
             >
-              <Descriptions column={2} size="small" items={fields} />
+              <div className="evaluation-config-snapshot-grid">
+                <section>
+                  <h4>{intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.retrievalSettings' })}</h4>
+                  <Descriptions column={2} size="small" items={retrievalFields} />
+                </section>
+                <section>
+                  <h4>{intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.queryEnhancement' })}</h4>
+                  <Descriptions column={2} size="small" items={enhancementFields} />
+                </section>
+                <section>
+                  <h4>{intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.rankingSettings' })}</h4>
+                  <Descriptions column={2} size="small" items={rankingFields} />
+                </section>
+              </div>
             </Card>
           )
         })}
@@ -610,7 +630,8 @@ export default function EvaluationPage() {
                     rowKey="id"
                     size="small"
                     pagination={false}
-                    dataSource={trend}
+                    scroll={{ y: 184 }}
+                    dataSource={[...trend].sort((a, b) => (b.startedAt || 0) - (a.startedAt || 0))}
                     columns={[
                       {
                         title: intl.formatMessage({ id: 'pages.knowledge.evaluation.runTime' }),

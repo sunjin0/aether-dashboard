@@ -287,8 +287,43 @@
     font-weight: 600;
   }
 
-  .evaluation-trend-card .ant-card-body {
-    padding: 0 12px 8px;
+  .evaluation-trend-card {
+    height: 280px;
+
+    .ant-card-body {
+      padding: 0 12px 8px;
+      overflow: hidden;
+    }
+
+    .ant-table-body {
+      scrollbar-gutter: stable;
+    }
+  }
+
+  .evaluation-config-snapshot-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+
+    section {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid #edf0f5;
+      border-radius: 8px;
+    }
+
+    h4 {
+      margin: 0 0 10px;
+      color: rgba(0, 0, 0, .72);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .ant-descriptions-item-label,
+    .ant-descriptions-item-content {
+      padding-bottom: 6px;
+      font-size: 12px;
+    }
   }
 
   .evaluation-table .ant-table-cell {
@@ -329,6 +364,8 @@
     }
 
     .evaluation-workbench-stages { grid-template-columns: 1fr; }
+
+    .evaluation-config-snapshot-grid { grid-template-columns: 1fr; }
 
     .evaluation-metric-card .ant-descriptions-item {
       padding-bottom: 8px;

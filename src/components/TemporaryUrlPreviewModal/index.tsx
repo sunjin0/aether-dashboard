@@ -1,5 +1,5 @@
 ﻿import { Button, message, Modal } from 'antd'
-import React, { useState } from 'react'
+import React, { ReactNode, useState } from 'react'
 import { useIntl } from '@umijs/max'
 
 export interface TemporaryUrlResult {
@@ -12,7 +12,7 @@ interface TemporaryUrlPreviewModalProps {
   /** 每次打开时获取临时 URL，避免前端缓存过期链接。 */
   getUrl: () => Promise<TemporaryUrlResult>
   title?: string
-  triggerText?: string
+  triggerText?: ReactNode
   disabled?: boolean
   width?: number | string
   previewHeight?: number | string

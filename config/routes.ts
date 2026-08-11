@@ -123,6 +123,11 @@ export default [
         name: '技能管理',
         component: './agent/skill',
       },
+      {
+        path: '/agent/artifact',
+        name: '生成文件',
+        component: './agent/artifact',
+      },
     ],
   },
   {

@@ -68,6 +68,34 @@ export interface AgentDefinitionStatusParams {
   status: number;
 }
 
+/** 当前用户可访问的 AI 生成文件。 */
+export interface AgentArtifact {
+  id?: string;
+  runId?: string;
+  messageId?: string;
+  agentDefinitionId?: string;
+  agentDefinitionName?: string;
+  fileName?: string;
+  contentType?: string;
+  size?: number;
+  expiresAt?: number;
+  recycledAt?: number;
+  recycleExpiresAt?: number;
+  status?: number;
+  createdAt?: number;
+}
+
+export interface AgentArtifactSearchParams {
+  current?: number;
+  pageSize?: number;
+  fileName?: string;
+  extension?: string;
+  agentDefinitionId?: string;
+  startTime?: number;
+  endTime?: number;
+  recycled?: boolean;
+}
+
 /** Agent 专属知识库 */
 export interface KnowledgeBase {
   id?: string;

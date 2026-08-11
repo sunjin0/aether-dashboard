@@ -42,6 +42,7 @@ const pagePermissionPaths = [
   '/agent/chat',
   '/agent/run',
   '/agent/tool-call-log',
+  '/agent/artifact',
   '/workflow/workflow',
   '/workflow/operations',
   '/workflow/run',

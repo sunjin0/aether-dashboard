@@ -136,6 +136,28 @@ describe('ChatController', () => {
     expect(onProgress).toHaveBeenCalledWith(progress)
   })
 
+  it('routes reasoning and tool-call events without dropping the tool payload', async () => {
+    const onReasoning = jest.fn()
+    const onToolCall = jest.fn()
+    const reasoning = { conversationId: 'conversation-1', chunk: 'Analyse the request.' }
+    const toolCall = {
+      conversationId: 'conversation-1',
+      toolCalls: [{ id: 'call-1', function: { name: 'search_knowledge', arguments: '{"q":"SSE"}' } }],
+    }
+
+    const streamPromise = streamAgentChat(
+      { agentId: 'agent-1', message: 'hello' },
+      { onReasoning, onToolCall },
+    )
+    const options = mockedFetchEventSource.mock.calls[0][1]
+    options.onmessage({ event: 'reasoning', data: JSON.stringify(reasoning) })
+    options.onmessage({ event: 'tool_call', data: JSON.stringify(toolCall) })
+    await streamPromise
+
+    expect(onReasoning).toHaveBeenCalledWith(reasoning.chunk, reasoning)
+    expect(onToolCall).toHaveBeenCalledWith(toolCall)
+  })
+
   it('reports a non-200 status exactly once', async () => {
     const onError = jest.fn()
     const statusText = 'Service Unavailable'

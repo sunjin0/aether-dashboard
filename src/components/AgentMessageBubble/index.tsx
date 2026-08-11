@@ -23,7 +23,16 @@ const { Text } = Typography
 export type AgentMessageBubbleStatus = 'streaming' | 'error' | 'stopped'
 
 export interface AgentMessageBubbleProps {
-  agentMessage: AgentMessage & { reasoningStream?: string; progressMessage?: string }
+  agentMessage: AgentMessage & {
+    reasoningStream?: string
+    progressMessage?: string
+    executionEvents?: Array<{
+      id: string
+      title: string
+      detail?: string
+      status?: 'running' | 'completed' | 'failed' | 'pending'
+    }>
+  }
   align?: 'left' | 'right'
   compact?: boolean
   status?: AgentMessageBubbleStatus
@@ -224,6 +233,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
   const currentReasoning = agentMessage.reasoningContent || agentMessage.reasoningStream || ''
   const currentContent = agentMessage.content || ''
   const attachments = getAttachments(agentMessage.attachments)
+  const executionEvents = agentMessage.executionEvents || []
 
   useEffect(() => {
     if (reasoningContainerRef.current) {
@@ -270,6 +280,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
       !agentMessage.content &&
       !agentMessage.reasoningContent &&
       !agentMessage.reasoningStream &&
+      !executionEvents.length &&
       !(agentMessage.toolCallLogs && agentMessage.toolCallLogs.length > 0)
     ) {
       if (status === 'streaming') {
@@ -302,6 +313,43 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
                       className="agent-message-bubble-reasoning-content"
                     >
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{currentReasoning}</ReactMarkdown>
+                    </div>
+                  ),
+                },
+              ]}
+            />
+          </div>
+        )}
+
+        {!!executionEvents.length && (
+          <div className="agent-message-bubble-execution">
+            <Collapse
+              size="small"
+              defaultActiveKey={status === 'streaming' ? ['execution'] : []}
+              items={[
+                {
+                  key: 'execution',
+                  label: intl.formatMessage(
+                    { id: 'components.agentMessageBubble.executionProcess' },
+                    { count: executionEvents.length },
+                  ),
+                  children: (
+                    <div className="agent-message-bubble-execution-list">
+                      {executionEvents.map((event) => (
+                        <div className="agent-message-bubble-execution-item" key={event.id}>
+                          <span
+                            className={`agent-message-bubble-execution-status agent-message-bubble-execution-status-${event.status || 'pending'}`}
+                          />
+                          <div className="agent-message-bubble-execution-body">
+                            <div>{event.title}</div>
+                            {event.detail && (
+                              <pre className="agent-message-bubble-execution-detail">
+                                {event.detail}
+                              </pre>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   ),
                 },

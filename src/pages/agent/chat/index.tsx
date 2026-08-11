@@ -53,6 +53,7 @@ import {
   AskUserAnswer,
   AgentStreamRunStepData,
   AgentStreamAcceptedData,
+  AgentStreamToolCallData,
   KnowledgeSource,
 } from '@/services/entity/Agent'
 import { Option } from '@/services/entity/Common'
@@ -80,6 +81,14 @@ type ChatMessage = AgentMessage & {
   errorMsg?: string
   reasoningStream?: string
   progressMessage?: string
+  executionEvents?: ChatExecutionEvent[]
+}
+
+type ChatExecutionEvent = {
+  id: string
+  title: string
+  detail?: string
+  status?: 'running' | 'completed' | 'failed' | 'pending'
 }
 
 type ChatAttachmentFile = UploadFile & { attachment?: AgentChatAttachment }
@@ -167,6 +176,23 @@ const ChatDebugPage: React.FC = () => {
       setDeepRunId(data.runId)
     }
     setDeepRunSteps((current) => mergeDeepRunSteps(current, data))
+    const title = getDeepStepDisplayText(data, intl.formatMessage)
+    const detail = data.data?.error || data.data?.outputSummary || data.data?.summary || data.data?.message
+    if (title) {
+      appendExecutionEvent(streamingAssistantIdRef.current, {
+        id: `deep-${data.eventId || `${data.eventType}-${data.occurredAt}`}`,
+        title,
+        detail,
+        status:
+          data.eventType?.endsWith('.failed') || data.eventType === 'run.failed'
+            ? 'failed'
+            : data.eventType?.endsWith('.completed') || data.eventType === 'run.completed'
+              ? 'completed'
+              : data.eventType?.endsWith('.started') || data.eventType === 'run.started'
+                ? 'running'
+                : 'pending',
+      })
+    }
   }
 
   const deepRunTasks = useMemo(() => getDeepRunTasks(deepRunSteps), [deepRunSteps])
@@ -191,7 +217,15 @@ const ChatDebugPage: React.FC = () => {
   }
 
   const setConversationMessages = (messageList: ChatMessage[]) => {
-    const restoredMessages = messageList.map(restoreMessageSources)
+    const executionEventsByMessageId = new Map(
+      messages
+        .filter((item) => item.id && item.executionEvents?.length)
+        .map((item) => [item.id as string, item.executionEvents as ChatExecutionEvent[]]),
+    )
+    const restoredMessages = messageList.map((item) => ({
+      ...restoreMessageSources(item),
+      executionEvents: item.id ? executionEventsByMessageId.get(item.id) : undefined,
+    }))
     const pendingQuestion = findPendingQuestionMessage(restoredMessages)
 
     setMessages(restoredMessages)
@@ -263,6 +297,43 @@ const ChatDebugPage: React.FC = () => {
     setMessages((current) =>
       current.map((item) => (item.clientId === clientId ? updater(item) : item)),
     )
+  }
+
+  const appendExecutionEvent = (assistantClientId: string | undefined, event: ChatExecutionEvent) => {
+    if (!assistantClientId) {
+      return
+    }
+    updateAssistantMessage(assistantClientId, (item) => {
+      const currentEvents = item.executionEvents || []
+      const existingIndex = currentEvents.findIndex((current) => current.id === event.id)
+      const executionEvents =
+        existingIndex < 0
+          ? [...currentEvents, event]
+          : currentEvents.map((current, index) => (index === existingIndex ? { ...current, ...event } : current))
+      return { ...item, executionEvents }
+    })
+  }
+
+  const appendToolCallEvents = (assistantClientId: string, data: AgentStreamToolCallData) => {
+    const toolCalls = data.toolCalls?.length ? data.toolCalls : [data]
+    toolCalls.forEach((toolCall, index) => {
+      const toolName = toolCall.toolName || toolCall.name || toolCall.function?.name
+      const toolCallId = toolCall.toolCallId || toolCall.id || `${Date.now()}-${index}`
+      const argumentsValue = toolCall.arguments || toolCall.function?.arguments
+      appendExecutionEvent(assistantClientId, {
+        id: `tool-${toolCallId}`,
+        title: toolName
+          ? intl.formatMessage({ id: 'pages.agent.chat.execution.toolCalling' }, { toolName })
+          : intl.formatMessage({ id: 'pages.agent.chat.execution.toolCallingUnknown' }),
+        detail:
+          typeof argumentsValue === 'string'
+            ? argumentsValue
+            : argumentsValue
+              ? JSON.stringify(argumentsValue)
+              : undefined,
+        status: 'running',
+      })
+    })
   }
 
   const clearTypewriterTimer = () => {
@@ -535,8 +606,25 @@ const ChatDebugPage: React.FC = () => {
 
       await streamReplyAgentChat(replyPayload, {
         signal: controller.signal,
-        onAccepted: acceptDeepRun,
+        onAccepted: (data) => {
+          acceptDeepRun(data)
+          appendExecutionEvent(assistantClientId, {
+            id: `run-${data.runId}-accepted`,
+            title: intl.formatMessage({ id: 'pages.agent.chat.execution.runAccepted' }),
+            status: 'running',
+          })
+        },
         onRunStep: addDeepRunStep,
+        onToolCall: (data) => appendToolCallEvents(assistantClientId, data),
+        onProgress: (data) => {
+          if (data.message) {
+            appendExecutionEvent(assistantClientId, {
+              id: `progress-${data.stage || 'default'}-${Date.now()}`,
+              title: data.message,
+              status: 'running',
+            })
+          }
+        },
         onMessage: (chunk, data) => {
           if (data.conversationId) {
             setConversationId(data.conversationId)
@@ -571,6 +659,11 @@ const ChatDebugPage: React.FC = () => {
           // question 事件：追加交互卡片，不清空当前流式 assistant
           questionReceived = true
           flushTypewriterQueue(assistantClientId)
+          appendExecutionEvent(assistantClientId, {
+            id: `question-${data.messageId || Date.now()}`,
+            title: intl.formatMessage({ id: 'pages.agent.chat.execution.waitingForUser' }),
+            status: 'pending',
+          })
 
           const interactionMessage: ChatMessage = {
             clientId: createClientId('interaction'),
@@ -592,6 +685,11 @@ const ChatDebugPage: React.FC = () => {
         },
         onDone: (data) => {
           terminalEventReceived = true
+          appendExecutionEvent(assistantClientId, {
+            id: `done-${data.messageId || Date.now()}`,
+            title: intl.formatMessage({ id: 'pages.agent.chat.execution.completed' }),
+            status: 'completed',
+          })
           const doneConversationId = data.conversationId
           if (doneConversationId) {
             setConversationId(doneConversationId)
@@ -773,14 +871,29 @@ const ChatDebugPage: React.FC = () => {
       }
       await streamAgentChat(payload, {
         signal: controller.signal,
-        onAccepted: acceptDeepRun,
+        onAccepted: (data) => {
+          acceptDeepRun(data)
+          appendExecutionEvent(assistantClientId, {
+            id: `run-${data.runId}-accepted`,
+            title: intl.formatMessage({ id: 'pages.agent.chat.execution.runAccepted' }),
+            status: 'running',
+          })
+        },
         onRunStep: addDeepRunStep,
         onProgress: (data) => {
           updateAssistantMessage(assistantClientId, (item) => ({
             ...item,
             progressMessage: data.message,
           }))
+          if (data.message) {
+            appendExecutionEvent(assistantClientId, {
+              id: `progress-${data.stage || 'default'}-${Date.now()}`,
+              title: data.message,
+              status: 'running',
+            })
+          }
         },
+        onToolCall: (data) => appendToolCallEvents(assistantClientId, data),
         onMessage: (chunk, data) => {
           if (data.conversationId) {
             setConversationId(data.conversationId)
@@ -821,6 +934,11 @@ const ChatDebugPage: React.FC = () => {
           // question 事件：追加交互卡片，不清空当前流式 assistant
           questionReceived = true
           flushTypewriterQueue(assistantClientId)
+          appendExecutionEvent(assistantClientId, {
+            id: `question-${data.messageId || Date.now()}`,
+            title: intl.formatMessage({ id: 'pages.agent.chat.execution.waitingForUser' }),
+            status: 'pending',
+          })
 
           const interactionMessage: ChatMessage = {
             clientId: createClientId('interaction'),
@@ -842,6 +960,11 @@ const ChatDebugPage: React.FC = () => {
         },
         onDone: (data) => {
           terminalEventReceived = true
+          appendExecutionEvent(assistantClientId, {
+            id: `done-${data.messageId || Date.now()}`,
+            title: intl.formatMessage({ id: 'pages.agent.chat.execution.completed' }),
+            status: 'completed',
+          })
           const doneConversationId = data.conversationId
           if (doneConversationId) {
             setConversationId(doneConversationId)

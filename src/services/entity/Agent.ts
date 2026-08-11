@@ -497,9 +497,21 @@ export interface AgentStreamMessageData {
  */
 export interface AgentStreamToolCallData {
   conversationId?: string;
+  id?: string;
+  name?: string;
   toolName?: string;
   toolCallId?: string;
-  arguments?: Record<string, unknown>;
+  function?: { name?: string; arguments?: string };
+  arguments?: Record<string, unknown> | string;
+  /** OpenAI 兼容流式接口会在一个事件中携带多个工具调用。 */
+  toolCalls?: Array<{
+    id?: string;
+    toolCallId?: string;
+    name?: string;
+    toolName?: string;
+    function?: { name?: string; arguments?: string };
+    arguments?: Record<string, unknown> | string;
+  }>;
 }
 
 /**
@@ -667,6 +679,7 @@ export interface AgentRunStep {
 }
 
 export interface AgentStreamRunStepData {
+  conversationId?: string;
   runId?: string;
   eventId?: string;
   eventType?: string;

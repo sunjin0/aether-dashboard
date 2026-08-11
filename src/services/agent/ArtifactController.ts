@@ -5,6 +5,9 @@ import type { AgentArtifact, AgentArtifactSearchParams } from '@/services/entity
 export const getAgentArtifactList = (params: AgentArtifactSearchParams): Promise<ResponseStructure<AgentArtifact[]>> =>
   request('/api/agent/artifact/list', { method: 'POST', data: params })
 
+export const getAgentArtifactByRun = (runId: string): Promise<ResponseStructure<AgentArtifact | null>> =>
+  request(`/api/agent/artifact/run/${runId}`, { method: 'GET' })
+
 const getArtifactBlob = async (id: string, action: 'preview' | 'download'): Promise<Blob> =>
   request(`/api/agent/artifact/${id}/${action}`, { method: 'GET', responseType: 'blob', skipErrorHandler: true })
 

@@ -90,6 +90,12 @@ export const testAgentTool = async (
   })
 }
 
+/** Refresh a MCP-imported tool's remote input schema and description. */
+export const refreshAgentToolDefinition = async (id: string): Promise<ResponseStructure<void>> =>
+  request(`/api/agent/tool/${id}/refresh-definition`, {
+    method: 'POST',
+  })
+
 /**
  * @description 删除 Agent 工具
  */

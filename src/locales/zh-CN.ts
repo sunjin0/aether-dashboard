@@ -1,4 +1,6 @@
 export default {
+  'pages.agent.chat.artifactGenerating': '正在生成文件',
+  'pages.agent.chat.artifactReady': '文件已生成，可以预览或下载',
   'pages.agent.artifact.total': '共 {total} 条',
   'pages.agent.artifact.title': '生成文件',
   'pages.agent.artifact.subtitle': '集中查看和管理 AI 为你生成的文件。',
@@ -221,6 +223,8 @@ export default {
   'pages.agent.tool.requiredEndpoint': '请输入 MCP Endpoint',
   'pages.agent.tool.invalidJson': '{label}必须是合法 JSON',
   'pages.agent.tool.discoverFailed': '发现 MCP 工具失败',
+  'pages.agent.tool.refreshDefinition': '更新工具定义',
+  'pages.agent.tool.refreshDefinitionSuccess': '工具参数已同步更新',
   'pages.agent.tool.noDiscoveredTools': 'MCP Server 未返回可用工具',
   'pages.agent.tool.invalidConnection': '请检查 MCP 连接配置',
   'pages.agent.tool.selectTool': '请选择一个工具',

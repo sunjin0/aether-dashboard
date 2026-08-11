@@ -39,6 +39,7 @@ import {
   uploadAgentChatAttachments,
 } from '@/services/agent/ChatController'
 import { cancelAgentRun } from '@/services/agent/RunController'
+import { getAgentArtifactByRun } from '@/services/agent/ArtifactController'
 import {
   getAgentConversationList,
   getAgentConversationMessages,
@@ -150,6 +151,8 @@ const ChatDebugPage: React.FC = () => {
   const typewriterQueueRef = useRef('')
   const typewriterTimerRef = useRef<number>()
   const typewriterDrainCallbackRef = useRef<() => void>()
+  const artifactRequestedRef = useRef(false)
+  const artifactPollingTimerRef = useRef<number>()
 
   const findPendingQuestionMessage = (messageList: ChatMessage[]) =>
     messageList.find(
@@ -176,6 +179,17 @@ const ChatDebugPage: React.FC = () => {
       setDeepRunId(data.runId)
     }
     setDeepRunSteps((current) => mergeDeepRunSteps(current, data))
+    // Deep Agent reports MCP lifecycle through run_step rather than the
+    // regular Agent's tool_call event. Start artifact completion tracking as
+    // soon as the platform generator is actually invoked.
+    if (data.eventType === 'tool.started' && data.data?.toolName === 'generate_artifact') {
+      artifactRequestedRef.current = true
+      appendExecutionEvent(streamingAssistantIdRef.current, {
+        id: `artifact-${data.eventId || data.occurredAt || Date.now()}`,
+        title: intl.formatMessage({ id: 'pages.agent.chat.artifactGenerating' }),
+        status: 'running',
+      })
+    }
     const title = getDeepStepDisplayText(data, intl.formatMessage)
     const detail = data.data?.error || data.data?.outputSummary || data.data?.summary || data.data?.message
     if (title) {
@@ -232,6 +246,50 @@ const ChatDebugPage: React.FC = () => {
     setPendingQuestionMessage(pendingQuestion)
     setChatTurnState(pendingQuestion ? 'waiting_user' : 'idle')
   }
+
+  const stopArtifactPolling = () => {
+    if (artifactPollingTimerRef.current !== undefined) {
+      window.clearInterval(artifactPollingTimerRef.current)
+      artifactPollingTimerRef.current = undefined
+    }
+  }
+
+  const startArtifactPolling = (targetConversationId?: string, targetMessageId?: string, runId?: string) => {
+    if (!targetConversationId || !targetMessageId) return
+    stopArtifactPolling()
+    let attempts = 0
+    const refresh = async () => {
+      attempts += 1
+      try {
+        if (runId) {
+          const artifact = await getAgentArtifactByRun(runId)
+          if (artifact.code === 200 && artifact.data) {
+            const result = await getAgentConversationMessages(targetConversationId, { current: 1, pageSize: 100 })
+            if (result.code === 200 && result.data) setConversationMessages(result.data)
+            stopArtifactPolling()
+            message.success(intl.formatMessage({ id: 'pages.agent.chat.artifactReady' }))
+            return
+          }
+        }
+        const result = await getAgentConversationMessages(targetConversationId, { current: 1, pageSize: 100 })
+        const target = result.data?.find((item) => item.id === targetMessageId)
+        const hasArtifact = Boolean(target?.attachments && /"artifactId"\s*:/.test(target.attachments))
+        if (result.code === 200 && result.data && hasArtifact) {
+          setConversationMessages(result.data)
+          stopArtifactPolling()
+          message.success(intl.formatMessage({ id: 'pages.agent.chat.artifactReady' }))
+        } else if (attempts >= 60) {
+          stopArtifactPolling()
+        }
+      } catch {
+        if (attempts >= 60) stopArtifactPolling()
+      }
+    }
+    void refresh()
+    artifactPollingTimerRef.current = window.setInterval(() => void refresh(), 2000)
+  }
+
+  useEffect(() => () => stopArtifactPolling(), [])
 
   const loadAgents = async () => {
     setLoadingAgents(true)
@@ -323,6 +381,14 @@ const ChatDebugPage: React.FC = () => {
     )
     toolCalls.forEach((toolCall, index) => {
       const toolName = toolCall.toolName || toolCall.name || toolCall.function?.name
+      if (toolName === 'generate_artifact') {
+        artifactRequestedRef.current = true
+        appendExecutionEvent(assistantClientId, {
+          id: `artifact-${toolCall.toolCallId || toolCall.id || index}`,
+          title: intl.formatMessage({ id: 'pages.agent.chat.artifactGenerating' }),
+          status: 'running',
+        })
+      }
       // 流式工具参数会拆成多个片段；没有稳定调用标识和工具名的片段不是独立执行事件。
       if (!toolName && !toolCall.toolCallId && !toolCall.id) {
         return
@@ -601,6 +667,7 @@ const ChatDebugPage: React.FC = () => {
     let typewriterDrainPromise: Promise<void> | undefined
 
     resetTypewriter()
+    artifactRequestedRef.current = false
 
     try {
       const replyPayload: AgentChatReplyRequest = {
@@ -740,6 +807,10 @@ const ChatDebugPage: React.FC = () => {
               }))
             }
 
+            if (artifactRequestedRef.current || data.runId) {
+              startArtifactPolling(doneConversationId, data.messageId, data.runId)
+            }
+
             // 如果已收到 question，保持 waiting_user 状态（由 handleReplyQuestion 管理）
             if (!questionReceived) {
               if (data.waitingUser) {
@@ -844,6 +915,7 @@ const ChatDebugPage: React.FC = () => {
     let typewriterDrainPromise: Promise<void> | undefined
 
     resetTypewriter()
+    artifactRequestedRef.current = false
     resetDeepProgress()
     abortControllerRef.current = controller
     streamingAssistantIdRef.current = assistantClientId
@@ -1009,6 +1081,9 @@ const ChatDebugPage: React.FC = () => {
               } catch {
                 // ignore
               }
+            }
+            if (artifactRequestedRef.current || data.runId) {
+              startArtifactPolling(doneConversationId, data.messageId, data.runId)
             }
             if (!questionReceived) {
               if (data.waitingUser) {

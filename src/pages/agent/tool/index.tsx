@@ -24,6 +24,7 @@ import {
   getAgentToolInfo,
   getAgentToolList,
   getAgentToolStatistics,
+  refreshAgentToolDefinition,
   updateAgentToolInfo,
 } from '@/services/agent/ToolController'
 import {
@@ -69,6 +70,7 @@ const AgentToolPage: React.FC = () => {
   const [toolType, setToolType] = useState<string>()
   const [status, setStatus] = useState<number>()
   const [mcpServerId, setMcpServerId] = useState<string>()
+  const [refreshingToolId, setRefreshingToolId] = useState<string>()
   const [facets, setFacets] = useState<AgentToolFacets>({
     categories: [],
     statuses: [],
@@ -152,6 +154,19 @@ const AgentToolPage: React.FC = () => {
       }
     } catch {
       // API failures are displayed by the global request handler.
+    }
+  }
+  const handleRefreshDefinition = async (record: AgentTool) => {
+    if (!record.id) return
+    setRefreshingToolId(record.id)
+    try {
+      const result = await refreshAgentToolDefinition(record.id)
+      if (result.code === 200) {
+        message.success(format('pages.agent.tool.refreshDefinitionSuccess'))
+        refresh()
+      }
+    } finally {
+      setRefreshingToolId(undefined)
     }
   }
 
@@ -243,6 +258,13 @@ const AgentToolPage: React.FC = () => {
         write && (
           <TableActionMenu
             items={[
+              {
+                key: 'refresh-definition',
+                label: format('pages.agent.tool.refreshDefinition'),
+                visible: Boolean(record.mcpServerId && record.mcpToolName),
+                loading: refreshingToolId === record.id,
+                onClick: () => handleRefreshDefinition(record),
+              },
               {
                 key: 'edit',
                 label: format('pages.common.edit'),

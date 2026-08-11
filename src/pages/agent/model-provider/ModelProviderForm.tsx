@@ -18,7 +18,7 @@ const ModelProviderForm = (props: {
   id?: string;
   open?: boolean;
   setOpen?: (open: boolean) => void;
-  onSuccess: () => void;
+  onSuccess: (providerId?: string) => void;
 }) => {
   const { id, open, setOpen, onSuccess } = props
   const intl = useIntl()
@@ -41,12 +41,14 @@ const ModelProviderForm = (props: {
         }
       }}
       onSuccess={async (values) => {
+        let providerId = id
         if (id) {
           await updateModelProviderInfo(values)
         } else {
-          await addModelProviderInfo(values)
+          const result = await addModelProviderInfo(values)
+          providerId = result.data || undefined
         }
-        onSuccess()
+        onSuccess(providerId)
         return true
       }}
       form={form}
@@ -75,11 +77,6 @@ const ModelProviderForm = (props: {
         rules={[{ required: !id }]}
         fieldProps={{ autoComplete: 'new-password' }}
         extra={id ? format('pages.agent.modelProvider.apiKeyUnchanged') : undefined}
-      />
-      <ProFormText
-        name="defaultModel"
-        label={format('pages.agent.modelProvider.defaultModel')}
-        rules={[{ required: true }]}
       />
       <ProFormSelect
         name="status"

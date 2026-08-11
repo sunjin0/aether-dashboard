@@ -13,9 +13,8 @@ import {
   addAgentDefinitionInfo,
   getAgentDefinitionInfo,
   updateAgentDefinitionInfo,
-  getModelProviderList,
 } from '@/services/agent/AgentDefinitionController'
-import { getModelProviderInfo } from '@/services/agent/ModelProviderController'
+import { getModelCatalogOptions } from '@/services/agent/ModelProviderController'
 import { getAgentToolOptions } from '@/services/agent/ToolController'
 import { getOptionList } from '@/services/sys/DictController'
 import { useIntl } from '@umijs/max'
@@ -105,27 +104,11 @@ const AgentDefinitionForm = (props: {
           return (
             <>
               <ProFormSelect
-                name="modelProviderId"
+                name="modelId"
                 label={format('pages.agent.definition.modelProvider')}
                 showSearch={true}
                 rules={[{ required: true }]}
-                request={async () => getModelProviderList()}
-                fieldProps={{
-                  onChange: async (value: string) => {
-                    if (value) {
-                      const { data } = await getModelProviderInfo(value)
-                      if (data?.defaultModel) {
-                        form.setFieldsValue({ model: data.defaultModel })
-                      }
-                    }
-                  },
-                }}
-              />
-              <ProFormText
-                name="model"
-                label={format('pages.agent.definition.model')}
-                rules={[{ required: true }]}
-                disabled
+                request={() => getModelCatalogOptions('CHAT,MULTIMODAL')}
               />
             </>
           )

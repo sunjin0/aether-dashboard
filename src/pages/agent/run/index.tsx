@@ -406,10 +406,6 @@ const AgentRunPage: React.FC = () => {
                     dataIndex: 'messageId',
                   },
                   {
-                    title: intl.formatMessage({ id: 'pages.agent.run.modelProviderId' }),
-                    dataIndex: 'modelProviderId',
-                  },
-                  {
                     title: intl.formatMessage({ id: 'pages.agent.run.model' }),
                     dataIndex: 'model',
                   },

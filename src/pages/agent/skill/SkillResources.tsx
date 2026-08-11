@@ -38,7 +38,7 @@ import {
 import { AgentSkillExecutionConfig, AgentSkillPreviewVo, AgentSkillResource } from '@/services/entity/Agent'
 import { Option } from '@/services/entity/Common'
 import MarkdownText from '@/components/MarkdownText'
-import { getModelProviderOptions } from '@/services/agent/ModelProviderController'
+import { getModelCatalogOptions } from '@/services/agent/ModelProviderController'
 import { loadKnowledgeBaseOptions } from './options'
 import './SkillResources.less'
 
@@ -195,7 +195,7 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
   const [studioLoading, setStudioLoading] = useState(false)
   const [studioResource, setStudioResource] = useState<Partial<AgentSkillResource>>({ type: 'MARKDOWN' })
   const [studioPrompt, setStudioPrompt] = useState('')
-  const [studioProviderId, setStudioProviderId] = useState('')
+  const [studioModelId, setStudioModelId] = useState('')
   const [studioContent, setStudioContent] = useState('')
   const [providerOptions, setProviderOptions] = useState<Option[]>([])
   const [providerLoading, setProviderLoading] = useState(false)
@@ -221,7 +221,7 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
     setPurpose(undefined)
     setLoading(true)
     setProviderLoading(true)
-    Promise.all([getSkillResources(id), getSkillDetail(id), loadKnowledgeBaseOptions(), getSkillExecutionConfig(id), getModelProviderOptions(undefined, true)])
+    Promise.all([getSkillResources(id), getSkillDetail(id), loadKnowledgeBaseOptions(), getSkillExecutionConfig(id), getModelCatalogOptions('CHAT,MULTIMODAL')])
       .then(([resourcesRes, detailRes, knowledgeBases, configRes, providers]) => {
         setResources(resourcesRes.data || [])
         setEditable(Boolean(detailRes.data?.draft?.id))
@@ -315,10 +315,10 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
   }
 
   const generateResourceDraft = async () => {
-    if (!id || !studioProviderId || !studioPrompt.trim()) { message.warning(format('pages.agent.skill.studio.providerRequired')); return }
+    if (!id || !studioModelId || !studioPrompt.trim()) { message.warning(format('pages.agent.skill.studio.providerRequired')); return }
     setStudioLoading(true)
     try {
-      const { data } = await generateSkillResource(id, { providerId: studioProviderId, type: (studioResource.type || 'MARKDOWN') as 'MARKDOWN' | 'TEMPLATE' | 'SCRIPT', name: studioResource.name, purpose: studioResource.purpose, prompt: studioPrompt })
+      const { data } = await generateSkillResource(id, { modelId: studioModelId, type: (studioResource.type || 'MARKDOWN') as 'MARKDOWN' | 'TEMPLATE' | 'SCRIPT', name: studioResource.name, purpose: studioResource.purpose, prompt: studioPrompt })
       if (data) { setStudioResource({ ...studioResource, name: data.name, type: data.type }); setStudioContent(data.content) }
     } finally { setStudioLoading(false) }
   }
@@ -566,7 +566,7 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
             <Col span={8}><Form.Item label={format('pages.agent.skill.studio.purpose')}><Input disabled={!editable} value={studioResource.purpose} onChange={(event) => setStudioResource({ ...studioResource, purpose: event.target.value })} /></Form.Item></Col>
           </Row>
           {editable && <Card size="small" title={format('pages.agent.skill.studio.generateTest')} style={{ marginBottom: 16 }}>
-            <Row gutter={12}><Col span={8}><Select showSearch loading={providerLoading} value={studioProviderId || undefined} placeholder={format('pages.agent.skill.studio.selectProvider')} optionFilterProp="label" options={providerOptions} onChange={(value) => setStudioProviderId(String(value))} /></Col><Col span={16}><Input.TextArea rows={2} value={studioPrompt} placeholder={format('pages.agent.skill.studio.promptPlaceholder')} onChange={(event) => setStudioPrompt(event.target.value)} /></Col></Row>
+            <Row gutter={12}><Col span={8}><Select showSearch loading={providerLoading} value={studioModelId || undefined} placeholder={format('pages.agent.skill.studio.selectProvider')} optionFilterProp="label" options={providerOptions} onChange={(value) => setStudioModelId(String(value))} /></Col><Col span={16}><Input.TextArea rows={2} value={studioPrompt} placeholder={format('pages.agent.skill.studio.promptPlaceholder')} onChange={(event) => setStudioPrompt(event.target.value)} /></Col></Row>
             <Button style={{ marginTop: 12 }} icon={<RobotOutlined />} loading={studioLoading} onClick={generateResourceDraft}>生成并测试草稿</Button>
           </Card>}
           <Form.Item label={format('pages.agent.skill.studio.content')}><Input.TextArea rows={16} readOnly={!editable} value={studioContent} onChange={(event) => setStudioContent(event.target.value)} /></Form.Item>

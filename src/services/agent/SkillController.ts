@@ -43,10 +43,10 @@ export const getSkillStatistics = async (): Promise<ResponseStructure<AgentSkill
   return request('/api/agent/skill/statistics', { method: 'GET' })
 }
 
-export const getSkillRoutingConfig = async (): Promise<ResponseStructure<{ embeddingProviderId?: string }>> =>
+export const getSkillRoutingConfig = async (): Promise<ResponseStructure<{ embeddingModelId?: string }>> =>
   request('/api/agent/skill/routing-config', { method: 'GET' })
 
-export const updateSkillRoutingConfig = async (params: { embeddingProviderId?: string }): Promise<ResponseStructure<void>> =>
+export const updateSkillRoutingConfig = async (params: { embeddingModelId?: string }): Promise<ResponseStructure<void>> =>
   request('/api/agent/skill/routing-config', { method: 'PUT', data: params })
 
 /**
@@ -223,8 +223,7 @@ export const getSkillResources = async (
 }
 
 export interface AgentSkillResourceGenerateParams {
-  providerId: string
-  model?: string
+  modelId: string
   type: 'MARKDOWN' | 'TEMPLATE' | 'SCRIPT'
   name?: string
   purpose?: string

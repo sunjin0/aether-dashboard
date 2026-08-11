@@ -12,8 +12,8 @@ import {
   deleteAgentDefinitionInfo,
   getAgentDefinitionList,
   updateAgentDefinitionStatus,
-  getModelProviderList,
 } from '@/services/agent/AgentDefinitionController'
+import { getModelCatalogOptions } from '@/services/agent/ModelProviderController'
 import { getOptionList } from '@/services/sys/DictController'
 import { AgentDefinition, AgentDefinitionSearchParams } from '@/services/entity/Agent'
 import TableActionMenu from '@/components/TableActionMenu'
@@ -97,15 +97,9 @@ const AgentDefinitionPage: React.FC = () => {
     },
     {
       title: format('pages.agent.definition.modelProvider'),
-      dataIndex: 'modelProviderId',
+      dataIndex: 'modelId',
       valueType: 'select',
-      request: async () => getModelProviderList(),
-      ellipsis: true,
-    },
-    {
-      title: format('pages.agent.definition.model'),
-      dataIndex: 'model',
-      valueType: 'text',
+      request: async () => getModelCatalogOptions('CHAT,MULTIMODAL'),
       ellipsis: true,
     },
     {

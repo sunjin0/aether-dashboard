@@ -59,17 +59,17 @@ import {
   updateEvaluationCaseStatuses,
   setEvaluationRunBaseline,
 } from '@/services/knowledge/EvaluationController'
-import { getModelProviderOptions } from '@/services/agent/ModelProviderController'
+import { getModelCatalogOptions } from '@/services/agent/ModelProviderController'
 import '../evaluation.less'
 const pct = (v?: number) => (v === undefined ? '-' : `${(v * 100).toFixed(1)}%`)
 type RetrievalConfigSnapshot = {
   knowledgeBases?: Array<{
     name?: string
     scope?: string
-    embeddingProviderId?: string
+    embeddingModelId?: string
     retrievalConfig?: Record<string, unknown> | string
   }>
-  providers?: Array<{ id?: string; name?: string }>
+  models?: Array<{ id?: string; name?: string; providerId?: string; capabilities?: string }>
 }
 export default function EvaluationPage() {
   const access = useAccess()
@@ -96,7 +96,7 @@ export default function EvaluationPage() {
     [trend, setTrend] = useState<EvaluationRun[]>([]),
     [runVersionId, setRunVersionId] = useState<string>(),
     [configRun, setConfigRun] = useState<EvaluationRun>(),
-    [providerOptionNames, setProviderOptionNames] = useState<Record<string, string>>({}),
+    [modelOptionNames, setModelOptionNames] = useState<Record<string, string>>({}),
     [workspaceTab, setWorkspaceTab] = useState<'dataset' | 'runs'>('dataset'),
     [startingRun, setStartingRun] = useState(false),
     [labelCase, setLabelCase] = useState<EvaluationCase>(),
@@ -123,10 +123,10 @@ export default function EvaluationPage() {
     if (!snapshot?.knowledgeBases?.length) {
       return <Alert type="info" showIcon message={intl.formatMessage({ id: 'pages.knowledge.evaluation.configSnapshotUnavailable' })} />
     }
-    const providerNames = new Map(snapshot.providers?.map((provider) => [provider.id, provider.name]))
-    Object.entries(providerOptionNames).forEach(([id, name]) => providerNames.set(id, name))
-    const providerName = (id?: string) =>
-      id ? providerNames.get(id) || intl.formatMessage({ id: 'pages.knowledge.evaluation.providerUnavailable' }) : '-'
+    const modelNames = new Map(snapshot.models?.map((model) => [model.id, model.name]))
+    Object.entries(modelOptionNames).forEach(([id, name]) => modelNames.set(id, name))
+    const modelName = (id?: string) =>
+      id ? modelNames.get(id) || intl.formatMessage({ id: 'pages.knowledge.evaluation.providerUnavailable' }) : '-'
     const value = (input: unknown) => {
       if (typeof input === 'boolean') return intl.formatMessage({ id: input ? 'pages.common.yes' : 'pages.common.no' })
       return input === undefined || input === null || input === '' ? '-' : String(input)
@@ -148,7 +148,7 @@ export default function EvaluationPage() {
             }
           } else config = base.retrievalConfig || {}
           const retrievalFields = [
-            field('embeddingProvider', providerName(base.embeddingProviderId)),
+            field('embeddingProvider', modelName(base.embeddingModelId)),
             field('topK', config.topK),
             field('minSimilarity', config.minSimilarity),
             field('maxChunksPerDocument', config.maxChunksPerDocument),
@@ -157,8 +157,7 @@ export default function EvaluationPage() {
           const enhancementFields = [
             field('hybridEnabled', config.hybridEnabled),
             field('queryRewriteEnabled', config.queryRewriteEnabled ?? false),
-            field('queryRewriteProvider', providerName(config.queryRewriteProviderId as string | undefined)),
-            field('queryRewriteModel', config.queryRewriteModel),
+            field('queryRewriteProvider', modelName(config.queryRewriteModelId as string | undefined)),
             field('vectorWeight', config.vectorWeight),
             field('minLexicalScore', config.minLexicalScore),
           ].filter((item) => item.children !== '-')
@@ -167,8 +166,7 @@ export default function EvaluationPage() {
             field('authorityWeight', config.authorityWeight),
             field('freshnessWeight', config.freshnessWeight),
             field('rerankEnabled', config.rerankEnabled),
-            field('rerankProvider', providerName(config.rerankProviderId as string | undefined)),
-            field('rerankModel', config.rerankModel),
+            field('rerankProvider', modelName(config.rerankModelId as string | undefined)),
             field('rerankTopN', config.rerankTopN),
           ].filter((item) => item.children !== '-')
           return (
@@ -914,10 +912,10 @@ export default function EvaluationPage() {
                             type="link"
                             onClick={async () => {
                               setConfigRun(run)
-                              const providers = await getModelProviderOptions()
-                              setProviderOptionNames(
-                                providers.reduce<Record<string, string>>((names, provider) => {
-                                  names[String(provider.value)] = provider.label
+                              const models = await getModelCatalogOptions('CHAT,MULTIMODAL,EMBEDDING,RERANK')
+                              setModelOptionNames(
+                                models.reduce<Record<string, string>>((names, model) => {
+                                  names[String(model.value)] = model.label
                                   return names
                                 }, {}),
                               )

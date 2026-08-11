@@ -4,10 +4,7 @@ import {
   getKnowledgeBase,
   updateKnowledgeBase,
 } from '@/services/knowledge/KnowledgeBaseController'
-import {
-  getEmbeddingProviderOptions,
-  getReviewModelProviderOptions,
-} from '@/services/agent/ModelProviderController'
+import { getModelCatalogOptions } from '@/services/agent/ModelProviderController'
 import { getAdminOptions } from '@/services/sys/AdminController'
 import {
   ProCard,
@@ -133,7 +130,7 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
         className="knowledge-base-form-card"
       >
         <ProFormSelect
-          name="embeddingProviderId"
+          name="embeddingModelId"
           label={retrievalLabel('embeddingProvider')}
           rules={[
             {
@@ -143,7 +140,7 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
               }),
             },
           ]}
-          request={async () => (await getEmbeddingProviderOptions()).data || []}
+          request={() => getModelCatalogOptions('EMBEDDING')}
           fieldProps={{ showSearch: true, optionFilterProp: 'label' }}
         />
         <div className="knowledge-base-retrieval-grid">
@@ -164,13 +161,13 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
               {({ retrievalConfig }) => retrievalConfig?.hybridEnabled ? <Row gutter={16}><Col xs={24} md={12}><ProFormDigit name={['retrievalConfig', 'vectorWeight']} label={retrievalLabel('vectorWeight')} initialValue={0.7} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col><Col xs={24} md={12}><ProFormDigit name={['retrievalConfig', 'minLexicalScore']} label={retrievalLabel('minLexicalScore')} initialValue={0.05} min={0} max={1} fieldProps={{ step: 0.01 }} /></Col></Row> : null}
             </ProFormDependency>
             <ProFormDependency name={['retrievalConfig', 'queryRewriteEnabled']}>
-              {({ retrievalConfig }) => retrievalConfig?.queryRewriteEnabled ? <Row gutter={16}><Col xs={24} md={12}><ProFormSelect name={['retrievalConfig', 'queryRewriteProviderId']} label={retrievalLabel('queryRewriteProvider')} request={getReviewModelProviderOptions} rules={[{ required: true }]} /></Col><Col xs={24} md={12}><ProFormText name={['retrievalConfig', 'queryRewriteModel']} label={retrievalLabel('queryRewriteModel')} /></Col></Row> : null}
+              {({ retrievalConfig }) => retrievalConfig?.queryRewriteEnabled ? <Row gutter={16}><Col xs={24}><ProFormSelect name={['retrievalConfig', 'queryRewriteModelId']} label={retrievalLabel('queryRewriteProvider')} request={() => getModelCatalogOptions('CHAT,MULTIMODAL')} rules={[{ required: true }]} /></Col></Row> : null}
             </ProFormDependency>
           </Card>
           <Card size="small" title={intl.formatMessage({ id: 'pages.knowledge.base.form.retrieval.rankingSettings' })} className="knowledge-base-retrieval-card">
             <Row gutter={16}><Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'authorityScore']} label={retrievalLabel('authorityScore')} initialValue={0} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col><Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'authorityWeight']} label={retrievalLabel('authorityWeight')} initialValue={0} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col><Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'freshnessWeight']} label={retrievalLabel('freshnessWeight')} initialValue={0} min={0} max={1} fieldProps={{ step: 0.1 }} /></Col><Col xs={24}><ProFormSwitch name={['retrievalConfig', 'rerankEnabled']} label={retrievalLabel('rerankEnabled')} initialValue={false} /></Col></Row>
             <ProFormDependency name={['retrievalConfig', 'rerankEnabled']}>
-              {({ retrievalConfig }) => retrievalConfig?.rerankEnabled ? <Row gutter={16}><Col xs={24} md={8}><ProFormSelect name={['retrievalConfig', 'rerankProviderId']} label={retrievalLabel('rerankProvider')} request={getReviewModelProviderOptions} rules={[{ required: true }]} /></Col><Col xs={24} md={8}><ProFormText name={['retrievalConfig', 'rerankModel']} label={retrievalLabel('rerankModel')} /></Col><Col xs={24} md={8}><ProFormDigit name={['retrievalConfig', 'rerankTopN']} label={retrievalLabel('rerankTopN')} initialValue={5} min={1} max={20} /></Col></Row> : null}
+              {({ retrievalConfig }) => retrievalConfig?.rerankEnabled ? <Row gutter={16}><Col xs={24} md={12}><ProFormSelect name={['retrievalConfig', 'rerankModelId']} label={retrievalLabel('rerankProvider')} request={() => getModelCatalogOptions('RERANK')} rules={[{ required: true }]} /></Col><Col xs={24} md={12}><ProFormDigit name={['retrievalConfig', 'rerankTopN']} label={retrievalLabel('rerankTopN')} initialValue={5} min={1} max={20} /></Col></Row> : null}
             </ProFormDependency>
           </Card>
         </div>
@@ -228,7 +225,7 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
           }}
         />
         <ProFormSelect
-          name={['reviewConfig', 'reviewModelProviderId']}
+          name={['reviewConfig', 'reviewModelId']}
           label={intl.formatMessage({ id: 'pages.knowledge.base.form.reviewModelProvider' })}
           rules={[
             {
@@ -238,15 +235,8 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
               }),
             },
           ]}
-          request={getReviewModelProviderOptions}
+          request={() => getModelCatalogOptions('CHAT,MULTIMODAL')}
           fieldProps={{ showSearch: true, optionFilterProp: 'label' }}
-        />
-        <ProFormText
-          name={['reviewConfig', 'reviewModel']}
-          label={intl.formatMessage({ id: 'pages.knowledge.base.form.reviewModel' })}
-          placeholder={intl.formatMessage({
-            id: 'pages.knowledge.base.form.reviewModelPlaceholder',
-          })}
         />
       </ProCard>
 

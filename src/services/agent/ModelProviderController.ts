@@ -4,6 +4,7 @@ import {
   ModelProvider,
   ModelProviderSearchParams,
   ModelProviderStatusParams,
+  ModelCatalog,
 } from '@/services/entity/Agent'
 
 /**
@@ -21,6 +22,28 @@ export const getModelProviderOptions = async (type?: string, excludeEmbedding = 
   const { data } = await request<ResponseStructure<Option[]>>('/api/agent/model-provider/options', { method: 'GET', params: { type, excludeEmbedding } })
   return data || []
 }
+export const getModelCatalogOptions = async (capability: string): Promise<Option[]> => {
+  const { data } = await request<ResponseStructure<Option[]>>('/api/agent/model-provider/models/options', {
+    method: 'GET', params: { capability },
+  })
+  return data || []
+}
+export const getModelCatalog = async (providerId?: string) =>
+  request<ResponseStructure<ModelCatalog[]>>('/api/agent/model-provider/models', { method: 'GET', params: { providerId } })
+export const discoverProviderModels = async (providerId: string): Promise<Option[]> => {
+  const { data } = await request<ResponseStructure<Option[]>>(`/api/agent/model-provider/${providerId}/models/discover`, { method: 'GET' })
+  return data || []
+}
+export const saveModelCatalog = async (data: ModelCatalog) =>
+  request<ResponseStructure<string>>('/api/agent/model-provider/models', { method: 'POST', data })
+export const saveModelCatalogBatch = async (data: ModelCatalog[]) =>
+  request<ResponseStructure<number>>('/api/agent/model-provider/models/batch', { method: 'POST', data })
+export const updateModelCatalog = async (id: string, data: ModelCatalog) =>
+  request<ResponseStructure<void>>(`/api/agent/model-provider/models/${id}`, { method: 'PUT', data })
+export const deleteModelCatalog = async (id: string) =>
+  request<ResponseStructure<void>>(`/api/agent/model-provider/models/${id}`, { method: 'DELETE' })
+export const updateModelCatalogStatus = async (id: string, status: number) =>
+  request<ResponseStructure<void>>(`/api/agent/model-provider/models/${id}/status`, { method: 'PUT', data: { status } })
 
 /**
  * @description 获取模型供应商详情
@@ -38,7 +61,7 @@ export const getModelProviderInfo = async (
  */
 export const addModelProviderInfo = async (
   params: ModelProvider,
-): Promise<ResponseStructure<ModelProvider>> => {
+): Promise<ResponseStructure<string>> => {
   return request('/api/agent/model-provider', {
     method: 'POST',
     data: params,
@@ -92,3 +115,7 @@ export const getReviewModelProviderOptions = async () => {
   const options = await getModelProviderOptions(undefined, true)
   return options
 }
+
+export interface ModelProviderConnectionTestResult { success: boolean; elapsedMs: number; error?: string }
+export const testModelProviderConnection = async (id: string): Promise<ResponseStructure<ModelProviderConnectionTestResult>> =>
+  request(`/api/agent/model-provider/${id}/test`, { method: 'POST' })

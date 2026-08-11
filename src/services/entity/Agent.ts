@@ -8,6 +8,7 @@ export interface ModelProvider {
   apiBaseUrl?: string;
   apiKey?: string;
   defaultModel?: string;
+  contextWindow?: number;
   status?: number;
   sort?: number;
   remark?: string;
@@ -39,7 +40,8 @@ export interface AgentDefinition {
   code?: string;
   description?: string;
   systemPrompt?: string;
-  modelProviderId?: string;
+  modelId?: string;
+  /** Resolved catalog model name for display only. */
   model?: string;
   temperature?: number;
   maxTokens?: number;
@@ -70,7 +72,7 @@ export interface AgentDefinitionStatusParams {
 export interface KnowledgeBase {
   id?: string;
   scope?: 'PLATFORM' | 'AGENT';
-  embeddingProviderId?: string;
+  embeddingModelId?: string;
   name?: string;
   description?: string;
   visibility?: 'platform' | 'private' | 'shared';
@@ -92,8 +94,9 @@ export interface RetrievalConfig {
   vectorWeight?: number;
   minLexicalScore?: number;
   rerankEnabled?: boolean;
-  rerankProviderId?: string;
-  rerankModel?: string;
+  rerankModelId?: string;
+  queryRewriteEnabled?: boolean;
+  queryRewriteModelId?: string;
   rerankTopN?: number;
   strictGrounding?: boolean;
   authorityScore?: number;
@@ -108,8 +111,7 @@ export interface ReviewConfig {
   requireDifferentApprover: boolean;
   /** Optional administrator exclusively responsible for manual review tasks. */
   manualReviewerId?: string;
-  reviewModelProviderId: string;
-  reviewModel?: string;
+  reviewModelId: string;
 }
 export interface KnowledgeBaseSearchParams extends KnowledgeBase {
   current?: number;
@@ -1140,6 +1142,17 @@ export interface AgentSkillPreviewVo {
   resources?: AgentSkillPreviewResourceItem[];
   /** 粗略 token 估算 */
   estimatedTokens?: number;
+}
+
+export interface ModelCatalog {
+  id?: string;
+  providerId: string;
+  name: string;
+  capabilities: string;
+  contextWindow?: number;
+  endpointOverride?: string;
+  status?: number;
+  remark?: string;
 }
 
 /** 声明式产物执行配置；平台不接受命令、镜像、挂载或网络参数。 */

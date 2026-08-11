@@ -18,7 +18,7 @@ import {
   updateSkillRoutingConfig,
   updateSkillStatus,
 } from '@/services/agent/SkillController'
-import { getEmbeddingProviderOptions } from '@/services/agent/ModelProviderController'
+import { getModelCatalogOptions } from '@/services/agent/ModelProviderController'
 import { AgentSkill, AgentSkillDetail, AgentSkillSearchParams, AgentSkillStatistics } from '@/services/entity/Agent'
 import { getOptionList } from '@/services/sys/DictController'
 import TableActionMenu from '@/components/TableActionMenu'
@@ -53,7 +53,7 @@ const SkillPage: React.FC = () => {
   const [routingConfigOpen, setRoutingConfigOpen] = useState(false)
   const [routingProviders, setRoutingProviders] = useState<{ label: string; value: string }[]>([])
   const [routingConfigLoading, setRoutingConfigLoading] = useState(false)
-  const [routingForm] = Form.useForm<{ embeddingProviderId?: string }>()
+  const [routingForm] = Form.useForm<{ embeddingModelId?: string }>()
 
   useEffect(() => {
     getOptionList('Agent_Skill_Category')
@@ -82,9 +82,9 @@ const SkillPage: React.FC = () => {
   const openRoutingConfig = async () => {
     setRoutingConfigLoading(true)
     try {
-      const [config, providers] = await Promise.all([getSkillRoutingConfig(), getEmbeddingProviderOptions()])
-      routingForm.setFieldsValue({ embeddingProviderId: config.data?.embeddingProviderId })
-      setRoutingProviders(providers.data || [])
+      const [config, providers] = await Promise.all([getSkillRoutingConfig(), getModelCatalogOptions('EMBEDDING')])
+      routingForm.setFieldsValue({ embeddingModelId: config.data?.embeddingModelId })
+      setRoutingProviders((providers || []).map((item) => ({ label: item.label, value: String(item.value) })))
       setRoutingConfigOpen(true)
     } finally { setRoutingConfigLoading(false) }
   }
@@ -363,7 +363,7 @@ const SkillPage: React.FC = () => {
       <SkillResources id={resourcesId} open={resourcesOpen} setOpen={setResourcesOpen} />
       <Modal title={format('pages.agent.skill.routingConfig')} open={routingConfigOpen} onCancel={() => setRoutingConfigOpen(false)} onOk={saveRoutingConfig} confirmLoading={routingConfigLoading} destroyOnClose>
         <Form form={routingForm} layout="vertical">
-          <Form.Item name="embeddingProviderId" label={format('pages.agent.skill.routingProvider')} extra={format('pages.agent.skill.routingHint')}>
+          <Form.Item name="embeddingModelId" label={format('pages.agent.skill.routingProvider')} extra={format('pages.agent.skill.routingHint')}>
             <Select allowClear showSearch optionFilterProp="label" options={routingProviders} placeholder={format('pages.agent.skill.routingProviderPlaceholder')} />
           </Form.Item>
         </Form>

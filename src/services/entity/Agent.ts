@@ -367,6 +367,7 @@ export interface AgentChatRequest {
   thinking?: boolean;
   temporary?: boolean;
   reasoningEffort?: 'low' | 'medium' | 'high';
+  toolApprovalPolicy?: 'ask' | 'risky' | 'never';
   attachmentContent?: string;
   attachments?: string;
 }
@@ -799,9 +800,9 @@ export interface AgentTool {
   mcpServerName?: string;
   mcpBaseUrl?: string;
   mcpToolName?: string;
-  mcpInputSchema?: string;
-  timeoutMs?: number;
-  status?: number;
+    mcpInputSchema?: string;
+    timeoutMs?: number;
+    status?: number;
   callCount?: number;
   successRate?: number;
   remark?: string;
@@ -1193,6 +1194,7 @@ export interface ModelCatalog {
   contextWindow?: number;
   endpointOverride?: string;
   status?: number;
+  toolApprovalPolicy?: 'ask' | 'risky' | 'never';
   remark?: string;
 }
 

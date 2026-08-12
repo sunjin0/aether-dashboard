@@ -215,7 +215,7 @@ const AgentToolPage: React.FC = () => {
           </span>
         ) : (
           <span className="status-disabled">{format('pages.agent.tool.notIntegrated')}</span>
-        ),
+      ),
     },
     {
       title: format('pages.agent.tool.callCount'),

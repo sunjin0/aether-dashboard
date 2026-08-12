@@ -56,6 +56,15 @@ export const closeAgentConversation = async (
   })
 }
 
+export const updateAgentConversationToolApprovalPolicy = async (
+  id: string,
+  toolApprovalPolicy: 'ask' | 'risky' | 'never',
+): Promise<ResponseStructure<void>> =>
+  request(`/api/agent/conversation/${id}/tool-approval-policy`, {
+    method: 'PUT',
+    data: { toolApprovalPolicy },
+  })
+
 /**
  * @description 删除 Agent 会话
  */

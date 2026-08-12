@@ -1,10 +1,12 @@
 import React, { useCallback, useRef, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Collapse, message, Popover, Tag, Tooltip, Typography } from 'antd'
+import { Button, Collapse, message, Popover, Tag, Tooltip, Typography } from 'antd'
 import { useIntl } from '@umijs/max'
 import {
   CustomerServiceOutlined,
+  CopyOutlined,
+  RedoOutlined,
   SettingOutlined,
   ToolOutlined,
   UserOutlined,
@@ -38,6 +40,7 @@ export interface AgentMessageBubbleProps {
   status?: AgentMessageBubbleStatus
   errorMessage?: string
   onQuestionSubmit?: (answers: Record<string, AskUserAnswer>) => void
+  onRegenerate?: () => void
 }
 
 const roleIconMap: Record<string, React.ReactNode> = {
@@ -191,6 +194,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
   status,
   errorMessage,
   onQuestionSubmit,
+  onRegenerate,
 }) => {
   const intl = useIntl()
   const role = getRole(agentMessage.role)
@@ -232,6 +236,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
 
   const currentReasoning = agentMessage.reasoningContent || agentMessage.reasoningStream || ''
   const currentContent = agentMessage.content || ''
+  const copyText = currentContent || currentReasoning
   const attachments = getAttachments(agentMessage.attachments)
   const executionEvents = agentMessage.executionEvents || []
 
@@ -518,6 +523,33 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
           <Text className={`agent-message-bubble-status agent-message-bubble-status-${status}`}>
             {statusText}
           </Text>
+        )}
+
+        {(copyText || onRegenerate) && status !== 'streaming' && (
+          <div className="agent-message-bubble-actions">
+            {copyText && (
+              <Tooltip title={intl.formatMessage({ id: 'components.agentMessageBubble.copy' })}>
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<CopyOutlined />}
+                  aria-label={intl.formatMessage({ id: 'components.agentMessageBubble.copy' })}
+                  onClick={() => void handleCopy(copyText)}
+                />
+              </Tooltip>
+            )}
+            {onRegenerate && (
+              <Tooltip title={intl.formatMessage({ id: 'components.agentMessageBubble.regenerate' })}>
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<RedoOutlined />}
+                  aria-label={intl.formatMessage({ id: 'components.agentMessageBubble.regenerate' })}
+                  onClick={onRegenerate}
+                />
+              </Tooltip>
+            )}
+          </div>
         )}
 
         {metas.length > 0 && (

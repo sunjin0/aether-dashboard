@@ -43,6 +43,7 @@ import { getAgentArtifactByRun } from '@/services/agent/ArtifactController'
 import {
   getAgentConversationList,
   getAgentConversationMessages,
+  updateAgentConversationToolApprovalPolicy,
 } from '@/services/agent/ConversationController'
 import { getOptionList } from '@/services/sys/DictController'
 import {
@@ -136,6 +137,7 @@ const ChatDebugPage: React.FC = () => {
   const [thinking, setThinking] = useState(false)
   const [reasoningEffort, setReasoningEffort] = useState<'low' | 'medium' | 'high'>('medium')
   const [reasoningEffortOptions, setReasoningEffortOptions] = useState<Option[]>([])
+  const [toolApprovalPolicy, setToolApprovalPolicy] = useState<'ask' | 'risky' | 'never'>('ask')
   const [chatTurnState, setChatTurnState] = useState<ChatTurnState>('idle')
   const [pendingQuestionMessage, setPendingQuestionMessage] = useState<ChatMessage | null>(null)
   const [deepRunId, setDeepRunId] = useState<string | null>(null)
@@ -501,8 +503,22 @@ const ChatDebugPage: React.FC = () => {
     setMessages([])
     attachmentsRef.current = []
     setAttachments([])
+    setToolApprovalPolicy('ask')
     resetDeepProgress()
     resetConversationTurnState()
+  }
+
+  const handleToolApprovalPolicyChange = async (policy: 'ask' | 'risky' | 'never') => {
+    if (policy === toolApprovalPolicy) return
+    if (conversationId) {
+      const result = await updateAgentConversationToolApprovalPolicy(conversationId, policy)
+      if (result.code !== 200) return
+      setConversations((items) =>
+        items.map((item) => (item.id === conversationId ? { ...item, toolApprovalPolicy: policy } : item)),
+      )
+      message.success(intl.formatMessage({ id: 'pages.agent.chat.toolApprovalSaved' }))
+    }
+    setToolApprovalPolicy(policy)
   }
 
   const handleSelectConversation = async (conversation: AgentConversation) => {
@@ -511,6 +527,7 @@ const ChatDebugPage: React.FC = () => {
     }
 
     setConversationId(conversation.id)
+    setToolApprovalPolicy(conversation.toolApprovalPolicy || 'ask')
     if (conversation.agentDefinitionId) {
       setAgentId(conversation.agentDefinitionId)
     }
@@ -948,6 +965,7 @@ const ChatDebugPage: React.FC = () => {
         payload.thinking = true
         payload.reasoningEffort = reasoningEffort
       }
+      if (!conversationId) payload.toolApprovalPolicy = toolApprovalPolicy
       await streamAgentChat(payload, {
         signal: controller.signal,
         onAccepted: (data) => {
@@ -1132,6 +1150,20 @@ const ChatDebugPage: React.FC = () => {
         stoppedByUserRef.current = false
       }
     }
+  }
+
+  const handleRegenerate = (messageIndex: number) => {
+    const previousUserMessage = messages
+      .slice(0, messageIndex)
+      .reverse()
+      .find((item) => item.role === 'user' && item.content)
+
+    if (!previousUserMessage?.content) {
+      message.error(intl.formatMessage({ id: 'pages.agent.chat.regenerateUnavailable' }))
+      return
+    }
+
+    void handleSend(previousUserMessage.content)
   }
 
   const handleScrollBottom = () => {
@@ -1502,6 +1534,13 @@ const ChatDebugPage: React.FC = () => {
                                 ? handleReplyQuestion
                                 : undefined
                             }
+                            onRegenerate={
+                              item.role === 'assistant' &&
+                              item.messageType !== 'interaction' &&
+                              !item.streamStatus
+                                ? () => handleRegenerate(index)
+                                : undefined
+                            }
                           />
                           {item.clientId === streamingAssistantIdRef.current &&
                             item.streamStatus === 'streaming' &&
@@ -1616,6 +1655,19 @@ const ChatDebugPage: React.FC = () => {
               </div>
               <div className="agent-chat-input-tools">
                 <div className="agent-chat-input-tools-left">
+                  <Select
+                    className="agent-chat-tool-approval-select"
+                    size="small"
+                    value={toolApprovalPolicy}
+                    disabled={sending || chatTurnState === 'waiting_user'}
+                    aria-label={intl.formatMessage({ id: 'pages.agent.chat.toolApprovalSettings' })}
+                    onChange={handleToolApprovalPolicyChange}
+                    options={[
+                      { value: 'ask', label: intl.formatMessage({ id: 'pages.agent.chat.toolApproval.ask' }) },
+                      { value: 'risky', label: intl.formatMessage({ id: 'pages.agent.chat.toolApproval.risky' }) },
+                      { value: 'never', label: intl.formatMessage({ id: 'pages.agent.chat.toolApproval.never' }) },
+                    ]}
+                  />
                   <Upload
                     multiple
                     accept=".txt,.md,.pdf,.docx,.xlsx,.png,.jpg,.jpeg,.webp"

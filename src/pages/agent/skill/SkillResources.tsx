@@ -53,10 +53,9 @@ const formatSize = (size?: number) => {
   return `${(size / 1024 / 1024).toFixed(1)} MB`
 }
 
-const inferResourceType = (fileName: string): 'MARKDOWN' | 'SCRIPT' | 'TEMPLATE' | undefined => {
+const inferResourceType = (fileName: string): 'MARKDOWN' | 'TEMPLATE' | undefined => {
   const name = fileName.toLowerCase()
   if (name.endsWith('.md')) return 'MARKDOWN'
-  if (name.endsWith('.js') || name.endsWith('.py')) return 'SCRIPT'
   if (['.html', '.hbs', '.tpl', '.ftl'].some((extension) => name.endsWith(extension))) return 'TEMPLATE'
   return undefined
 }
@@ -280,14 +279,14 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
     if (!id || !studioModelId || !studioPrompt.trim()) { message.warning(format('pages.agent.skill.studio.providerRequired')); return }
     setStudioLoading(true)
     try {
-      const { data } = await generateSkillResource(id, { modelId: studioModelId, type: (studioResource.type || 'MARKDOWN') as 'MARKDOWN' | 'TEMPLATE' | 'SCRIPT', name: studioResource.name, purpose: studioResource.purpose, prompt: studioPrompt })
+      const { data } = await generateSkillResource(id, { modelId: studioModelId, type: (studioResource.type || 'MARKDOWN') as 'MARKDOWN' | 'TEMPLATE', name: studioResource.name, purpose: studioResource.purpose, prompt: studioPrompt })
       if (data) { setStudioResource({ ...studioResource, name: data.name, type: data.type }); setStudioContent(data.content) }
     } finally { setStudioLoading(false) }
   }
 
   const saveResourceDraft = async () => {
     if (!id || !studioContent.trim() || !studioResource.name) return
-    const type = studioResource.type as 'MARKDOWN' | 'TEMPLATE' | 'SCRIPT'
+    const type = studioResource.type as 'MARKDOWN' | 'TEMPLATE'
     if (inferResourceType(studioResource.name) !== type) { message.error(format('pages.agent.skill.studio.typeMismatch')); return }
     setStudioLoading(true)
     try {
@@ -421,12 +420,11 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
             <Space wrap>
               <Select disabled={!editable || uploading} style={{ width: 170 }} value={resourceType} placeholder={format('pages.agent.skill.resourceTypeSelect')} options={[
                 { value: 'TEMPLATE', label: format('pages.agent.skill.resourceType.template') },
-                { value: 'SCRIPT', label: format('pages.agent.skill.resourceType.script') },
                 { value: 'MARKDOWN', label: format('pages.agent.skill.resourceType.markdown') },
               ]} onChange={setResourceType} />
               <Input disabled={!editable || uploading} style={{ width: 260 }} placeholder={format('pages.agent.skill.resourcePurposePlaceholder')} value={purpose} onChange={(e) => setPurpose(e.target.value)} />
           <Upload
-            accept={resourceType === 'SCRIPT' ? '.js,.py' : resourceType === 'MARKDOWN' ? '.md' : '.html,.hbs,.tpl,.ftl'}
+            accept={resourceType === 'MARKDOWN' ? '.md' : '.html,.hbs,.tpl,.ftl'}
             showUploadList={false}
             disabled={uploading || !editable || !resourceType}
             beforeUpload={(file) => {
@@ -487,7 +485,7 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
           </div>
         ) : (
           <div className="skill-resource-preview skill-resource-preview-code">
-            <div className="skill-resource-preview-code-header">{resourcePreview?.type === 'SCRIPT' ? '脚本源码' : '模板源码'}</div>
+            <div className="skill-resource-preview-code-header">模板源码</div>
             {resourcePreviewLoading ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={format('pages.agent.skill.studio.loadingContent')} /> : (
               <Editor
                 height="calc(60vh - 38px)"
@@ -506,7 +504,7 @@ const SkillResources: React.FC<SkillResourcesProps> = ({ id, open, setOpen }) =>
         footer={<Space><Button onClick={() => setStudioOpen(false)}>取消</Button><Button type="primary" disabled={!editable} loading={studioLoading} onClick={saveResourceDraft}>{studioResource.id ? format('pages.common.edit') : format('pages.agent.skill.resourceSaveAsNew')}</Button></Space>}>
         <Form layout="vertical">
           <Row gutter={12}>
-            <Col span={8}><Form.Item label={format('pages.agent.skill.studio.type')}><Select disabled={!editable} value={studioResource.type} options={['MARKDOWN', 'TEMPLATE', 'SCRIPT'].map((value) => ({ value, label: format(`pages.agent.skill.resourceType.${value.toLowerCase()}`) }))} onChange={(type) => setStudioResource({ ...studioResource, type })} /></Form.Item></Col>
+            <Col span={8}><Form.Item label={format('pages.agent.skill.studio.type')}><Select disabled={!editable} value={studioResource.type} options={['MARKDOWN', 'TEMPLATE'].map((value) => ({ value, label: format(`pages.agent.skill.resourceType.${value.toLowerCase()}`) }))} onChange={(type) => setStudioResource({ ...studioResource, type })} /></Form.Item></Col>
             <Col span={8}><Form.Item label={format('pages.agent.skill.studio.fileName')}><Input disabled={!editable} value={studioResource.name} placeholder={format('pages.agent.skill.studio.fileNamePlaceholder')} onChange={(event) => setStudioResource({ ...studioResource, name: event.target.value })} /></Form.Item></Col>
             <Col span={8}><Form.Item label={format('pages.agent.skill.studio.purpose')}><Input disabled={!editable} value={studioResource.purpose} onChange={(event) => setStudioResource({ ...studioResource, purpose: event.target.value })} /></Form.Item></Col>
           </Row>

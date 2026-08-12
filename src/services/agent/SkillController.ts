@@ -12,7 +12,6 @@ import {
   AgentSkillPublishCheck,
   AgentSkillStatistics,
   AgentSkillResource,
-  AgentSkillExecutionConfig,
   AgentSkillSearchParams,
   AgentSkillVersion,
 } from '@/services/entity/Agent'
@@ -224,7 +223,7 @@ export const getSkillResources = async (
 
 export interface AgentSkillResourceGenerateParams {
   modelId: string
-  type: 'MARKDOWN' | 'TEMPLATE' | 'SCRIPT'
+  type: 'MARKDOWN' | 'TEMPLATE'
   name?: string
   purpose?: string
   prompt: string
@@ -232,7 +231,7 @@ export interface AgentSkillResourceGenerateParams {
 
 export interface AgentSkillResourceGenerateResult {
   name: string
-  type: 'MARKDOWN' | 'TEMPLATE' | 'SCRIPT'
+  type: 'MARKDOWN' | 'TEMPLATE'
   purpose?: string
   content: string
   model?: string
@@ -281,9 +280,3 @@ export const previewSkill = async (
     data: params,
   })
 }
-
-export const getSkillExecutionConfig = async (id: string): Promise<ResponseStructure<AgentSkillExecutionConfig>> =>
-  request(`/api/agent/skill/${id}/execution-config`, { method: 'GET' })
-
-export const updateSkillExecutionConfig = async (id: string, params: AgentSkillExecutionConfig): Promise<ResponseStructure<void>> =>
-  request(`/api/agent/skill/${id}/execution-config`, { method: 'PUT', data: params })

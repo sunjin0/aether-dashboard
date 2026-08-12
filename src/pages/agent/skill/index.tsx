@@ -146,12 +146,20 @@ const SkillPage: React.FC = () => {
     }
     try {
       const { data: check } = await getSkillPublishCheck(record.id)
-      if (!check?.draftVersionId) {
+      const blockers = check?.blockers || []
+      const warnings = check?.warnings || []
+      if (blockers.length) {
+        Modal.warning({
+          title: format('pages.agent.skill.publishValidationFailed'),
+          content: <List size="small" header={format('pages.agent.skill.publishBlockers')} dataSource={blockers} renderItem={(item) => <List.Item>{item}</List.Item>} />,
+        })
         return
       }
-      const blockers = check.blockers || []
-      const warnings = check.warnings || []
-      if (blockers.length) {
+      if (!check?.draftVersionId) {
+        Modal.warning({
+          title: format('pages.agent.skill.publishValidationFailed'),
+          content: format('pages.agent.skill.publishCheckUnavailable'),
+        })
         return
       }
       Modal.confirm({

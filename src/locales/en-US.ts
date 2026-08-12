@@ -1089,6 +1089,7 @@ export default {
   'pages.knowledge.review.detail.rejectConfirm': 'Reject?',
   'pages.knowledge.review.detail.reject': 'Reject',
   'pages.knowledge.review.detail.versionContent': 'Version Content',
+  'pages.knowledge.review.detail.recognizeFile': 'AI format file',
   'pages.knowledge.review.detail.aiReviewScore': 'AI Review {score} pts',
   'pages.knowledge.review.detail.noAiReviewSummary': 'No summary',
   'pages.knowledge.review.detail.reviewComment': 'Review Comment',
@@ -1139,6 +1140,12 @@ export default {
   'pages.knowledge.indexJob.retryFailed': 'Retry failed',
 
   'pages.knowledge.review.diffWorkspace.title': 'AI Review Diff',
+  'pages.knowledge.review.detail.originalFile': 'Original file',
+  'pages.knowledge.review.detail.originalFileUnavailable': 'Original file preview is unavailable',
+  'pages.knowledge.review.detail.reviewPanel': 'Review panel',
+  'pages.knowledge.review.detail.collapseSidebar': 'Collapse review panel',
+  'pages.knowledge.review.detail.expandSidebar': 'Expand review panel',
+  'pages.knowledge.review.diffToolbar.previewOriginal': 'Preview original file',
   'pages.knowledge.review.diffWorkspace.back': 'Back to Documents',
   'pages.knowledge.review.diffWorkspace.refresh': 'Refresh',
   'pages.knowledge.review.diffWorkspace.error.conflict':

@@ -89,6 +89,12 @@ export const uploadDocuments = async (
  */
 export const getDocumentPreviewUrl = async (id: string): Promise<ResponseStructure<string>> =>
   request(`/api/knowledge/document/${id}/preview-url`, { method: 'GET' });
+/** 获取指定版本原始文件预览地址，避免审查中误打开最新版本文件。 */
+export const getDocumentVersionPreviewUrl = async (versionId: string): Promise<ResponseStructure<string>> =>
+  request(`/api/knowledge/document/version/${versionId}/preview-url`, { method: 'GET' });
+/** 重新识别版本原文件，仅返回文本供审核人填充编辑器，不会直接保存。 */
+export const recognizeDocumentVersionContent = async (versionId: string): Promise<ResponseStructure<string>> =>
+  request(`/api/knowledge/document/version/${versionId}/recognize-content`, { method: 'POST' });
 /**
  * 获取文档版本详情
  * @param id 文档ID

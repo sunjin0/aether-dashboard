@@ -50,7 +50,7 @@ const ReviewDiffEditor: React.FC<ReviewDiffEditorProps> = ({ diff, activeIssue }
 
   const title = (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <span>Content Diff</span>
+      <span>文本对比</span>
       {activeIssue && (
         <Text type="secondary" style={{ fontSize: 13, fontWeight: 400 }}>
           Line {activeIssue.baseStartLine || '-'}

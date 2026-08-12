@@ -4,6 +4,7 @@ import { Alert, Button, Checkbox, Col, Empty, Modal, Result, Row, Space, Spin, T
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { AiReviewDiffIssue } from '@/services/entity/Agent'
 import { startAiReview, submitReview } from '@/services/knowledge/ReviewController'
+import { getDocumentVersionPreviewUrl } from '@/services/knowledge/DocumentController'
 import ReviewDiffEditor from './components/ReviewDiffEditor'
 import ReviewDiffToolbar from './components/ReviewDiffToolbar'
 import ReviewIssueList from './components/ReviewIssueList'
@@ -77,6 +78,7 @@ const DiffWorkspace: React.FC<Props> = ({
   const [justApplied, setJustApplied] = useState(false)
   const [batchModalOpen, setBatchModalOpen] = useState(false)
   const [batchSelection, setBatchSelection] = useState<string[]>([])
+  const [previewingOriginal, setPreviewingOriginal] = useState(false)
   const shortcutHintRef = useRef<HTMLDivElement>(null)
 
   const status = (diff?.reviewStatus || versionReviewStatus || '').toUpperCase()
@@ -263,6 +265,18 @@ const DiffWorkspace: React.FC<Props> = ({
       // API failures are displayed by the global request handler.
     } finally {
       setBusy(false)
+    }
+  }
+
+  const previewOriginalFile = async () => {
+    const targetVersionId = diff?.documentVersionId || documentVersionId
+    if (!targetVersionId) return
+    setPreviewingOriginal(true)
+    try {
+      const response = await getDocumentVersionPreviewUrl(targetVersionId)
+      if (response.data) window.open(response.data, '_blank', 'noopener,noreferrer')
+    } finally {
+      setPreviewingOriginal(false)
     }
   }
 
@@ -481,6 +495,8 @@ const DiffWorkspace: React.FC<Props> = ({
               unappliedAcceptedCount > 0 && !diff.stale ? applyAcceptedChanges : undefined
             }
             onSubmit={canSubmit ? submit : undefined}
+            onPreviewOriginal={documentVersionId || diff?.documentVersionId ? previewOriginalFile : undefined}
+            previewOriginalLoading={previewingOriginal}
           />
         )}
         {!isDiffAvailable ? (

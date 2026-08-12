@@ -1,24 +1,82 @@
 import { PageContainer } from '@ant-design/pro-components'
-import MDEditor from '@uiw/react-md-editor'
+import '@mdxeditor/editor/style.css'
+import {
+  BoldItalicUnderlineToggles,
+  BlockTypeSelect,
+  CodeToggle,
+  CreateLink,
+  DiffSourceToggleWrapper,
+  InsertCodeBlock,
+  InsertImage,
+  InsertTable,
+  InsertThematicBreak,
+  ListsToggle,
+  MDXEditor,
+  type MDXEditorMethods,
+  UndoRedo,
+  codeBlockPlugin,
+  codeMirrorPlugin,
+  diffSourcePlugin,
+  headingsPlugin,
+  imagePlugin,
+  linkPlugin,
+  listsPlugin,
+  markdownShortcutPlugin,
+  quotePlugin,
+  tablePlugin,
+  thematicBreakPlugin,
+  toolbarPlugin,
+} from '@mdxeditor/editor'
 import { useIntl } from '@umijs/max'
 import { Alert, Button, Card, Col, Descriptions, Row, Space, Spin, Tag, Tooltip, Typography } from 'antd'
-import React, { useState } from 'react'
-import ReactMarkdown from 'react-markdown'
+import React, { useEffect, useRef, useState } from 'react'
 import { useReviewTask } from '@/pages/knowledge/review/hooks/useReviewTask'
 import ReviewActionTimeline from '@/pages/knowledge/review/components/ReviewActionTimeline'
 import ReviewTaskActions from '@/pages/knowledge/review/components/ReviewTaskActions'
 import { editReviewTaskContent } from '@/services/knowledge/ReviewController'
+import { getDocumentVersionPreviewUrl, recognizeDocumentVersionContent } from '@/services/knowledge/DocumentController'
 import {
   patchOperationLabelKey,
   severityColor,
   severityLabelKey,
 } from '@/pages/knowledge/review/detail/constants'
+import './ReviewTaskPage.less'
 
 interface Props {
   taskId: string
   onClose: () => void
   onSuccess: () => void
 }
+
+const markdownEditorPlugins = [
+  headingsPlugin({ allowedHeadingLevels: [1, 2, 3, 4, 5, 6] }),
+  listsPlugin(),
+  quotePlugin(),
+  linkPlugin(),
+  imagePlugin(),
+  tablePlugin(),
+  thematicBreakPlugin(),
+  codeBlockPlugin(),
+  codeMirrorPlugin({ codeBlockLanguages: { txt: 'Plain text', js: 'JavaScript', ts: 'TypeScript', java: 'Java', json: 'JSON', bash: 'Bash' } }),
+  markdownShortcutPlugin(),
+  diffSourcePlugin({ viewMode: 'rich-text' }),
+  toolbarPlugin({
+    toolbarContents: () => (
+      <DiffSourceToggleWrapper options={['rich-text', 'source']}>
+        <UndoRedo />
+        <BlockTypeSelect />
+        <BoldItalicUnderlineToggles />
+        <CodeToggle />
+        <ListsToggle />
+        <CreateLink />
+        <InsertImage />
+        <InsertTable />
+        <InsertCodeBlock />
+        <InsertThematicBreak />
+      </DiffSourceToggleWrapper>
+    ),
+  }),
+]
 
 const ReviewTaskPage: React.FC<Props> = ({ taskId, onClose, onSuccess }) => {
   const intl = useIntl()
@@ -91,14 +149,54 @@ const ReviewTaskPage: React.FC<Props> = ({ taskId, onClose, onSuccess }) => {
   )
 
   const [editedContent, setEditedContent] = useState<string>()
-  const [mode, setMode] = useState<'preview' | 'edit'>('edit')
+  const [originalFileUrl, setOriginalFileUrl] = useState('')
+  const [originalPreviewLoading, setOriginalPreviewLoading] = useState(false)
+  const [recognizing, setRecognizing] = useState(false)
+  const [contentMode, setContentMode] = useState<'preview' | 'edit'>('preview')
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const markdownEditorRef = useRef<MDXEditorMethods>(null)
   const content = editedContent ?? data?.version?.content ?? ''
+
+  useEffect(() => {
+    setEditedContent(undefined)
+    setOriginalFileUrl('')
+    setContentMode('preview')
+  }, [taskId])
+
+  useEffect(() => {
+    const versionId = data?.version?.id
+    if (!versionId) return
+    let active = true
+    setOriginalPreviewLoading(true)
+    getDocumentVersionPreviewUrl(versionId)
+      .then(({ data: url }) => active && setOriginalFileUrl(url || ''))
+      .catch(() => active && setOriginalFileUrl(''))
+      .finally(() => active && setOriginalPreviewLoading(false))
+    return () => { active = false }
+  }, [data?.version?.id])
+
+  useEffect(() => {
+    markdownEditorRef.current?.setMarkdown(content)
+  }, [content])
 
   const handleSaveDraft = async () => {
     if (!taskId || editedContent === undefined) return
     try {
       await editReviewTaskContent(taskId, { content: editedContent, expectedChecksum: data?.version?.contentChecksum ?? '' })
     } catch { /* handled globally */ }
+  }
+
+  const handleRecognizeFile = async () => {
+    const versionId = data?.version?.id
+    if (!versionId) return
+    setRecognizing(true)
+    try {
+      const response = await recognizeDocumentVersionContent(versionId)
+      setEditedContent(response.data || '')
+      setContentMode('edit')
+    } finally {
+      setRecognizing(false)
+    }
   }
 
   return (
@@ -113,45 +211,40 @@ const ReviewTaskPage: React.FC<Props> = ({ taskId, onClose, onSuccess }) => {
       onBack={onClose}
     >
       <Spin spinning={loading}>
+        {sidebarCollapsed && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+            <Button onClick={() => setSidebarCollapsed(false)}>
+              {intl.formatMessage({ id: 'pages.knowledge.review.detail.expandSidebar' })}
+            </Button>
+          </div>
+        )}
         <Row gutter={16} align="stretch">
-          <Col xs={24} lg={16}>
+          <Col xs={24} lg={sidebarCollapsed ? 24 : 16}>
+            <Row gutter={[12, 12]}>
+              <Col xs={24} xl={12}>
+                <Card size="small" title={intl.formatMessage({ id: 'pages.knowledge.review.detail.originalFile' })} styles={{ body: { padding: 0, height: 'calc(100vh - 230px)' } }}>
+                  <Spin spinning={originalPreviewLoading}>
+                    {originalFileUrl ? <iframe title={intl.formatMessage({ id: 'pages.knowledge.review.detail.originalFile' })} src={originalFileUrl} style={{ width: '100%', height: 'calc(100vh - 230px)', border: 0 }} /> : <div style={{ padding: 24 }}><Typography.Text type="secondary">{intl.formatMessage({ id: 'pages.knowledge.review.detail.originalFileUnavailable' })}</Typography.Text></div>}
+                  </Spin>
+                </Card>
+              </Col>
+              <Col xs={24} xl={12}>
+                <Card size="small" title={intl.formatMessage({ id: 'pages.knowledge.review.detail.versionContent' })} extra={<Space><Button size="small" loading={recognizing} onClick={handleRecognizeFile}>{intl.formatMessage({ id: 'pages.knowledge.review.detail.recognizeFile' })}</Button><Button.Group size="small"><Button type={contentMode === 'preview' ? 'primary' : 'default'} onClick={() => setContentMode('preview')}>{intl.formatMessage({ id: 'pages.knowledge.review.detail.preview' })}</Button><Button type={contentMode === 'edit' ? 'primary' : 'default'} onClick={() => setContentMode('edit')}>{intl.formatMessage({ id: 'pages.knowledge.review.detail.edit' })}</Button></Button.Group><Button type="link" size="small" onClick={handleSaveDraft} disabled={editedContent === undefined}>{intl.formatMessage({ id: 'pages.knowledge.review.detail.saveDraft' })}</Button></Space>} styles={{ body: { padding: 0, height: 'calc(100vh - 230px)' } }}>
+                  <MDXEditor ref={markdownEditorRef} markdown={content} readOnly={contentMode === 'preview'} className="knowledge-review-markdown-editor" contentEditableClassName="knowledge-review-markdown-content" plugins={markdownEditorPlugins} onChange={(value, initial) => { if (!initial) setEditedContent(value) }} />
+                </Card>
+              </Col>
+            </Row>
+          </Col>
+          <Col xs={24} lg={sidebarCollapsed ? 0 : 8} style={sidebarCollapsed ? { display: 'none' } : undefined}>
             <Card
               size="small"
-              title={intl.formatMessage({ id: 'pages.knowledge.review.detail.versionContent' })}
-              extra={
-                <Space>
-                  <Button.Group size="small">
-                    <Button type={mode === 'preview' ? 'primary' : 'default'} onClick={() => setMode('preview')}>
-                      {intl.formatMessage({ id: 'pages.knowledge.review.detail.preview' })}
-                    </Button>
-                    <Button type={mode === 'edit' ? 'primary' : 'default'} onClick={() => setMode('edit')}>
-                      {intl.formatMessage({ id: 'pages.knowledge.review.detail.edit' })}
-                    </Button>
-                  </Button.Group>
-                  <Button type="link" size="small" onClick={handleSaveDraft} disabled={editedContent === undefined}>
-                    {intl.formatMessage({ id: 'pages.knowledge.review.detail.saveDraft' })}
-                  </Button>
-                </Space>
-              }
-              styles={{ body: { padding: mode === 'preview' ? 12 : 0 } }}
+              className="knowledge-review-sidebar-card"
+              title={intl.formatMessage({ id: 'pages.knowledge.review.detail.reviewPanel' })}
+              extra={<Button type="link" size="small" onClick={() => setSidebarCollapsed(true)}>{intl.formatMessage({ id: 'pages.knowledge.review.detail.collapseSidebar' })}</Button>}
             >
-              {mode === 'preview' ? (
-                <div style={{ maxHeight: 'calc(100vh - 230px)', overflow: 'auto' }}>
-                  <ReactMarkdown>{content || '-'}</ReactMarkdown>
-                </div>
-              ) : (
-                <MDEditor
-                  height="calc(100vh - 230px)"
-                  value={content}
-                  onChange={(value) => setEditedContent(value ?? '')}
-                />
-              )}
-            </Card>
-          </Col>
-          <Col xs={24} lg={8}>
-            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
               {data?.aiReview?.summary && <Alert showIcon type="info" message={data.aiReview.summary} />}
-              <Card size="small" title={intl.formatMessage({ id: 'pages.knowledge.review.detail.reviewInfo' })}>
+              <Card size="small" type="inner" title={intl.formatMessage({ id: 'pages.knowledge.review.detail.reviewInfo' })}>
                 <Descriptions column={1} size="small" bordered>
                   <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.review.detail.submitter' })}>
                     {getUserName(data?.submitterId)}
@@ -166,6 +259,7 @@ const ReviewTaskPage: React.FC<Props> = ({ taskId, onClose, onSuccess }) => {
               </Card>
               <Card
                 size="small"
+                type="inner"
                 title={intl.formatMessage(
                   { id: 'pages.knowledge.review.detail.issueCount' },
                   { count: (data?.issues || []).length },
@@ -182,10 +276,11 @@ const ReviewTaskPage: React.FC<Props> = ({ taskId, onClose, onSuccess }) => {
                 onCommentChange={setComment}
                 onAct={act}
               />
-              <Card size="small" title={intl.formatMessage({ id: 'pages.knowledge.review.detail.actionHistory' })}>
+              <Card size="small" type="inner" title={intl.formatMessage({ id: 'pages.knowledge.review.detail.actionHistory' })}>
                 <ReviewActionTimeline actionLogs={data?.actionLogs} getUserName={getUserName} />
               </Card>
-            </Space>
+              </Space>
+            </Card>
           </Col>
         </Row>
       </Spin>

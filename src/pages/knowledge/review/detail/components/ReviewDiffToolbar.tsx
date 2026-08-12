@@ -30,6 +30,8 @@ interface Props {
   onBatchAccept?: () => void;
   onApplyAccepted?: () => void;
   onSubmit?: () => void;
+  onPreviewOriginal?: () => void;
+  previewOriginalLoading?: boolean;
 }
 
 const ReviewDiffToolbar: React.FC<Props> = ({
@@ -41,6 +43,8 @@ const ReviewDiffToolbar: React.FC<Props> = ({
   onBatchAccept,
   onApplyAccepted,
   onSubmit,
+  onPreviewOriginal,
+  previewOriginalLoading,
 }) => {
   const intl = useIntl()
   const statusLabelMap: Record<string, string> = {
@@ -117,6 +121,11 @@ const ReviewDiffToolbar: React.FC<Props> = ({
       </Col>
       <Col style={{ marginTop: 4 }}>
         <Space size="small">
+          {onPreviewOriginal && (
+            <Button loading={previewOriginalLoading} onClick={onPreviewOriginal}>
+              {intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.previewOriginal' })}
+            </Button>
+          )}
           {acceptedCount > 0 && onApplyAccepted && (
             <Popconfirm
               title={intl.formatMessage({ id: 'pages.knowledge.review.diffToolbar.applyTitle' })}

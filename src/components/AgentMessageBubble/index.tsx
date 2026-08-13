@@ -33,6 +33,7 @@ export interface AgentMessageBubbleProps {
       title: string
       detail?: string
       status?: 'running' | 'completed' | 'failed' | 'pending'
+      actions?: Array<{ label: string; danger?: boolean; onClick: () => void }>
     }>
   }
   align?: 'left' | 'right'
@@ -352,6 +353,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
                                 {event.detail}
                               </pre>
                             )}
+                            {!!event.actions?.length && <div style={{ marginTop: 6 }}>{event.actions.map((action) => <Button key={action.label} size="small" danger={action.danger} onClick={action.onClick} style={{ marginRight: 6 }}>{action.label}</Button>)}</div>}
                           </div>
                         </div>
                       ))}

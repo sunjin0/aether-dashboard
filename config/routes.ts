@@ -128,6 +128,11 @@ export default [
         name: '生成文件',
         component: './agent/artifact',
       },
+      {
+        path: '/agent/sandbox',
+        name: 'Sandbox 执行平台',
+        component: './agent/sandbox',
+      },
     ],
   },
   {

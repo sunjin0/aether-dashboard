@@ -96,6 +96,36 @@ export interface AgentArtifactSearchParams {
   recycled?: boolean;
 }
 
+/** Frozen Sandbox task exposed to the requester; log bodies remain server-side summaries. */
+export interface SandboxTask {
+  id?: string;
+  templateCode?: string;
+  requesterUserId?: string;
+  agentDefinitionId?: string;
+  status?: 'PENDING_APPROVAL' | 'QUEUED' | 'CLAIMED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'TIMED_OUT' | 'CANCELLED' | 'EXPIRED';
+  riskLevel?: string;
+  approvalRequired?: boolean;
+  cancelRequested?: boolean;
+  runId?: string;
+  failureReason?: string;
+  logSummary?: string;
+  createdAt?: number;
+  startedAt?: number;
+  completedAt?: number;
+    expiresAt?: number;
+    resourceUsage?: {
+      wallMillis?: number;
+      cpuMillis?: number;
+      maxRssBytes?: number;
+      outputBytes?: number;
+      exitCode?: number;
+      reportedAt?: number;
+    };
+    approvals?: Array<{ decision?: string; approverUserId?: string; reason?: string; decidedAt?: number }>;
+    events?: Array<{ sequence?: number; occurredAt?: number; eventType?: string; status?: string; progress?: number; summary?: string; subjectSha256?: string }>;
+    approvalSummary?: { targetUrl?: string; purpose?: string; allowedDomains?: string[]; allowSubdomains?: boolean; estimatedRequests?: number; pageDepth?: number; maxRequests?: number; maxPageDepth?: number; externalSensitiveRisk?: boolean };
+  }
+
 /** Agent 专属知识库 */
 export interface KnowledgeBase {
   id?: string;

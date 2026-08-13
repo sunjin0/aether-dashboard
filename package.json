@@ -57,7 +57,8 @@
     "react-activation": "^0.13.4",
     "react-dom": "^18.3.1",
     "react-markdown": "^10.1.0",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@ant-design/pro-cli": "^3.3.0",

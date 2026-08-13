@@ -469,7 +469,7 @@ const AgentRunPage: React.FC = () => {
                 style={{ marginTop: 16 }}
                 className="agent-run-card"
               >
-                <MarkdownText content={run.inputContent} />
+                <JsonDisplay content={run.inputContent} />
               </Card>
               <Card
                 title={intl.formatMessage({ id: 'pages.agent.run.outputSummary' })}

@@ -7,7 +7,7 @@ export default [
   },
   {
     path: '/dashboard',
-    name: 'dashboard',
+    name: '工作台',
     icon: 'smile',
     component: './Dashboard',
   },
@@ -21,12 +21,12 @@ export default [
     routes: [
       {
         path: '/msg/sms',
-        name: '短信管理',
+        name: '短信消息',
         component: './message/sms',
       },
       {
         path: '/msg/email',
-        name: '邮件管理',
+        name: '邮件消息',
         component: './message/email',
       },
     ],
@@ -38,7 +38,7 @@ export default [
     routes: [
       {
         path: '/sys/admin',
-        name: '用户管理',
+        name: '管理员管理',
         component: './sys/admin',
       },
       {
@@ -53,7 +53,7 @@ export default [
       },
       {
         path: '/sys/resource',
-        name: '资源管理',
+        name: '资源与权限',
         component: './sys/resource',
       },
       {
@@ -68,34 +68,34 @@ export default [
       },
       {
         path: '/sys/preference',
-        name: '偏好管理',
+        name: '管理员偏好',
         component: './sys/admin-preference',
       },
     ],
   },
   {
     path: '/agent',
-    name: 'Agent 平台',
+    name: '智能体平台',
     icon: 'robot',
     routes: [
       {
         path: '/agent/model-provider',
-        name: '模型供应商',
+        name: '模型服务商',
         component: './agent/model-provider',
       },
       {
         path: '/agent/definition',
-        name: 'Agent 定义',
+        name: '智能体配置',
         component: './agent/definition',
       },
       {
         path: '/agent/mcp-server',
-        name: 'MCP 服务管理',
+        name: 'MCP 服务',
         component: './agent/mcp-server',
       },
       {
         path: '/agent/tool',
-        name: 'MCP 工具管理',
+        name: '工具目录',
         component: './agent/tool',
       },
       {
@@ -105,12 +105,12 @@ export default [
       },
       {
         path: '/agent/chat',
-        name: 'Chat 调试',
+        name: '对话调试',
         component: './agent/chat',
       },
       {
         path: '/agent/run',
-        name: '运行记录',
+        name: '执行记录',
         component: './agent/run',
       },
       {
@@ -120,17 +120,17 @@ export default [
       },
       {
         path: '/agent/skill',
-        name: '技能管理',
+        name: '智能体技能',
         component: './agent/skill',
       },
       {
         path: '/agent/artifact',
-        name: '生成文件',
+        name: '生成文件库',
         component: './agent/artifact',
       },
       {
         path: '/agent/sandbox',
-        name: 'Sandbox 执行平台',
+        name: '沙箱执行平台',
         component: './agent/sandbox',
       },
     ],
@@ -148,13 +148,13 @@ export default [
       },
       {
         path: '/workflow/run',
-        name: '启动与运行实例',
+        name: '工作流实例',
         exact: true,
         component: './workflow/instances',
       },
       {
         path: '/workflow/schedule',
-        name: '定时任务',
+        name: '工作流定时任务',
         exact: true,
         component: './workflow/schedule',
       },
@@ -172,7 +172,7 @@ export default [
       },
       {
         path: '/workflow/workflow',
-        name: '工作流',
+        name: '工作流管理',
         exact: true,
         component: './workflow',
       },
@@ -180,39 +180,39 @@ export default [
   },
   {
     path: '/knowledge',
-    name: '知识库管理',
+    name: '知识中心',
     icon: 'database',
     routes: [
       {
         path: '/knowledge/base',
-        name: '知识库列表',
+        name: '知识库',
         component: './knowledge/base',
       },
       {
         path: '/knowledge/document',
-        name: '文档管理',
+        name: '知识文档',
         component: './knowledge/document',
       },
       {
         path: '/knowledge/document/:documentId/review',
-        name: 'AI 审阅工作台',
+        name: '文档 AI 审阅',
         hideInMenu: true,
         component: './knowledge/review/detail',
       },
       {
         path: '/knowledge/document/:documentId/versions',
-        name: '版本历史',
+        name: '文档版本',
         hideInMenu: true,
         component: './knowledge/document/version',
       },
       {
         path: '/knowledge/reviews',
-        name: '审批中心',
+        name: '内容审核',
         component: './knowledge/review',
       },
       {
         path: '/knowledge/reviews/:taskId',
-        name: '人工审批',
+        name: '审核任务',
         hideInMenu: true,
         component: './knowledge/review/task',
       },
@@ -229,7 +229,7 @@ export default [
       },
       {
         path: '/knowledge/evaluation/sets/:setId',
-        name: '评测集工作台',
+        name: '评测集详情',
         hideInMenu: true,
         component: './knowledge/evaluation/set',
       },
@@ -238,11 +238,11 @@ export default [
   },
   {
     path: '/user',
-    name: 'user',
+    name: '用户中心',
     routes: [
       {
         path: '/user/member',
-        name: 'Member',
+        name: '成员管理',
         component: './user/member',
       },
     ],

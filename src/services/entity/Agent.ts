@@ -121,7 +121,7 @@ export interface SandboxTask {
       exitCode?: number;
       reportedAt?: number;
     };
-    approvals?: Array<{ decision?: string; approverUserId?: string; reason?: string; decidedAt?: number }>;
+    approvals?: Array<{ decision?: string; approverUserId?: string; approverName?: string; reason?: string; decidedAt?: number }>;
     events?: Array<{ sequence?: number; occurredAt?: number; eventType?: string; status?: string; progress?: number; summary?: string; subjectSha256?: string }>;
     approvalSummary?: { targetUrl?: string; purpose?: string; allowedDomains?: string[]; allowSubdomains?: boolean; estimatedRequests?: number; pageDepth?: number; maxRequests?: number; maxPageDepth?: number; externalSensitiveRisk?: boolean };
   }

@@ -2175,6 +2175,8 @@ export default {
   'pages.agent.sandbox.allow': 'Allow',
   'pages.agent.sandbox.disallow': 'Disallow',
   'pages.agent.sandbox.approvalDecision': 'Decision',
+  'pages.agent.sandbox.decision.APPROVED': 'Approved',
+  'pages.agent.sandbox.decision.REJECTED': 'Rejected',
   'pages.agent.sandbox.approver': 'Approver',
   'pages.agent.sandbox.redactedReason': 'Reason (redacted)',
   'pages.agent.sandbox.time': 'Time',

@@ -2112,6 +2112,8 @@ export default {
   'pages.agent.sandbox.allow': '允许',
   'pages.agent.sandbox.disallow': '禁止',
   'pages.agent.sandbox.approvalDecision': '决策',
+  'pages.agent.sandbox.decision.APPROVED': '已批准',
+  'pages.agent.sandbox.decision.REJECTED': '已驳回',
   'pages.agent.sandbox.approver': '审批人',
   'pages.agent.sandbox.redactedReason': '原因（脱敏）',
   'pages.agent.sandbox.time': '时间',

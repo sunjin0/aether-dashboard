@@ -6,6 +6,7 @@ import {
   AgentRunSearchParams,
   AgentRunStatistics,
   AgentRunStatisticsParams,
+  AgentRunPlan,
 } from '@/services/entity/Agent'
 
 /**
@@ -46,6 +47,9 @@ export const cancelAgentRun = async (id: string): Promise<ResponseStructure<void
     method: 'POST',
   })
 }
+export const getAgentRunPlan = async (id: string): Promise<ResponseStructure<AgentRunPlan>> => request(`/api/agent/run/${id}/plan`, { method: 'GET' })
+export const pauseAgentRun = async (id: string): Promise<ResponseStructure<void>> => request(`/api/agent/run/${id}/pause`, { method: 'POST' })
+export const resumeAgentRun = async (id: string): Promise<ResponseStructure<void>> => request(`/api/agent/run/${id}/resume`, { method: 'POST' })
 
 /**
  * @description 获取 Agent 运行统计

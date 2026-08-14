@@ -4,6 +4,7 @@ import { useIntl } from '@umijs/max'
 import type { Dayjs } from 'dayjs'
 import {
   Alert,
+  Button,
   Card,
   DatePicker,
   Drawer,
@@ -18,7 +19,10 @@ import TableActionMenu from '@/components/TableActionMenu'
 import {
   getAgentRunInfo,
   getAgentRunList,
+  getAgentRunPlan,
   getAgentRunStatistics,
+  pauseAgentRun,
+  resumeAgentRun,
 } from '@/services/agent/RunController'
 import { getOptionList } from '@/services/sys/DictController'
 import {
@@ -26,6 +30,7 @@ import {
   AgentRunSearchParams,
   AgentRunStatistics,
   AgentRunStatisticsParams,
+  AgentRunPlan,
 } from '@/services/entity/Agent'
 import JsonDisplay from '@/components/JsonDisplay'
 import MarkdownText from '@/components/MarkdownText'
@@ -51,6 +56,7 @@ const renderStatusTag = (status: number | undefined, intl: ReturnType<typeof use
     3: { color: 'processing', text: intl.formatMessage({ id: 'pages.agent.run.status.queued' }) },
     4: { color: 'cyan', text: intl.formatMessage({ id: 'pages.agent.run.status.running' }) },
     5: { color: 'default', text: intl.formatMessage({ id: 'pages.agent.run.status.cancelled' }) },
+    6: { color: 'gold', text: '已暂停' },
   }
   const item = statusMap[status ?? -1]
 
@@ -72,6 +78,7 @@ const AgentRunPage: React.FC = () => {
   const ref = useRef<ActionType>()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [run, setRun] = useState<AgentRun>()
+  const [plan, setPlan] = useState<AgentRunPlan>()
   const [detailLoading, setDetailLoading] = useState(false)
   const [statistics, setStatistics] = useState<AgentRunStatistics>()
   const [statisticsLoading, setStatisticsLoading] = useState(false)
@@ -128,6 +135,7 @@ const AgentRunPage: React.FC = () => {
     const requestToken = ++detailRequestTokenRef.current
     setDrawerOpen(true)
     setRun(undefined)
+    setPlan(undefined)
     setDetailLoading(true)
     try {
       const { code, data } = await getAgentRunInfo(record.id)
@@ -136,6 +144,10 @@ const AgentRunPage: React.FC = () => {
       }
       if (code === 200) {
         setRun(data)
+        if (data.executionMode === 'DEEP') {
+          const planResponse = await getAgentRunPlan(record.id)
+          if (requestToken === detailRequestTokenRef.current && planResponse.code === 200) setPlan(planResponse.data)
+        }
       } else {
         setRun(undefined)
       }
@@ -426,6 +438,21 @@ const AgentRunPage: React.FC = () => {
                   },
                 ]}
               />
+              {run.executionMode === 'DEEP' && run.id && (
+                <Card title="执行计划" size="small" style={{ marginTop: 16 }}>
+                  {plan?.versions?.slice().reverse().map((version) => (
+                    <div key={version.version} style={{ marginBottom: 12 }}>
+                      <Text strong>版本 {version.version}：{version.summary || version.reason}</Text>
+                      {version.steps?.map((step) => <div key={step.id || step.stepKey} style={{ padding: '4px 0 0 12px' }}><Tag color={step.status === 'COMPLETED' ? 'success' : step.status === 'RUNNING' ? 'processing' : 'default'}>{step.status}</Tag>{step.sequence}. {step.title}{step.resultSummary ? ` — ${step.resultSummary}` : ''}</div>)}
+                    </div>
+                  )) || <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无计划" />}
+                </Card>
+              )}
+              {run.executionMode === 'DEEP' && run.id && (
+                <Card size="small" style={{ marginTop: 16 }}>
+                  {run.status === 6 ? <Button type="primary" onClick={async () => { await resumeAgentRun(run.id as string); message.success('运行已继续'); setRun({ ...run, status: 3 }) }}>继续执行</Button> : (run.status === 3 || run.status === 4) && <Button onClick={async () => { await pauseAgentRun(run.id as string); message.success('运行已暂停'); setRun({ ...run, status: 6 }) }}>暂停执行</Button>}
+                </Card>
+              )}
               {run.executionMode === 'DEEP' && run.id && (
                 <Card
                   title={intl.formatMessage({ id: 'pages.agent.run.steps' })}

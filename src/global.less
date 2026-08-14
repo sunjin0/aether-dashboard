@@ -18,6 +18,13 @@ body,
 }
 .ant-pro-sider.ant-layout-sider.ant-pro-sider-fixed {
   left: unset;
+  // 侧栏的折叠按钮会伸入内容区域；侧栏必须高于粘性页签所在层。
+  z-index: 11;
+}
+
+// 折叠圆形按钮在侧栏内再提升一层，避免被内容区控件覆盖。
+.ant-pro-sider-collapsed-button {
+  z-index: 12;
 }
 
 canvas {

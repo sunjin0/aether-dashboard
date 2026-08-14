@@ -28,6 +28,7 @@ import {
   LoadingOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  UnorderedListOutlined,
   PaperClipOutlined,
   PlusOutlined,
   SearchOutlined,
@@ -39,7 +40,7 @@ import {
   streamReplyAgentChat,
   uploadAgentChatAttachments,
 } from '@/services/agent/ChatController'
-import { cancelAgentRun } from '@/services/agent/RunController'
+import { cancelAgentRun, getAgentRunPlan } from '@/services/agent/RunController'
 import { getAgentArtifactByRun } from '@/services/agent/ArtifactController'
 import { cancelSandboxTask, decideSandboxTask, getSandboxTaskByRun, retrySandboxTask } from '@/services/agent/SandboxTaskController'
 import {
@@ -59,6 +60,7 @@ import {
   AgentStreamAcceptedData,
   AgentStreamToolCallData,
   KnowledgeSource,
+  AgentRunPlan,
 } from '@/services/entity/Agent'
 import { Option } from '@/services/entity/Common'
 import AgentMessageBubble from '@/components/AgentMessageBubble'
@@ -69,6 +71,7 @@ import {
   getDeepRunTasks,
   getDeepStepDisplayText,
   mergeDeepRunSteps,
+  DeepTask,
 } from './deepProgress'
 import './index.less'
 
@@ -148,7 +151,8 @@ const ChatDebugPage: React.FC = () => {
   const [pendingQuestionMessage, setPendingQuestionMessage] = useState<ChatMessage | null>(null)
   const [deepRunId, setDeepRunId] = useState<string | null>(null)
   const [deepRunSteps, setDeepRunSteps] = useState<AgentStreamRunStepData[]>([])
-  const [taskPlanCollapsed, setTaskPlanCollapsed] = useState(false)
+  const [persistedDeepTasks, setPersistedDeepTasks] = useState<DeepTask[]>([])
+  const [taskPlanDrawerOpen, setTaskPlanDrawerOpen] = useState(false)
   const messageEndRef = useRef<HTMLDivElement>(null)
   const messageListRef = useRef<HTMLDivElement>(null)
   const abortControllerRef = useRef<AbortController>()
@@ -163,6 +167,7 @@ const ChatDebugPage: React.FC = () => {
   const artifactPollingTimerRef = useRef<number>()
   const sandboxPollingKeyRef = useRef<string>()
   const shownSandboxApprovalTaskRef = useRef<string>()
+  const loadedPlanRunIdRef = useRef<string>()
 
   const findPendingQuestionMessage = (messageList: ChatMessage[]) =>
     messageList.find(
@@ -180,7 +185,9 @@ const ChatDebugPage: React.FC = () => {
     deepRunIdRef.current = null
     setDeepRunId(null)
     setDeepRunSteps([])
-    setTaskPlanCollapsed(false)
+    setPersistedDeepTasks([])
+    loadedPlanRunIdRef.current = undefined
+    setTaskPlanDrawerOpen(false)
   }
 
   const addDeepRunStep = (data: AgentStreamRunStepData) => {
@@ -189,6 +196,9 @@ const ChatDebugPage: React.FC = () => {
       setDeepRunId(data.runId)
     }
     setDeepRunSteps((current) => mergeDeepRunSteps(current, data))
+    if (data.eventType === 'plan.updated' && data.runId) {
+      void loadPersistedTaskPlan(data.runId, true)
+    }
     // Deep Agent reports MCP lifecycle through run_step rather than the
     // regular Agent's tool_call event. Start artifact completion tracking as
     // soon as the platform generator is actually invoked.
@@ -220,11 +230,38 @@ const ChatDebugPage: React.FC = () => {
   }
 
   const deepRunTasks = useMemo(() => getDeepRunTasks(deepRunSteps), [deepRunSteps])
+  const visibleDeepTasks = deepRunTasks.length > 0 ? deepRunTasks : persistedDeepTasks
+  const activeDeepTask = visibleDeepTasks.find((task) => task.status === 'running')
+
+  const loadPersistedTaskPlan = async (runId: string, force = false) => {
+    if (!runId || (!force && loadedPlanRunIdRef.current === runId)) return
+    loadedPlanRunIdRef.current = runId
+    try {
+      const response = await getAgentRunPlan(runId)
+      if (response.code !== 200 || !response.data) return
+      const plan = response.data as AgentRunPlan
+      const currentVersion = plan.versions?.find((item) => item.version === plan.currentVersion)
+        || plan.versions?.[plan.versions.length - 1]
+      setPersistedDeepTasks((currentVersion?.steps || []).map((step, index) => {
+        const status = step.status?.toUpperCase()
+        return {
+          id: step.id || step.stepKey || `plan-${index + 1}`,
+          title: step.title || `步骤 ${index + 1}`,
+          status: status === 'COMPLETED' ? 'completed' : status === 'RUNNING' ? 'running' : status === 'FAILED' ? 'failed' : 'pending',
+        }
+      }))
+    } catch {
+      // A run may be accepted before its first persisted plan callback arrives.
+    }
+  }
 
   const acceptDeepRun = (data: AgentStreamAcceptedData) => {
     deepRunIdRef.current = data.runId
     setDeepRunId(data.runId)
     setConversationId(data.conversationId)
+    // Deep 运行已受理时立即展示规划区域；首个 plan.updated 事件到达前显示准备态。
+    setTaskPlanDrawerOpen(true)
+    void loadPersistedTaskPlan(data.runId)
     deepStreamAbortControllerRef.current?.abort()
     const controller = new AbortController()
     deepStreamAbortControllerRef.current = controller
@@ -355,6 +392,14 @@ const ChatDebugPage: React.FC = () => {
     if (sandboxPollingKeyRef.current === key) return
     startArtifactPolling(conversationId, messageWithRun.id, messageWithRun.runId)
   }, [conversationId, messages])
+
+  useEffect(() => {
+    const messageWithRun = [...messages].reverse().find((item) => item.runId)
+    if (!messageWithRun?.runId) return
+    deepRunIdRef.current = messageWithRun.runId
+    setDeepRunId(messageWithRun.runId)
+    void loadPersistedTaskPlan(messageWithRun.runId)
+  }, [messages])
 
   const loadAgents = async () => {
     setLoadingAgents(true)
@@ -1286,8 +1331,17 @@ const ChatDebugPage: React.FC = () => {
   const currentConversation = conversations.find((item) => item.id === conversationId)
   const activeAgentId = currentConversation?.agentDefinitionId || agentId
   const currentAgent = agents.find((item) => item.id === activeAgentId)
+  const isDeepRequestProcessing = currentAgent?.executionMode === 'DEEP' && sending
+  const shouldShowTaskPlan = visibleDeepTasks.length > 0 || isDeepRequestProcessing
   const inputDisabled =
     sending || chatTurnState === 'waiting_user' || chatTurnState === 'submitting_answer'
+
+  useEffect(() => {
+    // 用户发起 Deep 请求后无需等待规划回调，直接打开卡片反馈正在处理。
+    if (isDeepRequestProcessing) {
+      setTaskPlanDrawerOpen(true)
+    }
+  }, [isDeepRequestProcessing])
 
   const removeAttachment = (uid: string) => {
     attachmentsRef.current = attachmentsRef.current.filter((item) => item.uid !== uid)
@@ -1467,7 +1521,7 @@ const ChatDebugPage: React.FC = () => {
         </div>
 
         {/* 主面板 */}
-        <div className={`agent-chat-panel ${!messages.length ? 'agent-chat-panel-empty' : ''}`}>
+        <div className={`agent-chat-panel ${!messages.length ? 'agent-chat-panel-empty' : ''} ${taskPlanDrawerOpen && shouldShowTaskPlan ? 'agent-chat-panel-plan-open' : ''}`}>
           {/* 顶部 */}
           <div className="agent-chat-panel-header">
             <div className="agent-chat-panel-info">
@@ -1497,56 +1551,57 @@ const ChatDebugPage: React.FC = () => {
                   : intl.formatMessage({ id: 'pages.agent.chat.newConversationTitle' })}
               </div>
             </div>
+            {shouldShowTaskPlan && (
+              <Button
+                className="agent-chat-plan-trigger"
+                type="text"
+                icon={<UnorderedListOutlined />}
+                onClick={() => setTaskPlanDrawerOpen((value) => !value)}
+              >
+                {intl.formatMessage({ id: 'pages.agent.chat.deepTaskPlan' })}
+                {visibleDeepTasks.length > 0 && ` · ${visibleDeepTasks.filter((task) => task.status === 'completed').length}/${visibleDeepTasks.length}`}
+              </Button>
+            )}
           </div>
 
-          {deepRunTasks.length > 0 && (
-            <section
-              className="agent-chat-task-plan"
-              aria-label={intl.formatMessage({ id: 'pages.agent.chat.deepTaskPlan' })}
-            >
+          {taskPlanDrawerOpen && shouldShowTaskPlan && (
+            <aside className="agent-chat-task-plan-drawer" aria-label={intl.formatMessage({ id: 'pages.agent.chat.deepTaskPlan' })}>
               <div className="agent-chat-task-plan-header">
                 <Text strong>{intl.formatMessage({ id: 'pages.agent.chat.deepTaskPlan' })}</Text>
                 <div>
                   <Text type="secondary">
-                    {intl.formatMessage({ id: 'pages.agent.chat.deepRunning' })}
+                    {isDeepRequestProcessing
+                      ? intl.formatMessage({ id: 'pages.agent.chat.deepRunning' })
+                      : intl.formatMessage({ id: 'pages.agent.chat.deepTaskPlan' })}
                   </Text>
-                  <Button
-                    type="text"
-                    size="small"
-                    onClick={() => setTaskPlanCollapsed((value) => !value)}
-                  >
-                    {intl.formatMessage({
-                      id: taskPlanCollapsed
-                        ? 'pages.agent.chat.deepTaskPlan.expand'
-                        : 'pages.agent.chat.deepTaskPlan.collapse',
-                    })}
-                  </Button>
                 </div>
               </div>
-              {!taskPlanCollapsed && (
-                <div className="agent-chat-deep-task-list">
-                  {deepRunTasks.map((task) => (
-                    <div className="agent-chat-deep-task" key={task.id}>
-                      {task.status === 'completed' ? (
-                        <CheckCircleFilled className="agent-chat-deep-task-completed" />
-                      ) : task.status === 'failed' ? (
-                        <CloseCircleFilled className="agent-chat-deep-task-failed" />
-                      ) : task.status === 'running' ? (
-                        <LoadingOutlined spin className="agent-chat-deep-task-running" />
-                      ) : (
-                        <span className="agent-chat-deep-task-pending" />
-                      )}
-                      <span>{task.title}</span>
-                      <Text type="secondary" className="agent-chat-deep-task-status">
-                        {intl.formatMessage({
-                          id: `pages.agent.chat.deepTaskStatus.${task.status}`,
-                        })}
-                      </Text>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
+              <div className="agent-chat-deep-task-list">
+                {visibleDeepTasks.length === 0 && (
+                  <div className="agent-chat-deep-task-preparing">
+                    <LoadingOutlined spin />
+                    <span>{intl.formatMessage({ id: 'pages.agent.chat.deepRunning' })}</span>
+                  </div>
+                )}
+                {visibleDeepTasks.map((task) => (
+                  <div className={`agent-chat-deep-task agent-chat-deep-task-${task.status}`} key={task.id}>
+                    {task.status === 'completed' ? (
+                      <CheckCircleFilled className="agent-chat-deep-task-state-completed" />
+                    ) : task.status === 'failed' ? (
+                      <CloseCircleFilled className="agent-chat-deep-task-state-failed" />
+                    ) : task.status === 'running' ? (
+                      <LoadingOutlined spin className="agent-chat-deep-task-state-running" />
+                    ) : (
+                      <span className="agent-chat-deep-task-state-pending" />
+                    )}
+                    <span>{task.title}</span>
+                    <Text type="secondary" className="agent-chat-deep-task-status">
+                      {intl.formatMessage({ id: `pages.agent.chat.deepTaskStatus.${task.status}` })}
+                    </Text>
+                  </div>
+                ))}
+              </div>
+            </aside>
           )}
 
           {/* 消息列表 */}

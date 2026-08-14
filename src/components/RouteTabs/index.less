@@ -1,7 +1,8 @@
 .route-tabs {
   position: sticky;
   top: 60px;
-  z-index: 100;
+  // 页签只需要压住普通内容，不能盖住 ProLayout 的侧栏折叠按钮。
+  z-index: 10;
   background: #fff;
   border-bottom: 1px solid #f0f0f0;
 }

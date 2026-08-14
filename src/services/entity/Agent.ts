@@ -720,7 +720,7 @@ export interface AgentRun {
   completionTokens?: number;
   totalTokens?: number;
   latencyMs?: number;
-  status?: 0 | 1 | 2 | 3 | 4 | 5;
+  status?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
   errorMsg?: string;
   executionMode?: 'STANDARD' | 'DEEP';
   externalRunId?: string;
@@ -1216,6 +1216,8 @@ export interface AgentSkillPreviewVo {
   /** 粗略 token 估算 */
   estimatedTokens?: number;
 }
+
+export interface AgentRunPlan { runId?: string; status?: string; pauseReason?: string; currentVersion?: number; currentStepId?: string; lastActiveAt?: number; versions?: Array<{ version?: number; reason?: string; summary?: string; steps?: Array<{ id?: string; stepKey?: string; sequence?: number; title?: string; status?: string; resultSummary?: string }> }> }
 
 export interface ModelCatalog {
   id?: string;

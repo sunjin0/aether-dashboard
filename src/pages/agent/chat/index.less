@@ -16,18 +16,18 @@
   min-height: 560px;
   overflow: hidden;
   border: 1px solid @line;
-  border-radius: 18px;
+  border-radius: 14px;
   background: #fff;
   box-shadow: 0 12px 36px rgba(31, 42, 68, 0.06);
 }
 
 .@{chat-prefix}-sidebar {
   display: flex;
-  width: 264px;
+  width: 286px;
   flex-shrink: 0;
   flex-direction: column;
   border-right: 1px solid @line;
-  background: #f7f8fa;
+  background: #fff;
   transition:
     width 0.25s ease,
     opacity 0.2s ease;
@@ -60,36 +60,38 @@
   }
 
   .@{chat-prefix}-sidebar-toggle {
+    position: relative;
+    z-index: 101;
     color: #657085;
   }
 
   .@{chat-prefix}-new-conversation {
-    padding: 2px 12px 12px;
+    padding: 2px 16px 14px;
 
     .ant-btn {
-      height: 44px;
-      border-color: #e1e5eb;
-      border-radius: 22px;
-      background: #fff;
-      color: @ink;
-      font-weight: 500;
-      box-shadow: 0 2px 8px rgba(31, 42, 68, 0.04);
+      height: 42px;
+      border-color: @primary;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #2454ff, #3e70ff);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 5px 12px rgba(52, 91, 255, 0.18);
 
       &:hover {
-        border-color: #cfd6ff;
-        color: @primary;
-        background: #fbfcff;
+        border-color: #1c4ae5;
+        color: #fff;
+        background: #1f50ed;
       }
     }
   }
 
   .@{chat-prefix}-sidebar-search {
-    padding: 0 12px 10px;
+    padding: 0 16px 10px;
 
     .ant-input-affix-wrapper {
-      border: 0;
-      border-radius: 10px;
-      background: #eef0f3;
+      border: 1px solid #dfe5ef;
+      border-radius: 8px;
+      background: #fff;
       box-shadow: none;
     }
   }
@@ -97,7 +99,7 @@
   .@{chat-prefix}-session-list {
     min-height: 0;
     flex: 1;
-    padding: 2px 8px 16px;
+    padding: 2px 12px 16px;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: #d9dde4 transparent;
@@ -119,11 +121,11 @@
   }
 
   .ant-list-item {
-    min-height: 38px;
+    min-height: 42px;
     margin: 2px 0;
     padding: 8px 10px;
     border: 0 !important;
-    border-radius: 8px;
+    border-radius: 9px;
     cursor: pointer;
     transition: background 0.16s ease;
 
@@ -139,15 +141,16 @@
   }
 
   .@{chat-prefix}-session-active {
-    background: #e7ebf3 !important;
+    background: #edf3ff !important;
 
     .ant-typography {
-      color: @ink;
+      color: #1d5dff;
     }
   }
 }
 
 .@{chat-prefix}-panel {
+  position: relative;
   display: flex;
   min-width: 0;
   flex: 1;
@@ -158,11 +161,11 @@
 .@{chat-prefix}-panel-header {
   z-index: 2;
   display: flex;
-  min-height: 62px;
+  min-height: 70px;
   flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 22px;
+  padding: 12px 28px;
   border-bottom: 1px solid rgba(232, 235, 240, 0.72);
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(10px);
@@ -183,6 +186,25 @@
 
   .@{chat-prefix}-panel-menu {
     margin-left: -8px;
+  }
+}
+
+.@{chat-prefix}-plan-trigger {
+  height: 38px;
+  max-width: min(430px, 45vw);
+  overflow: hidden;
+  border: 1px solid #b9c9ff;
+  border-radius: 9px;
+  background: #f8faff;
+  color: #1757ff;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: #7f9cff !important;
+    background: #eef3ff !important;
+    color: #124de4 !important;
   }
 }
 
@@ -217,6 +239,37 @@
   border: 1px solid #dfe5ff;
   border-radius: 10px;
   background: #f8f9ff;
+}
+
+.@{chat-prefix}-task-plan-drawer {
+  position: absolute;
+  z-index: 3;
+  top: 70px;
+  right: 0;
+  bottom: 0;
+  width: 320px;
+  padding: 18px 16px;
+  overflow-y: auto;
+  border-left: 1px solid #e6eaf2;
+  background: #fff;
+  box-shadow: none;
+
+  .@{chat-prefix}-task-plan-header {
+    margin-bottom: 12px;
+  }
+}
+
+.@{chat-prefix}-panel-plan-open {
+  .@{chat-prefix}-message-container,
+  .@{chat-prefix}-input-bar {
+    margin-right: 320px;
+  }
+
+  .@{chat-prefix}-message-list,
+  .@{chat-prefix}-input-wrapper,
+  .@{chat-prefix}-input-hint {
+    width: min(100%, 760px);
+  }
 }
 
 .@{chat-prefix}-task-plan-header {
@@ -340,20 +393,24 @@
 
 .@{chat-prefix}-deep-task-list {
   display: flex;
-  margin-top: 8px;
-  padding-top: 8px;
+  margin: 0 -16px;
+  padding-top: 0;
   flex-direction: column;
-  gap: 5px;
-  border-top: 1px solid #e0e5f8;
+  gap: 0;
+  border-top: 1px solid #edf0f5;
 }
 
 .@{chat-prefix}-deep-task {
   display: flex;
+  min-height: 58px;
   min-width: 0;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
+  padding: 8px 16px;
+  border-bottom: 1px solid #edf0f5;
   color: #4d576a;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 600;
 
   > span:nth-child(2) {
     overflow: hidden;
@@ -362,19 +419,38 @@
   }
 }
 
+.@{chat-prefix}-deep-task-running {
+  background: linear-gradient(90deg, #f4f7ff, #eef4ff);
+  color: #1d5dff;
+}
+
+.@{chat-prefix}-deep-task-preparing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 10px 12px;
+  color: #62708a;
+  font-size: 13px;
+}
+
 .@{chat-prefix}-deep-task-completed {
+  color: #31425f;
+}
+
+.@{chat-prefix}-deep-task-state-completed {
   color: #52c41a;
 }
 
-.@{chat-prefix}-deep-task-failed {
+.@{chat-prefix}-deep-task-state-failed {
   color: #ff4d4f;
 }
 
-.@{chat-prefix}-deep-task-running {
+.@{chat-prefix}-deep-task-state-running {
   color: @primary;
 }
 
-.@{chat-prefix}-deep-task-pending {
+.@{chat-prefix}-deep-task-state-pending {
   width: 10px;
   height: 10px;
   flex: 0 0 10px;
@@ -383,14 +459,14 @@
 }
 
 .@{chat-prefix}-deep-task-status {
-  margin-left: auto;
+  display: none;
   white-space: nowrap;
 }
 
 .@{chat-prefix}-input-bar {
   z-index: 3;
   flex-shrink: 0;
-  padding: 10px 24px 14px;
+  padding: 10px 28px 14px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0), #fff 24%);
   transition: padding-bottom 0.24s ease;
 }
@@ -401,12 +477,12 @@
 
 .@{chat-prefix}-input-wrapper {
   display: flex;
-  width: min(100%, 780px);
+  width: min(100%, 820px);
   margin: 0 auto;
   padding: 10px 12px 9px;
   flex-direction: column;
   border: 1px solid #dfe3e9;
-  border-radius: 20px;
+  border-radius: 12px;
   background: #fff;
   box-shadow: 0 10px 34px rgba(31, 42, 68, 0.1);
   transition:

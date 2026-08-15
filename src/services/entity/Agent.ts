@@ -740,6 +740,8 @@ export interface AgentRunStep {
 
 export interface AgentStreamRunStepData {
   conversationId?: string;
+  sessionId?: string;
+  taskId?: string;
   runId?: string;
   eventId?: string;
   eventType?: string;
@@ -1215,6 +1217,103 @@ export interface AgentSkillPreviewVo {
   resources?: AgentSkillPreviewResourceItem[];
   /** 粗略 token 估算 */
   estimatedTokens?: number;
+}
+
+/** 持续 Deep Agent 会话快照。 */
+export interface AgentSession {
+  id?: string;
+  conversationId?: string;
+  agentDefinitionId?: string;
+  userId?: string;
+  status?: string;
+  activeTaskId?: string;
+  memoryVersion?: number;
+  lastActiveAt?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/** Session 内的用户任务。 */
+export interface AgentTask {
+  id?: string;
+  sessionId?: string;
+  userId?: string;
+  agentDefinitionId?: string;
+  title?: string;
+  status?: string;
+  currentRunId?: string;
+  pauseReason?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface AgentSessionSnapshot {
+  session?: AgentSession;
+  tasks?: AgentTask[];
+}
+
+/** Session 范围内的可审计事件（不包含原始推理链）。 */
+export interface AgentTaskEvent {
+  id?: string;
+  taskId?: string;
+  runId?: string;
+  eventType?: string;
+  summary?: string;
+  data?: string;
+  occurredAt?: number;
+}
+
+/** Session 快照 + 任务列表 + 有序事件，刷新后以此恢复工作区。 */
+export interface AgentSessionTimeline {
+  session?: AgentSession;
+  tasks?: AgentTask[];
+  events?: AgentTaskEvent[];
+}
+
+/** 任务计划的一个版本，reason 标明 INITIAL / TOOL_RESULT / USER_INPUT / GOAL_CHANGED 等。 */
+export interface AgentPlanVersion {
+  version?: number;
+  reason?: string;
+  summary?: string;
+  steps?: AgentPlanStep[];
+}
+
+export interface AgentPlanStep {
+  id?: string;
+  stepKey?: string;
+  sequence?: number;
+  title?: string;
+  status?: string;
+  resultSummary?: string;
+}
+
+/** 经过脱敏的 Session 长期任务结论。 */
+export interface AgentSessionMemory {
+  id?: string;
+  sessionId?: string;
+  memoryType?: string;
+  content?: string;
+  summary?: string;
+  sourceTaskId?: string;
+  sourceRunId?: string;
+  importance?: number;
+  sensitivityLevel?: string;
+  createdAt?: number;
+}
+
+/** 当前 Deep 会话的脱敏运行概览。 */
+export interface AgentSessionMetrics {
+  sessionId?: string;
+  activeTaskId?: string;
+  lastActiveAt?: number;
+  taskCount?: number;
+  taskStatusCounts?: Record<string, number>;
+  memoryCount?: number;
+}
+
+export interface AgentTaskSnapshot {
+  task?: AgentTask;
+  plan?: AgentRunPlan;
 }
 
 export interface AgentRunPlan { runId?: string; status?: string; pauseReason?: string; currentVersion?: number; currentStepId?: string; lastActiveAt?: number; versions?: Array<{ version?: number; reason?: string; summary?: string; steps?: Array<{ id?: string; stepKey?: string; sequence?: number; title?: string; status?: string; resultSummary?: string }> }> }

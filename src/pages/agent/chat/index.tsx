@@ -20,6 +20,7 @@ import type { RcFile, UploadFile, UploadProps } from 'antd/es/upload/interface'
 import {
   ArrowDownOutlined,
   ArrowUpOutlined,
+  BarChartOutlined,
   BulbOutlined,
   CheckCircleFilled,
   ClearOutlined,
@@ -41,6 +42,7 @@ import {
   uploadAgentChatAttachments,
 } from '@/services/agent/ChatController'
 import { cancelAgentRun, getAgentRunPlan } from '@/services/agent/RunController'
+import { deleteAgentSessionMemory, getAgentSessionByConversation, getAgentSessionMemories, getAgentSessionMetrics, getAgentSessionTimeline, getAgentTaskSnapshot, pauseAgentSessionTask, resumeAgentSessionTask, submitAgentTaskFeedback } from '@/services/agent/SessionController'
 import { getAgentArtifactByRun } from '@/services/agent/ArtifactController'
 import { cancelSandboxTask, decideSandboxTask, getSandboxTaskByRun, retrySandboxTask } from '@/services/agent/SandboxTaskController'
 import {
@@ -61,6 +63,10 @@ import {
   AgentStreamToolCallData,
   KnowledgeSource,
   AgentRunPlan,
+  AgentSessionMetrics,
+  AgentSessionMemory,
+  AgentTask,
+  AgentTaskEvent,
 } from '@/services/entity/Agent'
 import { Option } from '@/services/entity/Common'
 import AgentMessageBubble from '@/components/AgentMessageBubble'
@@ -153,11 +159,24 @@ const ChatDebugPage: React.FC = () => {
   const [deepRunSteps, setDeepRunSteps] = useState<AgentStreamRunStepData[]>([])
   const [persistedDeepTasks, setPersistedDeepTasks] = useState<DeepTask[]>([])
   const [taskPlanDrawerOpen, setTaskPlanDrawerOpen] = useState(false)
+  const [activeDeepSessionId, setActiveDeepSessionId] = useState<string>()
+  const [sessionMemories, setSessionMemories] = useState<AgentSessionMemory[]>([])
+  const [sessionMemoryModalOpen, setSessionMemoryModalOpen] = useState(false)
+  const [selectedSessionTask, setSelectedSessionTask] = useState<AgentTask>()
+  const [taskFeedbackOpen, setTaskFeedbackOpen] = useState(false)
+  const [taskFeedbackRating, setTaskFeedbackRating] = useState(5)
+  const [taskFeedbackNote, setTaskFeedbackNote] = useState('')
+  const [sessionMetrics, setSessionMetrics] = useState<AgentSessionMetrics>()
+  const [sessionMetricsModalOpen, setSessionMetricsModalOpen] = useState(false)
+  const [sessionTasks, setSessionTasks] = useState<AgentTask[]>([])
+  const [sessionTaskTimeline, setSessionTaskTimeline] = useState<AgentTaskEvent[]>([])
+  const [sessionTaskPlan, setSessionTaskPlan] = useState<AgentRunPlan>()
   const messageEndRef = useRef<HTMLDivElement>(null)
   const messageListRef = useRef<HTMLDivElement>(null)
   const abortControllerRef = useRef<AbortController>()
   const deepStreamAbortControllerRef = useRef<AbortController>()
   const deepRunIdRef = useRef<string | null>(null)
+  const deepStreamSubscribedRunIdRef = useRef<string>()
   const streamingAssistantIdRef = useRef<string>()
   const stoppedByUserRef = useRef(false)
   const typewriterQueueRef = useRef('')
@@ -183,9 +202,16 @@ const ChatDebugPage: React.FC = () => {
     deepStreamAbortControllerRef.current?.abort()
     deepStreamAbortControllerRef.current = undefined
     deepRunIdRef.current = null
+    deepStreamSubscribedRunIdRef.current = undefined
     setDeepRunId(null)
     setDeepRunSteps([])
     setPersistedDeepTasks([])
+    setActiveDeepSessionId(undefined)
+    setSessionMemories([])
+    setSelectedSessionTask(undefined)
+    setSessionTasks([])
+    setSessionTaskTimeline([])
+    setSessionTaskPlan(undefined)
     loadedPlanRunIdRef.current = undefined
     setTaskPlanDrawerOpen(false)
   }
@@ -233,6 +259,29 @@ const ChatDebugPage: React.FC = () => {
   const visibleDeepTasks = deepRunTasks.length > 0 ? deepRunTasks : persistedDeepTasks
   const activeDeepTask = visibleDeepTasks.find((task) => task.status === 'running')
 
+  const toDeepTaskStatus = (status?: string): DeepTask['status'] => {
+    switch (status?.toUpperCase()) {
+      case 'COMPLETED':
+      case 'SUCCEEDED':
+      case 'SUCCESS':
+      case 'DONE':
+        return 'completed'
+      case 'RUNNING':
+      case 'IN_PROGRESS':
+      case 'PLANNING':
+      case 'WAITING_USER':
+      case 'WAITING_APPROVAL':
+      case 'PAUSED':
+        return 'running'
+      case 'FAILED':
+      case 'CANCELLED':
+      case 'BLOCKED':
+        return 'failed'
+      default:
+        return 'pending'
+    }
+  }
+
   const loadPersistedTaskPlan = async (runId: string, force = false) => {
     if (!runId || (!force && loadedPlanRunIdRef.current === runId)) return
     loadedPlanRunIdRef.current = runId
@@ -243,11 +292,10 @@ const ChatDebugPage: React.FC = () => {
       const currentVersion = plan.versions?.find((item) => item.version === plan.currentVersion)
         || plan.versions?.[plan.versions.length - 1]
       setPersistedDeepTasks((currentVersion?.steps || []).map((step, index) => {
-        const status = step.status?.toUpperCase()
         return {
           id: step.id || step.stepKey || `plan-${index + 1}`,
           title: step.title || `步骤 ${index + 1}`,
-          status: status === 'COMPLETED' ? 'completed' : status === 'RUNNING' ? 'running' : status === 'FAILED' ? 'failed' : 'pending',
+          status: toDeepTaskStatus(step.status),
         }
       }))
     } catch {
@@ -255,16 +303,147 @@ const ChatDebugPage: React.FC = () => {
     }
   }
 
-  const acceptDeepRun = (data: AgentStreamAcceptedData) => {
+  const loadSessionWorkspace = async (targetConversationId: string) => {
+    if (!targetConversationId) return
+    try {
+      // 先拉取 Session 快照与时间线，再据此恢复工作区；前端内存不作为任务状态来源。
+      const [sessionResult, timelineResult] = await Promise.allSettled([
+        getAgentSessionByConversation(targetConversationId),
+        getAgentSessionTimeline(targetConversationId),
+      ])
+      const sessionResponse = sessionResult.status === 'fulfilled' ? sessionResult.value : undefined
+      const timelineResponse = timelineResult.status === 'fulfilled' ? timelineResult.value : undefined
+      const session = sessionResponse?.data?.session
+      if (!session) return
+      setActiveDeepSessionId(session.id)
+      const tasks = sessionResponse?.data?.tasks?.length
+        ? sessionResponse.data.tasks
+        : timelineResponse?.data?.tasks || []
+      setSessionTasks(tasks)
+      setSessionTaskTimeline(timelineResponse?.data?.events || [])
+      const activeTask = tasks.find((item: AgentTask) =>
+        ['QUEUED', 'PLANNING', 'RUNNING', 'WAITING_USER', 'WAITING_APPROVAL', 'PAUSED'].includes(item.status || ''),
+      ) || tasks[0]
+      if (!activeTask?.id) return
+      setSelectedSessionTask(activeTask)
+      const taskResponse = await getAgentTaskSnapshot(activeTask.id)
+      const plan = taskResponse.data?.plan
+      setSessionTaskPlan(plan)
+      const currentVersion = plan?.versions?.find((item) => item.version === plan.currentVersion)
+        || plan?.versions?.[plan.versions.length - 1]
+      if (currentVersion?.steps?.length) {
+        setPersistedDeepTasks(currentVersion.steps.map((step, index) => {
+          return {
+            id: step.id || step.stepKey || `task-${index + 1}`,
+            title: step.title || `步骤 ${index + 1}`,
+            status: toDeepTaskStatus(step.status),
+          }
+        }))
+        setTaskPlanDrawerOpen(true)
+      } else {
+        // 排队任务尚未被派发，因此没有计划版本；仍应让用户看见它而不是误以为请求丢失。
+        setPersistedDeepTasks([{
+          id: activeTask.id,
+          title: activeTask.title || '等待处理任务',
+          status: toDeepTaskStatus(activeTask.status),
+        }])
+        setTaskPlanDrawerOpen(true)
+      }
+    } catch {
+      // Standard conversations and historical conversations may not own a Deep Session yet.
+    }
+  }
+
+  const handlePauseSessionTask = async () => {
+    if (!selectedSessionTask?.id || !conversationId) return
+    const response = await pauseAgentSessionTask(selectedSessionTask.id)
+    if (response.code === 200) {
+      message.success('任务已暂停')
+      setSelectedSessionTask((item) => (item ? { ...item, status: 'PAUSED' } : item))
+      await loadSessionWorkspace(conversationId)
+    } else {
+      message.error('暂停任务失败')
+    }
+  }
+
+  const handleResumeSessionTask = async () => {
+    if (!selectedSessionTask?.id || !conversationId) return
+    const response = await resumeAgentSessionTask(selectedSessionTask.id)
+    if (response.code === 200) {
+      message.success('任务已继续')
+      setSelectedSessionTask((item) => (item ? { ...item, status: 'RUNNING' } : item))
+      await loadSessionWorkspace(conversationId)
+    } else {
+      message.error('继续任务失败')
+    }
+  }
+
+  /** 等待用户输入/审批时，滚动到消息区中对应的交互卡片继续作答。 */
+  const handleWorkspaceUserInput = () => {
+    messageEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const openSessionMemory = async () => {
+    if (!activeDeepSessionId) return
+    try {
+      const response = await getAgentSessionMemories(activeDeepSessionId)
+      if (response.code === 200) {
+        setSessionMemories(response.data || [])
+        setSessionMemoryModalOpen(true)
+      }
+    } catch {
+      message.error('读取会话记忆失败')
+    }
+  }
+
+  const removeSessionMemory = async (memoryId?: string) => {
+    if (!activeDeepSessionId || !memoryId) return
+    const response = await deleteAgentSessionMemory(activeDeepSessionId, memoryId)
+    if (response.code === 200) {
+      setSessionMemories((items) => items.filter((item) => item.id !== memoryId))
+      message.success('记忆已删除')
+    }
+  }
+
+  const openSessionMetrics = async () => {
+    if (!activeDeepSessionId) return
+    try {
+      const response = await getAgentSessionMetrics(activeDeepSessionId)
+      if (response.code === 200) {
+        setSessionMetrics(response.data)
+        setSessionMetricsModalOpen(true)
+      }
+    } catch {
+      message.error('读取运行概览失败')
+    }
+  }
+
+  const submitTaskFeedback = async () => {
+    if (!selectedSessionTask?.id) return
+    const response = await submitAgentTaskFeedback(selectedSessionTask.id, {
+      rating: taskFeedbackRating,
+      note: taskFeedbackNote.trim() || undefined,
+    })
+    if (response.code === 200) {
+      setTaskFeedbackOpen(false)
+      setTaskFeedbackNote('')
+      message.success('反馈已记录')
+    }
+  }
+
+  const acceptDeepRun = async (data: AgentStreamAcceptedData) => {
     deepRunIdRef.current = data.runId
     setDeepRunId(data.runId)
     setConversationId(data.conversationId)
     // Deep 运行已受理时立即展示规划区域；首个 plan.updated 事件到达前显示准备态。
     setTaskPlanDrawerOpen(true)
     void loadPersistedTaskPlan(data.runId)
+    // 先恢复 Session 快照与时间线，再订阅 SSE 增量，保证工作区以 API 历史状态为准。
+    await loadSessionWorkspace(data.conversationId)
     deepStreamAbortControllerRef.current?.abort()
     const controller = new AbortController()
     deepStreamAbortControllerRef.current = controller
+    deepStreamSubscribedRunIdRef.current = data.runId
     void streamDeepRun(data.runId, {
       signal: controller.signal,
       onRunStep: addDeepRunStep,
@@ -400,6 +579,30 @@ const ChatDebugPage: React.FC = () => {
     setDeepRunId(messageWithRun.runId)
     void loadPersistedTaskPlan(messageWithRun.runId)
   }, [messages])
+
+  // 刷新/切换会话恢复工作区后，若当前任务仍可推进，则重新订阅该运行的 SSE 增量。
+  // 只有历史的非终态任务才会触发，避免对已完成运行重复回放。
+  useEffect(() => {
+    const status = selectedSessionTask?.status?.toUpperCase()
+    const runId = selectedSessionTask?.currentRunId
+    if (!conversationId || !runId) return
+    if (!['QUEUED', 'PLANNING', 'RUNNING', 'WAITING_USER', 'WAITING_APPROVAL', 'PAUSED'].includes(status || '')) return
+    if (deepStreamSubscribedRunIdRef.current === runId) return
+    deepStreamSubscribedRunIdRef.current = runId
+    deepStreamAbortControllerRef.current?.abort()
+    const controller = new AbortController()
+    deepStreamAbortControllerRef.current = controller
+    void streamDeepRun(runId, {
+      signal: controller.signal,
+      onRunStep: addDeepRunStep,
+      onDone: async (done) => {
+        if (done.conversationId) {
+          setConversationId(done.conversationId)
+          await loadMessages(done.conversationId)
+        }
+      },
+    }).catch(() => undefined)
+  }, [conversationId, selectedSessionTask])
 
   const loadAgents = async () => {
     setLoadingAgents(true)
@@ -643,6 +846,7 @@ const ChatDebugPage: React.FC = () => {
     resetDeepProgress()
     resetConversationTurnState()
     await loadMessages(conversation.id)
+    await loadSessionWorkspace(conversation.id)
   }
 
   const markAssistantStopped = (assistantClientId?: string) => {
@@ -1336,6 +1540,35 @@ const ChatDebugPage: React.FC = () => {
   const inputDisabled =
     sending || chatTurnState === 'waiting_user' || chatTurnState === 'submitting_answer'
 
+  // 会话工作区：实时流优先展示流式计划；否则展示已持久化的计划版本；都没有时退回扁平任务列表。
+  const showLivePlanTasks = deepRunTasks.length > 0
+  const showVersionedPlan = !showLivePlanTasks && Boolean(sessionTaskPlan?.versions?.length)
+  const activeTaskStatus = selectedSessionTask?.status?.toUpperCase()
+  const taskPausable = Boolean(selectedSessionTask?.currentRunId)
+    && ['QUEUED', 'PLANNING', 'RUNNING'].includes(activeTaskStatus || '')
+  const taskResumable = Boolean(selectedSessionTask?.currentRunId) && activeTaskStatus === 'PAUSED'
+  const taskWaitingUser = activeTaskStatus === 'WAITING_USER' || activeTaskStatus === 'WAITING_APPROVAL'
+
+  const sessionTaskStatusColor = (status?: string): string => {
+    switch (status?.toUpperCase()) {
+      case 'COMPLETED':
+        return 'success'
+      case 'FAILED':
+      case 'CANCELLED':
+        return 'error'
+      case 'RUNNING':
+      case 'PLANNING':
+      case 'QUEUED':
+        return 'processing'
+      case 'WAITING_USER':
+      case 'WAITING_APPROVAL':
+      case 'PAUSED':
+        return 'warning'
+      default:
+        return 'default'
+    }
+  }
+
   useEffect(() => {
     // 用户发起 Deep 请求后无需等待规划回调，直接打开卡片反馈正在处理。
     if (isDeepRequestProcessing) {
@@ -1562,6 +1795,30 @@ const ChatDebugPage: React.FC = () => {
                 {visibleDeepTasks.length > 0 && ` · ${visibleDeepTasks.filter((task) => task.status === 'completed').length}/${visibleDeepTasks.length}`}
               </Button>
             )}
+            {activeDeepSessionId && (
+              <Tooltip title="查看已保存的任务结论，可随时删除">
+                <Button
+                  className="agent-chat-plan-trigger"
+                  type="text"
+                  icon={<BulbOutlined />}
+                  onClick={() => void openSessionMemory()}
+                >
+                  记忆
+                </Button>
+              </Tooltip>
+            )}
+            {activeDeepSessionId && (
+              <Tooltip title="查看任务与记忆的运行概览">
+                <Button
+                  className="agent-chat-plan-trigger"
+                  type="text"
+                  icon={<BarChartOutlined />}
+                  onClick={() => void openSessionMetrics()}
+                >
+                  概览
+                </Button>
+              </Tooltip>
+            )}
           </div>
 
           {taskPlanDrawerOpen && shouldShowTaskPlan && (
@@ -1569,6 +1826,11 @@ const ChatDebugPage: React.FC = () => {
               <div className="agent-chat-task-plan-header">
                 <Text strong>{intl.formatMessage({ id: 'pages.agent.chat.deepTaskPlan' })}</Text>
                 <div>
+                  {selectedSessionTask?.status === 'COMPLETED' && (
+                    <Button type="link" size="small" onClick={() => setTaskFeedbackOpen(true)}>
+                      评价结果
+                    </Button>
+                  )}
                   <Text type="secondary">
                     {isDeepRequestProcessing
                       ? intl.formatMessage({ id: 'pages.agent.chat.deepRunning' })
@@ -1576,33 +1838,190 @@ const ChatDebugPage: React.FC = () => {
                   </Text>
                 </div>
               </div>
-              <div className="agent-chat-deep-task-list">
-                {visibleDeepTasks.length === 0 && (
-                  <div className="agent-chat-deep-task-preparing">
-                    <LoadingOutlined spin />
-                    <span>{intl.formatMessage({ id: 'pages.agent.chat.deepRunning' })}</span>
-                  </div>
-                )}
-                {visibleDeepTasks.map((task) => (
-                  <div className={`agent-chat-deep-task agent-chat-deep-task-${task.status}`} key={task.id}>
-                    {task.status === 'completed' ? (
-                      <CheckCircleFilled className="agent-chat-deep-task-state-completed" />
-                    ) : task.status === 'failed' ? (
-                      <CloseCircleFilled className="agent-chat-deep-task-state-failed" />
-                    ) : task.status === 'running' ? (
-                      <LoadingOutlined spin className="agent-chat-deep-task-state-running" />
-                    ) : (
-                      <span className="agent-chat-deep-task-state-pending" />
-                    )}
-                    <span>{task.title}</span>
-                    <Text type="secondary" className="agent-chat-deep-task-status">
-                      {intl.formatMessage({ id: `pages.agent.chat.deepTaskStatus.${task.status}` })}
+
+              {selectedSessionTask && (
+                <div className="agent-chat-session-task-header">
+                  <div className="agent-chat-session-task-title">
+                    <Text strong ellipsis style={{ display: 'block' }}>
+                      {selectedSessionTask.title || '当前任务'}
                     </Text>
+                    <Tag color={sessionTaskStatusColor(selectedSessionTask.status)}>
+                      {selectedSessionTask.status}
+                    </Tag>
                   </div>
-                ))}
+                  {selectedSessionTask.pauseReason && (
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {selectedSessionTask.pauseReason}
+                    </Text>
+                  )}
+                  <div className="agent-chat-session-task-actions">
+                    {taskPausable && (
+                      <Button size="small" onClick={() => void handlePauseSessionTask()}>
+                        暂停
+                      </Button>
+                    )}
+                    {taskResumable && (
+                      <Button size="small" type="primary" onClick={() => void handleResumeSessionTask()}>
+                        继续
+                      </Button>
+                    )}
+                    {taskWaitingUser && (
+                      <Button size="small" type="primary" ghost onClick={handleWorkspaceUserInput}>
+                        去回答
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="agent-chat-deep-task-list">
+                {showVersionedPlan ? (
+                  (sessionTaskPlan?.versions || []).slice().reverse().map((version) => (
+                    <div key={version.version || 0} className="agent-chat-plan-version">
+                      <Text strong style={{ fontSize: 12 }}>
+                        版本 {version.version}：{version.summary || version.reason}
+                      </Text>
+                      {version.steps?.map((step) => (
+                        <div
+                          key={step.id || step.stepKey || step.sequence}
+                          className={`agent-chat-plan-step agent-chat-plan-step-${(step.status || 'pending').toLowerCase()}`}
+                        >
+                          <span className="agent-chat-plan-step-index">
+                            {step.sequence ? `${step.sequence}.` : ''}
+                          </span>
+                          <span className="agent-chat-plan-step-title">{step.title}</span>
+                          {step.status && (
+                            <Tag color={step.status.toUpperCase() === 'COMPLETED' ? 'success' : step.status.toUpperCase() === 'RUNNING' ? 'processing' : 'default'}>
+                              {step.status}
+                            </Tag>
+                          )}
+                          {step.resultSummary && (
+                            <Text type="secondary" className="agent-chat-plan-step-summary">
+                              {step.resultSummary}
+                            </Text>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    {visibleDeepTasks.length === 0 && (
+                      <div className="agent-chat-deep-task-preparing">
+                        <LoadingOutlined spin />
+                        <span>{intl.formatMessage({ id: 'pages.agent.chat.deepRunning' })}</span>
+                      </div>
+                    )}
+                    {visibleDeepTasks.map((task) => (
+                      <div className={`agent-chat-deep-task agent-chat-deep-task-${task.status}`} key={task.id}>
+                        {task.status === 'completed' ? (
+                          <CheckCircleFilled className="agent-chat-deep-task-state-completed" />
+                        ) : task.status === 'failed' ? (
+                          <CloseCircleFilled className="agent-chat-deep-task-state-failed" />
+                        ) : task.status === 'running' ? (
+                          <LoadingOutlined spin className="agent-chat-deep-task-state-running" />
+                        ) : (
+                          <span className="agent-chat-deep-task-state-pending" />
+                        )}
+                        <span>{task.title}</span>
+                        <Text type="secondary" className="agent-chat-deep-task-status">
+                          {intl.formatMessage({ id: `pages.agent.chat.deepTaskStatus.${task.status}` })}
+                        </Text>
+                      </div>
+                    ))}
+                  </>
+                )}
               </div>
+
+              {sessionTaskTimeline.length > 0 && (
+                <div className="agent-chat-session-timeline">
+                  <Text strong style={{ fontSize: 12 }}>
+                    近期事件
+                  </Text>
+                  {sessionTaskTimeline.slice(-8).map((event) => (
+                    <div
+                      key={event.id || `${event.eventType}-${event.occurredAt}`}
+                      className="agent-chat-session-timeline-item"
+                    >
+                      <span className="agent-chat-session-timeline-dot" />
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        {event.summary || event.eventType}
+                      </Text>
+                    </div>
+                  ))}
+                </div>
+              )}
             </aside>
           )}
+
+          <Modal
+            title="会话记忆"
+            open={sessionMemoryModalOpen}
+            footer={null}
+            onCancel={() => setSessionMemoryModalOpen(false)}
+          >
+            <List
+              locale={{ emptyText: '暂无可用的任务记忆' }}
+              dataSource={sessionMemories}
+              renderItem={(memory) => (
+                <List.Item
+                  actions={[
+                    <Button key="delete" type="link" danger onClick={() => void removeSessionMemory(memory.id)}>
+                      删除
+                    </Button>,
+                  ]}
+                >
+                  <List.Item.Meta
+                    title={memory.summary || '任务结论'}
+                    description={memory.content}
+                  />
+                </List.Item>
+              )}
+            />
+          </Modal>
+
+          <Modal
+            title="任务反馈"
+            open={taskFeedbackOpen}
+            okText="提交反馈"
+            cancelText="取消"
+            onCancel={() => setTaskFeedbackOpen(false)}
+            onOk={() => void submitTaskFeedback()}
+          >
+            <div style={{ marginBottom: 12 }}>评分</div>
+            <Select
+              style={{ width: '100%', marginBottom: 16 }}
+              value={taskFeedbackRating}
+              onChange={setTaskFeedbackRating}
+              options={[5, 4, 3, 2, 1].map((rating) => ({
+                value: rating,
+                label: `${rating} 分`,
+              }))}
+            />
+            <Input.TextArea
+              value={taskFeedbackNote}
+              onChange={(event) => setTaskFeedbackNote(event.target.value)}
+              maxLength={500}
+              showCount
+              rows={4}
+              placeholder="可选：说明结果是否准确、完整，或需要改进的地方"
+            />
+          </Modal>
+
+          <Modal
+            title="运行概览"
+            open={sessionMetricsModalOpen}
+            footer={null}
+            onCancel={() => setSessionMetricsModalOpen(false)}
+          >
+            <List size="small">
+              <List.Item>任务总数：{sessionMetrics?.taskCount || 0}</List.Item>
+              <List.Item>已保存记忆：{sessionMetrics?.memoryCount || 0}</List.Item>
+              {Object.entries(sessionMetrics?.taskStatusCounts || {}).map(([status, count]) => (
+                <List.Item key={status}>{status}：{count}</List.Item>
+              ))}
+            </List>
+          </Modal>
 
           {/* 消息列表 */}
           <div className="agent-chat-message-container">

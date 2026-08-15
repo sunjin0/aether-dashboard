@@ -463,6 +463,86 @@
   white-space: nowrap;
 }
 
+.@{chat-prefix}-session-task-header {
+  padding: 10px 16px 8px;
+  border-bottom: 1px solid #edf0f5;
+}
+
+.@{chat-prefix}-session-task-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.@{chat-prefix}-session-task-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.@{chat-prefix}-plan-version {
+  padding: 8px 16px;
+  border-bottom: 1px solid #edf0f5;
+}
+
+.@{chat-prefix}-plan-step {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 4px 0 4px 12px;
+  color: #4d576a;
+  font-size: 12px;
+}
+
+.@{chat-prefix}-plan-step-index {
+  flex: 0 0 auto;
+  color: #aeb7c6;
+}
+
+.@{chat-prefix}-plan-step-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.@{chat-prefix}-plan-step-summary {
+  flex-basis: 100%;
+  padding-left: 12px;
+  font-size: 12px;
+}
+
+.@{chat-prefix}-plan-step-running {
+  background: #f4f7ff;
+}
+
+.@{chat-prefix}-session-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 16px;
+}
+
+.@{chat-prefix}-session-timeline-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.@{chat-prefix}-session-timeline-dot {
+  flex: 0 0 6px;
+  width: 6px;
+  height: 6px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: #aeb7c6;
+}
+
 .@{chat-prefix}-input-bar {
   z-index: 3;
   flex-shrink: 0;

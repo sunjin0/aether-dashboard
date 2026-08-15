@@ -358,11 +358,11 @@ const ChatDebugPage: React.FC = () => {
     if (!selectedSessionTask?.id || !conversationId) return
     const response = await pauseAgentSessionTask(selectedSessionTask.id)
     if (response.code === 200) {
-      message.success('任务已暂停')
+      message.success(intl.formatMessage({ id: 'pages.agent.chat.session.paused' }))
       setSelectedSessionTask((item) => (item ? { ...item, status: 'PAUSED' } : item))
       await loadSessionWorkspace(conversationId)
     } else {
-      message.error('暂停任务失败')
+      message.error(intl.formatMessage({ id: 'pages.agent.chat.session.pauseFailed' }))
     }
   }
 
@@ -370,11 +370,11 @@ const ChatDebugPage: React.FC = () => {
     if (!selectedSessionTask?.id || !conversationId) return
     const response = await resumeAgentSessionTask(selectedSessionTask.id)
     if (response.code === 200) {
-      message.success('任务已继续')
+      message.success(intl.formatMessage({ id: 'pages.agent.chat.session.resumed' }))
       setSelectedSessionTask((item) => (item ? { ...item, status: 'RUNNING' } : item))
       await loadSessionWorkspace(conversationId)
     } else {
-      message.error('继续任务失败')
+      message.error(intl.formatMessage({ id: 'pages.agent.chat.session.resumeFailed' }))
     }
   }
 
@@ -392,7 +392,7 @@ const ChatDebugPage: React.FC = () => {
         setSessionMemoryModalOpen(true)
       }
     } catch {
-      message.error('读取会话记忆失败')
+      message.error(intl.formatMessage({ id: 'pages.agent.chat.session.memoryLoadFailed' }))
     }
   }
 
@@ -401,7 +401,7 @@ const ChatDebugPage: React.FC = () => {
     const response = await deleteAgentSessionMemory(activeDeepSessionId, memoryId)
     if (response.code === 200) {
       setSessionMemories((items) => items.filter((item) => item.id !== memoryId))
-      message.success('记忆已删除')
+      message.success(intl.formatMessage({ id: 'pages.agent.chat.session.memoryDeleted' }))
     }
   }
 
@@ -414,7 +414,7 @@ const ChatDebugPage: React.FC = () => {
         setSessionMetricsModalOpen(true)
       }
     } catch {
-      message.error('读取运行概览失败')
+      message.error(intl.formatMessage({ id: 'pages.agent.chat.session.metricsLoadFailed' }))
     }
   }
 
@@ -427,7 +427,7 @@ const ChatDebugPage: React.FC = () => {
     if (response.code === 200) {
       setTaskFeedbackOpen(false)
       setTaskFeedbackNote('')
-      message.success('反馈已记录')
+      message.success(intl.formatMessage({ id: 'pages.agent.chat.session.feedbackSaved' }))
     }
   }
 
@@ -1569,6 +1569,14 @@ const ChatDebugPage: React.FC = () => {
     }
   }
 
+  const sessionTaskStatusLabel = (status?: string): string => {
+    const normalized = (status || 'QUEUED').toUpperCase()
+    const known = ['COMPLETED', 'FAILED', 'CANCELLED', 'RUNNING', 'PLANNING', 'QUEUED',
+      'WAITING_USER', 'WAITING_APPROVAL', 'PAUSED']
+    if (!known.includes(normalized)) return status || ''
+    return intl.formatMessage({ id: `pages.agent.chat.session.taskStatus.${normalized}` })
+  }
+
   useEffect(() => {
     // 用户发起 Deep 请求后无需等待规划回调，直接打开卡片反馈正在处理。
     if (isDeepRequestProcessing) {
@@ -1796,26 +1804,26 @@ const ChatDebugPage: React.FC = () => {
               </Button>
             )}
             {activeDeepSessionId && (
-              <Tooltip title="查看已保存的任务结论，可随时删除">
+              <Tooltip title={intl.formatMessage({ id: 'pages.agent.chat.session.memoryTooltip' })}>
                 <Button
                   className="agent-chat-plan-trigger"
                   type="text"
                   icon={<BulbOutlined />}
                   onClick={() => void openSessionMemory()}
                 >
-                  记忆
+                  {intl.formatMessage({ id: 'pages.agent.chat.session.memory' })}
                 </Button>
               </Tooltip>
             )}
             {activeDeepSessionId && (
-              <Tooltip title="查看任务与记忆的运行概览">
+              <Tooltip title={intl.formatMessage({ id: 'pages.agent.chat.session.overviewTooltip' })}>
                 <Button
                   className="agent-chat-plan-trigger"
                   type="text"
                   icon={<BarChartOutlined />}
                   onClick={() => void openSessionMetrics()}
                 >
-                  概览
+                  {intl.formatMessage({ id: 'pages.agent.chat.session.overview' })}
                 </Button>
               </Tooltip>
             )}
@@ -1828,7 +1836,7 @@ const ChatDebugPage: React.FC = () => {
                 <div>
                   {selectedSessionTask?.status === 'COMPLETED' && (
                     <Button type="link" size="small" onClick={() => setTaskFeedbackOpen(true)}>
-                      评价结果
+                      {intl.formatMessage({ id: 'pages.agent.chat.session.feedback' })}
                     </Button>
                   )}
                   <Text type="secondary">
@@ -1842,11 +1850,11 @@ const ChatDebugPage: React.FC = () => {
               {selectedSessionTask && (
                 <div className="agent-chat-session-task-header">
                   <div className="agent-chat-session-task-title">
-                    <Text strong ellipsis style={{ display: 'block' }}>
-                      {selectedSessionTask.title || '当前任务'}
+                    <Text strong ellipsis style={{ display: 'block', flex: 1, minWidth: 0 }}>
+                      {selectedSessionTask.title || intl.formatMessage({ id: 'pages.agent.chat.session.currentTask' })}
                     </Text>
                     <Tag color={sessionTaskStatusColor(selectedSessionTask.status)}>
-                      {selectedSessionTask.status}
+                      {sessionTaskStatusLabel(selectedSessionTask.status)}
                     </Tag>
                   </div>
                   {selectedSessionTask.pauseReason && (
@@ -1857,17 +1865,17 @@ const ChatDebugPage: React.FC = () => {
                   <div className="agent-chat-session-task-actions">
                     {taskPausable && (
                       <Button size="small" onClick={() => void handlePauseSessionTask()}>
-                        暂停
+                        {intl.formatMessage({ id: 'pages.agent.chat.session.pause' })}
                       </Button>
                     )}
                     {taskResumable && (
                       <Button size="small" type="primary" onClick={() => void handleResumeSessionTask()}>
-                        继续
+                        {intl.formatMessage({ id: 'pages.agent.chat.session.resume' })}
                       </Button>
                     )}
                     {taskWaitingUser && (
                       <Button size="small" type="primary" ghost onClick={handleWorkspaceUserInput}>
-                        去回答
+                        {intl.formatMessage({ id: 'pages.agent.chat.session.answer' })}
                       </Button>
                     )}
                   </div>
@@ -1879,7 +1887,7 @@ const ChatDebugPage: React.FC = () => {
                   (sessionTaskPlan?.versions || []).slice().reverse().map((version) => (
                     <div key={version.version || 0} className="agent-chat-plan-version">
                       <Text strong style={{ fontSize: 12 }}>
-                        版本 {version.version}：{version.summary || version.reason}
+                        {intl.formatMessage({ id: 'pages.agent.chat.session.planVersion' }, { version: version.version })}：{version.summary || version.reason}
                       </Text>
                       {version.steps?.map((step) => (
                         <div
@@ -1936,7 +1944,7 @@ const ChatDebugPage: React.FC = () => {
               {sessionTaskTimeline.length > 0 && (
                 <div className="agent-chat-session-timeline">
                   <Text strong style={{ fontSize: 12 }}>
-                    近期事件
+                    {intl.formatMessage({ id: 'pages.agent.chat.session.recentEvents' })}
                   </Text>
                   {sessionTaskTimeline.slice(-8).map((event) => (
                     <div
@@ -1955,24 +1963,24 @@ const ChatDebugPage: React.FC = () => {
           )}
 
           <Modal
-            title="会话记忆"
+            title={intl.formatMessage({ id: 'pages.agent.chat.session.memoryModalTitle' })}
             open={sessionMemoryModalOpen}
             footer={null}
             onCancel={() => setSessionMemoryModalOpen(false)}
           >
             <List
-              locale={{ emptyText: '暂无可用的任务记忆' }}
+              locale={{ emptyText: intl.formatMessage({ id: 'pages.agent.chat.session.memoryEmpty' }) }}
               dataSource={sessionMemories}
               renderItem={(memory) => (
                 <List.Item
                   actions={[
                     <Button key="delete" type="link" danger onClick={() => void removeSessionMemory(memory.id)}>
-                      删除
+                      {intl.formatMessage({ id: 'pages.agent.chat.session.memoryDelete' })}
                     </Button>,
                   ]}
                 >
                   <List.Item.Meta
-                    title={memory.summary || '任务结论'}
+                    title={memory.summary || intl.formatMessage({ id: 'pages.agent.chat.session.memoryFallbackTitle' })}
                     description={memory.content}
                   />
                 </List.Item>
@@ -1981,21 +1989,23 @@ const ChatDebugPage: React.FC = () => {
           </Modal>
 
           <Modal
-            title="任务反馈"
+            title={intl.formatMessage({ id: 'pages.agent.chat.session.feedbackTitle' })}
             open={taskFeedbackOpen}
-            okText="提交反馈"
-            cancelText="取消"
+            okText={intl.formatMessage({ id: 'pages.agent.chat.session.feedbackSubmit' })}
+            cancelText={intl.formatMessage({ id: 'pages.agent.chat.session.feedbackCancel' })}
             onCancel={() => setTaskFeedbackOpen(false)}
             onOk={() => void submitTaskFeedback()}
           >
-            <div style={{ marginBottom: 12 }}>评分</div>
+            <div style={{ marginBottom: 12 }}>
+              {intl.formatMessage({ id: 'pages.agent.chat.session.feedbackRating' })}
+            </div>
             <Select
               style={{ width: '100%', marginBottom: 16 }}
               value={taskFeedbackRating}
               onChange={setTaskFeedbackRating}
               options={[5, 4, 3, 2, 1].map((rating) => ({
                 value: rating,
-                label: `${rating} 分`,
+                label: intl.formatMessage({ id: 'pages.agent.chat.session.feedbackScore' }, { rating }),
               }))}
             />
             <Input.TextArea
@@ -2004,21 +2014,25 @@ const ChatDebugPage: React.FC = () => {
               maxLength={500}
               showCount
               rows={4}
-              placeholder="可选：说明结果是否准确、完整，或需要改进的地方"
+              placeholder={intl.formatMessage({ id: 'pages.agent.chat.session.feedbackPlaceholder' })}
             />
           </Modal>
 
           <Modal
-            title="运行概览"
+            title={intl.formatMessage({ id: 'pages.agent.chat.session.metricsTitle' })}
             open={sessionMetricsModalOpen}
             footer={null}
             onCancel={() => setSessionMetricsModalOpen(false)}
           >
             <List size="small">
-              <List.Item>任务总数：{sessionMetrics?.taskCount || 0}</List.Item>
-              <List.Item>已保存记忆：{sessionMetrics?.memoryCount || 0}</List.Item>
+              <List.Item>
+                {intl.formatMessage({ id: 'pages.agent.chat.session.metricsTaskCount' })}：{sessionMetrics?.taskCount || 0}
+              </List.Item>
+              <List.Item>
+                {intl.formatMessage({ id: 'pages.agent.chat.session.metricsMemoryCount' })}：{sessionMetrics?.memoryCount || 0}
+              </List.Item>
               {Object.entries(sessionMetrics?.taskStatusCounts || {}).map(([status, count]) => (
-                <List.Item key={status}>{status}：{count}</List.Item>
+                <List.Item key={status}>{sessionTaskStatusLabel(status)}：{count}</List.Item>
               ))}
             </List>
           </Modal>

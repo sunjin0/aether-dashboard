@@ -96,23 +96,18 @@ const AgentDefinitionForm = (props: {
           </Form.Item>
         )}
       </ProFormDependency>
+      {/* 模型设置：标准与 Deep 模式均展示。Deep Agent 的模型由 Admin 的
+          agent/model-provider 配置解析，因此 DEEP 模式也需要可配置。 */}
       <ProFormDependency name={['executionMode']}>
-        {({ executionMode }) => {
-          if (executionMode === 'DEEP') {
-            return null
-          }
-          return (
-            <>
-              <ProFormSelect
-                name="modelId"
-                label={format('pages.agent.definition.modelProvider')}
-                showSearch={true}
-                rules={[{ required: true }]}
-                request={() => getModelCatalogOptions('CHAT,MULTIMODAL')}
-              />
-            </>
-          )
-        }}
+        {() => (
+          <ProFormSelect
+            name="modelId"
+            label={format('pages.agent.definition.modelProvider')}
+            showSearch={true}
+            rules={[{ required: true }]}
+            request={() => getModelCatalogOptions('CHAT,MULTIMODAL')}
+          />
+        )}
       </ProFormDependency>
       <ProFormSelect
         name="status"

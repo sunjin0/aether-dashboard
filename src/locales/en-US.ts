@@ -848,6 +848,7 @@ export default {
   'pages.agent.chat.session.memoryEmpty': 'No task memory available',
   'pages.agent.chat.session.memoryDelete': 'Delete',
   'pages.agent.chat.session.memoryFallbackTitle': 'Task conclusion',
+  'pages.agent.chat.session.memoryImportance': 'Importance {value}',
   'pages.agent.chat.session.memoryLoadFailed': 'Failed to load session memory',
   'pages.agent.chat.session.memoryDeleted': 'Memory deleted',
   'pages.agent.chat.session.metricsLoadFailed': 'Failed to load overview',

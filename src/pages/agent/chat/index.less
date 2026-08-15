@@ -281,6 +281,18 @@
   .ant-typography {
     font-size: 13px;
   }
+
+  > div {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .ant-btn {
+    padding-inline: 4px;
+    font-size: 12px;
+  }
 }
 
 .@{chat-prefix}-message-scroll {
@@ -573,6 +585,56 @@
   margin-top: 5px;
   border-radius: 50%;
   background: #aeb7c6;
+}
+
+.@{chat-prefix}-memory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 56vh;
+  overflow-y: auto;
+}
+
+.@{chat-prefix}-memory-card {
+  padding: 12px 14px;
+  border: 1px solid #e6eaf2;
+  border-radius: 8px;
+  background: #fbfcff;
+}
+
+.@{chat-prefix}-memory-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.@{chat-prefix}-memory-card-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  word-break: break-all;
+}
+
+.@{chat-prefix}-memory-card-content {
+  margin-top: 6px;
+  max-height: 96px;
+  overflow-y: auto;
+  font-size: 12px;
+  line-height: 1.6;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.@{chat-prefix}-memory-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.@{chat-prefix}-memory-card-meta .ant-tag {
+  margin-inline-end: 0;
 }
 
 .@{chat-prefix}-input-bar {

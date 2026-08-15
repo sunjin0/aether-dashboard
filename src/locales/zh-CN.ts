@@ -839,6 +839,7 @@ export default {
   'pages.agent.chat.session.memoryEmpty': '暂无可用的任务记忆',
   'pages.agent.chat.session.memoryDelete': '删除',
   'pages.agent.chat.session.memoryFallbackTitle': '任务结论',
+  'pages.agent.chat.session.memoryImportance': '重要度 {value}',
   'pages.agent.chat.session.memoryLoadFailed': '读取会话记忆失败',
   'pages.agent.chat.session.memoryDeleted': '记忆已删除',
   'pages.agent.chat.session.metricsLoadFailed': '读取运行概览失败',

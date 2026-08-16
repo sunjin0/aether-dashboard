@@ -338,10 +338,17 @@ const ConfirmLayout: React.FC<{
   const [customValue, setCustomValue] = useState('');
   const approvalQuestion = config.questions[0];
   const statusInfo = statusLabelMap[status];
+  const isPlanApproval = config.approvalType === 'deep_plan_approval';
 
-  if (!approvalQuestion) return null;
+  if (!isPlanApproval && !approvalQuestion) return null;
 
-  const submit = (answer: AskUserAnswer) => onSubmit?.({ [approvalQuestion.id]: answer });
+  const submit = (answer: AskUserAnswer) => {
+    if (isPlanApproval) {
+      onSubmit?.({ plan_approved: answer })
+      return
+    }
+    onSubmit?.({ [approvalQuestion.id]: answer })
+  }
 
   return (
     <div className={`iq-card iq-card-confirm-layout ${disabled ? `iq-card-${status}` : ''}`}>
@@ -349,43 +356,72 @@ const ConfirmLayout: React.FC<{
         <SafetyCertificateOutlined />
         <div>
           <Text strong>
-            {intl.formatMessage({ id: 'components.interactiveQuestionCard.toolCallConfirmation' })}
+            {intl.formatMessage({
+              id: isPlanApproval
+                ? 'components.interactiveQuestionCard.planApprovalTitle'
+                : 'components.interactiveQuestionCard.toolCallConfirmation',
+            })}
           </Text>
           <div className="iq-card-confirm-layout-question">{config.question}</div>
         </div>
       </div>
-      <div className="iq-card-confirm-layout-description">{approvalQuestion.question}</div>
-      <div className="iq-card-confirm-layout-details">
-        <div>
-          <Text type="secondary">
-            {intl.formatMessage({ id: 'components.interactiveQuestionCard.tool' })}
-          </Text>
-          <Text code>{config.toolName || '-'}</Text>
+      {isPlanApproval ? (
+        <div className="iq-card-confirm-layout-plan">
+          {(config.plan || []).map((step: any, index: number) => (
+            <div key={step.id || step.stepKey || `plan-${index}`} className="iq-card-plan-step">
+              <Checkbox checked={step.status === 'completed'} disabled />
+              <span>{step.title || `步骤 ${index + 1}`}</span>
+            </div>
+          ))}
         </div>
-        <div>
-          <Text type="secondary">
-            {intl.formatMessage({ id: 'components.interactiveQuestionCard.riskLevel' })}
-          </Text>
-          <span className={`iq-card-risk iq-card-risk-${config.riskLevel || 'low'}`}>
-            {riskLabelMap[config.riskLevel || 'low'] || config.riskLevel}
-          </span>
-        </div>
-        {config.riskReason && (
-          <div>
-            <Text type="secondary">
-              {intl.formatMessage({ id: 'components.interactiveQuestionCard.riskReason' })}
-            </Text>
-            <Text>{config.riskReason}</Text>
+      ) : (
+        <>
+          <div className="iq-card-confirm-layout-description">{approvalQuestion.question}</div>
+          <div className="iq-card-confirm-layout-details">
+            <div>
+              <Text type="secondary">
+                {intl.formatMessage({ id: 'components.interactiveQuestionCard.tool' })}
+              </Text>
+              <Text code>{config.toolName || '-'}</Text>
+            </div>
+            <div>
+              <Text type="secondary">
+                {intl.formatMessage({ id: 'components.interactiveQuestionCard.riskLevel' })}
+              </Text>
+              <span className={`iq-card-risk iq-card-risk-${config.riskLevel || 'low'}`}>
+                {riskLabelMap[config.riskLevel || 'low'] || config.riskLevel}
+              </span>
+            </div>
+            {config.riskReason && (
+              <div>
+                <Text type="secondary">
+                  {intl.formatMessage({ id: 'components.interactiveQuestionCard.riskReason' })}
+                </Text>
+                <Text>{config.riskReason}</Text>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-      <div className="iq-card-confirm-layout-arguments">
-        <Text type="secondary">
-          {intl.formatMessage({ id: 'components.interactiveQuestionCard.arguments' })}
-        </Text>
-        <pre>{JSON.stringify(config.arguments || {}, null, 2)}</pre>
-      </div>
-      {!disabled &&
+          <div className="iq-card-confirm-layout-arguments">
+            <Text type="secondary">
+              {intl.formatMessage({ id: 'components.interactiveQuestionCard.arguments' })}
+            </Text>
+            <pre>{JSON.stringify(config.arguments || {}, null, 2)}</pre>
+          </div>
+        </>
+      )}
+      {!disabled && isPlanApproval && (
+        <div className="iq-card-confirm">
+          <Button
+            type="primary"
+            icon={<CheckCircleOutlined />}
+            onClick={() => submit({ confirmed: true })}
+            className="iq-card-confirm-btn"
+          >
+            {intl.formatMessage({ id: 'components.interactiveQuestionCard.planApprove' })}
+          </Button>
+        </div>
+      )}
+      {!disabled && !isPlanApproval &&
         (approvalQuestion.type === 'confirm' ? (
           <div className="iq-card-confirm">
             <Button

@@ -317,6 +317,28 @@
         line-height: 1.5;
       }
     }
+
+    &-plan {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #fafafa;
+
+      .iq-card-plan-step {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        font-size: 13px;
+        color: rgba(15, 23, 42, 0.85);
+
+        .ant-checkbox-wrapper {
+          margin-top: 2px;
+        }
+      }
+    }
   }
 
   &-risk {

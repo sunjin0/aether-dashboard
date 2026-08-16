@@ -3,6 +3,7 @@ import { PageContainer } from '@ant-design/pro-components'
 import { useIntl } from '@umijs/max'
 import {
   Button,
+  Checkbox,
   Empty,
   Input,
   List,
@@ -1896,6 +1897,11 @@ const ChatDebugPage: React.FC = () => {
                           key={step.id || step.stepKey || step.sequence}
                           className={`agent-chat-plan-step agent-chat-plan-step-${(step.status || 'pending').toLowerCase()}`}
                         >
+                          <Checkbox
+                            className="agent-chat-plan-step-check"
+                            checked={step.status?.toUpperCase() === 'COMPLETED'}
+                            disabled
+                          />
                           <span className="agent-chat-plan-step-index">
                             {step.sequence ? `${step.sequence}.` : ''}
                           </span>

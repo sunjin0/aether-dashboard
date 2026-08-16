@@ -336,7 +336,6 @@ const ConfirmLayout: React.FC<{
   };
   const [selected, setSelected] = useState<string | string[]>('');
   const [customValue, setCustomValue] = useState('');
-  const [selectedSteps, setSelectedSteps] = useState<Record<number, boolean>>({});
   const approvalQuestion = config.questions?.[0];
   const statusInfo = statusLabelMap[status];
   const isPlanApproval = config.approvalType === 'deep_plan_approval';
@@ -371,19 +370,6 @@ const ConfirmLayout: React.FC<{
           {config.document && (
             <div className="iq-card-plan-document">{config.document}</div>
           )}
-          <div className="iq-card-confirm-layout-plan">
-            {(config.plan || []).map((step: any, index: number) => (
-              <div key={step.id || step.stepKey || `plan-${index}`} className="iq-card-plan-step">
-                <Checkbox
-                  checked={selectedSteps[index] ?? true}
-                  onChange={(event) =>
-                    setSelectedSteps((prev) => ({ ...prev, [index]: event.target.checked }))
-                  }
-                />
-                <span>{step.title || `步骤 ${index + 1}`}</span>
-              </div>
-            ))}
-          </div>
         </>
       ) : (
         <>
@@ -425,12 +411,7 @@ const ConfirmLayout: React.FC<{
           <Button
             type="primary"
             icon={<CheckCircleOutlined />}
-            onClick={() =>
-              submit({
-                confirmed: true,
-                selectedSteps: (config.plan || []).map((_, index) => selectedSteps[index] ?? true),
-              })
-            }
+            onClick={() => submit({ confirmed: true })}
             className="iq-card-confirm-btn"
           >
             {intl.formatMessage({ id: 'components.interactiveQuestionCard.planApprove' })}

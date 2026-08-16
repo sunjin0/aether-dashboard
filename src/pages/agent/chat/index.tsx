@@ -3,7 +3,6 @@ import { PageContainer } from '@ant-design/pro-components'
 import { useIntl } from '@umijs/max'
 import {
   Button,
-  Checkbox,
   Empty,
   Input,
   List,
@@ -157,7 +156,6 @@ const ChatDebugPage: React.FC = () => {
   const [pendingQuestionMessage, setPendingQuestionMessage] = useState<ChatMessage | null>(null)
   const [deepRunId, setDeepRunId] = useState<string | null>(null)
   const [deepRunSteps, setDeepRunSteps] = useState<AgentStreamRunStepData[]>([])
-  const [toggledStepKeys, setToggledStepKeys] = useState<Record<string, boolean>>({})
   const [persistedDeepTasks, setPersistedDeepTasks] = useState<DeepTask[]>([])
   const [taskPlanDrawerOpen, setTaskPlanDrawerOpen] = useState(false)
   const [activeDeepSessionId, setActiveDeepSessionId] = useState<string>()
@@ -1531,7 +1529,7 @@ const ChatDebugPage: React.FC = () => {
   const sessionTaskStatusLabel = (status?: string): string => {
     const normalized = (status || 'QUEUED').toUpperCase()
     const known = ['COMPLETED', 'FAILED', 'CANCELLED', 'RUNNING', 'PLANNING', 'QUEUED',
-      'WAITING_USER', 'WAITING_APPROVAL', 'PAUSED']
+      'WAITING_USER', 'WAITING_APPROVAL', 'PAUSED', 'PENDING', 'SUPERSEDED', 'VERIFIED', 'SUCCEEDED']
     if (!known.includes(normalized)) return status || ''
     return intl.formatMessage({ id: `pages.agent.chat.session.taskStatus.${normalized}` })
   }
@@ -1838,17 +1836,6 @@ const ChatDebugPage: React.FC = () => {
                           key={step.id || step.stepKey || step.sequence}
                           className={`agent-chat-plan-step agent-chat-plan-step-${(step.status || 'pending').toLowerCase()}`}
                         >
-                          <Checkbox
-                            className="agent-chat-plan-step-check"
-                            checked={
-                              toggledStepKeys[step.id || step.stepKey || `step-${step.sequence}`]
-                                ?? step.status?.toUpperCase() === 'COMPLETED'
-                            }
-                            onChange={(event) => {
-                              const key = step.id || step.stepKey || `step-${step.sequence}`
-                              setToggledStepKeys((prev) => ({ ...prev, [key]: event.target.checked }))
-                            }}
-                          />
                           <span className="agent-chat-plan-step-index">
                             {step.sequence ? `${step.sequence}.` : ''}
                           </span>

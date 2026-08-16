@@ -71,6 +71,7 @@ import {
 import { Option } from '@/services/entity/Common'
 import AgentMessageBubble from '@/components/AgentMessageBubble'
 import TemporaryUrlPreviewModal from '@/components/TemporaryUrlPreviewModal'
+import FormattedContent from '@/components/FormattedContent'
 import { createChatAttachmentPreviewUrl } from '@/services/file/FileController'
 import {
   cancelDeepRun,
@@ -1994,7 +1995,7 @@ const ChatDebugPage: React.FC = () => {
                       </Button>
                     </div>
                     <div className="agent-chat-memory-card-content">
-                      <Text type="secondary">{memory.content}</Text>
+                      <FormattedContent content={memory.content} maxHeight={140} />
                     </div>
                     <div className="agent-chat-memory-card-meta">
                       {memory.importance != null && (

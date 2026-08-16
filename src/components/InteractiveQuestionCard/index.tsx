@@ -336,7 +336,7 @@ const ConfirmLayout: React.FC<{
   };
   const [selected, setSelected] = useState<string | string[]>('');
   const [customValue, setCustomValue] = useState('');
-  const approvalQuestion = config.questions[0];
+  const approvalQuestion = config.questions?.[0];
   const statusInfo = statusLabelMap[status];
   const isPlanApproval = config.approvalType === 'deep_plan_approval';
 

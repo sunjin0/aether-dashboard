@@ -43,7 +43,7 @@ import {
   uploadAgentChatAttachments,
 } from '@/services/agent/ChatController'
 import { cancelAgentRun, getAgentRunPlan } from '@/services/agent/RunController'
-import { deleteAgentSessionMemory, getAgentSessionByConversation, getAgentSessionMemories, getAgentSessionMetrics, getAgentSessionTimeline, getAgentTaskSnapshot, pauseAgentSessionTask, resumeAgentSessionTask, submitAgentTaskFeedback } from '@/services/agent/SessionController'
+import { deleteAgentSessionMemory, getAgentSessionByConversation, getAgentSessionMemories, getAgentSessionMetrics, getAgentSessionTimeline, getAgentTaskSnapshot, pauseAgentSessionTask, submitAgentTaskFeedback } from '@/services/agent/SessionController'
 import { getAgentArtifactByRun } from '@/services/agent/ArtifactController'
 import { cancelSandboxTask, decideSandboxTask, getSandboxTaskByRun, retrySandboxTask } from '@/services/agent/SandboxTaskController'
 import {
@@ -356,27 +356,16 @@ const ChatDebugPage: React.FC = () => {
     }
   }
 
+  /** Codex 风格中断：停止当前任务，随后通过回复消息继续或调整目标。 */
   const handlePauseSessionTask = async () => {
     if (!selectedSessionTask?.id || !conversationId) return
     const response = await pauseAgentSessionTask(selectedSessionTask.id)
     if (response.code === 200) {
-      message.success(intl.formatMessage({ id: 'pages.agent.chat.session.paused' }))
+      message.success(intl.formatMessage({ id: 'pages.agent.chat.session.interrupted' }))
       setSelectedSessionTask((item) => (item ? { ...item, status: 'PAUSED' } : item))
       await loadSessionWorkspace(conversationId)
     } else {
       message.error(intl.formatMessage({ id: 'pages.agent.chat.session.pauseFailed' }))
-    }
-  }
-
-  const handleResumeSessionTask = async () => {
-    if (!selectedSessionTask?.id || !conversationId) return
-    const response = await resumeAgentSessionTask(selectedSessionTask.id)
-    if (response.code === 200) {
-      message.success(intl.formatMessage({ id: 'pages.agent.chat.session.resumed' }))
-      setSelectedSessionTask((item) => (item ? { ...item, status: 'RUNNING' } : item))
-      await loadSessionWorkspace(conversationId)
-    } else {
-      message.error(intl.formatMessage({ id: 'pages.agent.chat.session.resumeFailed' }))
     }
   }
 
@@ -1546,9 +1535,10 @@ const ChatDebugPage: React.FC = () => {
   const showLivePlanTasks = deepRunTasks.length > 0
   const showVersionedPlan = !showLivePlanTasks && Boolean(sessionTaskPlan?.versions?.length)
   const activeTaskStatus = selectedSessionTask?.status?.toUpperCase()
-  const taskPausable = Boolean(selectedSessionTask?.currentRunId)
+  // Codex 风格：不再手动暂停/继续；通过"中断"停止当前任务，回复消息继续或调整目标。
+  const taskInterruptible = Boolean(selectedSessionTask?.currentRunId)
     && ['QUEUED', 'PLANNING', 'RUNNING'].includes(activeTaskStatus || '')
-  const taskResumable = Boolean(selectedSessionTask?.currentRunId) && activeTaskStatus === 'PAUSED'
+  const interrupted = activeTaskStatus === 'PAUSED'
   const taskWaitingUser = activeTaskStatus === 'WAITING_USER' || activeTaskStatus === 'WAITING_APPROVAL'
 
   const sessionTaskStatusColor = (status?: string): string => {
@@ -1866,14 +1856,9 @@ const ChatDebugPage: React.FC = () => {
                     </Text>
                   )}
                   <div className="agent-chat-session-task-actions">
-                    {taskPausable && (
-                      <Button size="small" onClick={() => void handlePauseSessionTask()}>
-                        {intl.formatMessage({ id: 'pages.agent.chat.session.pause' })}
-                      </Button>
-                    )}
-                    {taskResumable && (
-                      <Button size="small" type="primary" onClick={() => void handleResumeSessionTask()}>
-                        {intl.formatMessage({ id: 'pages.agent.chat.session.resume' })}
+                    {taskInterruptible && (
+                      <Button size="small" danger onClick={() => void handlePauseSessionTask()}>
+                        {intl.formatMessage({ id: 'pages.agent.chat.session.interrupt' })}
                       </Button>
                     )}
                     {taskWaitingUser && (
@@ -1882,6 +1867,11 @@ const ChatDebugPage: React.FC = () => {
                       </Button>
                     )}
                   </div>
+                  {interrupted && (
+                    <Text type="secondary" className="agent-chat-session-interrupted-hint">
+                      {intl.formatMessage({ id: 'pages.agent.chat.session.interruptedHint' })}
+                    </Text>
+                  )}
                 </div>
               )}
 

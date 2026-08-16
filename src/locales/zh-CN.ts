@@ -950,6 +950,7 @@ export default {
   'pages.agent.run.steps.event.planUpdated': '计划已更新',
   'pages.agent.run.steps.event.stepStarted': '步骤已开始',
   'pages.agent.run.steps.event.stepCompleted': '步骤已完成',
+  'pages.agent.run.steps.event.stepVerified': '步骤已验证',
   'pages.agent.run.steps.event.toolStarted': '工具 {toolName} 已开始执行',
   'pages.agent.run.steps.event.toolApprovalRequired': '工具 {toolName} 等待人工确认',
   'pages.agent.run.steps.event.toolCompleted': '工具 {toolName} 已完成执行',

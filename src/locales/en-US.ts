@@ -961,6 +961,7 @@ export default {
   'pages.agent.run.steps.event.planUpdated': 'Plan updated',
   'pages.agent.run.steps.event.stepStarted': 'Step started',
   'pages.agent.run.steps.event.stepCompleted': 'Step completed',
+  'pages.agent.run.steps.event.stepVerified': 'Step verified',
   'pages.agent.run.steps.event.toolStarted': 'Tool {toolName} started',
   'pages.agent.run.steps.event.toolApprovalRequired': 'Tool {toolName} is waiting for approval',
   'pages.agent.run.steps.event.toolCompleted': 'Tool {toolName} completed',

@@ -7,6 +7,7 @@ export const AGENT_RUN_EVENT_MESSAGE_IDS: Record<string, string> = {
   'ask_user.required': 'pages.agent.run.steps.event.askUserRequired',
   'step.started': 'pages.agent.run.steps.event.stepStarted',
   'step.completed': 'pages.agent.run.steps.event.stepCompleted',
+  'step.verified': 'pages.agent.run.steps.event.stepVerified',
   'tool.started': 'pages.agent.run.steps.event.toolStarted',
   'tool.approval.required': 'pages.agent.run.steps.event.toolApprovalRequired',
   'tool.completed': 'pages.agent.run.steps.event.toolCompleted',

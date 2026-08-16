@@ -1,12 +1,15 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Button, Checkbox, Input, Radio, Tabs, Typography } from 'antd';
+import { Button, Checkbox, Input, Radio, Tabs, Typography, message } from 'antd';
 import { useIntl } from '@umijs/max';
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   CheckOutlined,
   SafetyCertificateOutlined,
+  EditOutlined,
 } from '@ant-design/icons';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
   AskUserAnswer,
   ChoiceQuestionConfig,
@@ -336,6 +339,7 @@ const ConfirmLayout: React.FC<{
   };
   const [selected, setSelected] = useState<string | string[]>('');
   const [customValue, setCustomValue] = useState('');
+  const [planFeedback, setPlanFeedback] = useState('');
   const approvalQuestion = config.questions?.[0];
   const statusInfo = statusLabelMap[status];
   const isPlanApproval = config.approvalType === 'deep_plan_approval';
@@ -348,6 +352,17 @@ const ConfirmLayout: React.FC<{
       return
     }
     onSubmit?.({ [approvalQuestion.id]: answer })
+  }
+
+  /** 方案反馈：不新增聊天消息，直接触发 deep-agent 按反馈重规划并重新提交审批。 */
+  const submitPlanFeedback = () => {
+    const text = planFeedback.trim()
+    if (!text) {
+      message.warning(intl.formatMessage({ id: 'components.interactiveQuestionCard.planFeedbackEmpty' }))
+      return
+    }
+    // 反馈是纯文本，随 answers 原样转发给后端按 plan_feedback 处理。
+    onSubmit?.({ plan_feedback: text } as unknown as Record<string, AskUserAnswer>)
   }
 
   return (
@@ -368,7 +383,9 @@ const ConfirmLayout: React.FC<{
       {isPlanApproval ? (
         <>
           {config.document && (
-            <div className="iq-card-plan-document">{config.document}</div>
+            <div className="iq-card-plan-document">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{config.document}</ReactMarkdown>
+            </div>
           )}
         </>
       ) : (
@@ -407,15 +424,33 @@ const ConfirmLayout: React.FC<{
         </>
       )}
       {!disabled && isPlanApproval && (
-        <div className="iq-card-confirm">
-          <Button
-            type="primary"
-            icon={<CheckCircleOutlined />}
-            onClick={() => submit({ confirmed: true })}
-            className="iq-card-confirm-btn"
-          >
-            {intl.formatMessage({ id: 'components.interactiveQuestionCard.planApprove' })}
-          </Button>
+        <div className="iq-card-plan-feedback">
+          <Input.TextArea
+            rows={2}
+            value={planFeedback}
+            onChange={(e) => setPlanFeedback(e.target.value)}
+            placeholder={intl.formatMessage({
+              id: 'components.interactiveQuestionCard.planFeedbackPlaceholder',
+            })}
+            maxLength={500}
+          />
+          <div className="iq-card-confirm">
+            <Button
+              icon={<EditOutlined />}
+              onClick={submitPlanFeedback}
+              className="iq-card-confirm-btn"
+            >
+              {intl.formatMessage({ id: 'components.interactiveQuestionCard.planModify' })}
+            </Button>
+            <Button
+              type="primary"
+              icon={<CheckCircleOutlined />}
+              onClick={() => submit({ confirmed: true })}
+              className="iq-card-confirm-btn"
+            >
+              {intl.formatMessage({ id: 'components.interactiveQuestionCard.planApprove' })}
+            </Button>
+          </div>
         </div>
       )}
       {!disabled && !isPlanApproval &&

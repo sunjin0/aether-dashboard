@@ -343,12 +343,46 @@
     .iq-card-plan-document {
       margin-bottom: 10px;
       padding: 10px 12px;
-      border-left: 3px solid #d48806;
+      border-left: 3px solid #1677ff;
       border-radius: 4px;
-      background: #fffbef;
+      background: #f5f7fb;
       color: rgba(15, 23, 42, 0.8);
       font-size: 12px;
       line-height: 1.6;
+      overflow-x: auto;
+
+      h1,
+      h2,
+      h3 {
+        margin: 8px 0 4px;
+        color: rgba(15, 23, 42, 0.92);
+      }
+      h1 { font-size: 16px; }
+      h2 { font-size: 14px; }
+      h3 { font-size: 13px; }
+      p { margin: 4px 0; }
+      ul,
+      ol { padding-left: 18px; margin: 4px 0; }
+      li { margin: 2px 0; }
+      code { background: rgba(15, 23, 42, 0.06); padding: 1px 4px; border-radius: 3px; }
+      pre {
+        background: rgba(15, 23, 42, 0.06);
+        padding: 8px;
+        border-radius: 4px;
+        overflow-x: auto;
+      }
+      pre code { background: none; padding: 0; }
+    }
+
+    .iq-card-plan-feedback {
+      margin-top: 4px;
+
+      .iq-card-confirm {
+        margin-top: 8px;
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+      }
     }
   }
 

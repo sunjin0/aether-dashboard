@@ -23,6 +23,11 @@ jest.mock('@umijs/max', () => ({
         'components.interactiveQuestionCard.multipleQuestions': '多项提问',
         'components.interactiveQuestionCard.confirmSubmit': '确认提交',
         'components.interactiveQuestionCard.questionPrefix': '第 {number} 题',
+        'components.interactiveQuestionCard.planApprovalTitle': '规划方案',
+        'components.interactiveQuestionCard.planApprove': '批准执行',
+        'components.interactiveQuestionCard.planModify': '修改方案',
+        'components.interactiveQuestionCard.planFeedbackPlaceholder': '对方案有意见？在此说明，将据此重新规划方案',
+        'components.interactiveQuestionCard.planFeedbackEmpty': '请输入方案意见',
       };
       if (id === 'components.interactiveQuestionCard.questionNumber')
         return `问题 ${values?.count}`;
@@ -256,5 +261,73 @@ describe('InteractiveQuestionCard', () => {
     fireEvent.click(screen.getByLabelText('否'));
 
     expect(screen.getByRole('tab', { name: /问题 2/ }).getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('renders the plan scheme as markdown with approve and revise buttons', () => {
+    const onSubmit = jest.fn();
+
+    render(
+      <InteractiveQuestionCard
+        questionConfig={{
+          type: 'group',
+          layout: 'confirm',
+          question: '请确认执行计划，批准后将按计划执行。',
+          approvalType: 'deep_plan_approval',
+          document: '# 风险分析方案\n\n## 目标\n输出整改清单\n\n## 执行步骤\n- [ ] 1. 抽取条款\n- [ ] 2. 生成报告',
+          plan: [{ id: '1', title: '抽取条款', status: 'pending' }],
+        }}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    expect(screen.getByText('规划方案')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: '风险分析方案' })).toBeTruthy();
+    expect(screen.getByText('输出整改清单')).toBeTruthy();
+    expect(screen.getByText('修改方案')).toBeTruthy();
+    expect(screen.getByText('批准执行')).toBeTruthy();
+  });
+
+  it('submits plan feedback without creating a chat message', () => {
+    const onSubmit = jest.fn();
+
+    render(
+      <InteractiveQuestionCard
+        questionConfig={{
+          type: 'group',
+          layout: 'confirm',
+          question: '请确认执行计划。',
+          approvalType: 'deep_plan_approval',
+          document: '## 目标\n输出报告',
+        }}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    const textarea = screen.getByPlaceholderText(/对方案有意见/);
+    fireEvent.change(textarea, { target: { value: '简化步骤，合并为3步' } });
+    fireEvent.click(screen.getByText('修改方案'));
+
+    expect(onSubmit).toHaveBeenCalledWith({ plan_feedback: '简化步骤，合并为3步' });
+  });
+
+  it('approves the plan scheme via the approve button', () => {
+    const onSubmit = jest.fn();
+
+    render(
+      <InteractiveQuestionCard
+        questionConfig={{
+          type: 'group',
+          layout: 'confirm',
+          question: '请确认执行计划。',
+          approvalType: 'deep_plan_approval',
+          document: '## 目标\n输出报告',
+        }}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    fireEvent.click(screen.getByText('批准执行'));
+
+    expect(onSubmit).toHaveBeenCalledWith({ plan_approved: { confirmed: true } });
   });
 });

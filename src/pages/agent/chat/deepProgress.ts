@@ -4,6 +4,7 @@ import { ResponseStructure } from '@/services/entity/Common'
 export const AGENT_RUN_EVENT_MESSAGE_IDS: Record<string, string> = {
   'run.started': 'pages.agent.run.steps.event.runStarted',
   'plan.updated': 'pages.agent.run.steps.event.planUpdated',
+  'plan.approval.required': 'pages.agent.run.steps.event.planApprovalRequired',
   'ask_user.required': 'pages.agent.run.steps.event.askUserRequired',
   'step.started': 'pages.agent.run.steps.event.stepStarted',
   'step.completed': 'pages.agent.run.steps.event.stepCompleted',

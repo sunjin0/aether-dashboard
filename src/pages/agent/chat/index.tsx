@@ -159,6 +159,7 @@ const ChatDebugPage: React.FC = () => {
   const [pendingQuestionMessage, setPendingQuestionMessage] = useState<ChatMessage | null>(null)
   const [deepRunId, setDeepRunId] = useState<string | null>(null)
   const [deepRunSteps, setDeepRunSteps] = useState<AgentStreamRunStepData[]>([])
+  const [toggledStepKeys, setToggledStepKeys] = useState<Record<string, boolean>>({})
   const [persistedDeepTasks, setPersistedDeepTasks] = useState<DeepTask[]>([])
   const [taskPlanDrawerOpen, setTaskPlanDrawerOpen] = useState(false)
   const [activeDeepSessionId, setActiveDeepSessionId] = useState<string>()
@@ -1889,8 +1890,14 @@ const ChatDebugPage: React.FC = () => {
                         >
                           <Checkbox
                             className="agent-chat-plan-step-check"
-                            checked={step.status?.toUpperCase() === 'COMPLETED'}
-                            disabled
+                            checked={
+                              toggledStepKeys[step.id || step.stepKey || `step-${step.sequence}`]
+                                ?? step.status?.toUpperCase() === 'COMPLETED'
+                            }
+                            onChange={(event) => {
+                              const key = step.id || step.stepKey || `step-${step.sequence}`
+                              setToggledStepKeys((prev) => ({ ...prev, [key]: event.target.checked }))
+                            }}
                           />
                           <span className="agent-chat-plan-step-index">
                             {step.sequence ? `${step.sequence}.` : ''}

@@ -959,6 +959,7 @@ export default {
   'pages.agent.run.steps.rawPayload': 'Raw payload',
   'pages.agent.run.steps.event.runStarted': 'Run started',
   'pages.agent.run.steps.event.planUpdated': 'Plan updated',
+  'pages.agent.run.steps.event.planApprovalRequired': 'Plan approval required',
   'pages.agent.run.steps.event.stepStarted': 'Step started',
   'pages.agent.run.steps.event.stepCompleted': 'Step completed',
   'pages.agent.run.steps.event.stepVerified': 'Step verified',

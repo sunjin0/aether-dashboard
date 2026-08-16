@@ -948,6 +948,7 @@ export default {
   'pages.agent.run.steps.rawPayload': '原始载荷',
   'pages.agent.run.steps.event.runStarted': '运行已开始',
   'pages.agent.run.steps.event.planUpdated': '计划已更新',
+  'pages.agent.run.steps.event.planApprovalRequired': '计划待确认',
   'pages.agent.run.steps.event.stepStarted': '步骤已开始',
   'pages.agent.run.steps.event.stepCompleted': '步骤已完成',
   'pages.agent.run.steps.event.stepVerified': '步骤已验证',

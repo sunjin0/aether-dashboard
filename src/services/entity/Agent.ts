@@ -509,7 +509,7 @@ export type QuestionConfig = GroupQuestionConfig | QuestionItemConfig;
 /**
  * @description 用户回答
  */
-export type AskUserAnswer = { selected: string | string[] } | { confirmed: boolean };
+export type AskUserAnswer = { selected: string | string[] } | { confirmed: boolean; selectedSteps?: boolean[] };
 
 /**
  * @description 单个问题数据（SSE question 事件中的 questions 数组项）

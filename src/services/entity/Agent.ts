@@ -494,6 +494,8 @@ export interface GroupQuestionConfig {
   riskReason?: string;
   /** 计划确认（deep_plan_approval）时的执行计划步骤。 */
   plan?: Array<{ id?: string; stepKey?: string; sequence?: number; title?: string; status?: string }>;
+  /** 计划确认（deep_plan_approval）时的方案文档说明。 */
+  document?: string;
   /** 历史回显时的组级回答 */
   answer?: {
     answeredAt?: number;

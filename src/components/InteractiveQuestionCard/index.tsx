@@ -367,19 +367,24 @@ const ConfirmLayout: React.FC<{
         </div>
       </div>
       {isPlanApproval ? (
-        <div className="iq-card-confirm-layout-plan">
-          {(config.plan || []).map((step: any, index: number) => (
-            <div key={step.id || step.stepKey || `plan-${index}`} className="iq-card-plan-step">
-              <Checkbox
-                checked={selectedSteps[index] ?? true}
-                onChange={(event) =>
-                  setSelectedSteps((prev) => ({ ...prev, [index]: event.target.checked }))
-                }
-              />
-              <span>{step.title || `步骤 ${index + 1}`}</span>
-            </div>
-          ))}
-        </div>
+        <>
+          {config.document && (
+            <div className="iq-card-plan-document">{config.document}</div>
+          )}
+          <div className="iq-card-confirm-layout-plan">
+            {(config.plan || []).map((step: any, index: number) => (
+              <div key={step.id || step.stepKey || `plan-${index}`} className="iq-card-plan-step">
+                <Checkbox
+                  checked={selectedSteps[index] ?? true}
+                  onChange={(event) =>
+                    setSelectedSteps((prev) => ({ ...prev, [index]: event.target.checked }))
+                  }
+                />
+                <span>{step.title || `步骤 ${index + 1}`}</span>
+              </div>
+            ))}
+          </div>
+        </>
       ) : (
         <>
           <div className="iq-card-confirm-layout-description">{approvalQuestion.question}</div>

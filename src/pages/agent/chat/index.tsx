@@ -21,7 +21,6 @@ import type { RcFile, UploadFile, UploadProps } from 'antd/es/upload/interface'
 import {
   ArrowDownOutlined,
   ArrowUpOutlined,
-  BarChartOutlined,
   BulbOutlined,
   CheckCircleFilled,
   ClearOutlined,
@@ -43,7 +42,7 @@ import {
   uploadAgentChatAttachments,
 } from '@/services/agent/ChatController'
 import { cancelAgentRun, getAgentRunPlan } from '@/services/agent/RunController'
-import { deleteAgentSessionMemory, getAgentSessionByConversation, getAgentSessionMemories, getAgentSessionMetrics, getAgentSessionTimeline, getAgentTaskSnapshot, submitAgentTaskFeedback } from '@/services/agent/SessionController'
+import { deleteAgentSessionMemory, getAgentSessionByConversation, getAgentSessionMemories, getAgentSessionTimeline, getAgentTaskSnapshot, submitAgentTaskFeedback } from '@/services/agent/SessionController'
 import { getAgentArtifactByRun } from '@/services/agent/ArtifactController'
 import { cancelSandboxTask, decideSandboxTask, getSandboxTaskByRun, retrySandboxTask } from '@/services/agent/SandboxTaskController'
 import {
@@ -64,7 +63,6 @@ import {
   AgentStreamToolCallData,
   KnowledgeSource,
   AgentRunPlan,
-  AgentSessionMetrics,
   AgentSessionMemory,
   AgentTask,
   AgentTaskEvent,
@@ -169,8 +167,6 @@ const ChatDebugPage: React.FC = () => {
   const [taskFeedbackOpen, setTaskFeedbackOpen] = useState(false)
   const [taskFeedbackRating, setTaskFeedbackRating] = useState(5)
   const [taskFeedbackNote, setTaskFeedbackNote] = useState('')
-  const [sessionMetrics, setSessionMetrics] = useState<AgentSessionMetrics>()
-  const [sessionMetricsModalOpen, setSessionMetricsModalOpen] = useState(false)
   const [sessionTasks, setSessionTasks] = useState<AgentTask[]>([])
   const [sessionTaskTimeline, setSessionTaskTimeline] = useState<AgentTaskEvent[]>([])
   const [sessionTaskPlan, setSessionTaskPlan] = useState<AgentRunPlan>()
@@ -381,19 +377,6 @@ const ChatDebugPage: React.FC = () => {
     if (response.code === 200) {
       setSessionMemories((items) => items.filter((item) => item.id !== memoryId))
       message.success(intl.formatMessage({ id: 'pages.agent.chat.session.memoryDeleted' }))
-    }
-  }
-
-  const openSessionMetrics = async () => {
-    if (!activeDeepSessionId) return
-    try {
-      const response = await getAgentSessionMetrics(activeDeepSessionId)
-      if (response.code === 200) {
-        setSessionMetrics(response.data)
-        setSessionMetricsModalOpen(true)
-      }
-    } catch {
-      message.error(intl.formatMessage({ id: 'pages.agent.chat.session.metricsLoadFailed' }))
     }
   }
 
@@ -1798,18 +1781,11 @@ const ChatDebugPage: React.FC = () => {
                 <Text strong>{intl.formatMessage({ id: 'pages.agent.chat.deepTaskPlan' })}</Text>
                 <div>
                   {activeDeepSessionId && (
-                    <>
-                      <Tooltip title={intl.formatMessage({ id: 'pages.agent.chat.session.memoryTooltip' })}>
-                        <Button type="link" size="small" icon={<BulbOutlined />} onClick={() => void openSessionMemory()}>
-                          {intl.formatMessage({ id: 'pages.agent.chat.session.memory' })}
-                        </Button>
-                      </Tooltip>
-                      <Tooltip title={intl.formatMessage({ id: 'pages.agent.chat.session.overviewTooltip' })}>
-                        <Button type="link" size="small" icon={<BarChartOutlined />} onClick={() => void openSessionMetrics()}>
-                          {intl.formatMessage({ id: 'pages.agent.chat.session.overview' })}
-                        </Button>
-                      </Tooltip>
-                    </>
+                    <Tooltip title={intl.formatMessage({ id: 'pages.agent.chat.session.memoryTooltip' })}>
+                      <Button type="link" size="small" icon={<BulbOutlined />} onClick={() => void openSessionMemory()}>
+                        {intl.formatMessage({ id: 'pages.agent.chat.session.memory' })}
+                      </Button>
+                    </Tooltip>
                   )}
                   {selectedSessionTask?.status === 'COMPLETED' && (
                     <Button type="link" size="small" onClick={() => setTaskFeedbackOpen(true)}>
@@ -1851,7 +1827,8 @@ const ChatDebugPage: React.FC = () => {
 
               <div className="agent-chat-deep-task-list">
                 {showVersionedPlan ? (
-                  (sessionTaskPlan?.versions || []).slice().reverse().map((version) => (
+                  // 只展示最新任务规划版本，不展示全部历史版本。
+                  (sessionTaskPlan?.versions || []).slice(-1).map((version) => (
                     <div key={version.version || 0} className="agent-chat-plan-version">
                       <Text strong style={{ fontSize: 12 }}>
                         {intl.formatMessage({ id: 'pages.agent.chat.session.planVersion' }, { version: version.version })}：{version.summary || version.reason}
@@ -1878,7 +1855,7 @@ const ChatDebugPage: React.FC = () => {
                           <span className="agent-chat-plan-step-title">{step.title}</span>
                           {step.status && (
                             <Tag color={step.status.toUpperCase() === 'COMPLETED' ? 'success' : step.status.toUpperCase() === 'RUNNING' ? 'processing' : 'default'}>
-                              {step.status}
+                              {sessionTaskStatusLabel(step.status)}
                             </Tag>
                           )}
                           {step.resultSummary && (
@@ -2019,25 +1996,6 @@ const ChatDebugPage: React.FC = () => {
               rows={4}
               placeholder={intl.formatMessage({ id: 'pages.agent.chat.session.feedbackPlaceholder' })}
             />
-          </Modal>
-
-          <Modal
-            title={intl.formatMessage({ id: 'pages.agent.chat.session.metricsTitle' })}
-            open={sessionMetricsModalOpen}
-            footer={null}
-            onCancel={() => setSessionMetricsModalOpen(false)}
-          >
-            <List size="small">
-              <List.Item>
-                {intl.formatMessage({ id: 'pages.agent.chat.session.metricsTaskCount' })}：{sessionMetrics?.taskCount || 0}
-              </List.Item>
-              <List.Item>
-                {intl.formatMessage({ id: 'pages.agent.chat.session.metricsMemoryCount' })}：{sessionMetrics?.memoryCount || 0}
-              </List.Item>
-              {Object.entries(sessionMetrics?.taskStatusCounts || {}).map(([status, count]) => (
-                <List.Item key={status}>{sessionTaskStatusLabel(status)}：{count}</List.Item>
-              ))}
-            </List>
           </Modal>
 
           {/* 消息列表 */}

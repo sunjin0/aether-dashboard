@@ -6,6 +6,8 @@ server {
 
     # API 与前端同源，浏览器无需保存或暴露后端容器地址。
     location /api/ {
+        # Keep this aligned with Spring's max-request-size so uploads reach the API.
+        client_max_body_size 100m;
         resolver 127.0.0.11 ipv6=off;
         proxy_pass ${AETHER_ADMIN_UPSTREAM};
         proxy_http_version 1.1;
@@ -26,4 +28,3 @@ server {
         try_files $uri $uri/ /index.html;
     }
 }
-

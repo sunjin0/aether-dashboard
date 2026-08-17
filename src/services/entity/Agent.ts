@@ -652,6 +652,7 @@ export type AgentStreamEvent =
 export interface AgentConversation {
   id?: string;
   agentDefinitionId?: string;
+  executionMode?: 'STANDARD' | 'DEEP';
   title?: string;
   toolApprovalPolicy?: 'ask' | 'risky' | 'never';
   status?: number;

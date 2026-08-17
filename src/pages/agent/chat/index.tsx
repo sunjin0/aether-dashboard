@@ -806,7 +806,9 @@ const ChatDebugPage: React.FC = () => {
     resetDeepProgress()
     resetConversationTurnState()
     await loadMessages(conversation.id)
-    await loadSessionWorkspace(conversation.id)
+    if (conversation.executionMode === 'DEEP') {
+      await loadSessionWorkspace(conversation.id)
+    }
   }
 
   const markAssistantStopped = (assistantClientId?: string) => {

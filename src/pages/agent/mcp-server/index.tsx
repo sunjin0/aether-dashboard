@@ -21,6 +21,7 @@ import {
   message,
   Modal,
   Space,
+  Spin,
   Tag,
   Typography,
 } from 'antd'
@@ -39,14 +40,15 @@ const McpServerPage: React.FC = () => {
   const [importedToolNames, setImportedToolNames] = useState<string[]>([])
   const [schemaTool, setSchemaTool] = useState<McpTool>()
   const [toolKeyword, setToolKeyword] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [discoveringServerId, setDiscoveringServerId] = useState<string>()
+  const [importingTools, setImportingTools] = useState(false)
   const permissions = useAccess()
   const write = permissions[history.location.pathname]
   const format = (key: string) => intl.formatMessage({ id: key })
 
   const discover = async (server: McpServer) => {
     if (!server.id) return
-    setLoading(true)
+    setDiscoveringServerId(server.id)
     try {
       const [{ code, data }, imported] = await Promise.all([
         discoverMcpServerTools(server.id),
@@ -59,7 +61,7 @@ const McpServerPage: React.FC = () => {
       setToolKeyword('')
       setDiscoverServer(server)
     } finally {
-      setLoading(false)
+      setDiscoveringServerId(undefined)
     }
   }
 
@@ -95,17 +97,16 @@ const McpServerPage: React.FC = () => {
       message.warning(format('pages.agent.mcpServer.selectTools'))
       return
     }
-    setLoading(true)
+    const toolNames = Array.from(new Set(selectedTools.map(String)))
+    setImportingTools(true)
     try {
-      const { code } = await importMcpServerTools(
-        discoverServer.id,
-        selectedTools as string[],
-      )
+      const { code } = await importMcpServerTools(discoverServer.id, toolNames)
       if (code === 200) {
         setDiscoverServer(undefined)
+        ref.current?.reload()
       }
     } finally {
-      setLoading(false)
+      setImportingTools(false)
     }
   }
 
@@ -163,7 +164,7 @@ const McpServerPage: React.FC = () => {
                 key: 'discover',
                 label: format('pages.agent.mcpServer.discover'),
                 primary: true,
-                loading: loading,
+                loading: discoveringServerId === record.id,
                 onClick: async () => {
                   await discover(record)
                 },
@@ -236,24 +237,32 @@ const McpServerPage: React.FC = () => {
       <Modal
         title={format('pages.agent.mcpServer.discoverTitle')}
         open={Boolean(discoverServer)}
-        onCancel={() => setDiscoverServer(undefined)}
+        onCancel={() => !importingTools && setDiscoverServer(undefined)}
         onOk={importTools}
         okText={format('pages.agent.mcpServer.import')}
-        okButtonProps={{ disabled: !selectedTools.length }}
-        confirmLoading={loading}
+        okButtonProps={{ disabled: !selectedTools.length || importingTools }}
+        cancelButtonProps={{ disabled: importingTools }}
+        confirmLoading={importingTools}
+        closable={!importingTools}
+        maskClosable={!importingTools}
         width="50%"
         styles={{ body: { height: '60vh', overflow: 'hidden' } }}
       >
-        <Space
-          direction="vertical"
-          size="middle"
-          style={{ width: '100%', height: '100%', display: 'flex' }}
-        >
+        <Spin spinning={importingTools} style={{ height: '100%' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 16,
+              height: '100%',
+              minHeight: 0,
+            }}
+          >
           <Space style={{ width: '100%', justifyContent: 'space-between', flex: 'none' }}>
             <Space>
               <Checkbox
                 checked={allVisibleSelected}
-                disabled={!selectableToolNames.length}
+                disabled={!selectableToolNames.length || importingTools}
                 indeterminate={
                   !allVisibleSelected &&
                   selectableToolNames.some((name) => selectedTools.includes(name))
@@ -267,6 +276,7 @@ const McpServerPage: React.FC = () => {
                 placeholder={format('pages.agent.mcpServer.searchTools')}
                 style={{ width: 320 }}
                 value={toolKeyword}
+                disabled={importingTools}
                 onChange={(event) => setToolKeyword(event.target.value)}
               />
             </Space>
@@ -300,9 +310,9 @@ const McpServerPage: React.FC = () => {
                     aria-checked={selected}
                     aria-disabled={imported}
                     tabIndex={imported ? -1 : 0}
-                    onClick={() => !imported && toggleTool(tool, !selected)}
+                    onClick={() => !imported && !importingTools && toggleTool(tool, !selected)}
                     onKeyDown={(event) => {
-                      if (!imported && (event.key === 'Enter' || event.key === ' ')) {
+                      if (!imported && !importingTools && (event.key === 'Enter' || event.key === ' ')) {
                         event.preventDefault()
                         toggleTool(tool, !selected)
                       }
@@ -312,13 +322,13 @@ const McpServerPage: React.FC = () => {
                       borderRadius: 8,
                       padding: 16,
                       background: selected ? '#f6ffed' : '#fff',
-                      cursor: imported ? 'not-allowed' : 'pointer',
+                      cursor: imported || importingTools ? 'not-allowed' : 'pointer',
                     }}
                   >
                     <Space align="start" style={{ width: '100%' }}>
                       <Checkbox
                         checked={selected}
-                        disabled={imported}
+                        disabled={imported || importingTools}
                         onClick={(event) => event.stopPropagation()}
                         onChange={(event) => toggleTool(tool, event.target.checked)}
                       />
@@ -341,8 +351,9 @@ const McpServerPage: React.FC = () => {
                           style={{ padding: 0, textAlign: 'left' }}
                           onClick={(event) => {
                             event.stopPropagation()
-                            setSchemaTool(tool)
+                            if (!importingTools) setSchemaTool(tool)
                           }}
+                          disabled={importingTools}
                         >
                           {format('pages.agent.mcpServer.viewSchema')}
                         </Button>
@@ -355,7 +366,8 @@ const McpServerPage: React.FC = () => {
           ) : (
             <Empty description={format('pages.agent.mcpServer.noTools')} />
           )}
-        </Space>
+          </div>
+        </Spin>
       </Modal>
       <Drawer
         title={schemaTool?.name}

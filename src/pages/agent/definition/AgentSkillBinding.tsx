@@ -1,318 +1,72 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { PlusOutlined } from '@ant-design/icons'
-import { ActionType, ProColumns, ProTable } from '@ant-design/pro-components'
-import { Button, Form, InputNumber, Modal, Select, Tag } from 'antd'
+import React, { useEffect, useState } from 'react'
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
+import { Button, Card, Col, Empty, Input, Modal, Pagination, Popconfirm, Row, Select, Spin, Switch, Tabs, Tag, Tooltip, Typography } from 'antd'
+import { getAgentSkillBindingList, getAvailableAgentSkills, getSkillVersions, installSkillToAgent, uninstallSkillFromAgent, updateSkillBinding } from '@/services/agent/SkillController'
+import { getOptionList } from '@/services/sys/DictController'
+import { AgentDefinitionSkillBinding, AgentSkill, AgentSkillVersion } from '@/services/entity/Agent'
 import { useIntl } from '@umijs/max'
-import TableActionMenu from '@/components/TableActionMenu'
-import {
-  getAgentSkillBindings,
-  getSkillOptions,
-  getSkillVersions,
-  installSkillToAgent,
-  uninstallSkillFromAgent,
-  updateSkillBinding,
-} from '@/services/agent/SkillController'
-import {
-  AgentDefinitionSkillBinding,
-  AgentSkillVersion,
-} from '@/services/entity/Agent'
+import './binding.less'
 
-interface AgentSkillBindingProps {
-  agentId: string;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-}
+interface Props { agentId: string; open: boolean; setOpen: (open: boolean) => void }
+interface Option { label: string; value: string }
+const pageSize = 12
 
-const AgentSkillBinding: React.FC<AgentSkillBindingProps> = ({ agentId, open }) => {
+const AgentSkillBinding: React.FC<Props> = ({ agentId, open, setOpen }) => {
   const intl = useIntl()
-  const format = (id: string, values?: Record<string, string>) =>
-    intl.formatMessage({ id }, values)
-  const ref = useRef<ActionType>()
-  const [form] = Form.useForm()
-  const [installOpen, setInstallOpen] = useState(false)
-  const [skillOptions, setSkillOptions] = useState<{ label: string; value: string }[]>([])
-  const [versionOptions, setVersionOptions] = useState<{ label: string; value: string }[]>([])
-  const [versionMap, setVersionMap] = useState<Record<string, number>>({})
+  const format = (id: string) => intl.formatMessage({ id })
+  const [tab, setTab] = useState('bound')
+  const [items, setItems] = useState<(AgentDefinitionSkillBinding | AgentSkill)[]>([])
+  const [total, setTotal] = useState(0)
+  const [current, setCurrent] = useState(1)
+  const [loading, setLoading] = useState(false)
+  const [keyword, setKeyword] = useState('')
+  const [field, setField] = useState<'name' | 'code' | 'description'>('name')
+  const [category, setCategory] = useState<string>()
+  const [categories, setCategories] = useState<Option[]>([])
+  const categoryName = (value?: string) => categories.find((item) => item.value === value)?.label || value || format('pages.agent.skill.uncategorized')
 
-  useEffect(() => {
-    if (!open) return
-    ref.current?.reload()
-    loadSkills()
-  }, [open, agentId])
-
-  const loadSkills = async () => {
+  useEffect(() => { getOptionList('Agent_Skill_Category').then((options) => setCategories(options.map((item) => ({ label: item.label, value: String(item.value) })))).catch(() => undefined) }, [])
+  const load = async (page = current, filters = { keyword, category }) => {
+    if (!agentId) return
+    setLoading(true)
     try {
-      const options = await getSkillOptions()
-      const installOptions: { label: string; value: string }[] = []
-      options.forEach((item) => {
-        const value = String(item.value)
-        const name = item.label || value
-        if (item.status === 1) {
-          installOptions.push({ label: item.code ? `${name} (${item.code})` : name, value })
-        }
-      })
-      setSkillOptions(installOptions)
-    } catch {
-      // API failures are displayed by the global request handler.
-    }
+      const response = tab === 'bound'
+        ? await getAgentSkillBindingList(agentId, { current: page, pageSize, keyword: filters.keyword || undefined })
+        : await getAvailableAgentSkills(agentId, { current: page, pageSize, category: filters.category, [field]: filters.keyword || undefined })
+      if (response.code === 200) { setItems(response.data || []); setTotal(response.total || 0) }
+    } finally { setLoading(false) }
   }
-
-  /** 加载已安装绑定，并补齐技能名称与版本号展示信息 */
-  const loadBindings = async () => {
-    const { data } = await getAgentSkillBindings(agentId)
-    const bindings = data || []
-    const vMap: Record<string, number> = {}
-    const skillIds = Array.from(new Set(bindings.map((item) => item.skillId).filter((id): id is string => Boolean(id))))
-    await Promise.all(
-      skillIds.map(async (skillId) => {
-        try {
-          const { data: versions } = await getSkillVersions(skillId)
-          ;(versions || []).forEach((item) => {
-            if (item.id && item.versionNo != null) vMap[item.id] = item.versionNo
-          })
-        } catch {
-          // 单个技能版本加载失败不影响其余绑定展示
-        }
-      }),
-    )
-    setVersionMap(vMap)
-    return { data: bindings, total: bindings.length, success: true }
+  useEffect(() => { if (open) { setTab('bound'); setCurrent(1); setKeyword(''); setCategory(undefined) } }, [open, agentId])
+  useEffect(() => { if (open) load(1) // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, open])
+  const search = () => { setCurrent(1); load(1) }
+  const reset = () => { setKeyword(''); setCategory(undefined); setCurrent(1); load(1, { keyword: '', category: undefined }) }
+  const install = async (skill: AgentSkill) => {
+    if (!skill.id) return
+    const versions = await getSkillVersions(skill.id)
+    const version = (versions.data || []).filter((item: AgentSkillVersion) => item.status === 1).sort((a, b) => (b.versionNo || 0) - (a.versionNo || 0))[0]
+    if (version?.id && (await installSkillToAgent(agentId, { skillVersionId: version.id, priority: 0, status: 1 })).code === 200) { setTab('bound'); setCurrent(1) }
   }
-
-  const openInstallModal = () => {
-    form.resetFields()
-    setVersionOptions([])
-    setInstallOpen(true)
+  const card = (item: AgentDefinitionSkillBinding | AgentSkill) => {
+    const bound = tab === 'bound'
+    const binding = item as AgentDefinitionSkillBinding
+    const skill = item as AgentSkill
+    const name = bound ? binding.skillName : skill.name
+    const description = bound ? binding.skillDescription : skill.description || skill.code
+    const code = bound ? binding.skillCode : skill.code
+    return <Col xs={24} sm={12} lg={8} key={item.id}><Card size="small" className={`binding-card ${bound ? 'binding-card-bound' : 'binding-card-available'}`}>
+      <div className="binding-card-header"><Typography.Text strong ellipsis={{ tooltip: name }}>{name}</Typography.Text>{bound && <Tag color={binding.status === 1 ? 'success' : 'default'}>{format(binding.status === 1 ? 'pages.common.enabled' : 'pages.common.disabled')}</Tag>}</div>
+      <Typography.Paragraph ellipsis={{ rows: 2, tooltip: description }} type="secondary" className="binding-card-description">{description}</Typography.Paragraph>
+      <div className="binding-card-meta"><Tag title={code}>{code}</Tag><Tag color="purple">{categoryName(bound ? binding.category : skill.category)}</Tag>{bound && <Tag>v{binding.versionNo || '?'}</Tag>}</div>
+      <div className="binding-card-actions">{bound ? <><div className="binding-state-control"><Switch size="small" checked={binding.status === 1} onChange={(checked) => binding.id && updateSkillBinding(agentId, binding.id, { status: checked ? 1 : 0 }).then(() => load())} /><span>{format(binding.status === 1 ? 'pages.common.enabled' : 'pages.common.disabled')}</span></div><Popconfirm title={format('pages.agent.skill.uninstallConfirm')} onConfirm={() => binding.id && uninstallSkillFromAgent(agentId, binding.id).then(() => load())}><Tooltip title={format('pages.common.delete')}><Button size="small" type="text" danger icon={<DeleteOutlined />} /></Tooltip></Popconfirm></> : <Button size="small" type="primary" icon={<PlusOutlined />} onClick={() => install(skill)}>{format('pages.agent.skill.install')}</Button>}</div>
+    </Card></Col>
   }
-
-  const handleSkillChange = async (skillId: string) => {
-    if (!skillId) {
-      setVersionOptions([])
-      return
-    }
-    try {
-      const { data } = await getSkillVersions(skillId)
-      const published = (data || []).filter((item: AgentSkillVersion) => item.status === 1)
-      setVersionOptions(
-        published.map((item) => ({
-          label: `v${item.versionNo ?? '?'}${item.changeNote ? ` - ${item.changeNote}` : ''}`,
-          value: item.id as string,
-        })),
-      )
-    } catch {
-      setVersionOptions([])
-    }
-  }
-
-  const handleInstall = async () => {
-    let values: { skillId: string; skillVersionId: string; priority?: number }
-    try {
-      values = await form.validateFields()
-    } catch {
-      return
-    }
-    try {
-      const { code } = await installSkillToAgent(agentId, {
-        skillVersionId: values.skillVersionId,
-        priority: values.priority || 0,
-        status: 1,
-      })
-      if (code === 200) {
-        setInstallOpen(false)
-        form.resetFields()
-        ref.current?.reload()
-      }
-    } catch {
-      // API failures are displayed by the global request handler.
-    }
-  }
-
-  const handleStatusChange = async (record: AgentDefinitionSkillBinding) => {
-    if (!record.id) return
-    try {
-      const { code } = await updateSkillBinding(agentId, record.id, {
-        status: record.status === 1 ? 0 : 1,
-      })
-      if (code === 200) ref.current?.reload()
-    } catch {
-      // API failures are displayed by the global request handler.
-    }
-  }
-
-  /** 发布新版本不会隐式影响生产 Agent；管理员在这里显式升级到该 Skill 最新发布版本。 */
-  const handleUpgradeToLatest = async (record: AgentDefinitionSkillBinding) => {
-    if (!record.id || !record.skillId) return
-    try {
-      const { data } = await getSkillVersions(record.skillId)
-      const published = (data || []).filter((item: AgentSkillVersion) => item.status === 1 && item.id)
-        .sort((left: AgentSkillVersion, right: AgentSkillVersion) => (right.versionNo || 0) - (left.versionNo || 0))
-      const latest = published[0]
-      if (!latest?.id || latest.id === record.skillVersionId) {
-        Modal.info({ title: format('pages.agent.skill.upgradeNotNeeded'), content: format('pages.agent.skill.upgradeNotNeededHint') })
-        return
-      }
-      Modal.confirm({
-        title: format('pages.agent.skill.upgradeVersion'),
-        content: format('pages.agent.skill.upgradeConfirm', { current: String(versionMap[record.skillVersionId || ''] || '?'), latest: String(latest.versionNo || '?') }),
-        okText: format('pages.agent.skill.upgradeLatest'),
-        onOk: async () => {
-          const { code } = await updateSkillBinding(agentId, record.id as string, { skillVersionId: latest.id })
-          if (code === 200) ref.current?.reload()
-        },
-      })
-    } catch {
-      // API failures are displayed by the global request handler.
-    }
-  }
-
-
-  const handleUninstall = async (record: AgentDefinitionSkillBinding) => {
-    if (!record.id) return
-    try {
-      const { code } = await uninstallSkillFromAgent(agentId, record.id)
-      if (code === 200) ref.current?.reload()
-    } catch {
-      // API failures are displayed by the global request handler.
-    }
-  }
-
-  const columns: ProColumns[] = [
-    {
-      title: format('pages.agent.skill.name'),
-      dataIndex: 'skillId',
-      ellipsis: true,
-      valueType: 'select',
-      request: async () => {
-        let options = await getSkillOptions()
-        options = options.map((item) => ({
-          label: item.label + (item.code ? ` (${item.code})` : ''),
-          value: item.value,
-        }))
-        return options
-      },
-    },
-    {
-      title: format('pages.agent.skill.versionNo'),
-      dataIndex: 'skillVersionId',
-      width: 100,
-      render: (value: React.ReactNode) => {
-        const versionId = typeof value === 'string' ? value : undefined
-        return versionId && versionMap[versionId] != null ? `v${versionMap[versionId]}` : '-'
-      },
-    },
-    {
-      title: format('pages.agent.tool.priority'),
-      dataIndex: 'priority',
-      width: 150,
-    },
-    {
-      title: format('pages.common.status'),
-      dataIndex: 'status',
-      width: 110,
-      render: (value: React.ReactNode) =>
-        value === 1 ? (
-          <Tag color="green">{format('pages.common.enabled')}</Tag>
-        ) : (
-          <Tag>{format('pages.common.disabled')}</Tag>
-        ),
-    },
-    {
-      title: format('pages.common.option'),
-      valueType: 'option',
-      key: 'option',
-      fixed: 'right',
-      width: 300,
-      render: (_: unknown, record: AgentDefinitionSkillBinding) => (
-        <TableActionMenu
-          items={[
-            {
-              key: 'status',
-              primary: true,
-              label:
-                record.status === 1
-                  ? format('pages.common.disabled')
-                  : format('pages.common.enabled'),
-              confirm: { title: format('pages.agent.skill.bindingStatusConfirm') },
-              onClick: () => handleStatusChange(record),
-            },
-            {
-              key: 'uninstall',
-              primary: true,
-              label: format('pages.agent.skill.uninstall'),
-              danger: true,
-              confirm: { title: format('pages.agent.skill.uninstallConfirm') },
-              onClick: () => handleUninstall(record),
-            },
-            {
-              key: 'upgrade',
-              primary: true,
-              label: format('pages.agent.skill.upgradeLatest'),
-              onClick: () => handleUpgradeToLatest(record),
-            },
-          ]}
-        />
-      ),
-    },
-  ]
-
-  return (
-    <>
-      <ProTable<AgentDefinitionSkillBinding>
-        actionRef={ref}
-        rowKey="id"
-        search={false}
-        columns={columns}
-        pagination={{
-          current: 1,
-          pageSize: 20,
-        }}
-        request={loadBindings}
-        toolBarRender={() => [
-          <Button key="install" icon={<PlusOutlined />} type="primary" onClick={openInstallModal}>
-            {format('pages.agent.skill.install')}
-          </Button>,
-        ]}
-      />
-      <Modal
-        title={format('pages.agent.skill.install')}
-        open={installOpen}
-        onOk={handleInstall}
-        onCancel={() => {
-          setInstallOpen(false)
-          form.resetFields()
-        }}
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            name="skillId"
-            label={format('pages.agent.skill.selectSkill')}
-            rules={[{ required: true, message: format('pages.agent.skill.selectSkill') }]}
-          >
-            <Select
-              showSearch
-              optionFilterProp="label"
-              options={skillOptions}
-              placeholder={format('pages.agent.skill.selectSkillPlaceholder')}
-              onChange={handleSkillChange}
-            />
-          </Form.Item>
-          <Form.Item
-            name="skillVersionId"
-            label={format('pages.agent.skill.selectVersion')}
-            rules={[{ required: true, message: format('pages.agent.skill.selectVersion') }]}
-          >
-            <Select
-              options={versionOptions}
-              placeholder={format('pages.agent.skill.selectVersionPlaceholder')}
-            />
-          </Form.Item>
-          <Form.Item name="priority" label={format('pages.agent.tool.priority')} initialValue={0}>
-            <InputNumber min={0} max={999} style={{ width: '100%' }} />
-          </Form.Item>
-        </Form>
-      </Modal>
-    </>
-  )
+  const empty = <Empty className="binding-empty" description={tab === 'bound' ? format('pages.agent.definition.noBoundSkills') : format('pages.agent.definition.noAvailableItems')}><Button type="primary" onClick={() => tab === 'bound' ? setTab('available') : reset()}>{format(tab === 'bound' ? 'pages.agent.definition.availableItems' : 'pages.common.refresh')}</Button></Empty>
+  return <Modal className="binding-modal" title={format('pages.agent.skill.manage')} open={open} onCancel={() => setOpen(false)} footer={null} width="min(980px, calc(100vw - 24px))" destroyOnClose>
+    <Tabs activeKey={tab} onChange={(key) => { setTab(key); setCurrent(1) }} items={[{ key: 'bound', label: format('pages.agent.definition.boundItems') }, { key: 'available', label: format('pages.agent.definition.availableItems') }]} />
+    <div className="binding-search"><div className="binding-query-group"><Select value={field} onChange={setField} style={{ width: 110 }} options={[{ value: 'name', label: format('pages.common.name') }, { value: 'code', label: format('pages.common.code') }, { value: 'description', label: format('pages.common.description') }]} /><Input allowClear value={keyword} onChange={(event) => setKeyword(event.target.value)} onPressEnter={search} placeholder={format(tab === 'bound' ? 'pages.agent.definition.searchBoundSkills' : 'pages.agent.definition.searchAvailableSkills')} /></div>{tab === 'available' && <Select className="binding-filter" allowClear value={category} onChange={setCategory} placeholder={format('pages.agent.skill.category')} options={categories} />}<div className="binding-search-actions"><Button type="primary" onClick={search}>{format('pages.common.search')}</Button><Button onClick={reset}>{format('pages.common.refresh')}</Button></div></div>
+    <div className="binding-list"><Spin spinning={loading}>{items.length ? <Row gutter={[12, 12]}>{items.map(card)}</Row> : empty}</Spin></div>
+    {total > pageSize && <Pagination size="small" current={current} pageSize={pageSize} total={total} showSizeChanger={false} className="binding-pagination" onChange={(page) => { setCurrent(page); load(page) }} />}
+  </Modal>
 }
-
 export default AgentSkillBinding

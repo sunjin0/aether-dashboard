@@ -5,6 +5,7 @@ import {
   AgentDefinitionSearchParams,
   AgentDefinitionStatusParams,
   AgentToolBinding,
+  AgentTool,
   BindToolRequest,
   UpdateToolPriorityRequest,
 } from '@/services/entity/Agent'
@@ -19,6 +20,10 @@ export const getAgentDefinitionList = async (
     method: 'POST',
     data: params,
   })
+}
+
+export const getAvailableAgentTools = async (agentId: string, params: AgentTool): Promise<ResponseStructure<AgentTool[]>> => {
+  return request(`/api/agent/definition/${agentId}/tools/available`, { method: 'POST', data: params })
 }
 export const getAgentDefinitionOptions = async (status = 1): Promise<Option[]> => {
   const { data } = await request<ResponseStructure<Option[]>>('/api/agent/definition/options', { method: 'GET', params: { status } })
@@ -106,6 +111,17 @@ export const getAgentBoundTools = async (
   })
 }
 
+/** 分页查询 Agent 绑定的工具及其 MCP 服务信息 */
+export const getAgentToolBindingList = async (
+  agentId: string,
+  params: AgentToolBinding,
+): Promise<ResponseStructure<AgentToolBinding[]>> => {
+  return request(`/api/agent/definition/${agentId}/tools/list`, {
+    method: 'POST',
+    data: params,
+  })
+}
+
 /**
  * @description 绑定工具到 Agent
  */
@@ -140,6 +156,18 @@ export const updateToolPriority = async (
   params: UpdateToolPriorityRequest,
 ): Promise<ResponseStructure<AgentToolBinding>> => {
   return request(`/api/agent/definition/${agentId}/tools/${toolId}/priority`, {
+    method: 'PUT',
+    data: params,
+  })
+}
+
+/** 更新 Agent 工具绑定的启用状态 */
+export const updateAgentToolBindingStatus = async (
+  agentId: string,
+  toolId: string,
+  params: Pick<BindToolRequest, 'status'>,
+): Promise<ResponseStructure<void>> => {
+  return request(`/api/agent/definition/${agentId}/tools/${toolId}/status`, {
     method: 'PUT',
     data: params,
   })

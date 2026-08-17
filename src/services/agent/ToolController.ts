@@ -96,6 +96,15 @@ export const refreshAgentToolDefinition = async (id: string): Promise<ResponseSt
     method: 'POST',
   })
 
+/** Refresh selected MCP-imported tool definitions in one server request. */
+export const batchRefreshAgentToolDefinitions = async (
+  toolIds: string[],
+): Promise<ResponseStructure<{ total: number; succeeded: number; failed: number }>> =>
+  request('/api/agent/tool/batch-refresh-definition', {
+    method: 'POST',
+    data: { toolIds },
+  })
+
 /**
  * @description 删除 Agent 工具
  */

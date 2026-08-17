@@ -1,0 +1,89 @@
+.binding-modal {
+  .ant-modal-body { padding-top: 8px; }
+}
+
+.binding-search {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.binding-query-group { display: flex; flex: 1 1 350px; min-width: 280px; }
+.binding-query-group .ant-input { min-width: 180px; }
+.binding-filter { width: 144px; }
+.binding-search-actions { display: flex; gap: 8px; }
+
+.binding-list {
+  min-height: 180px;
+
+  .ant-spin-nested-loading > div > .ant-spin { max-height: none; }
+}
+
+.binding-card {
+  height: 100%;
+  overflow: hidden;
+  border-color: #e7edf5;
+  border-radius: 8px;
+  transition: border-color .2s, box-shadow .2s, transform .2s;
+
+  &:hover { border-color: #b7d5ff; box-shadow: 0 6px 18px rgb(25 73 130 / 8%); transform: translateY(-1px); }
+  .ant-card-body { display: flex; min-height: 168px; padding: 14px; flex-direction: column; }
+}
+
+.binding-card-bound { border-top: 3px solid #1677ff; }
+.binding-card-available { border-top: 3px solid #e6f4ff; }
+
+.binding-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  .ant-typography { min-width: 0; margin: 0; font-size: 14px; }
+  .ant-tag { flex: 0 0 auto; margin-inline-end: 0; }
+}
+
+.binding-card-description { min-height: 40px; margin: 9px 0 8px !important; font-size: 12px; line-height: 20px; }
+
+.binding-card-meta {
+  display: flex;
+  min-height: 22px;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+
+  .ant-tag { max-width: 100%; margin-inline-end: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+.binding-card-actions {
+  display: flex;
+  min-height: 34px;
+  margin-top: auto;
+  padding-top: 9px;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #f0f3f7;
+
+  .ant-input-number { width: 60px; }
+}
+
+.binding-state-control { display: inline-flex; gap: 6px; align-items: center; color: #667085; font-size: 12px; }
+.binding-pagination { margin-top: 16px; text-align: right; }
+.binding-empty { padding: 32px 0; }
+
+@media (max-width: 768px) {
+  .binding-modal { max-width: calc(100vw - 24px); margin: 12px auto; }
+  .binding-modal .ant-modal-body { padding: 8px 12px 16px; }
+  .binding-search { align-items: stretch; gap: 8px; }
+  .binding-query-group { flex-basis: 100%; min-width: 0; }
+  .binding-filter { width: 100%; }
+  .binding-search-actions { width: 100%; }
+  .binding-search-actions .ant-btn { flex: 1; }
+}
+
+@media (max-width: 420px) {
+  .binding-card-actions { gap: 8px; align-items: flex-start; flex-direction: column; }
+  .binding-card-actions > .ant-btn { align-self: flex-end; margin-top: -34px; }
+}

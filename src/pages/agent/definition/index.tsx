@@ -260,22 +260,14 @@ const AgentDefinitionPage: React.FC = () => {
         }}
       />
 
-      <Modal
-        title={format('pages.agent.definition.toolBindingManagement')}
+      <AgentToolBinding
+        agentId={currentAgentId}
         open={toolBindingVisible}
-        onCancel={() => {
-          setToolBindingVisible(false)
-          setCurrentAgentId('')
+        setOpen={(visible) => {
+          setToolBindingVisible(visible)
+          if (!visible) setCurrentAgentId('')
         }}
-        footer={null}
-        width={900}
-      >
-        <AgentToolBinding
-          agentId={currentAgentId}
-          open={toolBindingVisible}
-          setOpen={setToolBindingVisible}
-        />
-      </Modal>
+      />
       <Modal
         title={format('pages.agent.definition.knowledgeBaseBindingManagement')}
         open={knowledgeBaseBindingVisible}
@@ -293,23 +285,14 @@ const AgentDefinitionPage: React.FC = () => {
           setOpen={setKnowledgeBaseBindingVisible}
         />
       </Modal>
-      <Modal
-        title={format('pages.agent.skill.manage')}
+      <AgentSkillBinding
+        agentId={currentAgentId}
         open={skillBindingVisible}
-        onCancel={() => {
-          setSkillBindingVisible(false)
-          setCurrentAgentId('')
+        setOpen={(visible) => {
+          setSkillBindingVisible(visible)
+          if (!visible) setCurrentAgentId('')
         }}
-        footer={null}
-        width={900}
-        destroyOnClose
-      >
-        <AgentSkillBinding
-          agentId={currentAgentId}
-          open={skillBindingVisible}
-          setOpen={setSkillBindingVisible}
-        />
-      </Modal>
+      />
     </PageContainer>
   )
 }

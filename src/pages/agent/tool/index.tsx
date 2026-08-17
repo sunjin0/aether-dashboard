@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ApiOutlined,
   AppstoreOutlined,
@@ -12,163 +12,165 @@ import {
   ReloadOutlined,
   SearchOutlined,
   ToolOutlined,
-} from '@ant-design/icons'
-import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
-import { Button, Input, message, Progress, Select, Space, Spin, Switch, Tag } from 'antd'
-import { history, useAccess, useIntl } from '@@/exports'
-import AgentToolForm from '@/pages/agent/tool/AgentToolForm'
-import AgentToolTestModal from '@/pages/agent/tool/AgentToolTestModal'
+} from '@ant-design/icons';
+import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components';
+import { Button, Input, Modal, Progress, Select, Space, Spin, Switch, Tag } from 'antd';
+import { history, useAccess, useIntl } from '@@/exports';
+import AgentToolForm from '@/pages/agent/tool/AgentToolForm';
+import AgentToolTestModal from '@/pages/agent/tool/AgentToolTestModal';
 import {
   deleteAgentToolInfo,
   getAgentToolFacets,
   getAgentToolInfo,
   getAgentToolList,
   getAgentToolStatistics,
-  refreshAgentToolDefinition,
+  batchRefreshAgentToolDefinitions,
   updateAgentToolInfo,
-} from '@/services/agent/ToolController'
+} from '@/services/agent/ToolController';
 import {
   AgentTool,
   AgentToolFacets,
   AgentToolSearchParams,
   AgentToolStatistics,
-} from '@/services/entity/Agent'
-import './index.less'
-import { getOptionList } from '@/services/sys/DictController'
-import TableActionMenu from '@/components/TableActionMenu'
-import { SystemIcon } from '@/components/SystemIconPicker'
+} from '@/services/entity/Agent';
+import './index.less';
+import { getOptionList } from '@/services/sys/DictController';
+import TableActionMenu from '@/components/TableActionMenu';
+import { SystemIcon } from '@/components/SystemIconPicker';
 const toolTypesMap = [
   { value: 'knowledge', icon: <DatabaseOutlined /> },
   { value: 'ops', icon: <ToolOutlined /> },
   { value: 'dev', icon: <CodeOutlined /> },
   { value: 'general', icon: <AppstoreOutlined /> },
-]
+];
 const rate = (value?: number) => {
-  const result = value || 0
-  return result > 0 && result <= 1 ? result * 100 : result
-}
+  const result = value || 0;
+  return result > 0 && result <= 1 ? result * 100 : result;
+};
 const timeText = (value?: string | number, locale?: string) => {
-  if (value === undefined || value === null || value === '') return '-'
+  if (value === undefined || value === null || value === '') return '-';
   if (typeof value === 'number') {
-    const timestamp = value < 100000000000 ? value * 1000 : value
-    const date = new Date(timestamp)
-    return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString(locale, { hour12: false })
+    const timestamp = value < 100000000000 ? value * 1000 : value;
+    const date = new Date(timestamp);
+    return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString(locale, { hour12: false });
   }
-  return value.replace('T', ' ').slice(0, 16)
-}
+  return value.replace('T', ' ').slice(0, 16);
+};
 
 const AgentToolPage: React.FC = () => {
-  const ref = useRef<ActionType>()
-  const permissionMap = useAccess()
-  const intl = useIntl()
-  const [open, setOpen] = useState(false)
-  const [id, setId] = useState<string>()
-  const [testToolId, setTestToolId] = useState<string>()
-  const [statistics, setStatistics] = useState<AgentToolStatistics>()
-  const [statisticsLoading, setStatisticsLoading] = useState(false)
-  const [keyword, setKeyword] = useState('')
-  const [toolType, setToolType] = useState<string>()
-  const [status, setStatus] = useState<number>()
-  const [mcpServerId, setMcpServerId] = useState<string>()
-  const [refreshingToolId, setRefreshingToolId] = useState<string>()
+  const ref = useRef<ActionType>();
+  const permissionMap = useAccess();
+  const intl = useIntl();
+  const [open, setOpen] = useState(false);
+  const [id, setId] = useState<string>();
+  const [testToolId, setTestToolId] = useState<string>();
+  const [statistics, setStatistics] = useState<AgentToolStatistics>();
+  const [statisticsLoading, setStatisticsLoading] = useState(false);
+  const [keyword, setKeyword] = useState('');
+  const [toolType, setToolType] = useState<string>();
+  const [status, setStatus] = useState<number>();
+  const [mcpServerId, setMcpServerId] = useState<string>();
+  const [selectedToolIds, setSelectedToolIds] = useState<React.Key[]>([]);
+  const [syncingDefinitions, setSyncingDefinitions] = useState(false);
   const [facets, setFacets] = useState<AgentToolFacets>({
     categories: [],
     statuses: [],
     sources: [],
-  })
-  const write = permissionMap[history.location.pathname]
+  });
+  const write = permissionMap[history.location.pathname];
   const format = (id: string, values?: Record<string, string | number>) =>
-    intl.formatMessage({ id }, values)
-  const refresh = () => ref.current?.reloadAndRest?.()
-  const [toolTypes, setToolTypes] = useState<any>([])
+    intl.formatMessage({ id }, values);
+  const refresh = () => ref.current?.reloadAndRest?.();
+  const [toolTypes, setToolTypes] = useState<any>([]);
   useEffect(() => {
     getOptionList('Agent_Tool_Business_Type').then((res) => {
       res = res.map((item) => ({
         value: item.value,
         label: item.label,
         icon: toolTypesMap.find((type) => type.value === item.value)?.icon || <AppstoreOutlined />,
-      }))
-      setToolTypes(res)
-    })
-  }, [])
+      }));
+      setToolTypes(res);
+    });
+  }, []);
   const typeMeta = (type?: string) =>
-    toolTypes.find((item: { value: string | undefined }) => item.value === type)
+    toolTypes.find((item: { value: string | undefined }) => item.value === type);
 
   const loadStatistics = async () => {
-    setStatisticsLoading(true)
+    setStatisticsLoading(true);
     try {
-      const result = await getAgentToolStatistics({ toolType, mcpServerId })
-      if (result.code === 200) setStatistics(result.data)
-      else return
+      const result = await getAgentToolStatistics({ toolType, mcpServerId });
+      if (result.code === 200) setStatistics(result.data);
+      else return;
     } finally {
-      setStatisticsLoading(false)
+      setStatisticsLoading(false);
     }
-  }
+  };
 
   const loadFacets = () => {
     getAgentToolFacets().then(({ code, data }) => {
-      if (code === 200 && data) setFacets(data)
-    })
-  }
+      if (code === 200 && data) setFacets(data);
+    });
+  };
   const refreshPage = () => {
-    refresh()
-    loadStatistics()
-    loadFacets()
-  }
+    refresh();
+    loadStatistics();
+    loadFacets();
+  };
 
   useEffect(() => {
-    loadStatistics()
-  }, [toolType, mcpServerId])
+    loadStatistics();
+  }, [toolType, mcpServerId]);
   useEffect(() => {
-    loadFacets()
-  }, [])
+    loadFacets();
+  }, []);
 
   const changeFilter = (callback: () => void) => {
-    callback()
-    window.setTimeout(refresh, 0)
-  }
+    callback();
+    window.setTimeout(refresh, 0);
+  };
   const handleDelete = async (record: AgentTool) => {
-    if (!record.id) return
+    if (!record.id) return;
     try {
-      const result = await deleteAgentToolInfo(record.id)
+      const result = await deleteAgentToolInfo(record.id);
       if (result.code === 200) {
-      refresh()
-      loadStatistics()
+        refresh();
+        loadStatistics();
       }
     } catch {
       // API failures are displayed by the global request handler.
     }
-  }
+  };
   const handleStatusChange = async (record: AgentTool) => {
-    if (!record.id) return
+    if (!record.id) return;
     try {
-      const detail = await getAgentToolInfo(record.id)
-      if (detail.code !== 200 || !detail.data) return
+      const detail = await getAgentToolInfo(record.id);
+      if (detail.code !== 200 || !detail.data) return;
       const result = await updateAgentToolInfo({
         ...detail.data,
         status: record.status === 1 ? 0 : 1,
-      })
+      });
       if (result.code === 200) {
-        refresh()
-        loadStatistics()
+        refresh();
+        loadStatistics();
       }
     } catch {
       // API failures are displayed by the global request handler.
     }
-  }
-  const handleRefreshDefinition = async (record: AgentTool) => {
-    if (!record.id) return
-    setRefreshingToolId(record.id)
+  };
+  const handleBatchRefreshDefinitions = async () => {
+    const toolIds = selectedToolIds.map(String);
+    if (!toolIds.length) return;
+    setSyncingDefinitions(true);
     try {
-      const result = await refreshAgentToolDefinition(record.id)
+      const result = await batchRefreshAgentToolDefinitions(toolIds);
       if (result.code === 200) {
-        message.success(format('pages.agent.tool.refreshDefinitionSuccess'))
-        refresh()
+        setSelectedToolIds([]);
+        refreshPage();
       }
     } finally {
-      setRefreshingToolId(undefined)
+      setSyncingDefinitions(false);
     }
-  }
+  };
 
   const columns: any[] = [
     {
@@ -176,7 +178,7 @@ const AgentToolPage: React.FC = () => {
       dataIndex: 'name',
       width: 275,
       render: (_: unknown, record: AgentTool) => {
-        const meta = typeMeta(record.toolType)
+        const meta = typeMeta(record.toolType);
         return (
           <div className="tool-name-cell">
             <span className={`tool-icon tool-icon-${record.toolType || 'general'}`}>
@@ -189,7 +191,7 @@ const AgentToolPage: React.FC = () => {
               </small>
             </div>
           </div>
-        )
+        );
       },
     },
     {
@@ -215,7 +217,7 @@ const AgentToolPage: React.FC = () => {
           </span>
         ) : (
           <span className="status-disabled">{format('pages.agent.tool.notIntegrated')}</span>
-      ),
+        ),
     },
     {
       title: format('pages.agent.tool.callCount'),
@@ -259,19 +261,12 @@ const AgentToolPage: React.FC = () => {
           <TableActionMenu
             items={[
               {
-                key: 'refresh-definition',
-                label: format('pages.agent.tool.refreshDefinition'),
-                visible: Boolean(record.mcpServerId && record.mcpToolName),
-                loading: refreshingToolId === record.id,
-                onClick: () => handleRefreshDefinition(record),
-              },
-              {
                 key: 'edit',
                 label: format('pages.common.edit'),
                 primary: true,
                 onClick: () => {
-                  setId(record.id)
-                  setOpen(true)
+                  setId(record.id);
+                  setOpen(true);
                 },
               },
               {
@@ -309,7 +304,7 @@ const AgentToolPage: React.FC = () => {
           />
         ),
     },
-  ]
+  ];
 
   return (
     <PageContainer
@@ -338,11 +333,11 @@ const AgentToolPage: React.FC = () => {
               <small>
                 {statistics?.totalCount
                   ? format('pages.agent.tool.availabilityRate', {
-                    rate: (
-                      ((statistics.enabledCount || 0) / statistics.totalCount) *
+                      rate: (
+                        ((statistics.enabledCount || 0) / statistics.totalCount) *
                         100
-                    ).toFixed(0),
-                  })
+                      ).toFixed(0),
+                    })
                   : format('pages.agent.tool.empty')}
               </small>
             </div>
@@ -406,7 +401,7 @@ const AgentToolPage: React.FC = () => {
               {format('pages.agent.tool.all')}
             </button>
             {facets.statuses.map((item) => {
-              const value = Number(item.value)
+              const value = Number(item.value);
               return (
                 <button
                   key={String(item.value)}
@@ -417,7 +412,7 @@ const AgentToolPage: React.FC = () => {
                   {item.label}
                   <em>{item.count}</em>
                 </button>
-              )
+              );
             })}
           </section>
           <section>
@@ -473,14 +468,27 @@ const AgentToolPage: React.FC = () => {
               onChange={(value) => changeFilter(() => setMcpServerId(value))}
             />
             <Space className="tool-filter-actions">
-              <Button icon={<ReloadOutlined />} onClick={refreshPage}>{format('pages.common.refresh')}</Button>
+              <Button icon={<ReloadOutlined />} onClick={refreshPage}>
+                {format('pages.common.refresh')}
+              </Button>
+              {write && (
+                <Button
+                  disabled={!selectedToolIds.length || syncingDefinitions}
+                  loading={syncingDefinitions}
+                  onClick={handleBatchRefreshDefinitions}
+                >
+                  {format('pages.agent.tool.batchRefreshDefinition', {
+                    count: selectedToolIds.length,
+                  })}
+                </Button>
+              )}
               {write && (
                 <Button
                   type="primary"
                   icon={<PlusOutlined />}
                   onClick={() => {
-                    setId(undefined)
-                    setOpen(true)
+                    setId(undefined);
+                    setOpen(true);
                   }}
                 >
                   {format('pages.agent.tool.add')}
@@ -495,6 +503,13 @@ const AgentToolPage: React.FC = () => {
             search={false}
             options={false}
             headerTitle={false}
+            rowSelection={{
+              selectedRowKeys: selectedToolIds,
+              onChange: setSelectedToolIds,
+              getCheckboxProps: (record) => ({
+                disabled: !record.mcpServerId || !record.mcpToolName,
+              }),
+            }}
             scroll={{ x: 1100 }}
             columns={columns}
             request={(params: AgentToolSearchParams) =>
@@ -519,9 +534,9 @@ const AgentToolPage: React.FC = () => {
         open={open}
         setOpen={setOpen}
         onSuccess={() => {
-          setId(undefined)
-          refresh()
-          loadStatistics()
+          setId(undefined);
+          refresh();
+          loadStatistics();
         }}
       />
       <AgentToolTestModal
@@ -529,7 +544,25 @@ const AgentToolPage: React.FC = () => {
         open={Boolean(testToolId)}
         onClose={() => setTestToolId(undefined)}
       />
+      <Modal
+        open={syncingDefinitions}
+        footer={null}
+        closable={false}
+        maskClosable={false}
+        centered
+        width={360}
+      >
+        <Space
+          direction="vertical"
+          align="center"
+          size="middle"
+          style={{ display: 'flex', padding: '16px 0' }}
+        >
+          <Spin size="large" />
+          <span>{format('pages.agent.tool.batchRefreshProgress')}</span>
+        </Space>
+      </Modal>
     </PageContainer>
-  )
-}
-export default AgentToolPage
+  );
+};
+export default AgentToolPage;

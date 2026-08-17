@@ -1,6 +1,7 @@
 import { request } from '@umijs/max'
 import {
   addAgentToolInfo,
+  batchRefreshAgentToolDefinitions,
   deleteAgentToolInfo,
   getAgentToolInfo,
   getAgentToolList,
@@ -26,6 +27,7 @@ describe('ToolController', () => {
     await updateAgentToolInfo({ id: 'tool-1', name: 'Weather', code: 'weather' })
     await deleteAgentToolInfo('tool-1')
     await testAgentTool('tool-1', { keyword: 'test' })
+    await batchRefreshAgentToolDefinitions(['tool-1', 'tool-2'])
 
     expect(mockedRequest).toHaveBeenNthCalledWith(1, '/api/agent/tool/list', {
       method: 'POST',
@@ -48,6 +50,10 @@ describe('ToolController', () => {
     expect(mockedRequest).toHaveBeenNthCalledWith(6, '/api/agent/tool/tool-1/test', {
       method: 'POST',
       data: { keyword: 'test' },
+    })
+    expect(mockedRequest).toHaveBeenNthCalledWith(7, '/api/agent/tool/batch-refresh-definition', {
+      method: 'POST',
+      data: { toolIds: ['tool-1', 'tool-2'] },
     })
   })
 })

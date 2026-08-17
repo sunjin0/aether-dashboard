@@ -151,6 +151,17 @@ export const getAgentSkillBindings = async (
   })
 }
 
+export const getAgentSkillBindingList = async (
+  agentId: string,
+  params: AgentDefinitionSkillBinding,
+): Promise<ResponseStructure<AgentDefinitionSkillBinding[]>> => {
+  return request(`/api/agent/definition/${agentId}/skills/list`, { method: 'POST', data: params })
+}
+
+export const getAvailableAgentSkills = async (agentId: string, params: AgentSkill): Promise<ResponseStructure<AgentSkill[]>> => {
+  return request(`/api/agent/definition/${agentId}/skills/available`, { method: 'POST', data: params })
+}
+
 /**
  * @description 安装技能到 Agent
  */

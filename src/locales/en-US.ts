@@ -18,7 +18,8 @@ export default {
   'pages.agent.artifact.deleteContent': 'The file can be restored for {days} days.',
   'pages.agent.artifact.moveToRecycleBin': 'Move to recycle bin',
   'pages.agent.artifact.recycleExpiresAt': 'Auto-cleanup at {time}',
-  'pages.agent.artifact.recycleHint': 'Files in the recycle bin are automatically cleaned up after {days} days. Restored files return to My Files.',
+  'pages.agent.artifact.recycleHint':
+    'Files in the recycle bin are automatically cleaned up after {days} days. Restored files return to My Files.',
   'pages.agent.artifact.empty': 'No AI-generated files yet',
   'pages.agent.artifact.recycleEmpty': 'The recycle bin is empty',
   //公共
@@ -47,6 +48,7 @@ export default {
   'pages.common.disabled': 'Disabled',
   'pages.common.yes': 'Yes',
   'pages.common.no': 'No',
+  'pages.common.search': 'Search',
   // 关闭
   'pages.common.close': 'Close',
   'pages.common.confirm': 'Confirm',
@@ -90,7 +92,8 @@ export default {
   'pages.sys.config.delete': 'Delete',
   'pages.sys.config.deleteTitle': 'Delete Configuration',
   'pages.sys.config.deleteConfirm': 'Delete this configuration?',
-  'pages.sys.config.deleteWithChildren': 'This also deletes {count} child configurations. Continue?',
+  'pages.sys.config.deleteWithChildren':
+    'This also deletes {count} child configurations. Continue?',
   'pages.sys.config.childCount': '{count} children',
   'pages.sys.config.createTitle': 'New Configuration',
   'pages.sys.config.editTitle': 'Edit Configuration',
@@ -103,24 +106,32 @@ export default {
   'pages.sys.config.deleteSuccess': 'Configuration deleted',
   'pages.knowledge.review.rejectReasonRequired': 'Please provide a rejection reason',
   'pages.knowledge.review.operationSuccess': 'Operation completed successfully',
-  'pages.agent.skill.routingSaved': 'Routing settings saved. Newly published Skills will build vector indexes asynchronously.',
+  'pages.agent.skill.routingSaved':
+    'Routing settings saved. Newly published Skills will build vector indexes asynchronously.',
   'pages.agent.skill.routingConfig': 'Skill Routing Settings',
   'pages.agent.skill.routingProvider': 'Embedding Model',
-  'pages.agent.skill.routingHint': 'Optional. Used for vector-retrieval candidates; leave empty to use only trigger/exclusion terms and the routing model.',
+  'pages.agent.skill.routingHint':
+    'Optional. Used for vector-retrieval candidates; leave empty to use only trigger/exclusion terms and the routing model.',
   'pages.agent.skill.routingProviderPlaceholder': 'Select an enabled embedding model',
   'pages.agent.skill.allDeliveryStatuses': 'All delivery statuses',
   'pages.agent.skill.draftPending': 'Draft pending publication',
   'pages.agent.skill.createDraft': 'Create Skill Draft',
   'pages.agent.skill.routingSummary': 'When to use this Skill',
-  'pages.agent.skill.routingSummaryRequired': 'Provide a discovery summary of no more than 200 characters',
-  'pages.agent.skill.routingSummaryPlaceholder': 'Describe the user need that should activate this Skill; do not repeat the complete instruction.',
+  'pages.agent.skill.routingSummaryRequired':
+    'Provide a discovery summary of no more than 200 characters',
+  'pages.agent.skill.routingSummaryPlaceholder':
+    'Describe the user need that should activate this Skill; do not repeat the complete instruction.',
   'pages.agent.skill.triggerTerms': 'Trigger terms',
-  'pages.agent.skill.triggerTermsPlaceholder': 'Separate terms with commas, for example: refund, return, cancel order',
+  'pages.agent.skill.triggerTermsPlaceholder':
+    'Separate terms with commas, for example: refund, return, cancel order',
   'pages.agent.skill.excludeTerms': 'Exclusion terms',
-  'pages.agent.skill.excludeTermsPlaceholder': 'Separate terms with commas, for example: security, account login',
+  'pages.agent.skill.excludeTermsPlaceholder':
+    'Separate terms with commas, for example: security, account login',
   'pages.agent.skill.routingExamples': 'Example requests',
-  'pages.agent.skill.routingExamplesPlaceholder': 'One request per line, up to 5; for example:\nI need a refund\nWhen will a cancelled order be refunded?',
-  'pages.agent.skill.studio.providerRequired': 'Select an AI provider and enter generation requirements',
+  'pages.agent.skill.routingExamplesPlaceholder':
+    'One request per line, up to 5; for example:\nI need a refund\nWhen will a cancelled order be refunded?',
+  'pages.agent.skill.studio.providerRequired':
+    'Select an AI provider and enter generation requirements',
   'pages.agent.skill.studio.typeMismatch': 'The file extension must match the resource type',
   'pages.agent.skill.studio.saveSuccess': 'Resource draft saved',
   'pages.agent.skill.studio.generate': 'Generate with AI',
@@ -132,12 +143,14 @@ export default {
   'pages.agent.skill.studio.purpose': 'Purpose',
   'pages.agent.skill.studio.generateTest': 'Generate / Test with AI',
   'pages.agent.skill.studio.selectProvider': 'Select an AI provider',
-  'pages.agent.skill.studio.promptPlaceholder': 'Describe the resource to generate or improve. AI output appears in the editor below.',
+  'pages.agent.skill.studio.promptPlaceholder':
+    'Describe the resource to generate or improve. AI output appears in the editor below.',
   'pages.agent.skill.studio.content': 'Resource content',
   'pages.agent.skill.upgradeNotNeeded': 'No upgrade needed',
   'pages.agent.skill.upgradeNotNeededHint': 'The latest published version is already installed.',
   'pages.agent.skill.upgradeVersion': 'Upgrade Skill version',
-  'pages.agent.skill.upgradeConfirm': 'Upgrade this Agent’s Skill from v{current} to v{latest}. Other Agents will not be changed.',
+  'pages.agent.skill.upgradeConfirm':
+    'Upgrade this Agent’s Skill from v{current} to v{latest}. Other Agents will not be changed.',
   'pages.agent.skill.upgradeLatest': 'Upgrade to latest',
   'pages.agent.skill.assembly': 'Capability assembly',
   'pages.agent.skill.uncategorized': 'Uncategorized',
@@ -205,7 +218,8 @@ export default {
   'pages.agent.tool.authToken': 'Authentication Token',
   'pages.agent.tool.timeout': 'Timeout (ms)',
   'pages.agent.chat.toolApprovalSettings': 'Tool approval settings',
-  'pages.agent.chat.toolApprovalSettingsHint': 'This setting applies to tool calls made after this point in the current conversation.',
+  'pages.agent.chat.toolApprovalSettingsHint':
+    'This setting applies to tool calls made after this point in the current conversation.',
   'pages.agent.chat.toolApprovalSaved': 'Tool approval settings saved',
   'pages.agent.chat.toolApproval.ask': 'Ask always',
   'pages.agent.chat.toolApproval.risky': 'High risk only',
@@ -234,6 +248,8 @@ export default {
   'pages.agent.tool.discoverFailed': 'Failed to discover MCP tools',
   'pages.agent.tool.refreshDefinition': 'Refresh tool definition',
   'pages.agent.tool.refreshDefinitionSuccess': 'Tool parameters synchronized',
+  'pages.agent.tool.batchRefreshDefinition': 'Sync selected ({count})',
+  'pages.agent.tool.batchRefreshProgress': 'Synchronizing tool information. Please wait...',
   'pages.agent.tool.noDiscoveredTools': 'The MCP server returned no available tools',
   'pages.agent.tool.invalidConnection': 'Check the MCP connection configuration',
   'pages.agent.tool.selectTool': 'Select a tool',
@@ -272,8 +288,10 @@ export default {
   'pages.agent.skill.categoryPlaceholder': 'Enter category',
   'pages.agent.skill.icon': 'Icon',
   'pages.agent.skill.iconPlaceholder': 'Enter icon URL or icon name',
-  'pages.agent.skill.editableDraftOpened': 'Opened the existing editable draft. Continue editing and publish when ready.',
-  'pages.agent.skill.nextDraftFailed': 'Unable to create a follow-up draft. Please try again later.',
+  'pages.agent.skill.editableDraftOpened':
+    'Opened the existing editable draft. Continue editing and publish when ready.',
+  'pages.agent.skill.nextDraftFailed':
+    'Unable to create a follow-up draft. Please try again later.',
   'components.systemIconPicker.title': 'System Icon Library',
   'components.systemIconPicker.searchPlaceholder': 'Search system icons',
   'components.systemIconPicker.select': 'Select from system icons',
@@ -297,7 +315,8 @@ export default {
   'pages.agent.skill.outputSchema': 'Output JSON Schema',
   'pages.agent.skill.schemaPlaceholder': 'Enter JSON Schema',
   'pages.agent.skill.toolPolicy': 'Tool Call Policy',
-  'pages.agent.skill.toolPolicyPlaceholder': 'Enter tool policy, e.g. ALLOW_LIST / DENY_LIST / FREE',
+  'pages.agent.skill.toolPolicyPlaceholder':
+    'Enter tool policy, e.g. ALLOW_LIST / DENY_LIST / FREE',
   'pages.agent.skill.tool': 'Tool',
   'pages.agent.skill.tools': 'Tool Dependencies',
   'pages.agent.skill.toolsHint': 'Only published and enabled MCP tools can be selected',
@@ -350,7 +369,8 @@ export default {
   'pages.agent.skill.nextDraft': 'New Draft',
   'pages.agent.skill.nextDraftCreated': 'New draft created from the latest published version',
   'pages.agent.skill.publish': 'Publish',
-  'pages.agent.skill.publishConfirm': 'Publish this skill? The draft will replace the current published version',
+  'pages.agent.skill.publishConfirm':
+    'Publish this skill? The draft will replace the current published version',
   'pages.agent.skill.noDraftToPublish': 'There is no draft to publish',
   'pages.agent.skill.publishSuccess': 'Skill published successfully',
   'pages.agent.skill.publishBlocked': 'Publishing is blocked',
@@ -394,7 +414,8 @@ export default {
   'pages.agent.skill.resourceManage': 'Resources',
   'pages.agent.skill.resourceUpload': 'Upload Resource',
   'pages.agent.skill.resourceUploadPanel': 'Add resource file',
-  'pages.agent.skill.resourceUploadHint': 'Choose the resource type first. The file extension is validated before upload. Only .py / .js scripts can run in the platform sandbox.',
+  'pages.agent.skill.resourceUploadHint':
+    'Choose the resource type first. The file extension is validated before upload. Only .py / .js scripts can run in the platform sandbox.',
   'pages.agent.skill.resourceUploadSuccess': 'Resource uploaded successfully',
   'pages.agent.skill.resourceCopyEdit': 'Copy and edit',
   'pages.agent.skill.resourceSaveAsNew': 'Save as new resource',
@@ -406,16 +427,19 @@ export default {
   'pages.agent.skill.resourceTypePlaceholder': 'Select resource type',
   'pages.agent.skill.resourceTypeSelect': 'Select file type',
   'pages.agent.skill.resourceTypeRequired': 'Select a resource type first',
-  'pages.agent.skill.resourceTypeMismatch': 'The file extension does not match the selected type. Choose “{expected}”.',
+  'pages.agent.skill.resourceTypeMismatch':
+    'The file extension does not match the selected type. Choose “{expected}”.',
   'pages.agent.skill.resourceType.markdown': 'Markdown document',
   'pages.agent.skill.resourceType.template': 'Template file',
   'pages.agent.skill.resourceType.script': 'Executable script',
   'pages.agent.skill.resourceType.unsupported': 'a supported resource type',
   'pages.agent.skill.resourceTypeAuto': 'Resource type is detected from the file extension',
-  'pages.agent.skill.resourceReadonly': 'These are frozen resources from a published version. Create a new draft to upload or remove resources.',
+  'pages.agent.skill.resourceReadonly':
+    'These are frozen resources from a published version. Create a new draft to upload or remove resources.',
   'pages.agent.skill.resourceLanguage': 'Language',
   'pages.agent.skill.executionConfig': 'Managed artifact execution',
-  'pages.agent.skill.executionHint': 'Declare only the frozen entry script, runtime, and outputs. Containers, commands, mounts, and network are platform-controlled.',
+  'pages.agent.skill.executionHint':
+    'Declare only the frozen entry script, runtime, and outputs. Containers, commands, mounts, and network are platform-controlled.',
   'pages.agent.skill.executionEnabled': 'Enabled',
   'pages.agent.skill.executionEntry': 'Entry script',
   'pages.agent.skill.executionRuntime': 'Runtime',
@@ -525,7 +549,8 @@ export default {
   'components.temporaryUrlPreviewModal.getUrlFailed': 'Failed to get preview link',
   'components.temporaryUrlPreviewModal.download': 'Download file',
   'components.temporaryUrlPreviewModal.excelEmpty': 'The worksheet is empty',
-  'components.temporaryUrlPreviewModal.excelLimit': 'Preview shows the first {rows} rows and {columns} columns of each worksheet. Download the file to view all data.',
+  'components.temporaryUrlPreviewModal.excelLimit':
+    'Preview shows the first {rows} rows and {columns} columns of each worksheet. Download the file to view all data.',
   'components.toolCallCard.status.success': 'Success',
   'components.toolCallCard.status.failed': 'Failed',
   'components.toolCallCard.status.timeout': 'Timed out',
@@ -544,9 +569,11 @@ export default {
   'components.interactiveQuestionCard.planApprovalTitle': 'Plan scheme',
   'components.interactiveQuestionCard.planApprove': 'Approve and execute',
   'components.interactiveQuestionCard.planModify': 'Revise plan',
-  'components.interactiveQuestionCard.planFeedbackPlaceholder': 'Feedback on the plan? Describe it here and the plan will be revised accordingly',
+  'components.interactiveQuestionCard.planFeedbackPlaceholder':
+    'Feedback on the plan? Describe it here and the plan will be revised accordingly',
   'components.interactiveQuestionCard.planFeedbackEmpty': 'Please enter your feedback on the plan',
-  'components.interactiveQuestionCard.planAdjustHint': 'To adjust the plan, enter a new goal or more details in the input below.',
+  'components.interactiveQuestionCard.planAdjustHint':
+    'To adjust the plan, enter a new goal or more details in the input below.',
   'components.interactiveQuestionCard.status.answered': 'Answered',
   'components.interactiveQuestionCard.status.cancelled': 'Cancelled',
   'components.interactiveQuestionCard.status.expired': 'Expired',
@@ -573,13 +600,16 @@ export default {
   'pages.agent.modelCatalog.manage': 'Manage Model Catalog',
   'pages.agent.modelCatalog.deleteConfirm': 'Delete this model catalog entry?',
   'pages.agent.modelWorkbench.connections': 'Model Connections',
-  'pages.agent.modelWorkbench.connectionsHint': 'Select a connection to manage its models and status',
+  'pages.agent.modelWorkbench.connectionsHint':
+    'Select a connection to manage its models and status',
   'pages.agent.modelWorkbench.noConnections': 'No model connections',
-  'pages.agent.modelWorkbench.selectConnection': 'Select a model connection to view its configuration and models',
+  'pages.agent.modelWorkbench.selectConnection':
+    'Select a model connection to view its configuration and models',
   'pages.agent.modelWorkbench.connectionConfig': 'Connection Configuration',
   'pages.agent.modelWorkbench.connectionInfo': 'Connection Information',
   'pages.agent.modelWorkbench.diagnostics': 'Connectivity Diagnostics',
-  'pages.agent.modelWorkbench.diagnosticsHint': 'Verify the provider connection and model endpoint here.',
+  'pages.agent.modelWorkbench.diagnosticsHint':
+    'Verify the provider connection and model endpoint here.',
   'pages.agent.modelWorkbench.testConnection': 'Test Connection',
   'pages.agent.modelWorkbench.connectionSuccess': 'Provider connection test passed',
   'pages.agent.modelWorkbench.requestTime': '{value} ms',
@@ -595,7 +625,8 @@ export default {
   'pages.agent.modelCatalog.saveSelectedSuccess': '{count} model(s) saved',
   'pages.agent.modelCatalog.noNewModels': 'All selected models already exist in the catalog',
   'pages.agent.modelCatalog.alreadyAdded': 'Added',
-  'pages.agent.modelCatalog.alreadyAddedHint': 'Already in the model catalog and cannot be submitted again',
+  'pages.agent.modelCatalog.alreadyAddedHint':
+    'Already in the model catalog and cannot be submitted again',
   'pages.agent.modelCatalog.selected': 'Selected',
   'pages.agent.modelCatalog.clickToSelect': 'Click the card to select',
   'pages.agent.modelCatalog.capabilityPlaceholder': 'Select capabilities for this model',
@@ -670,6 +701,16 @@ export default {
   'pages.agent.definition.checkForm': 'Check the form fields',
   'pages.agent.definition.priorityUpdateSuccess': 'Priority updated successfully',
   'pages.agent.definition.priorityUpdateFailed': 'Failed to update priority',
+  'pages.agent.definition.localTools': 'Local tools',
+  'pages.agent.definition.noBoundTools': 'No tools are bound yet',
+  'pages.agent.definition.searchBoundTools': 'Search bound tool name or code',
+  'pages.agent.definition.searchBoundSkills': 'Search installed skill name or code',
+  'pages.agent.definition.searchAvailableTools': 'Search available tools',
+  'pages.agent.definition.searchAvailableSkills': 'Search available skills',
+  'pages.agent.definition.noBoundSkills': 'No skills are installed yet',
+  'pages.agent.definition.boundItems': 'Installed',
+  'pages.agent.definition.availableItems': 'Available',
+  'pages.agent.definition.noAvailableItems': 'No available items',
   'pages.agent.knowledgeBase.name': 'Knowledge Base',
   'pages.agent.knowledgeBase.select': 'Select a knowledge base',
   'pages.agent.knowledgeBase.documentTitle': 'Document Title',
@@ -844,13 +885,15 @@ export default {
   'pages.agent.chat.session.resumed': 'Task resumed',
   'pages.agent.chat.session.interrupt': 'Interrupt',
   'pages.agent.chat.session.interrupted': 'Task interrupted',
-  'pages.agent.chat.session.interruptedHint': 'Interrupted. Reply with "continue" or "change to..." to resume or adjust.',
+  'pages.agent.chat.session.interruptedHint':
+    'Interrupted. Reply with "continue" or "change to..." to resume or adjust.',
   'pages.agent.chat.session.pauseFailed': 'Failed to pause task',
   'pages.agent.chat.session.resumeFailed': 'Failed to resume task',
   'pages.agent.chat.session.planVersion': 'Version {version}',
   'pages.agent.chat.session.recentEvents': 'Recent events',
   'pages.agent.chat.session.memory': 'Memory',
-  'pages.agent.chat.session.memoryTooltip': 'View saved task conclusions; they can be deleted anytime',
+  'pages.agent.chat.session.memoryTooltip':
+    'View saved task conclusions; they can be deleted anytime',
   'pages.agent.chat.session.overview': 'Overview',
   'pages.agent.chat.session.overviewTooltip': 'View task and memory overview',
   'pages.agent.chat.session.memoryModalTitle': 'Session memory',
@@ -867,7 +910,8 @@ export default {
   'pages.agent.chat.session.feedbackScore': '{rating} points',
   'pages.agent.chat.session.feedbackSubmit': 'Submit feedback',
   'pages.agent.chat.session.feedbackCancel': 'Cancel',
-  'pages.agent.chat.session.feedbackPlaceholder': 'Optional: describe whether the result is accurate and complete, or what could be improved',
+  'pages.agent.chat.session.feedbackPlaceholder':
+    'Optional: describe whether the result is accurate and complete, or what could be improved',
   'pages.agent.chat.session.feedbackSaved': 'Feedback recorded',
   'pages.agent.chat.session.metricsTitle': 'Overview',
   'pages.agent.chat.session.metricsTaskCount': 'Tasks',
@@ -1044,7 +1088,8 @@ export default {
   'pages.knowledge.base.form.blockOnCriticalIssues': 'Block submission on critical issues',
   'pages.knowledge.base.form.requireDifferentApprover': 'Submitter and approver must be different',
   'pages.knowledge.base.form.manualReviewer': 'Manual Reviewer',
-  'pages.knowledge.base.form.manualReviewerTooltip': 'When selected, every submitted file can only be claimed and reviewed by this user. Leave empty for the shared review queue.',
+  'pages.knowledge.base.form.manualReviewerTooltip':
+    'When selected, every submitted file can only be claimed and reviewed by this user. Leave empty for the shared review queue.',
   'pages.knowledge.base.form.reviewModelProvider': 'AI Review Model Provider',
   'pages.knowledge.base.form.selectReviewModelProvider':
     'Please select a non-Embedding model provider',
@@ -1847,24 +1892,42 @@ export default {
   'pages.knowledge.base.form.retrieval.rerankModel': 'Reranking Model Name',
   'pages.knowledge.base.form.retrieval.rerankTopN': 'Reranking Retained Count',
   'pages.knowledge.base.form.retrieval.embeddingProvider': 'Embedding Model Provider',
-  'pages.knowledge.base.form.retrieval.embeddingProvider.tip': 'The provider that converts documents and questions into vectors. It must be compatible with the indexed data.',
-  'pages.knowledge.base.form.retrieval.topK.tip': 'The maximum number of relevant chunks passed to the model. Larger values improve coverage but increase context length.',
-  'pages.knowledge.base.form.retrieval.minSimilarity.tip': 'The minimum vector similarity for recall. Raising it filters irrelevant chunks but can miss relevant content expressed differently.',
-  'pages.knowledge.base.form.retrieval.maxChunksPerDocument.tip': 'The maximum chunks retained from one document, preventing long documents from occupying all results.',
-  'pages.knowledge.base.form.retrieval.hybridEnabled.tip': 'Combines vector and full-text retrieval before fusion ranking. Useful for knowledge bases with both semantic and keyword queries.',
-  'pages.knowledge.base.form.retrieval.strictGrounding.tip': 'Requires answers to rely only on retrieved knowledge-base content and to say so when the evidence is insufficient.',
-  'pages.knowledge.base.form.retrieval.queryRewriteEnabled.tip': 'Rewrites a user question into a more complete, standalone retrieval query before recall. The original query is used if rewriting fails.',
-  'pages.knowledge.base.form.retrieval.queryRewriteProvider.tip': 'The model provider used to rewrite retrieval queries.',
-  'pages.knowledge.base.form.retrieval.queryRewriteModel.tip': 'The model name for query rewriting. Leave empty to use the provider default.',
-  'pages.knowledge.base.form.retrieval.vectorWeight.tip': 'The vector-score weight in hybrid retrieval; the remaining weight is assigned to full-text retrieval.',
-  'pages.knowledge.base.form.retrieval.minLexicalScore.tip': 'The minimum full-text score used to filter weak keyword matches.',
-  'pages.knowledge.base.form.retrieval.authorityScore.tip': 'The business authority level of this knowledge base, used to prioritize results across knowledge bases.',
-  'pages.knowledge.base.form.retrieval.authorityWeight.tip': 'How much authority affects the final ranking score. A value of 0 disables this factor.',
-  'pages.knowledge.base.form.retrieval.freshnessWeight.tip': 'How much document update time affects the final ranking score. A value of 0 disables freshness preference.',
-  'pages.knowledge.base.form.retrieval.rerankEnabled.tip': 'Calls a reranking model on initial results. It can improve ordering quality but increases latency.',
-  'pages.knowledge.base.form.retrieval.rerankProvider.tip': 'The provider exposing the rerank API. Its URL must support /v1/rerank or /rerank.',
-  'pages.knowledge.base.form.retrieval.rerankModel.tip': 'The reranking model name used by the provider. Leave empty to use the provider default.',
-  'pages.knowledge.base.form.retrieval.rerankTopN.tip': 'The maximum initial chunks retained after reranking for final selection. It should usually be at least the final chunk count.',
+  'pages.knowledge.base.form.retrieval.embeddingProvider.tip':
+    'The provider that converts documents and questions into vectors. It must be compatible with the indexed data.',
+  'pages.knowledge.base.form.retrieval.topK.tip':
+    'The maximum number of relevant chunks passed to the model. Larger values improve coverage but increase context length.',
+  'pages.knowledge.base.form.retrieval.minSimilarity.tip':
+    'The minimum vector similarity for recall. Raising it filters irrelevant chunks but can miss relevant content expressed differently.',
+  'pages.knowledge.base.form.retrieval.maxChunksPerDocument.tip':
+    'The maximum chunks retained from one document, preventing long documents from occupying all results.',
+  'pages.knowledge.base.form.retrieval.hybridEnabled.tip':
+    'Combines vector and full-text retrieval before fusion ranking. Useful for knowledge bases with both semantic and keyword queries.',
+  'pages.knowledge.base.form.retrieval.strictGrounding.tip':
+    'Requires answers to rely only on retrieved knowledge-base content and to say so when the evidence is insufficient.',
+  'pages.knowledge.base.form.retrieval.queryRewriteEnabled.tip':
+    'Rewrites a user question into a more complete, standalone retrieval query before recall. The original query is used if rewriting fails.',
+  'pages.knowledge.base.form.retrieval.queryRewriteProvider.tip':
+    'The model provider used to rewrite retrieval queries.',
+  'pages.knowledge.base.form.retrieval.queryRewriteModel.tip':
+    'The model name for query rewriting. Leave empty to use the provider default.',
+  'pages.knowledge.base.form.retrieval.vectorWeight.tip':
+    'The vector-score weight in hybrid retrieval; the remaining weight is assigned to full-text retrieval.',
+  'pages.knowledge.base.form.retrieval.minLexicalScore.tip':
+    'The minimum full-text score used to filter weak keyword matches.',
+  'pages.knowledge.base.form.retrieval.authorityScore.tip':
+    'The business authority level of this knowledge base, used to prioritize results across knowledge bases.',
+  'pages.knowledge.base.form.retrieval.authorityWeight.tip':
+    'How much authority affects the final ranking score. A value of 0 disables this factor.',
+  'pages.knowledge.base.form.retrieval.freshnessWeight.tip':
+    'How much document update time affects the final ranking score. A value of 0 disables freshness preference.',
+  'pages.knowledge.base.form.retrieval.rerankEnabled.tip':
+    'Calls a reranking model on initial results. It can improve ordering quality but increases latency.',
+  'pages.knowledge.base.form.retrieval.rerankProvider.tip':
+    'The provider exposing the rerank API. Its URL must support /v1/rerank or /rerank.',
+  'pages.knowledge.base.form.retrieval.rerankModel.tip':
+    'The reranking model name used by the provider. Leave empty to use the provider default.',
+  'pages.knowledge.base.form.retrieval.rerankTopN.tip':
+    'The maximum initial chunks retained after reranking for final selection. It should usually be at least the final chunk count.',
   'pages.knowledge.evaluation.createSet': 'Create Evaluation Set',
   'pages.knowledge.evaluation.agent': 'Agent',
   'pages.knowledge.evaluation.manage': 'Manage',
@@ -1903,8 +1966,10 @@ export default {
   'pages.knowledge.evaluation.details': 'Details',
   'pages.knowledge.evaluation.viewQuestionResults': 'View Question Results',
   'pages.knowledge.evaluation.viewRetrievalConfig': 'View Retrieval Configuration',
-  'pages.knowledge.evaluation.retrievalConfigSnapshot': 'Retrieval Configuration Snapshot for This Run',
-  'pages.knowledge.evaluation.configSnapshotUnavailable': 'This historical run has no retrieval configuration snapshot.',
+  'pages.knowledge.evaluation.retrievalConfigSnapshot':
+    'Retrieval Configuration Snapshot for This Run',
+  'pages.knowledge.evaluation.configSnapshotUnavailable':
+    'This historical run has no retrieval configuration snapshot.',
   'pages.knowledge.evaluation.providerUnavailable': 'Provider unavailable',
   'pages.knowledge.evaluation.knowledgeBase': 'Knowledge Base',
   'pages.knowledge.evaluation.questionResultsTitle': 'Question Results: {time}',
@@ -2000,8 +2065,10 @@ export default {
   'pages.knowledge.evaluation.targetType.SECTION': 'Section',
   'pages.knowledge.evaluation.targetType.CHUNK': 'Chunk',
   'pages.knowledge.evaluation.workspace': 'Retrieval quality workspace',
-  'pages.knowledge.evaluation.workflowTitle': 'Make every retrieval change measurable and repeatable',
-  'pages.knowledge.evaluation.workflowDescription': 'Maintain questions with expected targets, freeze a healthy version, then run evaluations and set dependable results as a baseline.',
+  'pages.knowledge.evaluation.workflowTitle':
+    'Make every retrieval change measurable and repeatable',
+  'pages.knowledge.evaluation.workflowDescription':
+    'Maintain questions with expected targets, freeze a healthy version, then run evaluations and set dependable results as a baseline.',
   'pages.knowledge.evaluation.flow.prepare': 'Prepare dataset',
   'pages.knowledge.evaluation.flow.prepareHint': 'Questions and positive labels',
   'pages.knowledge.evaluation.flow.release': 'Freeze version',
@@ -2010,9 +2077,11 @@ export default {
   'pages.knowledge.evaluation.flow.measureHint': 'Set baseline, inspect metrics',
   'pages.knowledge.evaluation.sets': 'Evaluation sets',
   'pages.knowledge.evaluation.setTotal': '{total} evaluation sets',
-  'pages.knowledge.evaluation.setNamePlaceholder': 'For example: Customer support knowledge regression',
+  'pages.knowledge.evaluation.setNamePlaceholder':
+    'For example: Customer support knowledge regression',
   'pages.knowledge.evaluation.selectAgent': 'Select the Agent using this retrieval configuration',
-  'pages.knowledge.evaluation.descriptionPlaceholder': 'Describe the knowledge domain or regression goal covered by this set',
+  'pages.knowledge.evaluation.descriptionPlaceholder':
+    'Describe the knowledge domain or regression goal covered by this set',
   'pages.knowledge.evaluation.setIdentity': 'Evaluation set and coverage',
   'pages.knowledge.evaluation.targetAgent': 'Target retrieval Agent',
   'pages.knowledge.evaluation.readiness': 'Management status',
@@ -2038,7 +2107,8 @@ export default {
   'pages.knowledge.evaluation.stage.runSummary': '{count} historical runs',
   'pages.knowledge.evaluation.datasetCases': 'Evaluation cases and positive labels',
   'pages.knowledge.evaluation.runHistory': 'Run history and baseline comparison',
-  'pages.knowledge.evaluation.runHistoryHint': 'Select one baseline and one candidate run to compare',
+  'pages.knowledge.evaluation.runHistoryHint':
+    'Select one baseline and one candidate run to compare',
   'pages.knowledge.evaluation.workspaceTab.dataset': 'Dataset and labels',
   'pages.knowledge.evaluation.workspaceTab.runs': 'Runs, metrics, and baseline',
   'pages.knowledge.evaluation.questionDeleted': 'Evaluation question deleted',
@@ -2066,28 +2136,50 @@ export default {
   'pages.agent.sandbox.risk.LOW': 'Low risk',
   'pages.agent.sandbox.risk.MEDIUM': 'Medium risk',
   'pages.agent.sandbox.risk.HIGH': 'High risk',
-  'pages.agent.sandbox.event.TASK_CREATED': 'Task created|The template version, policy version, and input summary have been frozen.',
-  'pages.agent.sandbox.event.TASK_RETRIED': 'Retry task created|The original task\'s frozen input and policy were reused.',
-  'pages.agent.sandbox.event.TASK_CLAIMED': 'Claimed by Runner|The isolated runner obtained a short-term lease for this task.',
-  'pages.agent.sandbox.event.TASK_STARTED': 'Controlled execution started|The task has entered the isolated runtime.',
-  'pages.agent.sandbox.event.HEARTBEAT': 'Execution progress updated|The Runner is running normally and renewing its lease.',
-  'pages.agent.sandbox.event.RESOURCE_USAGE_REPORTED': 'Resource usage reported|The platform recorded this execution\'s duration, memory, or artifact usage.',
-  'pages.agent.sandbox.event.TASK_SUCCEEDED': 'Execution completed|The task completed successfully and controlled artifacts entered platform validation.',
-  'pages.agent.sandbox.event.TASK_FAILED': 'Execution failed|The task could not be completed and the platform saved redacted diagnostics.',
-  'pages.agent.sandbox.event.TASK_TIMED_OUT': 'Execution timed out|The task exceeded the template\'s maximum execution time.',
-  'pages.agent.sandbox.event.TASK_CANCELLED': 'Task cancelled|The task was stopped and subsequent callbacks will be rejected.',
-  'pages.agent.sandbox.event.TASK_EXPIRED': 'Task expired|The task did not complete within its validity period.',
-  'pages.agent.sandbox.event.APPROVAL_APPROVED': 'Approval granted|The requester confirmed this controlled execution.',
-  'pages.agent.sandbox.event.APPROVAL_REJECTED': 'Approval rejected|The task did not enter the execution queue.',
-  'pages.agent.sandbox.event.CANCEL_REQUESTED': 'Cancellation requested|The platform sent a cancellation signal to the Runner.',
-  'pages.agent.sandbox.event.SENSITIVE_INPUT_MATCH': 'Sensitive input found|The input matched a sensitive rule and was handled according to policy.',
-  'pages.agent.sandbox.event.SENSITIVE_ARTIFACT_MATCH': 'Sensitive artifact found|The artifact matched a sensitive rule; downloads or callbacks are policy-controlled.',
-  'pages.agent.sandbox.event.SENSITIVE_LOG_MATCH': 'Sensitive log found|The log matched a sensitive rule; raw content is excluded from audit records.',
-  'pages.agent.sandbox.event.LEASE_EXPIRED': 'Runner lease expired|The Runner did not renew its lease in time and the platform reclaimed the task.',
-  'pages.agent.sandbox.event.LEGACY_EXECUTION_LINKED': 'Compatibility execution linked|The task was linked to a legacy artifact execution chain.',
-  'pages.agent.sandbox.event.LOG_RETENTION_PURGED': 'Logs cleared on schedule|Execution records past the log-retention period were cleared.',
-  'pages.agent.sandbox.event.INPUT_RETENTION_PURGED': 'Inputs cleared on schedule|Task-private inputs past the retention period were cleared.',
-  'pages.agent.sandbox.event.fallback': 'Additional execution information|The platform recorded a controlled execution event.',
+  'pages.agent.sandbox.event.TASK_CREATED':
+    'Task created|The template version, policy version, and input summary have been frozen.',
+  'pages.agent.sandbox.event.TASK_RETRIED':
+    "Retry task created|The original task's frozen input and policy were reused.",
+  'pages.agent.sandbox.event.TASK_CLAIMED':
+    'Claimed by Runner|The isolated runner obtained a short-term lease for this task.',
+  'pages.agent.sandbox.event.TASK_STARTED':
+    'Controlled execution started|The task has entered the isolated runtime.',
+  'pages.agent.sandbox.event.HEARTBEAT':
+    'Execution progress updated|The Runner is running normally and renewing its lease.',
+  'pages.agent.sandbox.event.RESOURCE_USAGE_REPORTED':
+    "Resource usage reported|The platform recorded this execution's duration, memory, or artifact usage.",
+  'pages.agent.sandbox.event.TASK_SUCCEEDED':
+    'Execution completed|The task completed successfully and controlled artifacts entered platform validation.',
+  'pages.agent.sandbox.event.TASK_FAILED':
+    'Execution failed|The task could not be completed and the platform saved redacted diagnostics.',
+  'pages.agent.sandbox.event.TASK_TIMED_OUT':
+    "Execution timed out|The task exceeded the template's maximum execution time.",
+  'pages.agent.sandbox.event.TASK_CANCELLED':
+    'Task cancelled|The task was stopped and subsequent callbacks will be rejected.',
+  'pages.agent.sandbox.event.TASK_EXPIRED':
+    'Task expired|The task did not complete within its validity period.',
+  'pages.agent.sandbox.event.APPROVAL_APPROVED':
+    'Approval granted|The requester confirmed this controlled execution.',
+  'pages.agent.sandbox.event.APPROVAL_REJECTED':
+    'Approval rejected|The task did not enter the execution queue.',
+  'pages.agent.sandbox.event.CANCEL_REQUESTED':
+    'Cancellation requested|The platform sent a cancellation signal to the Runner.',
+  'pages.agent.sandbox.event.SENSITIVE_INPUT_MATCH':
+    'Sensitive input found|The input matched a sensitive rule and was handled according to policy.',
+  'pages.agent.sandbox.event.SENSITIVE_ARTIFACT_MATCH':
+    'Sensitive artifact found|The artifact matched a sensitive rule; downloads or callbacks are policy-controlled.',
+  'pages.agent.sandbox.event.SENSITIVE_LOG_MATCH':
+    'Sensitive log found|The log matched a sensitive rule; raw content is excluded from audit records.',
+  'pages.agent.sandbox.event.LEASE_EXPIRED':
+    'Runner lease expired|The Runner did not renew its lease in time and the platform reclaimed the task.',
+  'pages.agent.sandbox.event.LEGACY_EXECUTION_LINKED':
+    'Compatibility execution linked|The task was linked to a legacy artifact execution chain.',
+  'pages.agent.sandbox.event.LOG_RETENTION_PURGED':
+    'Logs cleared on schedule|Execution records past the log-retention period were cleared.',
+  'pages.agent.sandbox.event.INPUT_RETENTION_PURGED':
+    'Inputs cleared on schedule|Task-private inputs past the retention period were cleared.',
+  'pages.agent.sandbox.event.fallback':
+    'Additional execution information|The platform recorded a controlled execution event.',
   'pages.agent.sandbox.audit': 'Run audit',
   'pages.agent.sandbox.title': 'Sandbox Governance Workbench',
   'pages.agent.sandbox.refresh': 'Refresh data',
@@ -2099,23 +2191,30 @@ export default {
   'pages.agent.sandbox.cancel': 'Cancel',
   'pages.agent.sandbox.retry': 'Retry with frozen input',
   'pages.agent.sandbox.retryCreated': 'A retry task was created with the original frozen policy.',
-  'pages.agent.sandbox.chatApprovalDetail': 'Target: {target}; Purpose: {purpose}; Allowed domains: {domains}{subdomains}; Estimated requests: {estimated}/{maximum}; Depth: {depth}/{maxDepth}; May send sensitive data externally: {sensitive}',
+  'pages.agent.sandbox.chatApprovalDetail':
+    'Target: {target}; Purpose: {purpose}; Allowed domains: {domains}{subdomains}; Estimated requests: {estimated}/{maximum}; Depth: {depth}/{maxDepth}; May send sensitive data externally: {sensitive}',
   'pages.agent.sandbox.chatSubdomains': ' (including subdomains)',
   'pages.agent.sandbox.yes': 'Yes',
   'pages.agent.sandbox.no': 'No',
   'pages.agent.sandbox.log.empty': 'No logs|Select a task to view audit information.',
-  'pages.agent.sandbox.log.succeeded': 'Execution completed|The Runner returned a redacted execution summary; see the event timeline for details.',
-  'pages.agent.sandbox.log.failed': 'Execution failed|The platform hid the raw error. Check failed events and policy configuration.',
-  'pages.agent.sandbox.log.timedOut': 'Execution timed out|The task reached the template maximum; raw logs are not shown directly.',
-  'pages.agent.sandbox.log.cancelled': 'Task cancelled|The platform will not accept new execution logs or artifact callbacks.',
-  'pages.agent.sandbox.log.protected': 'Execution logs protected|Logs only produce redacted audit events and raw content is not exposed in the UI.',
+  'pages.agent.sandbox.log.succeeded':
+    'Execution completed|The Runner returned a redacted execution summary; see the event timeline for details.',
+  'pages.agent.sandbox.log.failed':
+    'Execution failed|The platform hid the raw error. Check failed events and policy configuration.',
+  'pages.agent.sandbox.log.timedOut':
+    'Execution timed out|The task reached the template maximum; raw logs are not shown directly.',
+  'pages.agent.sandbox.log.cancelled':
+    'Task cancelled|The platform will not accept new execution logs or artifact callbacks.',
+  'pages.agent.sandbox.log.protected':
+    'Execution logs protected|Logs only produce redacted audit events and raw content is not exposed in the UI.',
   'pages.agent.sandbox.second': '{value} sec',
   'pages.agent.sandbox.noNetwork': 'No network',
   'pages.agent.sandbox.maxArtifacts': 'Up to {count} artifacts',
   'pages.agent.sandbox.boolean.true': 'Yes',
   'pages.agent.sandbox.boolean.false': 'No',
   'pages.agent.sandbox.invalidSnapshot': 'Invalid frozen configuration',
-  'pages.agent.sandbox.invalidSnapshotHint': 'This version snapshot cannot be parsed as a JSON object. Check its source in the audit trail.',
+  'pages.agent.sandbox.invalidSnapshotHint':
+    'This version snapshot cannot be parsed as a JSON object. Check its source in the audit trail.',
   'pages.agent.sandbox.frozenConfig': 'Frozen configuration',
   'pages.agent.sandbox.copyRawJson': 'Copy raw JSON',
   'pages.agent.sandbox.executionEnvironment': 'Execution environment',
@@ -2143,8 +2242,10 @@ export default {
   'pages.agent.sandbox.invalidAdvancedConfig': 'Advanced configuration must be a valid JSON object',
   'pages.agent.sandbox.advancedConfigMustObject': 'Advanced configuration must be a JSON object',
   'pages.agent.sandbox.confirmPublish': 'Publish frozen version?',
-  'pages.agent.sandbox.publishConfirmHint': 'Tasks that have already been created continue to use their original frozen version.',
-  'pages.agent.sandbox.publishConfirmDetail': 'This publication enables policy {policyVersion} with risk level {riskLevel}.',
+  'pages.agent.sandbox.publishConfirmHint':
+    'Tasks that have already been created continue to use their original frozen version.',
+  'pages.agent.sandbox.publishConfirmDetail':
+    'This publication enables policy {policyVersion} with risk level {riskLevel}.',
   'pages.agent.sandbox.publishAndFreeze': 'Publish and freeze',
   'pages.agent.sandbox.publishSuccess': 'Policy version published and frozen',
   'pages.agent.sandbox.task': 'Task',
@@ -2162,8 +2263,10 @@ export default {
   'pages.agent.sandbox.lifecycle.check': 'Publication check',
   'pages.agent.sandbox.lifecycle.frozen': 'Frozen version',
   'pages.agent.sandbox.lifecycle.audit': 'Approval and run audit',
-  'pages.agent.sandbox.attention': '{pending} templates are pending publication and {highRisk} are high risk. Please address them promptly.',
-  'pages.agent.sandbox.allFrozen': 'All templates have frozen versions. No pending configuration was found.',
+  'pages.agent.sandbox.attention':
+    '{pending} templates are pending publication and {highRisk} are high risk. Please address them promptly.',
+  'pages.agent.sandbox.allFrozen':
+    'All templates have frozen versions. No pending configuration was found.',
   'pages.agent.sandbox.metric.templates': 'Templates',
   'pages.agent.sandbox.metric.pending': 'Pending checks',
   'pages.agent.sandbox.metric.frozen': 'Frozen versions',
@@ -2171,9 +2274,11 @@ export default {
   'pages.agent.sandbox.metric.sensitive': 'Sensitive matches',
   'pages.agent.sandbox.realtimeData': 'Live governance data',
   'pages.agent.sandbox.operations': 'Operations',
-  'pages.agent.sandbox.operationsHint': 'Metrics are calculated from persisted tasks, events, and Runner usage callbacks.',
+  'pages.agent.sandbox.operationsHint':
+    'Metrics are calculated from persisted tasks, events, and Runner usage callbacks.',
   'pages.agent.sandbox.operationsWindow': 'Latency and resource totals start at {time}.',
-  'pages.agent.sandbox.imageRiskFound': '{count} tasks do not use digest-pinned images. Complete image governance before production enablement.',
+  'pages.agent.sandbox.imageRiskFound':
+    '{count} tasks do not use digest-pinned images. Complete image governance before production enablement.',
   'pages.agent.sandbox.metric.successRate': 'Success rate',
   'pages.agent.sandbox.metric.queueWait': 'Average queue wait',
   'pages.agent.sandbox.metric.executionTime': 'Average execution time',
@@ -2240,9 +2345,11 @@ export default {
   'pages.agent.sandbox.runningAudit': 'Run audit',
   'pages.agent.sandbox.sensitiveHash': 'Sensitive object hash · {hash}',
   'pages.agent.sandbox.publishTemplateTitle': 'Publish template frozen version: {code}',
-  'pages.agent.sandbox.publishImmutableHint': 'New tasks freeze this version; existing tasks continue using their historical snapshot. Agents cannot override the runtime, network, mounts, or resource limits.',
+  'pages.agent.sandbox.publishImmutableHint':
+    'New tasks freeze this version; existing tasks continue using their historical snapshot. Agents cannot override the runtime, network, mounts, or resource limits.',
   'pages.agent.sandbox.executionEvents': 'Event timeline',
-  'pages.agent.sandbox.rawLogHint': 'Raw standard output, error output, and failure reasons are not shown directly. The platform only presents matched business events, execution status, progress, and sensitive object hashes.',
+  'pages.agent.sandbox.rawLogHint':
+    'Raw standard output, error output, and failure reasons are not shown directly. The platform only presents matched business events, execution status, progress, and sensitive object hashes.',
   'pages.agent.sandbox.versions': 'Frozen versions',
   'pages.agent.sandbox.draftShort': 'Draft',
   'pages.agent.sandbox.policyVersion': 'Policy version',
@@ -2253,23 +2360,34 @@ export default {
   'pages.agent.sandbox.timeoutSeconds': 'Maximum duration (seconds)',
   'pages.agent.sandbox.maxOutputMegabytes': 'Maximum artifact size per task (MB)',
   'pages.agent.sandbox.outputFormats': 'Allowed artifact formats',
-  'pages.agent.sandbox.outputFormatsHint': 'Only allow the Runner to upload these formats through controlled object storage.',
+  'pages.agent.sandbox.outputFormatsHint':
+    'Only allow the Runner to upload these formats through controlled object storage.',
   'pages.agent.sandbox.outputFormatsRequired': 'Select at least one artifact format',
   'pages.agent.sandbox.advancedAdminOnly': 'Platform administrators only',
-  'pages.agent.sandbox.advancedHint': 'Use for non-routine fields such as fixed commands, dependency policies, input formats, and a read-only root. The execution boundary tab takes precedence for common fields.',
+  'pages.agent.sandbox.advancedHint':
+    'Use for non-routine fields such as fixed commands, dependency policies, input formats, and a read-only root. The execution boundary tab takes precedence for common fields.',
   'pages.agent.sandbox.supplementalConfig': 'Supplemental JSON configuration',
-  'pages.agent.sandbox.supplementalConfigHint': 'Optional. For example: {&quot;readOnlyRoot&quot;:true,&quot;nonPrivileged&quot;:true,&quot;inputFormats&quot;:[&quot;zip&quot;]}.',
+  'pages.agent.sandbox.supplementalConfigHint':
+    'Optional. For example: {&quot;readOnlyRoot&quot;:true,&quot;nonPrivileged&quot;:true,&quot;inputFormats&quot;:[&quot;zip&quot;]}.',
   'pages.agent.sandbox.risk.low': 'Low risk · Run automatically under template policy',
   'pages.agent.sandbox.risk.medium': 'Medium risk · Run after requester confirmation',
   'pages.agent.sandbox.risk.high': 'High risk · Strict approval and download control',
   'pages.agent.sandbox.runtime.python': 'Python runtime',
   'pages.agent.sandbox.runtime.node': 'Node.js runtime',
-  'pages.agent.sandbox.governanceItem.1': 'Published versions cannot be modified; publish a new version when changes are required.',
-  'pages.agent.sandbox.governanceItem.2': 'Tasks only use frozen snapshots during execution. Agents cannot control images, mounts, networking, or resource limits.',
-  'pages.agent.sandbox.governanceItem.3': 'Changing the risk level affects task approval and artifact download policies.',
-  'pages.agent.sandbox.governanceItem.4': 'Audit records retain only redacted summaries, matched rules, and hashes, never sensitive plaintext.',
-  'pages.agent.sandbox.checkItem.1': 'The runtime, network, duration, artifact count, and artifact formats will be written to the frozen snapshot.',
-  'pages.agent.sandbox.checkItem.2': 'The network is fixed to none; requesters and Agents cannot change it when creating a task.',
-  'pages.agent.sandbox.checkItem.3': 'Existing tasks are unaffected after publication; new tasks only reference this published version.',
-  'pages.agent.sandbox.checkItem.4': 'When provided, advanced JSON must be an object; common boundary fields use the values in this form.',
+  'pages.agent.sandbox.governanceItem.1':
+    'Published versions cannot be modified; publish a new version when changes are required.',
+  'pages.agent.sandbox.governanceItem.2':
+    'Tasks only use frozen snapshots during execution. Agents cannot control images, mounts, networking, or resource limits.',
+  'pages.agent.sandbox.governanceItem.3':
+    'Changing the risk level affects task approval and artifact download policies.',
+  'pages.agent.sandbox.governanceItem.4':
+    'Audit records retain only redacted summaries, matched rules, and hashes, never sensitive plaintext.',
+  'pages.agent.sandbox.checkItem.1':
+    'The runtime, network, duration, artifact count, and artifact formats will be written to the frozen snapshot.',
+  'pages.agent.sandbox.checkItem.2':
+    'The network is fixed to none; requesters and Agents cannot change it when creating a task.',
+  'pages.agent.sandbox.checkItem.3':
+    'Existing tasks are unaffected after publication; new tasks only reference this published version.',
+  'pages.agent.sandbox.checkItem.4':
+    'When provided, advanced JSON must be an object; common boundary fields use the values in this form.',
 };

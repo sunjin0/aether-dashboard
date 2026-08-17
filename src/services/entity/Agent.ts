@@ -941,6 +941,7 @@ export interface AgentToolBinding {
   toolId?: string;
   toolName?: string;
   toolCode?: string;
+  toolDescription?: string;
   mcpServerName?: string;
   mcpToolName?: string;
   mcpBaseUrl?: string;
@@ -948,6 +949,9 @@ export interface AgentToolBinding {
   status?: number;
   createdAt?: string;
   updatedAt?: string;
+  keyword?: string;
+  current?: number;
+  pageSize?: number;
 }
 
 /**
@@ -1195,6 +1199,14 @@ export interface AgentDefinitionSkillBinding {
   configOverrides?: string;
   createdAt?: number;
   updatedAt?: number;
+  skillName?: string;
+  skillCode?: string;
+  skillDescription?: string;
+  category?: string;
+  versionNo?: number;
+  keyword?: string;
+  current?: number;
+  pageSize?: number;
 }
 
 /**

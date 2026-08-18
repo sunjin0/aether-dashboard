@@ -214,6 +214,9 @@ const ChatDebugPage: React.FC = () => {
   }
 
   const addDeepRunStep = (data: AgentStreamRunStepData) => {
+    if (currentAgent?.executionMode !== 'DEEP') {
+      return
+    }
     if (!deepRunIdRef.current && data.runId) {
       deepRunIdRef.current = data.runId
       setDeepRunId(data.runId)
@@ -451,7 +454,6 @@ const ChatDebugPage: React.FC = () => {
     try {
       const result = await decideSandboxTask(sandboxDecision.id, decision === 'approve' ? 'APPROVE' : 'REJECT', sandboxDecisionReason)
       if (result.code === 200) {
-        message.success(decision === 'approve' ? '任务已批准并进入队列' : '任务已拒绝')
         setSandboxDecision(undefined)
       }
     } finally {

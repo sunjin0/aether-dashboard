@@ -1,7 +1,7 @@
-import React, { useCallback, useRef, useEffect } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Button, Collapse, message, Popover, Tag, Tooltip, Typography } from 'antd'
+import { Button, Collapse, message, Popover, Spin, Tag, Tooltip, Typography } from 'antd'
 import { useIntl } from '@umijs/max'
 import {
   CustomerServiceOutlined,
@@ -71,6 +71,44 @@ const getAttachments = (value?: string) => {
     return []
   }
 }
+
+const MermaidGraph = ({ source }: { source: string }) => {
+  const id = useRef(`agent-message-mermaid-${Math.random().toString(36).slice(2)}`)
+  const [svg, setSvg] = useState('')
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    setSvg('')
+    setFailed(false)
+    import('mermaid')
+      .then(({ default: mermaid }) => {
+        mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'neutral' })
+        return mermaid.render(id.current, source)
+      })
+      .then(({ svg: nextSvg }) => {
+        if (active) setSvg(nextSvg)
+      })
+      .catch(() => {
+        if (active) setFailed(true)
+      })
+    return () => {
+      active = false
+    }
+  }, [source])
+
+  if (failed) return <pre><code>{source}</code></pre>
+  return (
+    <div className="agent-message-bubble-mermaid" role="img" aria-label="Flowchart">
+      {svg ? <div dangerouslySetInnerHTML={{ __html: svg }} /> : <Spin size="small" />}
+    </div>
+  )
+}
+
+const normalizeMermaidBlocks = (content: string) => content.replace(
+  /(^|\n{2,})((?:graph|flowchart)\s+LR\b[^\n]*(?:\n(?!\n)[\s\S]*?)?)(?=\n{2,}|$)/gi,
+  (_, prefix, graph) => `${prefix}\`\`\`mermaid\n${graph.trim()}\n\`\`\``,
+)
 
 const remarkCitations = (sources: KnowledgeSource[], messageId?: string) => () => (tree: any) => {
   const validIndexes = new Set(sources.map((source) => source.citationIndex))
@@ -372,8 +410,17 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
                 remarkGfm,
                 remarkCitations(agentMessage.sources || [], messageIdPrefix),
               ]}
+              components={{
+                code: ({ className, children, ...props }) => {
+                  const source = String(children).replace(/\n$/, '')
+                  if (!className?.includes('language-mermaid')) {
+                    return <code className={className} {...props}>{children}</code>
+                  }
+                  return <MermaidGraph source={source} />
+                },
+              }}
             >
-              {currentContent}
+              {normalizeMermaidBlocks(currentContent)}
             </ReactMarkdown>
           </div>
         ) : agentMessage.reasoningContent || agentMessage.reasoningStream ? (

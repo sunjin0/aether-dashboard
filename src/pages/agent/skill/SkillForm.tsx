@@ -126,6 +126,7 @@ const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen,
           routingSummary: data.draft?.routingSummary,
           triggerTerms: parseRoutingList(data.draft?.triggerTerms).join('，'),
           excludeTerms: parseRoutingList(data.draft?.excludeTerms).join('，'),
+          routingKeywords: parseRoutingList(data.draft?.routingKeywords).join('，'),
           routingExamples: parseRoutingList(data.draft?.routingExamples).join('\n'),
           inputSchema: data.draft?.inputSchema,
           outputSchema: data.draft?.outputSchema,
@@ -174,6 +175,7 @@ const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen,
       tags: joinTags(values.tags as unknown as string[]),
       triggerTerms: parseRoutingTerms(values.triggerTerms),
       excludeTerms: parseRoutingTerms(values.excludeTerms),
+      routingKeywords: parseRoutingTerms(values.routingKeywords),
       routingExamples: parseRoutingTerms(values.routingExamples),
       tools: (values.tools || []).filter((item) => Boolean(item.toolId)),
     }
@@ -334,6 +336,9 @@ const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen,
           </Form.Item>
           <Form.Item name="excludeTerms" label={format('pages.agent.skill.excludeTerms')}>
             <Input placeholder={format('pages.agent.skill.excludeTermsPlaceholder')} />
+          </Form.Item>
+          <Form.Item name="routingKeywords" label={format('pages.agent.skill.routingKeywords')} extra={format('pages.agent.skill.routingKeywordsHint')}>
+            <Input placeholder={format('pages.agent.skill.routingKeywordsPlaceholder')} />
           </Form.Item>
           <Form.Item name="routingExamples" label={format('pages.agent.skill.routingExamples')}>
             <Input.TextArea rows={3} placeholder={format('pages.agent.skill.routingExamplesPlaceholder')} />

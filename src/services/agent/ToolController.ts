@@ -113,3 +113,16 @@ export const deleteAgentToolInfo = async (id: string): Promise<ResponseStructure
     method: 'DELETE',
   })
 }
+
+export interface ToolRoutingConfig {
+  embeddingModelId?: string
+  topK?: number
+}
+
+export const getToolRoutingConfig = async (): Promise<ResponseStructure<ToolRoutingConfig>> =>
+  request('/api/agent/tool/routing-config', { method: 'GET' })
+
+export const updateToolRoutingConfig = async (
+  params: ToolRoutingConfig,
+): Promise<ResponseStructure<void>> =>
+  request('/api/agent/tool/routing-config', { method: 'PUT', data: params })

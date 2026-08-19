@@ -5,6 +5,14 @@ import AgentMessageBubble from './index';
 import { KnowledgeSource } from '@/services/entity/Agent';
 import enUS from '@/locales/en-US';
 
+jest.mock('mermaid', () => ({
+  __esModule: true,
+  default: {
+    initialize: jest.fn(),
+    render: jest.fn(async () => ({ svg: '<svg><text>Start</text><text>Finish</text></svg>' })),
+  },
+}));
+
 const renderWithEnglishLocale = (ui: any) =>
   render(React.createElement(IntlProvider as any, { locale: 'en-US', messages: enUS }, ui));
 
@@ -46,6 +54,19 @@ describe('AgentMessageBubble', () => {
     expect(screen.getByRole('table')).toBeTruthy();
     expect(screen.getByRole('columnheader', { name: '工具' })).toBeTruthy();
     expect(screen.getByRole('cell', { name: '搜索代码' })).toBeTruthy();
+  });
+
+  it('recognizes graph LR content as a flowchart', () => {
+    renderWithEnglishLocale(
+      <AgentMessageBubble
+        agentMessage={{
+          role: 'assistant',
+          content: '```mermaid\ngraph LR\nA[Start] --> B[Finish]\n```',
+        }}
+      />,
+    );
+
+    expect(screen.getByRole('img', { name: 'Flowchart' })).toBeTruthy();
   });
 
   it('generates unique anchor IDs for citations across messages', () => {
@@ -128,4 +149,5 @@ describe('AgentMessageBubble', () => {
 
     expect(screen.getByText(formattedDate)).toBeTruthy();
   });
+
 });

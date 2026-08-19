@@ -8,6 +8,7 @@ import {
   List,
   message,
   Modal,
+  Popover,
   Progress,
   Select,
   Spin,
@@ -46,6 +47,7 @@ import { getAgentArtifactByRun } from '@/services/agent/ArtifactController'
 import { cancelSandboxTask, decideSandboxTask, getSandboxTaskByRun, retrySandboxTask } from '@/services/agent/SandboxTaskController'
 import {
   getAgentConversationList,
+  getAgentConversationContext,
   getAgentConversationMessages,
   updateAgentConversationToolApprovalPolicy,
 } from '@/services/agent/ConversationController'
@@ -54,6 +56,7 @@ import {
   AgentChatReplyRequest,
   AgentChatAttachment,
   AgentConversation,
+  AgentConversationContext,
   AgentDefinition,
   AgentMessage,
   AskUserAnswer,
@@ -135,6 +138,7 @@ const ChatDebugPage: React.FC = () => {
   const [conversationId, setConversationId] = useState<string>()
   const [conversations, setConversations] = useState<AgentConversation[]>([])
   const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [conversationContext, setConversationContext] = useState<AgentConversationContext>()
   const [sandboxDecision, setSandboxDecision] = useState<{ id: string; decision: 'approve' | 'reject'; detail?: string }>()
   const [sandboxDecisionReason, setSandboxDecisionReason] = useState('')
   const [sandboxDecisionSubmitting, setSandboxDecisionSubmitting] = useState(false)
@@ -152,6 +156,7 @@ const ChatDebugPage: React.FC = () => {
   const [reasoningEffort, setReasoningEffort] = useState<'low' | 'medium' | 'high'>('medium')
   const [reasoningEffortOptions, setReasoningEffortOptions] = useState<Option[]>([])
   const [toolApprovalPolicy, setToolApprovalPolicy] = useState<'ask' | 'risky' | 'never'>('ask')
+  const [retrievalMode, setRetrievalMode] = useState<'AUTO' | 'ENABLED' | 'DISABLED'>('AUTO')
   const [chatTurnState, setChatTurnState] = useState<ChatTurnState>('idle')
   const [pendingQuestionMessage, setPendingQuestionMessage] = useState<ChatMessage | null>(null)
   const [deepRunId, setDeepRunId] = useState<string | null>(null)
@@ -466,14 +471,27 @@ const ChatDebugPage: React.FC = () => {
     sandboxPollingKeyRef.current = runId ? `${targetConversationId}:${targetMessageId}:${runId}` : undefined
     stopArtifactPolling()
     let attempts = 0
+    // 终态（含 SUCCEEDED）后再给少量轮次等待产物异步落库，避免成功但无产物的任务无限轮询。
+    let terminalAttemptAt = 0
+    let sawTask = false
+    let sawArtifact = false
+    const stopWhenSettled = () => {
+      if (attempts >= 60
+        || (terminalAttemptAt > 0 && attempts - terminalAttemptAt >= 3)
+        || (!sawTask && !sawArtifact && attempts >= 3)) {
+        stopArtifactPolling()
+      }
+    }
     const refresh = async () => {
       attempts += 1
       try {
         if (runId) {
           const task = await getSandboxTaskByRun(runId)
           if (task.code === 200 && task.data) {
+            sawTask = true
             const status = task.data.status || 'QUEUED'
             const terminal = ['SUCCEEDED', 'FAILED', 'TIMED_OUT', 'CANCELLED', 'EXPIRED'].includes(status)
+            if (terminal && terminalAttemptAt === 0) terminalAttemptAt = attempts
             const plan = task.data.approvalSummary
             const approvalDetail = plan ? intl.formatMessage({ id: 'pages.agent.sandbox.chatApprovalDetail' }, { target: plan.targetUrl || '-', purpose: plan.purpose || '-', domains: (plan.allowedDomains || []).join(', '), subdomains: plan.allowSubdomains ? intl.formatMessage({ id: 'pages.agent.sandbox.chatSubdomains' }) : '', estimated: plan.estimatedRequests ?? '-', maximum: plan.maxRequests ?? '-', depth: plan.pageDepth ?? 0, maxDepth: plan.maxPageDepth ?? '-', sensitive: intl.formatMessage({ id: plan.externalSensitiveRisk ? 'pages.agent.sandbox.yes' : 'pages.agent.sandbox.no' }) }) : undefined
             if (status === 'PENDING_APPROVAL' && task.data.id && shownSandboxApprovalTaskRef.current !== task.data.id) {
@@ -498,8 +516,8 @@ const ChatDebugPage: React.FC = () => {
           }
           const artifact = await getAgentArtifactByRun(runId)
           if (artifact.code === 200 && artifact.data) {
-            const result = await getAgentConversationMessages(targetConversationId, { current: 1, pageSize: 100 })
-            if (result.code === 200 && result.data) setConversationMessages(result.data)
+            sawArtifact = true
+            await loadMessages(targetConversationId)
             stopArtifactPolling()
             message.success(intl.formatMessage({ id: 'pages.agent.chat.artifactReady' }))
             return
@@ -509,14 +527,14 @@ const ChatDebugPage: React.FC = () => {
         const target = result.data?.find((item) => item.id === targetMessageId)
         const hasArtifact = Boolean(target?.attachments && /"artifactId"\s*:/.test(target.attachments))
         if (result.code === 200 && result.data && hasArtifact) {
-          setConversationMessages(result.data)
+          await loadMessages(targetConversationId)
           stopArtifactPolling()
           message.success(intl.formatMessage({ id: 'pages.agent.chat.artifactReady' }))
-        } else if (attempts >= 60) {
-          stopArtifactPolling()
+        } else {
+          stopWhenSettled()
         }
       } catch {
-        if (attempts >= 60) stopArtifactPolling()
+        stopWhenSettled()
       }
     }
     void refresh()
@@ -601,6 +619,12 @@ const ChatDebugPage: React.FC = () => {
       })
       if (code === 200) {
         setConversationMessages(data || [])
+        try {
+          const contextResult = await getAgentConversationContext(id)
+          setConversationContext(contextResult.code === 200 ? contextResult.data : undefined)
+        } catch {
+          setConversationContext(undefined)
+        }
       }
     } finally {
       setLoadingMessages(false)
@@ -774,6 +798,7 @@ const ChatDebugPage: React.FC = () => {
     }
     setConversationId(undefined)
     setMessages([])
+    setConversationContext(undefined)
     attachmentsRef.current = []
     setAttachments([])
     setToolApprovalPolicy('ask')
@@ -805,6 +830,7 @@ const ChatDebugPage: React.FC = () => {
       setAgentId(conversation.agentDefinitionId)
     }
     setMessages([])
+    setConversationContext(undefined)
     resetDeepProgress()
     resetConversationTurnState()
     await loadMessages(conversation.id)
@@ -969,6 +995,7 @@ const ChatDebugPage: React.FC = () => {
         parentMessageId: questionMessageId,
         answer: { answers },
         interactive: true,
+        retrievalMode,
       }
 
       await streamReplyAgentChat(replyPayload, {
@@ -1066,14 +1093,8 @@ const ChatDebugPage: React.FC = () => {
             let reloaded = false
             if (doneConversationId && data.messageId) {
               try {
-                const result = await getAgentConversationMessages(doneConversationId, {
-                  current: 1,
-                  pageSize: 100,
-                })
-                if (result.code === 200 && result.data) {
-                  setConversationMessages(result.data)
-                  reloaded = true
-                }
+                await loadMessages(doneConversationId)
+                reloaded = true
               } catch {
                 // ignore
               }
@@ -1241,6 +1262,7 @@ const ChatDebugPage: React.FC = () => {
         payload.thinking = true
         payload.reasoningEffort = reasoningEffort
       }
+      payload.retrievalMode = retrievalMode
       if (!conversationId) payload.toolApprovalPolicy = toolApprovalPolicy
       await streamAgentChat(payload, {
         signal: controller.signal,
@@ -1365,13 +1387,7 @@ const ChatDebugPage: React.FC = () => {
             }))
             if (doneConversationId && data.messageId) {
               try {
-                const result = await getAgentConversationMessages(doneConversationId, {
-                  current: 1,
-                  pageSize: 100,
-                })
-                if (result.code === 200 && result.data) {
-                  setConversationMessages(result.data)
-                }
+                await loadMessages(doneConversationId)
               } catch {
                 // ignore
               }
@@ -1644,6 +1660,7 @@ const ChatDebugPage: React.FC = () => {
                     setAgentId(value)
                     setConversationId(undefined)
                     setMessages([])
+                    setConversationContext(undefined)
                     resetConversationTurnState()
                   }}
                   options={agents
@@ -2110,6 +2127,40 @@ const ChatDebugPage: React.FC = () => {
           </div>
 
           <div className="agent-chat-input-bar">
+            <div className="agent-chat-input-settings-row">
+              <div className="agent-chat-input-select-group">
+                <span>{intl.formatMessage({ id: 'pages.agent.chat.toolMode' })}</span>
+                <Select
+                  className="agent-chat-tool-approval-select"
+                  size="small"
+                  value={toolApprovalPolicy}
+                  disabled={sending || chatTurnState === 'waiting_user'}
+                  aria-label={intl.formatMessage({ id: 'pages.agent.chat.toolApprovalSettings' })}
+                  onChange={handleToolApprovalPolicyChange}
+                  options={[
+                    { value: 'ask', label: intl.formatMessage({ id: 'pages.agent.chat.toolApproval.ask' }) },
+                    { value: 'risky', label: intl.formatMessage({ id: 'pages.agent.chat.toolApproval.risky' }) },
+                    { value: 'never', label: intl.formatMessage({ id: 'pages.agent.chat.toolApproval.never' }) },
+                  ]}
+                />
+              </div>
+              <div className="agent-chat-input-select-group">
+                <span>{intl.formatMessage({ id: 'pages.agent.chat.searchMode' })}</span>
+                <Select
+                  className="agent-chat-retrieval-select"
+                  size="small"
+                  value={retrievalMode}
+                  disabled={inputDisabled}
+                  aria-label={intl.formatMessage({ id: 'pages.agent.chat.retrievalMode' })}
+                  onChange={setRetrievalMode}
+                  options={[
+                    { value: 'AUTO', label: intl.formatMessage({ id: 'pages.agent.chat.retrievalMode.auto' }) },
+                    { value: 'ENABLED', label: intl.formatMessage({ id: 'pages.agent.chat.retrievalMode.enabled' }) },
+                    { value: 'DISABLED', label: intl.formatMessage({ id: 'pages.agent.chat.retrievalMode.disabled' }) },
+                  ]}
+                />
+              </div>
+            </div>
             <div className="agent-chat-input-wrapper">
               {!!attachments.length && (
                 <div className="agent-chat-attachment-list">
@@ -2158,19 +2209,6 @@ const ChatDebugPage: React.FC = () => {
               </div>
               <div className="agent-chat-input-tools">
                 <div className="agent-chat-input-tools-left">
-                  <Select
-                    className="agent-chat-tool-approval-select"
-                    size="small"
-                    value={toolApprovalPolicy}
-                    disabled={sending || chatTurnState === 'waiting_user'}
-                    aria-label={intl.formatMessage({ id: 'pages.agent.chat.toolApprovalSettings' })}
-                    onChange={handleToolApprovalPolicyChange}
-                    options={[
-                      { value: 'ask', label: intl.formatMessage({ id: 'pages.agent.chat.toolApproval.ask' }) },
-                      { value: 'risky', label: intl.formatMessage({ id: 'pages.agent.chat.toolApproval.risky' }) },
-                      { value: 'never', label: intl.formatMessage({ id: 'pages.agent.chat.toolApproval.never' }) },
-                    ]}
-                  />
                   <Upload
                     multiple
                     accept=".txt,.md,.pdf,.docx,.xlsx,.png,.jpg,.jpeg,.webp"
@@ -2216,33 +2254,87 @@ const ChatDebugPage: React.FC = () => {
                     </Tag>
                   )}
                 </div>
-                {sending ? (
-                  <Tooltip title={intl.formatMessage({ id: 'pages.agent.chat.stopGenerating' })}>
-                    <Button
-                      className="agent-chat-send-btn agent-chat-stop-btn"
-                      shape="circle"
-                      icon={<ClearOutlined />}
-                      onClick={handleStop}
-                    />
-                  </Tooltip>
-                ) : (
-                  <Tooltip title={intl.formatMessage({ id: 'pages.agent.chat.send' })}>
-                    <Button
-                      className="agent-chat-send-btn"
-                      type="primary"
-                      shape="circle"
-                      aria-label={intl.formatMessage({ id: 'pages.agent.chat.send' })}
-                      icon={<ArrowUpOutlined />}
-                      disabled={
-                        attachments.some((item) => item.status === 'uploading') ||
-                        (!input.trim() && !attachments.length) ||
-                        chatTurnState === 'waiting_user' ||
-                        chatTurnState === 'submitting_answer'
+                <div className="agent-chat-send-tools">
+                  {conversationContext && (
+                    <Popover
+                      trigger="click"
+                      placement="topRight"
+                      content={
+                        <div className="agent-chat-context-popover">
+                          <div className="agent-chat-context-popover-header">
+                            <Text strong>{intl.formatMessage({ id: 'pages.agent.chat.contextCapacityTitle' })}</Text>
+                            <span>{conversationContext.inputBudgetTokens || 0} tokens</span>
+                          </div>
+                          <Progress
+                            percent={Math.min(conversationContext.occupancyPercent || 0, 100)}
+                            showInfo={false}
+                            strokeColor={(conversationContext.occupancyPercent || 0) > 80 ? '#ff4d4f' : (conversationContext.occupancyPercent || 0) >= 60 ? '#faad14' : '#52c41a'}
+                          />
+                          <div className="agent-chat-context-sections">
+                            {[
+                              ['contextCapacitySystem', conversationContext.systemTokens],
+                              ['contextCapacitySkill', conversationContext.skillTokens],
+                              ['contextCapacityTask', conversationContext.taskTokens],
+                              ['contextCapacityMemory', conversationContext.memoryTokens],
+                              ['contextCapacitySummary', conversationContext.summaryTokens],
+                              ['contextCapacityHistory', conversationContext.historyTokens],
+                              ['contextCapacityTool', conversationContext.toolTokens],
+                              ['contextCapacityRag', conversationContext.ragTokens],
+                              ['contextCapacityCurrentMessage', conversationContext.currentMessageTokens],
+                              ['contextCapacityToolDefinition', conversationContext.toolDefinitionTokens],
+                              ['contextCapacityFraming', conversationContext.framingTokens],
+                            ].filter(([, tokens]) => tokens !== undefined && tokens !== 0).map(([label, tokens]) => (
+                              <div key={label} className="agent-chat-context-section">
+                                <span>{intl.formatMessage({ id: `pages.agent.chat.${label}` })}</span>
+                                <span>{tokens} tokens ({(((tokens as number) * 100) / (conversationContext.inputBudgetTokens || 1)).toFixed(1)}%)</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       }
-                      onClick={() => handleSend()}
-                    />
-                  </Tooltip>
-                )}
+                    >
+                      <Button
+                        className={`agent-chat-context-button agent-chat-context-button-${
+                          (conversationContext.occupancyPercent || 0) > 80 ? 'high' : (conversationContext.occupancyPercent || 0) >= 60 ? 'warning' : 'normal'
+                        }`}
+                        type="text"
+                        aria-label={intl.formatMessage({ id: 'pages.agent.chat.contextCapacity' }, { percent: (conversationContext.occupancyPercent || 0).toFixed(1) })}
+                      >
+                        <Progress
+                          type="circle"
+                          percent={Math.min(conversationContext.occupancyPercent || 0, 100)}
+                          size={28}
+                          strokeWidth={12}
+                          showInfo={false}
+                          strokeColor={(conversationContext.occupancyPercent || 0) > 80 ? '#ff4d4f' : (conversationContext.occupancyPercent || 0) >= 60 ? '#faad14' : '#52c41a'}
+                        />
+                        <span>{(conversationContext.occupancyPercent || 0).toFixed(0)}%</span>
+                      </Button>
+                    </Popover>
+                  )}
+                  {sending ? (
+                    <Tooltip title={intl.formatMessage({ id: 'pages.agent.chat.stopGenerating' })}>
+                      <Button className="agent-chat-send-btn agent-chat-stop-btn" shape="circle" icon={<ClearOutlined />} onClick={handleStop} />
+                    </Tooltip>
+                  ) : (
+                    <Tooltip title={intl.formatMessage({ id: 'pages.agent.chat.send' })}>
+                      <Button
+                        className="agent-chat-send-btn"
+                        type="primary"
+                        shape="circle"
+                        aria-label={intl.formatMessage({ id: 'pages.agent.chat.send' })}
+                        icon={<ArrowUpOutlined />}
+                        disabled={
+                          attachments.some((item) => item.status === 'uploading') ||
+                          (!input.trim() && !attachments.length) ||
+                          chatTurnState === 'waiting_user' ||
+                          chatTurnState === 'submitting_answer'
+                        }
+                        onClick={() => handleSend()}
+                      />
+                    </Tooltip>
+                  )}
+                </div>
               </div>
             </div>
             <div className="agent-chat-input-hint">

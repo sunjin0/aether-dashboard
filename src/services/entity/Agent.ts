@@ -397,6 +397,7 @@ export interface AgentChatRequest {
   thinking?: boolean;
   temporary?: boolean;
   reasoningEffort?: 'low' | 'medium' | 'high';
+  retrievalMode?: 'AUTO' | 'ENABLED' | 'DISABLED';
   toolApprovalPolicy?: 'ask' | 'risky' | 'never';
   attachmentContent?: string;
   attachments?: string;
@@ -536,6 +537,7 @@ export interface AgentChatReplyRequest {
     answers: Record<string, AskUserAnswer>;
   };
   interactive?: boolean;
+  retrievalMode?: 'AUTO' | 'ENABLED' | 'DISABLED';
 }
 
 /**
@@ -692,6 +694,8 @@ export interface AgentMessage {
   runId?: string;
   model?: string;
   promptTokens?: number;
+  contextTokens?: number;
+  contextBudgetTokens?: number;
   completionTokens?: number;
   totalTokens?: number;
   latencyMs?: number;
@@ -954,6 +958,32 @@ export interface AgentToolBinding {
   pageSize?: number;
 }
 
+/** Latest completed context-capacity measurement for an Agent conversation. */
+export interface AgentConversationContext {
+  modelCallId?: string;
+  runId?: string;
+  contextWindowTokens?: number;
+  outputReserveTokens?: number;
+  safetyReserveTokens?: number;
+  inputBudgetTokens?: number;
+  promptTokens?: number;
+  estimatedPromptTokens?: number;
+  toolDefinitionTokens?: number;
+  framingTokens?: number;
+  occupancyPercent?: number;
+  systemTokens?: number;
+  skillTokens?: number;
+  taskTokens?: number;
+  memoryTokens?: number;
+  summaryTokens?: number;
+  historyTokens?: number;
+  toolTokens?: number;
+  ragTokens?: number;
+  currentMessageTokens?: number;
+  trimmedMessageCount?: number;
+  compressionStatus?: string;
+}
+
 /**
  * @description 绑定工具请求参数
  */
@@ -1075,6 +1105,7 @@ export interface AgentSkillVersion {
   routingSummary?: string;
   triggerTerms?: string | string[];
   excludeTerms?: string | string[];
+  routingKeywords?: string | string[];
   routingExamples?: string | string[];
   status?: 0 | 1;
   changeNote?: string;
@@ -1160,6 +1191,7 @@ export interface AgentSkillDraftDto {
   routingSummary?: string;
   triggerTerms?: string[];
   excludeTerms?: string[];
+  routingKeywords?: string[];
   routingExamples?: string[];
   changeNote?: string;
   tools?: AgentSkillToolDto[];

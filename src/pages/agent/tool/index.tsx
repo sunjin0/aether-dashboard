@@ -14,7 +14,7 @@ import {
   ToolOutlined,
 } from '@ant-design/icons';
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, Input, Modal, Progress, Select, Space, Spin, Switch, Tag } from 'antd';
+import { Button, Form, Input, InputNumber, Modal, Progress, Select, Space, Spin, Switch, Tag } from 'antd';
 import { history, useAccess, useIntl } from '@@/exports';
 import AgentToolForm from '@/pages/agent/tool/AgentToolForm';
 import AgentToolTestModal from '@/pages/agent/tool/AgentToolTestModal';
@@ -26,6 +26,8 @@ import {
   getAgentToolStatistics,
   batchRefreshAgentToolDefinitions,
   updateAgentToolInfo,
+  getToolRoutingConfig,
+  updateToolRoutingConfig,
 } from '@/services/agent/ToolController';
 import {
   AgentTool,
@@ -33,6 +35,7 @@ import {
   AgentToolSearchParams,
   AgentToolStatistics,
 } from '@/services/entity/Agent';
+import { getModelCatalogOptions } from '@/services/agent/ModelProviderController';
 import './index.less';
 import { getOptionList } from '@/services/sys/DictController';
 import TableActionMenu from '@/components/TableActionMenu';
@@ -72,6 +75,10 @@ const AgentToolPage: React.FC = () => {
   const [mcpServerId, setMcpServerId] = useState<string>();
   const [selectedToolIds, setSelectedToolIds] = useState<React.Key[]>([]);
   const [syncingDefinitions, setSyncingDefinitions] = useState(false);
+  const [routingConfigOpen, setRoutingConfigOpen] = useState(false);
+  const [routingProviders, setRoutingProviders] = useState<{ label: string; value: string }[]>([]);
+  const [routingConfigLoading, setRoutingConfigLoading] = useState(false);
+  const [routingForm] = Form.useForm<{ embeddingModelId?: string; topK?: number }>();
   const [facets, setFacets] = useState<AgentToolFacets>({
     categories: [],
     statuses: [],
@@ -170,6 +177,29 @@ const AgentToolPage: React.FC = () => {
     } finally {
       setSyncingDefinitions(false);
     }
+  };
+
+  const openRoutingConfig = async () => {
+    setRoutingConfigLoading(true);
+    try {
+      const [config, providers] = await Promise.all([
+        getToolRoutingConfig(),
+        getModelCatalogOptions('EMBEDDING'),
+      ]);
+      routingForm.setFieldsValue({
+        embeddingModelId: config.data?.embeddingModelId,
+        topK: config.data?.topK,
+      });
+      setRoutingProviders((providers || []).map((item) => ({ label: item.label, value: String(item.value) })));
+      setRoutingConfigOpen(true);
+    } finally {
+      setRoutingConfigLoading(false);
+    }
+  };
+  const saveRoutingConfig = async () => {
+    const values = await routingForm.validateFields();
+    const { code } = await updateToolRoutingConfig(values);
+    if (code === 200) setRoutingConfigOpen(false);
   };
 
   const columns: any[] = [
@@ -472,6 +502,11 @@ const AgentToolPage: React.FC = () => {
                 {format('pages.common.refresh')}
               </Button>
               {write && (
+                <Button onClick={openRoutingConfig}>
+                  {format('pages.agent.tool.routingConfig')}
+                </Button>
+              )}
+              {write && (
                 <Button
                   disabled={!selectedToolIds.length || syncingDefinitions}
                   loading={syncingDefinitions}
@@ -544,6 +579,37 @@ const AgentToolPage: React.FC = () => {
         open={Boolean(testToolId)}
         onClose={() => setTestToolId(undefined)}
       />
+      <Modal
+        title={format('pages.agent.tool.routingConfig')}
+        open={routingConfigOpen}
+        onCancel={() => setRoutingConfigOpen(false)}
+        onOk={saveRoutingConfig}
+        confirmLoading={routingConfigLoading}
+        destroyOnClose
+      >
+        <Form form={routingForm} layout="vertical">
+          <Form.Item
+            name="embeddingModelId"
+            label={format('pages.agent.tool.routingProvider')}
+            extra={format('pages.agent.tool.routingHint')}
+          >
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              options={routingProviders}
+              placeholder={format('pages.agent.tool.routingProviderPlaceholder')}
+            />
+          </Form.Item>
+          <Form.Item
+            name="topK"
+            label={format('pages.agent.tool.routingTopK')}
+            extra={format('pages.agent.tool.routingTopKHint')}
+          >
+            <InputNumber min={1} max={50} style={{ width: '100%' }} placeholder="8" />
+          </Form.Item>
+        </Form>
+      </Modal>
       <Modal
         open={syncingDefinitions}
         footer={null}

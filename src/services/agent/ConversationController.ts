@@ -2,6 +2,7 @@ import { request } from '@umijs/max'
 import { ResponseStructure } from '@/services/entity/Common'
 import {
   AgentConversation,
+  AgentConversationContext,
   AgentConversationSearchParams,
   AgentMessage,
   AgentMessageSearchParams,
@@ -42,6 +43,17 @@ export const getAgentConversationMessages = async (
   return request(`/api/agent/conversation/${id}/messages`, {
     method: 'GET',
     params,
+  })
+}
+
+/**
+ * @description 获取会话最近一次已完成模型调用的上下文容量
+ */
+export const getAgentConversationContext = async (
+  id: string,
+): Promise<ResponseStructure<AgentConversationContext>> => {
+  return request(`/api/agent/conversation/${id}/context`, {
+    method: 'GET',
   })
 }
 

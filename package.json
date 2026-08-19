@@ -51,6 +51,7 @@
     "classnames": "^2.5.1",
     "dayjs": "^1.11.13",
     "mammoth": "^1.12.1",
+    "mermaid": "^11.16.1",
     "monaco-editor": "^0.55.1",
     "querystring": "^0.2.1",
     "react": "^18.3.1",

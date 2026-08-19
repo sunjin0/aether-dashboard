@@ -801,6 +801,49 @@
   }
 }
 
+.@{chat-prefix}-input-select-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #596477;
+  font-size: 12px;
+  white-space: nowrap;
+
+  > span {
+    margin-top: 8px;
+    line-height: 30px;
+  }
+}
+
+.@{chat-prefix}-input-settings-row {
+  display: flex;
+  width: min(100%, 820px);
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  margin: 0 auto 8px;
+}
+
+.@{chat-prefix}-retrieval-select {
+  width: 96px !important;
+
+  .ant-select-selector {
+    height: 30px !important;
+    padding-inline: 10px !important;
+    border: 1px solid #dfe5f3 !important;
+    border-radius: 14px !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+
+  .ant-select-selection-item {
+    color: #43516b !important;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 28px !important;
+  }
+}
+
 .@{chat-prefix}-tool-icon,
 .@{chat-prefix}-thinking-btn {
   color: #596477;
@@ -844,6 +887,76 @@
     background: #d9deed;
     color: #fff;
   }
+}
+
+.@{chat-prefix}-send-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.@{chat-prefix}-context-button {
+  position: relative;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 50%;
+  font-variant-numeric: tabular-nums;
+
+  .ant-progress {
+    display: block;
+    line-height: 0;
+  }
+
+  > span:last-child {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    color: #596477;
+    font-size: 8px;
+    font-weight: 600;
+    line-height: 1;
+    transform: translate(-50%, -50%);
+  }
+
+  &-normal { background: #f0f7f1; }
+  &-warning { background: #fff7e6; }
+  &-high { background: #fff1f0; }
+}
+
+.@{chat-prefix}-context-popover {
+  width: min(320px, calc(100vw - 40px));
+  color: #3b4557;
+  font-size: 12px;
+}
+
+.@{chat-prefix}-context-popover-header,
+.@{chat-prefix}-context-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.@{chat-prefix}-context-popover-header {
+  margin-bottom: 8px;
+}
+
+.@{chat-prefix}-context-popover-header > span,
+.@{chat-prefix}-context-section > span:last-child {
+  color: #7b879b;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.@{chat-prefix}-context-sections {
+  display: flex;
+  max-height: 230px;
+  margin-top: 10px;
+  flex-direction: column;
+  gap: 7px;
+  overflow-y: auto;
 }
 
 .@{chat-prefix}-stop-btn {

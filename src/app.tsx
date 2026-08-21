@@ -3,6 +3,7 @@ import {
   ApartmentOutlined,
   DashboardOutlined,
   DatabaseOutlined,
+  KeyOutlined,
   LinkOutlined,
   MessageOutlined,
   OpenAIOutlined,
@@ -31,6 +32,8 @@ const iconMap: Record<string, React.ReactNode> = {
   MessageOutlined: <MessageOutlined />,
   OpenAIOutlined: <OpenAIOutlined />,
   DatabaseOutlined: <DatabaseOutlined />,
+  KeyOutlined: <KeyOutlined />,
+  key: <KeyOutlined />,
 }
 
 const pagePermissionPaths = [
@@ -52,7 +55,8 @@ const pagePermissionPaths = [
   '/knowledge/index-job',
   '/knowledge/evaluation',
   '/sys/admin',
-  '/sys/service-account',
+  '/service-account/manage',
+  '/service-account/monitor',
   '/sys/role',
   '/sys/resource',
   '/sys/dict',

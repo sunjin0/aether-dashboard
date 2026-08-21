@@ -317,7 +317,7 @@ const ServiceAccountPage: React.FC = () => {
               <Button
                 key="monitor"
                 icon={<BarChartOutlined />}
-                onClick={() => history.push('/sys/service-account/monitor')}
+                onClick={() => history.push('/service-account/monitor')}
               >
                 {t('pages.serviceAccount.monitor')}
               </Button>,

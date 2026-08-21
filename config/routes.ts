@@ -42,16 +42,6 @@ export default [
         component: './sys/admin',
       },
       {
-        path: '/sys/service-account',
-        name: '服务账号管理',
-        component: './sys/service-account',
-      },
-      {
-        path: '/sys/service-account/monitor',
-        name: '服务账号监控',
-        component: './sys/service-account/monitor',
-      },
-      {
         path: '/sys/role',
         name: '角色管理',
         component: './sys/role',
@@ -75,6 +65,23 @@ export default [
         path: '/sys/preference',
         name: '管理员偏好',
         component: './sys/admin-preference',
+      },
+    ],
+  },
+  {
+    path: '/service-account',
+    name: '服务账号',
+    icon: 'key',
+    routes: [
+      {
+        path: '/service-account/manage',
+        name: '账号管理',
+        component: './service-account/manage',
+      },
+      {
+        path: '/service-account/monitor',
+        name: '使用监控',
+        component: './service-account/monitor',
       },
     ],
   },

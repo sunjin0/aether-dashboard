@@ -2277,6 +2277,14 @@ const ChatDebugPage: React.FC = () => {
                             showInfo={false}
                             strokeColor={(conversationContext.occupancyPercent || 0) > 80 ? '#ff4d4f' : (conversationContext.occupancyPercent || 0) >= 60 ? '#faad14' : '#52c41a'}
                           />
+                          {Number.isFinite(conversationContext.promptCacheHitRate) && (
+                            <div className="agent-chat-context-section">
+                              <span>{intl.formatMessage({ id: 'pages.agent.chat.contextCapacityPromptCache' })}</span>
+                              <span>
+                                {conversationContext.promptCacheHitRate!.toFixed(1)}% ({conversationContext.cachedPromptTokens || 0} / {conversationContext.promptTokens || 0} tokens)
+                              </span>
+                            </div>
+                          )}
                           <div className="agent-chat-context-sections">
                             {[
                               ['contextCapacitySystem', conversationContext.systemTokens],

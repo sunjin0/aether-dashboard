@@ -50,6 +50,24 @@ describe('AgentMessageBubble', () => {
     expect(screen.getByText(/Latency: 42ms/)).toBeTruthy();
   });
 
+  it('does not render a null provider cache hit rate', () => {
+    renderWithEnglishLocale(
+      <AgentMessageBubble
+        agentMessage={{
+          role: 'assistant',
+          content: 'answer',
+          contextMetric: {
+            inputBudgetTokens: 100,
+            promptTokens: 25,
+            promptCacheHitRate: null as unknown as number,
+          },
+        }}
+      />,
+    );
+
+    expect(screen.queryByText(/Prompt cache hit/)).toBeNull();
+  });
+
   it('renders GFM tables as semantic table elements', () => {
     renderWithEnglishLocale(
       <AgentMessageBubble

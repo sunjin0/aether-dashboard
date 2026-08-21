@@ -227,8 +227,8 @@ const getMessageMeta = (
     const used =
       message.contextMetric.promptTokens ?? message.contextMetric.estimatedPromptTokens ?? 0
     const percent =
-      message.contextMetric.occupancyPercent !== undefined
-        ? ` (${message.contextMetric.occupancyPercent.toFixed(1)}%)`
+      Number.isFinite(message.contextMetric.occupancyPercent)
+        ? ` (${message.contextMetric.occupancyPercent!.toFixed(1)}%)`
         : ''
     const estimated = message.contextMetric.promptTokens === undefined
       ? formatMessage({ id: 'components.agentMessageBubble.estimatedContext' })
@@ -236,6 +236,15 @@ const getMessageMeta = (
     items.push({
       label: formatMessage({ id: 'components.agentMessageBubble.requestContext' }),
       value: `${estimated}${used} / ${message.contextMetric.inputBudgetTokens}${percent}`,
+    })
+  }
+  const cacheMetric = message.contextMetric
+  if (cacheMetric && Number.isFinite(cacheMetric.promptCacheHitRate)) {
+    const cached = cacheMetric.cachedPromptTokens ?? 0
+    const uncached = cacheMetric.uncachedPromptTokens ?? 0
+    items.push({
+      label: formatMessage({ id: 'components.agentMessageBubble.promptCache' }),
+      value: `${cacheMetric.promptCacheHitRate!.toFixed(1)}% (${cached} / ${cached + uncached})`,
     })
   }
   if (message.latencyMs !== undefined && message.latencyMs > 0) {

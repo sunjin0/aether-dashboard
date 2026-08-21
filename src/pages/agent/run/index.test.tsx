@@ -36,7 +36,7 @@ jest.mock('antd', () => ({
   Empty: () => null,
   message: { error: jest.fn() },
   Spin: ({ children }: any) => <>{children}</>,
-  Statistic: () => null,
+  Statistic: ({ title, value, suffix }: any) => <div>{`${title}: ${value}${suffix || ''}`}</div>,
   Tag: ({ children }: any) => <>{children}</>,
   Typography: { Text: ({ children }: any) => <>{children}</> },
 }))
@@ -44,7 +44,7 @@ jest.mock('antd', () => ({
 jest.mock('@/components/TableActionMenu', () => ({ items }: any) => (
   <button onClick={items[0].onClick}>{items[0].label}</button>
 ))
-jest.mock('@/components/JsonDisplay', () => () => null)
+jest.mock('@/components/JsonDisplay', () => ({ content }: any) => <div>{content}</div>)
 jest.mock('@/components/MarkdownText', () => () => null)
 jest.mock('./AgentRunStepsTimeline', () => () => null)
 jest.mock('@/services/sys/DictController', () => ({ getOptionList: jest.fn() }))
@@ -89,5 +89,29 @@ describe('AgentRunPage', () => {
       resolveRunB({ code: 200, data: { id: 'run-b' } })
     })
     await waitFor(() => expect(screen.getAllByText('run-b')).toHaveLength(2))
+  })
+
+  it('shows the provider raw response in run detail', async () => {
+    mockedGetAgentRunInfo.mockResolvedValue({
+      code: 200,
+      data: { id: 'run-a', rawResponse: '{"usage":{"prompt_tokens":100,"prompt_tokens_details":{"cached_tokens":75}}}' },
+    })
+
+    render(<AgentRunPage />)
+    fireEvent.click(screen.getAllByRole('button')[0])
+
+    await waitFor(() => expect(screen.getByText(/cached_tokens/)).toBeTruthy())
+  })
+
+  it('shows aggregate prompt cache statistics', async () => {
+    mockedGetAgentRunStatistics.mockResolvedValue({
+      code: 200,
+      data: { totalCachedPromptTokens: 896, promptCacheHitRate: 8.63 },
+    })
+
+    render(<AgentRunPage />)
+
+    await waitFor(() => expect(screen.getByText('pages.agent.run.cachedPromptTokens: 896')).toBeTruthy())
+    expect(screen.getByText('pages.agent.run.promptCacheHitRate: 8.63%')).toBeTruthy()
   })
 })

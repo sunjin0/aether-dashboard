@@ -328,6 +328,32 @@ const AgentRunPage: React.FC = () => {
                 />
               </div>
               <div className="agent-run-stat-card">
+                <i className="run-stat-icon run-stat-blue">
+                  <DatabaseOutlined />
+                </i>
+                <Statistic
+                  title={intl.formatMessage({ id: 'pages.agent.run.cachedPromptTokens' })}
+                  value={statistics.totalCachedPromptTokens || 0}
+                />
+              </div>
+              <div className="agent-run-stat-card">
+                <i className="run-stat-icon run-stat-green">
+                  <DatabaseOutlined />
+                </i>
+                <Statistic
+                  title={intl.formatMessage({ id: 'pages.agent.run.promptCacheHitRate' })}
+                  value={Number.isFinite(statistics.promptCacheHitRate) ? statistics.promptCacheHitRate : 0}
+                  precision={2}
+                  suffix="%"
+                />
+                <span className="agent-run-stat-hint">
+                  {intl.formatMessage({ id: 'pages.agent.run.cacheObservedCalls' }, {
+                    observed: statistics.cacheObservedCallCount || 0,
+                    total: (statistics.cacheObservedCallCount || 0) + (statistics.cacheUnobservedCallCount || 0),
+                  })}
+                </span>
+              </div>
+              <div className="agent-run-stat-card">
                 <i className="run-stat-icon run-stat-red">
                   <WarningOutlined />
                 </i>
@@ -505,6 +531,20 @@ const AgentRunPage: React.FC = () => {
                 className="agent-run-card"
               >
                 <MarkdownText content={run.outputContent} />
+              </Card>
+              <Card
+                title={intl.formatMessage({ id: 'pages.agent.run.rawResponse' })}
+                size="small"
+                style={{ marginTop: 16 }}
+                className="agent-run-card"
+              >
+                {run.rawResponse ? (
+                  <JsonDisplay content={run.rawResponse} />
+                ) : (
+                  <Text type="secondary">
+                    {intl.formatMessage({ id: 'pages.agent.run.noRawResponse' })}
+                  </Text>
+                )}
               </Card>
               <Card
                 title={intl.formatMessage({ id: 'pages.agent.run.errorInfo' })}

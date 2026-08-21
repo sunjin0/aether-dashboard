@@ -736,6 +736,7 @@ export interface AgentRun {
   messageId?: string;
   inputContent?: string;
   outputContent?: string;
+  rawResponse?: string;
   model?: string;
   modelProviderId?: string;
   promptTokens?: number;
@@ -980,6 +981,9 @@ export interface AgentConversationContext {
   safetyReserveTokens?: number;
   inputBudgetTokens?: number;
   promptTokens?: number;
+  cachedPromptTokens?: number;
+  uncachedPromptTokens?: number;
+  promptCacheHitRate?: number;
   estimatedPromptTokens?: number;
   toolDefinitionTokens?: number;
   framingTokens?: number;
@@ -1003,6 +1007,10 @@ export interface AgentContextOperationsMetrics {
   totalMetricCount?: number;
   completedRequestMetricCount?: number;
   averageOccupancyPercent?: number;
+  cacheObservedMetricCount?: number;
+  averagePromptCacheHitRate?: number;
+  totalCachedPromptTokens?: number;
+  totalUncachedPromptTokens?: number;
   highPressureMetricCount?: number;
   compressionMetricCount?: number;
   compressionCompletedCount?: number;
@@ -1045,6 +1053,11 @@ export interface AgentRunStatistics {
   totalPromptTokens?: number;
   totalCompletionTokens?: number;
   totalTokens?: number;
+  totalCachedPromptTokens?: number;
+  cacheObservedCallCount?: number;
+  cacheUnobservedCallCount?: number;
+  cacheZeroHitCallCount?: number;
+  promptCacheHitRate?: number;
   avgLatencyMs?: number;
   errorRate?: number;
 }

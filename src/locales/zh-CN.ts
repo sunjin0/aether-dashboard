@@ -18,7 +18,8 @@ export default {
   'pages.agent.artifact.deleteContent': '文件将在回收站保留 {days} 天，期间可以恢复。',
   'pages.agent.artifact.moveToRecycleBin': '移入回收站',
   'pages.agent.artifact.recycleExpiresAt': '将在 {time} 自动清理',
-  'pages.agent.artifact.recycleHint': '回收站中的文件将在 {days} 天后自动清理，恢复后会重新出现在“我的文件”。',
+  'pages.agent.artifact.recycleHint':
+    '回收站中的文件将在 {days} 天后自动清理，恢复后会重新出现在“我的文件”。',
   'pages.agent.artifact.empty': '暂无 AI 生成文件',
   'pages.agent.artifact.recycleEmpty': '回收站暂无文件',
   //公共
@@ -112,16 +113,19 @@ export default {
   'pages.agent.skill.createDraft': '创建 Skill 草稿',
   'pages.agent.skill.routingSummary': '何时使用此 Skill',
   'pages.agent.skill.routingSummaryRequired': '请填写不超过 200 字的发现摘要',
-  'pages.agent.skill.routingSummaryPlaceholder': '描述用户什么需求时应激活此 Skill；不要重复完整指令。',
+  'pages.agent.skill.routingSummaryPlaceholder':
+    '描述用户什么需求时应激活此 Skill；不要重复完整指令。',
   'pages.agent.skill.triggerTerms': '触发词',
   'pages.agent.skill.triggerTermsPlaceholder': '多个词用逗号分隔，例如：退款，退货，取消订单',
   'pages.agent.skill.excludeTerms': '排除词',
   'pages.agent.skill.excludeTermsPlaceholder': '多个词用逗号分隔，例如：安全，账号登录',
   'pages.agent.skill.routingKeywords': '路由关键字',
-  'pages.agent.skill.routingKeywordsPlaceholder': '多个词用逗号分隔；用户问题命中关键字即纳入路由候选，不依赖向量模型',
+  'pages.agent.skill.routingKeywordsPlaceholder':
+    '多个词用逗号分隔；用户问题命中关键字即纳入路由候选，不依赖向量模型',
   'pages.agent.skill.routingKeywordsHint': '关键字命中时优先于向量召回，用于明确指定场景',
   'pages.agent.skill.routingExamples': '典型请求示例',
-  'pages.agent.skill.routingExamplesPlaceholder': '每行一条，最多 5 条；例如：\n我想申请退款\n订单取消后什么时候到账',
+  'pages.agent.skill.routingExamplesPlaceholder':
+    '每行一条，最多 5 条；例如：\n我想申请退款\n订单取消后什么时候到账',
   'pages.agent.skill.studio.providerRequired': '请选择 AI 服务商并填写生成要求',
   'pages.agent.skill.studio.typeMismatch': '文件名后缀需与资源类型匹配',
   'pages.agent.skill.studio.saveSuccess': '资源草稿已保存',
@@ -134,12 +138,14 @@ export default {
   'pages.agent.skill.studio.purpose': '用途',
   'pages.agent.skill.studio.generateTest': 'AI 生成 / 测试',
   'pages.agent.skill.studio.selectProvider': '选择 AI 服务商',
-  'pages.agent.skill.studio.promptPlaceholder': '描述要生成或改进的资源内容；AI 输出会先显示在下方编辑区。',
+  'pages.agent.skill.studio.promptPlaceholder':
+    '描述要生成或改进的资源内容；AI 输出会先显示在下方编辑区。',
   'pages.agent.skill.studio.content': '资源内容',
   'pages.agent.skill.upgradeNotNeeded': '无需升级',
   'pages.agent.skill.upgradeNotNeededHint': '当前已安装最新发布版本。',
   'pages.agent.skill.upgradeVersion': '升级 Skill 版本',
-  'pages.agent.skill.upgradeConfirm': '将该 Agent 的 Skill 从 v{current} 升级到 v{latest}。升级不会变更其他 Agent。',
+  'pages.agent.skill.upgradeConfirm':
+    '将该 Agent 的 Skill 从 v{current} 升级到 v{latest}。升级不会变更其他 Agent。',
   'pages.agent.skill.upgradeLatest': '升级到最新版',
   'pages.agent.skill.assembly': '能力装配',
   'pages.agent.skill.uncategorized': '未分类',
@@ -403,7 +409,8 @@ export default {
   'pages.agent.skill.resourceManage': '资源管理',
   'pages.agent.skill.resourceUpload': '上传资源',
   'pages.agent.skill.resourceUploadPanel': '添加资源文件',
-  'pages.agent.skill.resourceUploadHint': '先选择资源类型；系统会按文件扩展名校验类型。脚本仅支持 .py / .js，由平台沙箱执行。',
+  'pages.agent.skill.resourceUploadHint':
+    '先选择资源类型；系统会按文件扩展名校验类型。脚本仅支持 .py / .js，由平台沙箱执行。',
   'pages.agent.skill.resourceUploadSuccess': '资源上传成功',
   'pages.agent.skill.resourceCopyEdit': '复制并编辑',
   'pages.agent.skill.resourceSaveAsNew': '保存为新资源',
@@ -421,10 +428,12 @@ export default {
   'pages.agent.skill.resourceType.script': '执行脚本',
   'pages.agent.skill.resourceType.unsupported': '支持的资源类型',
   'pages.agent.skill.resourceTypeAuto': '资源类型将按文件扩展名自动识别',
-  'pages.agent.skill.resourceReadonly': '当前展示的是已发布版本的冻结资源；续建草稿后才能上传或删除。',
+  'pages.agent.skill.resourceReadonly':
+    '当前展示的是已发布版本的冻结资源；续建草稿后才能上传或删除。',
   'pages.agent.skill.resourceLanguage': '语言',
   'pages.agent.skill.executionConfig': '受控产物执行',
-  'pages.agent.skill.executionHint': '仅声明已冻结的入口脚本、运行时和输出格式。容器、命令、挂载与网络由平台沙箱控制。',
+  'pages.agent.skill.executionHint':
+    '仅声明已冻结的入口脚本、运行时和输出格式。容器、命令、挂载与网络由平台沙箱控制。',
   'pages.agent.skill.executionEnabled': '启用',
   'pages.agent.skill.executionEntry': '入口脚本',
   'pages.agent.skill.executionRuntime': '运行时',
@@ -534,7 +543,8 @@ export default {
   'components.temporaryUrlPreviewModal.getUrlFailed': '获取预览链接失败',
   'components.temporaryUrlPreviewModal.download': '下载文件',
   'components.temporaryUrlPreviewModal.excelEmpty': '工作表为空',
-  'components.temporaryUrlPreviewModal.excelLimit': '预览最多显示每个工作表的前 {rows} 行、前 {columns} 列；完整文件可下载查看。',
+  'components.temporaryUrlPreviewModal.excelLimit':
+    '预览最多显示每个工作表的前 {rows} 行、前 {columns} 列；完整文件可下载查看。',
   'components.toolCallCard.status.success': '成功',
   'components.toolCallCard.status.failed': '失败',
   'components.toolCallCard.status.timeout': '超时',
@@ -553,9 +563,11 @@ export default {
   'components.interactiveQuestionCard.planApprovalTitle': '规划方案',
   'components.interactiveQuestionCard.planApprove': '批准执行',
   'components.interactiveQuestionCard.planModify': '修改方案',
-  'components.interactiveQuestionCard.planFeedbackPlaceholder': '对方案有意见？在此说明，将据此重新规划方案',
+  'components.interactiveQuestionCard.planFeedbackPlaceholder':
+    '对方案有意见？在此说明，将据此重新规划方案',
   'components.interactiveQuestionCard.planFeedbackEmpty': '请输入方案意见',
-  'components.interactiveQuestionCard.planAdjustHint': '如需调整计划，可在下方输入框输入新的目标或补充信息。',
+  'components.interactiveQuestionCard.planAdjustHint':
+    '如需调整计划，可在下方输入框输入新的目标或补充信息。',
   'components.interactiveQuestionCard.status.answered': '已回答',
   'components.interactiveQuestionCard.status.cancelled': '已取消',
   'components.interactiveQuestionCard.status.expired': '已过期',
@@ -627,7 +639,8 @@ export default {
   'pages.agent.modelProvider.compressionOutboundAllowed': '允许压缩出站',
   'pages.agent.modelProvider.processingRegion': '处理区域',
   'pages.agent.modelProvider.dataProcessingPolicy': '数据处理许可',
-  'pages.agent.modelProvider.dataProcessingPolicyHint': '可填写 JSON：{"allowCompressionOutbound":true,"allowedRegions":["CN"],"allowTraining":false}',
+  'pages.agent.modelProvider.dataProcessingPolicyHint':
+    '可填写 JSON：{"allowCompressionOutbound":true,"allowedRegions":["CN"],"allowTraining":false}',
   'pages.agent.modelProvider.missingId': '缺少模型供应商 ID',
   'pages.agent.modelProvider.deleteSuccess': '删除成功',
   'pages.agent.modelProvider.deleteFailed': '删除失败',
@@ -641,7 +654,8 @@ export default {
   'pages.agent.definition.systemPromptPlaceholder': '输入系统提示词，或使用 AI 生成/模板...',
   'pages.agent.definition.modelProvider': '模型供应商',
   'pages.agent.definition.contextCompressionModel': '上下文压缩模型',
-  'pages.agent.definition.contextCompressionModelTip': '仅用于创建会话摘要和记忆候选项；留空时跟随聊天模型，不改变响应模型。',
+  'pages.agent.definition.contextCompressionModelTip':
+    '仅用于创建会话摘要和记忆候选项；留空时跟随聊天模型，不改变响应模型。',
   'pages.agent.definition.contextCompressionModelFollow': '跟随聊天模型',
   'pages.agent.definition.model': '模型名称',
   'pages.agent.definition.temperature': '温度参数',
@@ -685,8 +699,8 @@ export default {
   'pages.agent.definition.priorityUpdateFailed': '优先级调整失败',
   'pages.agent.definition.localTools': '本地工具',
   'pages.agent.definition.noBoundTools': '暂未绑定工具',
-   'pages.agent.definition.searchBoundTools': '搜索已绑定工具名称或编码',
-   'pages.agent.definition.searchBoundSkills': '搜索已安装技能名称或编码',
+  'pages.agent.definition.searchBoundTools': '搜索已绑定工具名称或编码',
+  'pages.agent.definition.searchBoundSkills': '搜索已安装技能名称或编码',
   'pages.agent.definition.searchAvailableTools': '搜索可安装工具',
   'pages.agent.definition.searchAvailableSkills': '搜索可安装技能',
   'pages.agent.definition.noBoundSkills': '暂未安装技能',
@@ -736,7 +750,8 @@ export default {
   'pages.agent.tool.add': '添加工具',
   'pages.agent.tool.routingConfig': '工具路由配置',
   'pages.agent.tool.routingProvider': '向量召回模型',
-  'pages.agent.tool.routingHint': '可选。开启后每轮按用户问题向量召回最相关工具（内置交互与 generate_artifact 常驻保留），减少无关工具定义占用的上下文；留空时发送全部工具。',
+  'pages.agent.tool.routingHint':
+    '可选。开启后每轮按用户问题向量召回最相关工具（内置交互与 generate_artifact 常驻保留），减少无关工具定义占用的上下文；留空时发送全部工具。',
   'pages.agent.tool.routingProviderPlaceholder': '选择已启用的向量模型',
   'pages.agent.tool.routingTopK': '召回数量',
   'pages.agent.tool.routingTopKHint': '每轮最多召回的相关工具数，默认 8。',
@@ -1135,7 +1150,8 @@ export default {
   'pages.knowledge.base.form.blockOnCriticalIssues': '严重问题阻止提交',
   'pages.knowledge.base.form.requireDifferentApprover': '提交人与审批人必须不同',
   'pages.knowledge.base.form.manualReviewer': '人工审查人',
-  'pages.knowledge.base.form.manualReviewerTooltip': '选择后，所有提交的文件只能由该用户认领并审查；留空则进入公共审核队列。',
+  'pages.knowledge.base.form.manualReviewerTooltip':
+    '选择后，所有提交的文件只能由该用户认领并审查；留空则进入公共审核队列。',
   'pages.knowledge.base.form.reviewModelProvider': 'AI 审查模型供应商',
   'pages.knowledge.base.form.selectReviewModelProvider': '请选择非 Embedding 模型供应商',
   'pages.knowledge.base.form.reviewModel': '审查模型',
@@ -1777,7 +1793,8 @@ export default {
   'pages.serviceAccount.clientSecret': '客户端密钥',
   'pages.serviceAccount.description': '说明',
   'pages.serviceAccount.allowedAgents': '允许调用的 Agent',
-  'pages.serviceAccount.allowedAgentsTip': '留空表示不允许调用任何 Agent；请选择明确开放给外部系统的 Agent。',
+  'pages.serviceAccount.allowedAgentsTip':
+    '留空表示不允许调用任何 Agent；请选择明确开放给外部系统的 Agent。',
   'pages.serviceAccount.noAgents': '未授权 Agent',
   'pages.serviceAccount.agentCount': '{count} 个 Agent',
   'pages.serviceAccount.allowedWorkflows': '允许启动的工作流',
@@ -1816,7 +1833,7 @@ export default {
   'pages.serviceAccount.deleteConfirm':
     '删除后该服务账号将无法使用，已签发令牌立即失效，确认删除？',
   'pages.serviceAccount.deleted': '服务账号已删除',
-  'pages.serviceAccount.monitor': '监控',
+  'pages.serviceAccount.monitor': '使用监控',
   'pages.serviceAccount.monitor.name': '名称',
   'pages.serviceAccount.monitor.calls': '调用次数',
   'pages.serviceAccount.monitor.tokens': 'Token 用量',
@@ -1912,24 +1929,41 @@ export default {
   'pages.knowledge.base.form.retrieval.rerankModel': '重排序模型名称',
   'pages.knowledge.base.form.retrieval.rerankTopN': '重排序保留数',
   'pages.knowledge.base.form.retrieval.embeddingProvider': '向量模型供应商',
-  'pages.knowledge.base.form.retrieval.embeddingProvider.tip': '将文档和问题转换为向量的模型供应商，必须与已索引的数据兼容。',
-  'pages.knowledge.base.form.retrieval.topK.tip': '最终提供给模型的最高相关片段数量。数量越大覆盖越广，但会增加上下文长度。',
-  'pages.knowledge.base.form.retrieval.minSimilarity.tip': '向量召回的最低相似度。提高该值可减少无关片段，但可能漏掉表述不同的相关内容。',
-  'pages.knowledge.base.form.retrieval.maxChunksPerDocument.tip': '单个文档最多保留的片段数，防止长文档占满检索结果。',
-  'pages.knowledge.base.form.retrieval.hybridEnabled.tip': '同时使用向量和全文检索，再融合排序；适合既有语义问题又有关键词问题的知识库。',
-  'pages.knowledge.base.form.retrieval.strictGrounding.tip': '要求回答仅依据检索到的知识库内容，无法支持时应明确说明。',
-  'pages.knowledge.base.form.retrieval.queryRewriteEnabled.tip': '在召回前将用户问题改写为更完整、独立的检索查询；失败时自动使用原问题。',
+  'pages.knowledge.base.form.retrieval.embeddingProvider.tip':
+    '将文档和问题转换为向量的模型供应商，必须与已索引的数据兼容。',
+  'pages.knowledge.base.form.retrieval.topK.tip':
+    '最终提供给模型的最高相关片段数量。数量越大覆盖越广，但会增加上下文长度。',
+  'pages.knowledge.base.form.retrieval.minSimilarity.tip':
+    '向量召回的最低相似度。提高该值可减少无关片段，但可能漏掉表述不同的相关内容。',
+  'pages.knowledge.base.form.retrieval.maxChunksPerDocument.tip':
+    '单个文档最多保留的片段数，防止长文档占满检索结果。',
+  'pages.knowledge.base.form.retrieval.hybridEnabled.tip':
+    '同时使用向量和全文检索，再融合排序；适合既有语义问题又有关键词问题的知识库。',
+  'pages.knowledge.base.form.retrieval.strictGrounding.tip':
+    '要求回答仅依据检索到的知识库内容，无法支持时应明确说明。',
+  'pages.knowledge.base.form.retrieval.queryRewriteEnabled.tip':
+    '在召回前将用户问题改写为更完整、独立的检索查询；失败时自动使用原问题。',
   'pages.knowledge.base.form.retrieval.queryRewriteProvider.tip': '用于改写检索查询的模型供应商。',
-  'pages.knowledge.base.form.retrieval.queryRewriteModel.tip': '查询重写使用的模型名称；留空时使用供应商默认模型。',
-  'pages.knowledge.base.form.retrieval.vectorWeight.tip': '混合检索中向量分数的权重，剩余权重分配给全文检索。',
-  'pages.knowledge.base.form.retrieval.minLexicalScore.tip': '全文检索结果的最低得分，用于过滤关键词匹配较弱的片段。',
-  'pages.knowledge.base.form.retrieval.authorityScore.tip': '知识库的业务权威等级，用于在多个知识库的结果间进行优先级排序。',
-  'pages.knowledge.base.form.retrieval.authorityWeight.tip': '权威度对最终排序分数的影响程度；设置为 0 则不参与排序。',
-  'pages.knowledge.base.form.retrieval.freshnessWeight.tip': '文档更新时间对最终排序分数的影响程度；设置为 0 则不优先最新内容。',
-  'pages.knowledge.base.form.retrieval.rerankEnabled.tip': '对初步召回结果调用重排序模型，通常可提升排序质量，但会增加请求耗时。',
-  'pages.knowledge.base.form.retrieval.rerankProvider.tip': '提供重排序接口的模型供应商；地址需支持 /v1/rerank 或 /rerank。',
-  'pages.knowledge.base.form.retrieval.rerankModel.tip': '供应商使用的重排序模型名称；留空时使用供应商默认模型。',
-  'pages.knowledge.base.form.retrieval.rerankTopN.tip': '初步召回后交给重排序模型并保留、参与最终选择的最大片段数，通常应不小于最终片段数。',
+  'pages.knowledge.base.form.retrieval.queryRewriteModel.tip':
+    '查询重写使用的模型名称；留空时使用供应商默认模型。',
+  'pages.knowledge.base.form.retrieval.vectorWeight.tip':
+    '混合检索中向量分数的权重，剩余权重分配给全文检索。',
+  'pages.knowledge.base.form.retrieval.minLexicalScore.tip':
+    '全文检索结果的最低得分，用于过滤关键词匹配较弱的片段。',
+  'pages.knowledge.base.form.retrieval.authorityScore.tip':
+    '知识库的业务权威等级，用于在多个知识库的结果间进行优先级排序。',
+  'pages.knowledge.base.form.retrieval.authorityWeight.tip':
+    '权威度对最终排序分数的影响程度；设置为 0 则不参与排序。',
+  'pages.knowledge.base.form.retrieval.freshnessWeight.tip':
+    '文档更新时间对最终排序分数的影响程度；设置为 0 则不优先最新内容。',
+  'pages.knowledge.base.form.retrieval.rerankEnabled.tip':
+    '对初步召回结果调用重排序模型，通常可提升排序质量，但会增加请求耗时。',
+  'pages.knowledge.base.form.retrieval.rerankProvider.tip':
+    '提供重排序接口的模型供应商；地址需支持 /v1/rerank 或 /rerank。',
+  'pages.knowledge.base.form.retrieval.rerankModel.tip':
+    '供应商使用的重排序模型名称；留空时使用供应商默认模型。',
+  'pages.knowledge.base.form.retrieval.rerankTopN.tip':
+    '初步召回后交给重排序模型并保留、参与最终选择的最大片段数，通常应不小于最终片段数。',
   'pages.knowledge.evaluation.createSet': '新建评测集',
   'pages.knowledge.evaluation.agent': 'Agent',
   'pages.knowledge.evaluation.manage': '管理',
@@ -2057,7 +2091,8 @@ export default {
   'pages.knowledge.evaluation.targetType.CHUNK': '分块',
   'pages.knowledge.evaluation.workspace': '检索质量工作台',
   'pages.knowledge.evaluation.workflowTitle': '让每次检索改动都有可复现的证据',
-  'pages.knowledge.evaluation.workflowDescription': '先维护具有正确目标的评测问题，再固化健康版本，最后运行评测并将可靠结果设为基线。',
+  'pages.knowledge.evaluation.workflowDescription':
+    '先维护具有正确目标的评测问题，再固化健康版本，最后运行评测并将可靠结果设为基线。',
   'pages.knowledge.evaluation.flow.prepare': '准备数据集',
   'pages.knowledge.evaluation.flow.prepareHint': '问题与正例标注',
   'pages.knowledge.evaluation.flow.release': '固化版本',
@@ -2127,8 +2162,10 @@ export default {
   'pages.agent.sandbox.event.TASK_CLAIMED': 'Runner 已领取|隔离执行器已取得此任务的短期租约。',
   'pages.agent.sandbox.event.TASK_STARTED': '开始受控执行|任务已进入隔离运行环境。',
   'pages.agent.sandbox.event.HEARTBEAT': '执行进度已更新|Runner 正在正常运行并续约。',
-  'pages.agent.sandbox.event.RESOURCE_USAGE_REPORTED': '资源用量已上报|平台已记录本次执行的时长、内存或产物用量。',
-  'pages.agent.sandbox.event.TASK_SUCCEEDED': '执行完成|任务已成功完成，受控产物已进入平台校验流程。',
+  'pages.agent.sandbox.event.RESOURCE_USAGE_REPORTED':
+    '资源用量已上报|平台已记录本次执行的时长、内存或产物用量。',
+  'pages.agent.sandbox.event.TASK_SUCCEEDED':
+    '执行完成|任务已成功完成，受控产物已进入平台校验流程。',
   'pages.agent.sandbox.event.TASK_FAILED': '执行失败|任务未能完成，平台已保存脱敏诊断信息。',
   'pages.agent.sandbox.event.TASK_TIMED_OUT': '执行超时|任务超过模板定义的最长执行时长。',
   'pages.agent.sandbox.event.TASK_CANCELLED': '任务已取消|任务已停止，后续回传将被拒绝。',
@@ -2136,13 +2173,20 @@ export default {
   'pages.agent.sandbox.event.APPROVAL_APPROVED': '审批已通过|发起人已确认本次受控执行。',
   'pages.agent.sandbox.event.APPROVAL_REJECTED': '审批已拒绝|任务未进入执行队列。',
   'pages.agent.sandbox.event.CANCEL_REQUESTED': '已请求取消|平台已向 Runner 发出取消信号。',
-  'pages.agent.sandbox.event.SENSITIVE_INPUT_MATCH': '发现敏感输入|输入已命中敏感规则，平台已按策略处理。',
-  'pages.agent.sandbox.event.SENSITIVE_ARTIFACT_MATCH': '发现敏感产物|产物已命中敏感规则，下载或回传已受策略控制。',
-  'pages.agent.sandbox.event.SENSITIVE_LOG_MATCH': '发现敏感日志|日志已命中敏感规则，原始内容不会进入审计记录。',
-  'pages.agent.sandbox.event.LEASE_EXPIRED': '执行器租约过期|Runner 未在租约期内续约，任务已被平台回收。',
-  'pages.agent.sandbox.event.LEGACY_EXECUTION_LINKED': '已关联兼容执行|任务已关联旧版产物执行链路。',
-  'pages.agent.sandbox.event.LOG_RETENTION_PURGED': '日志已按期清理|已超过日志留存期限的执行记录已完成清理。',
-  'pages.agent.sandbox.event.INPUT_RETENTION_PURGED': '输入已按期清理|已超过留存期限的任务私有输入已完成清理。',
+  'pages.agent.sandbox.event.SENSITIVE_INPUT_MATCH':
+    '发现敏感输入|输入已命中敏感规则，平台已按策略处理。',
+  'pages.agent.sandbox.event.SENSITIVE_ARTIFACT_MATCH':
+    '发现敏感产物|产物已命中敏感规则，下载或回传已受策略控制。',
+  'pages.agent.sandbox.event.SENSITIVE_LOG_MATCH':
+    '发现敏感日志|日志已命中敏感规则，原始内容不会进入审计记录。',
+  'pages.agent.sandbox.event.LEASE_EXPIRED':
+    '执行器租约过期|Runner 未在租约期内续约，任务已被平台回收。',
+  'pages.agent.sandbox.event.LEGACY_EXECUTION_LINKED':
+    '已关联兼容执行|任务已关联旧版产物执行链路。',
+  'pages.agent.sandbox.event.LOG_RETENTION_PURGED':
+    '日志已按期清理|已超过日志留存期限的执行记录已完成清理。',
+  'pages.agent.sandbox.event.INPUT_RETENTION_PURGED':
+    '输入已按期清理|已超过留存期限的任务私有输入已完成清理。',
   'pages.agent.sandbox.event.fallback': '执行补充信息|平台已记录一条受控执行事件。',
   'pages.agent.sandbox.audit': '运行审计',
   'pages.agent.sandbox.title': 'Sandbox 治理工作台',
@@ -2155,23 +2199,29 @@ export default {
   'pages.agent.sandbox.cancel': '取消',
   'pages.agent.sandbox.retry': '使用冻结输入重试',
   'pages.agent.sandbox.retryCreated': '已创建重试任务，将按原冻结策略执行。',
-  'pages.agent.sandbox.chatApprovalDetail': '目标：{target}；目的：{purpose}；允许域：{domains}{subdomains}；预计请求：{estimated}/{maximum}；深度：{depth}/{maxDepth}；可能外发敏感数据：{sensitive}',
+  'pages.agent.sandbox.chatApprovalDetail':
+    '目标：{target}；目的：{purpose}；允许域：{domains}{subdomains}；预计请求：{estimated}/{maximum}；深度：{depth}/{maxDepth}；可能外发敏感数据：{sensitive}',
   'pages.agent.sandbox.chatSubdomains': '（含子域）',
   'pages.agent.sandbox.yes': '是',
   'pages.agent.sandbox.no': '否',
   'pages.agent.sandbox.log.empty': '暂无日志|请选择任务后查看审计信息。',
-  'pages.agent.sandbox.log.succeeded': '执行已完成|Runner 已返回脱敏执行摘要；详细步骤请查看事件时间线。',
-  'pages.agent.sandbox.log.failed': '执行失败|平台已隐藏原始错误内容；请根据失败事件与策略配置排查。',
-  'pages.agent.sandbox.log.timedOut': '执行超时|任务已达到模板定义的最长时长，原始日志不会直接展示。',
+  'pages.agent.sandbox.log.succeeded':
+    '执行已完成|Runner 已返回脱敏执行摘要；详细步骤请查看事件时间线。',
+  'pages.agent.sandbox.log.failed':
+    '执行失败|平台已隐藏原始错误内容；请根据失败事件与策略配置排查。',
+  'pages.agent.sandbox.log.timedOut':
+    '执行超时|任务已达到模板定义的最长时长，原始日志不会直接展示。',
   'pages.agent.sandbox.log.cancelled': '任务已取消|平台不会再接受新的执行日志或产物回传。',
-  'pages.agent.sandbox.log.protected': '执行日志受保护|日志仅用于生成脱敏审计事件，不直接向界面暴露原始内容。',
+  'pages.agent.sandbox.log.protected':
+    '执行日志受保护|日志仅用于生成脱敏审计事件，不直接向界面暴露原始内容。',
   'pages.agent.sandbox.second': '{value} 秒',
   'pages.agent.sandbox.noNetwork': '无网络',
   'pages.agent.sandbox.maxArtifacts': '最多 {count} 个产物',
   'pages.agent.sandbox.boolean.true': '是',
   'pages.agent.sandbox.boolean.false': '否',
   'pages.agent.sandbox.invalidSnapshot': '冻结配置格式无效',
-  'pages.agent.sandbox.invalidSnapshotHint': '此版本快照无法解析为 JSON 对象，请通过审计记录核查来源。',
+  'pages.agent.sandbox.invalidSnapshotHint':
+    '此版本快照无法解析为 JSON 对象，请通过审计记录核查来源。',
   'pages.agent.sandbox.frozenConfig': '冻结配置',
   'pages.agent.sandbox.copyRawJson': '复制原始 JSON',
   'pages.agent.sandbox.executionEnvironment': '执行环境',
@@ -2200,7 +2250,8 @@ export default {
   'pages.agent.sandbox.advancedConfigMustObject': '高级配置必须是 JSON 对象',
   'pages.agent.sandbox.confirmPublish': '确认发布冻结版本？',
   'pages.agent.sandbox.publishConfirmHint': '发布后，已创建的任务仍使用原冻结版本。',
-  'pages.agent.sandbox.publishConfirmDetail': '本次发布会启用策略 {policyVersion}，风险等级为 {riskLevel}。',
+  'pages.agent.sandbox.publishConfirmDetail':
+    '本次发布会启用策略 {policyVersion}，风险等级为 {riskLevel}。',
   'pages.agent.sandbox.publishAndFreeze': '发布并冻结',
   'pages.agent.sandbox.publishSuccess': '策略版本已发布并冻结',
   'pages.agent.sandbox.task': '任务',
@@ -2218,7 +2269,8 @@ export default {
   'pages.agent.sandbox.lifecycle.check': '发布检查',
   'pages.agent.sandbox.lifecycle.frozen': '冻结版本',
   'pages.agent.sandbox.lifecycle.audit': '审批与运行审计',
-  'pages.agent.sandbox.attention': '当前有 {pending} 个模板待发布，{highRisk} 个模板属于高风险，请及时处理。',
+  'pages.agent.sandbox.attention':
+    '当前有 {pending} 个模板待发布，{highRisk} 个模板属于高风险，请及时处理。',
   'pages.agent.sandbox.allFrozen': '所有模板均已有冻结版本，当前未发现待发布配置。',
   'pages.agent.sandbox.metric.templates': '模板总数',
   'pages.agent.sandbox.metric.pending': '待发布检查',
@@ -2229,7 +2281,8 @@ export default {
   'pages.agent.sandbox.operations': '运行观测',
   'pages.agent.sandbox.operationsHint': '指标基于已持久化的任务、事件与 Runner 用量回传计算。',
   'pages.agent.sandbox.operationsWindow': '延迟与资源汇总窗口起始于 {time}。',
-  'pages.agent.sandbox.imageRiskFound': '发现 {count} 个任务未使用 digest 固定镜像，请在生产启用前完成镜像治理。',
+  'pages.agent.sandbox.imageRiskFound':
+    '发现 {count} 个任务未使用 digest 固定镜像，请在生产启用前完成镜像治理。',
   'pages.agent.sandbox.metric.successRate': '成功率',
   'pages.agent.sandbox.metric.queueWait': '平均排队时长',
   'pages.agent.sandbox.metric.executionTime': '平均执行时长',
@@ -2296,9 +2349,11 @@ export default {
   'pages.agent.sandbox.runningAudit': '运行审计',
   'pages.agent.sandbox.sensitiveHash': '敏感对象哈希 · {hash}',
   'pages.agent.sandbox.publishTemplateTitle': '发布模板冻结版本：{code}',
-  'pages.agent.sandbox.publishImmutableHint': '新创建的任务会冻结此版本；已创建任务继续使用其历史快照。Agent 无法覆盖运行时、网络、挂载或资源限额。',
+  'pages.agent.sandbox.publishImmutableHint':
+    '新创建的任务会冻结此版本；已创建任务继续使用其历史快照。Agent 无法覆盖运行时、网络、挂载或资源限额。',
   'pages.agent.sandbox.executionEvents': '事件时间线',
-  'pages.agent.sandbox.rawLogHint': '原始标准输出、错误输出和失败原因不会直接显示。平台只呈现已匹配的业务事件、执行状态、进度和敏感对象哈希。',
+  'pages.agent.sandbox.rawLogHint':
+    '原始标准输出、错误输出和失败原因不会直接显示。平台只呈现已匹配的业务事件、执行状态、进度和敏感对象哈希。',
   'pages.agent.sandbox.versions': '冻结版本',
   'pages.agent.sandbox.draftShort': '草案',
   'pages.agent.sandbox.policyVersion': '策略版本',
@@ -2312,18 +2367,22 @@ export default {
   'pages.agent.sandbox.outputFormatsHint': '只允许 Runner 通过受控对象存储上传这些格式。',
   'pages.agent.sandbox.outputFormatsRequired': '请至少选择一种产物格式',
   'pages.agent.sandbox.advancedAdminOnly': '仅供平台管理员使用',
-  'pages.agent.sandbox.advancedHint': '用于固定命令、依赖策略、输入格式、只读根目录等非日常字段。常用执行边界以“执行边界”页签为准，并会覆盖同名高级字段。',
+  'pages.agent.sandbox.advancedHint':
+    '用于固定命令、依赖策略、输入格式、只读根目录等非日常字段。常用执行边界以“执行边界”页签为准，并会覆盖同名高级字段。',
   'pages.agent.sandbox.supplementalConfig': '补充配置 JSON',
-  'pages.agent.sandbox.supplementalConfigHint': '可留空。示例：{&quot;readOnlyRoot&quot;:true,&quot;nonPrivileged&quot;:true,&quot;inputFormats&quot;:[&quot;zip&quot;]}。',
+  'pages.agent.sandbox.supplementalConfigHint':
+    '可留空。示例：{&quot;readOnlyRoot&quot;:true,&quot;nonPrivileged&quot;:true,&quot;inputFormats&quot;:[&quot;zip&quot;]}。',
   'pages.agent.sandbox.risk.low': '低风险 · 按模板策略自动执行',
   'pages.agent.sandbox.risk.medium': '中风险 · 发起人确认后执行',
   'pages.agent.sandbox.risk.high': '高风险 · 严格审批与下载控制',
   'pages.agent.sandbox.runtime.python': 'Python 运行时',
   'pages.agent.sandbox.runtime.node': 'Node.js 运行时',
   'pages.agent.sandbox.governanceItem.1': '版本一经发布不可修改；需要调整时发布新版本。',
-  'pages.agent.sandbox.governanceItem.2': '任务执行时仅使用冻结快照，Agent 不能控制镜像、挂载、网络和资源限额。',
+  'pages.agent.sandbox.governanceItem.2':
+    '任务执行时仅使用冻结快照，Agent 不能控制镜像、挂载、网络和资源限额。',
   'pages.agent.sandbox.governanceItem.3': '变更风险等级会影响任务审批与产物下载策略。',
-  'pages.agent.sandbox.governanceItem.4': '审计记录仅保留脱敏摘要、命中规则和哈希，不保留敏感明文。',
+  'pages.agent.sandbox.governanceItem.4':
+    '审计记录仅保留脱敏摘要、命中规则和哈希，不保留敏感明文。',
   'pages.agent.sandbox.checkItem.1': '运行时、网络、时长、产物数量和产物格式将写入冻结快照。',
   'pages.agent.sandbox.checkItem.2': '网络固定为无网络；请求方与 Agent 无法在创建任务时更改该值。',
   'pages.agent.sandbox.checkItem.3': '发布后已有任务不受影响；新任务只会引用这次发布的版本。',

@@ -663,7 +663,8 @@ export default {
   'pages.agent.modelProvider.compressionOutboundAllowed': 'Allow Compression Outbound',
   'pages.agent.modelProvider.processingRegion': 'Processing Region',
   'pages.agent.modelProvider.dataProcessingPolicy': 'Data Processing Permission',
-  'pages.agent.modelProvider.dataProcessingPolicyHint': 'Optional JSON: {"allowCompressionOutbound":true,"allowedRegions":["US"],"allowTraining":false}',
+  'pages.agent.modelProvider.dataProcessingPolicyHint':
+    'Optional JSON: {"allowCompressionOutbound":true,"allowedRegions":["US"],"allowTraining":false}',
   'pages.agent.modelProvider.missingId': 'Missing model provider ID',
   'pages.agent.modelProvider.deleteSuccess': 'Deleted successfully',
   'pages.agent.modelProvider.deleteFailed': 'Failed to delete',
@@ -930,7 +931,8 @@ export default {
   'pages.agent.chat.session.memoryDelete': 'Delete',
   'pages.agent.chat.session.memoryDeleteCancel': 'Cancel',
   'pages.agent.chat.session.memoryDeleteConfirmTitle': 'Delete this memory?',
-  'pages.agent.chat.session.memoryDeleteConfirmDescription': 'After deletion, this memory will not be injected into future requests.',
+  'pages.agent.chat.session.memoryDeleteConfirmDescription':
+    'After deletion, this memory will not be injected into future requests.',
   'pages.agent.chat.session.memoryDeleteFailed': 'Failed to delete memory',
   'pages.agent.chat.session.memoryClose': 'Close',
   'pages.agent.chat.session.memoryNoSession': 'No session memory available yet',
@@ -944,8 +946,10 @@ export default {
   'pages.agent.chat.session.memoryCorrectionReason': 'Correction reason: {reason}',
   'pages.agent.chat.session.memoryCorrect': 'Correct',
   'pages.agent.chat.session.memoryCorrectTitle': 'Replace with corrected memory',
-  'pages.agent.chat.session.memoryCorrectionContentPlaceholder': 'Enter the corrected memory content',
-  'pages.agent.chat.session.memoryCorrectionReasonPlaceholder': 'Required: explain why this memory is being corrected',
+  'pages.agent.chat.session.memoryCorrectionContentPlaceholder':
+    'Enter the corrected memory content',
+  'pages.agent.chat.session.memoryCorrectionReasonPlaceholder':
+    'Required: explain why this memory is being corrected',
   'pages.agent.chat.session.memoryCorrectionRequired': 'Enter both corrected content and a reason',
   'pages.agent.chat.session.memoryCorrectionSubmit': 'Submit correction',
   'pages.agent.chat.session.memoryCorrected': 'Memory corrected',
@@ -1902,7 +1906,7 @@ export default {
   'pages.serviceAccount.deleteConfirm':
     'Deleting disables this service account and immediately invalidates issued tokens. Delete?',
   'pages.serviceAccount.deleted': 'Service account deleted',
-  'pages.serviceAccount.monitor': 'Monitor',
+  'pages.serviceAccount.monitor': 'Usage Monitor',
   'pages.serviceAccount.monitor.name': 'Name',
   'pages.serviceAccount.monitor.calls': 'Calls',
   'pages.serviceAccount.monitor.tokens': 'Tokens',

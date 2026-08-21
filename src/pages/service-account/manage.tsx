@@ -1,5 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
+import {
+  ActionType,
+  PageContainer,
+  ProFormDigit,
+  ProFormSelect,
+  ProFormText,
+  ProFormTextArea,
+  ProTable,
+} from '@ant-design/pro-components'
 import { history, useIntl } from '@umijs/max'
 import {
   Alert,
@@ -15,9 +23,10 @@ import {
   Tag,
   message,
 } from 'antd'
-import { BarChartOutlined, CopyOutlined, PlusOutlined } from '@ant-design/icons'
+import { CopyOutlined, PlusOutlined } from '@ant-design/icons'
 import { useAccess } from '@@/exports'
 import TableActionMenu from '@/components/TableActionMenu'
+import DrawerForm from '@/components/DrawerForm'
 import { getAgentDefinitionOptions } from '@/services/agent/AgentDefinitionController'
 import { getWorkflowList, startExternalBusinessWorkflow } from '@/services/workflow/WorkflowController'
 import {
@@ -33,6 +42,8 @@ import {
   setServiceAccountEnabled,
   updateServiceAccount,
 } from '@/services/sys/ServiceAccountController'
+
+const CREATE_ID = '__new_service_account__'
 
 const ServiceAccountPage: React.FC = () => {
   const intl = useIntl()
@@ -59,8 +70,64 @@ const ServiceAccountPage: React.FC = () => {
     })
   }, [])
 
-  const submit = async () => {
-    const values = await form.validateFields()
+  const renderAccountFields = () => (
+    <>
+      <ProFormText
+        name="name"
+        label={t('pages.serviceAccount.name')}
+        rules={[{ required: true, max: 128 }]}
+      />
+      <ProFormTextArea
+        name="description"
+        label={t('pages.serviceAccount.description')}
+        fieldProps={{ rows: 3, maxLength: 1024 }}
+      />
+      <ProFormText
+        name="clientId"
+        label={t('pages.serviceAccount.clientId')}
+        extra={t('pages.serviceAccount.clientIdTip')}
+        rules={[
+          {
+            pattern: /^[A-Za-z][A-Za-z0-9_-]{2,63}$/,
+            message: t('pages.serviceAccount.clientIdInvalid'),
+          },
+        ]}
+        fieldProps={{ disabled: Boolean(editAccount) }}
+      />
+      <ProFormSelect
+        name="allowedAgentIds"
+        label={t('pages.serviceAccount.allowedAgents')}
+        extra={t('pages.serviceAccount.allowedAgentsTip')}
+        options={agentOptions}
+        fieldProps={{ mode: 'multiple' }}
+      />
+      <ProFormSelect
+        name="allowedWorkflowIds"
+        label={t('pages.serviceAccount.allowedWorkflows')}
+        extra={t('pages.serviceAccount.allowedWorkflowsTip')}
+        options={workflowOptions}
+        fieldProps={{ mode: 'multiple' }}
+      />
+      <ProFormDigit
+        name="maxAgentCallsPerHour"
+        label={t('pages.serviceAccount.maxAgentCalls')}
+        extra={t('pages.serviceAccount.maxAgentCallsTip')}
+        min={0}
+        max={100000}
+        fieldProps={{ precision: 0, style: { width: '100%' } }}
+      />
+      <ProFormDigit
+        name="maxStartsPerHour"
+        label={t('pages.serviceAccount.maxStarts')}
+        extra={t('pages.serviceAccount.maxStartsTip')}
+        min={0}
+        max={100000}
+        fieldProps={{ precision: 0, style: { width: '100%' } }}
+      />
+    </>
+  )
+
+  const submit = async (values: ServiceAccountCreate) => {
     const result = await createServiceAccount({
       ...values,
       clientId: values.clientId?.trim() || undefined,
@@ -69,11 +136,10 @@ const ServiceAccountPage: React.FC = () => {
       maxAgentCallsPerHour: values.maxAgentCallsPerHour || 0,
       maxStartsPerHour: values.maxStartsPerHour || 0,
     })
-    if (result.code !== 200) return
-    setCreateOpen(false)
-    form.resetFields()
+    if (result.code !== 200) return false
     setSecret(result.data)
     actionRef.current?.reload()
+    return true
   }
 
   const formatTime = (value?: unknown) => {
@@ -122,8 +188,7 @@ const ServiceAccountPage: React.FC = () => {
     actionRef.current?.reload()
   }
 
-  const submitEdit = async () => {
-    const values = await editForm.validateFields()
+  const submitEdit = async (values: ServiceAccountUpdate) => {
     const result = await updateServiceAccount(editAccount!.id, {
       ...values,
       allowedAgentIds: values.allowedAgentIds || [],
@@ -131,9 +196,9 @@ const ServiceAccountPage: React.FC = () => {
       maxAgentCallsPerHour: values.maxAgentCallsPerHour || 0,
       maxStartsPerHour: values.maxStartsPerHour || 0,
     })
-    if (result.code !== 200) return
-    setEditAccount(undefined)
+    if (result.code !== 200) return false
     actionRef.current?.reload()
+    return true
   }
 
   const columns: any[] = [
@@ -226,14 +291,6 @@ const ServiceAccountPage: React.FC = () => {
                 primary: true,
                 onClick: () => {
                   setEditAccount(record)
-                  editForm.setFieldsValue({
-                    name: record.name,
-                    description: record.description,
-                    allowedAgentIds: record.allowedAgentIds,
-                    allowedWorkflowIds: record.allowedWorkflowIds,
-                    maxAgentCallsPerHour: record.maxAgentCallsPerHour,
-                    maxStartsPerHour: record.maxStartsPerHour,
-                  })
                 },
               },
               {
@@ -314,135 +371,54 @@ const ServiceAccountPage: React.FC = () => {
               >
                 {t('pages.serviceAccount.create')}
               </Button>,
-              <Button
-                key="monitor"
-                icon={<BarChartOutlined />}
-                onClick={() => history.push('/service-account/monitor')}
-              >
-                {t('pages.serviceAccount.monitor')}
-              </Button>,
             ]
             : []
         }
       />
-      <Modal
-        title={t('pages.serviceAccount.create')}
+      <DrawerForm
+        id={createOpen ? CREATE_ID : ''}
         open={createOpen}
-        onCancel={() => {
-          form.resetFields()
-          setCreateOpen(false)
-        }}
-        afterClose={() => form.resetFields()}
-        onOk={submit}
-        destroyOnClose
+        setOpen={setCreateOpen}
+        form={form}
+        request={async () => ({
+          code: 200,
+          success: true,
+          data: {
+            allowedAgentIds: [],
+            allowedWorkflowIds: [],
+            maxAgentCallsPerHour: 0,
+            maxStartsPerHour: 0,
+          },
+        })}
+        onSuccess={submit}
+        drawerProps={{ title: t('pages.serviceAccount.create'), width: 560 }}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          preserve={false}
-        >
-          <Form.Item
-            name="name"
-            label={t('pages.serviceAccount.name')}
-            rules={[{ required: true, max: 128 }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item name="description" label={t('pages.serviceAccount.description')}>
-            <Input.TextArea rows={3} maxLength={1024} />
-          </Form.Item>
-          <Form.Item
-            name="clientId"
-            label={t('pages.serviceAccount.clientId')}
-            extra={t('pages.serviceAccount.clientIdTip')}
-            rules={[
-              {
-                pattern: /^[A-Za-z][A-Za-z0-9_-]{2,63}$/,
-                message: t('pages.serviceAccount.clientIdInvalid'),
-              },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="allowedAgentIds"
-            label={t('pages.serviceAccount.allowedAgents')}
-            extra={t('pages.serviceAccount.allowedAgentsTip')}
-          >
-            <Select mode="multiple" options={agentOptions} />
-          </Form.Item>
-          <Form.Item
-            name="allowedWorkflowIds"
-            label={t('pages.serviceAccount.allowedWorkflows')}
-            extra={t('pages.serviceAccount.allowedWorkflowsTip')}
-          >
-            <Select mode="multiple" options={workflowOptions} />
-          </Form.Item>
-          <Form.Item
-            name="maxAgentCallsPerHour"
-            label={t('pages.serviceAccount.maxAgentCalls')}
-            extra={t('pages.serviceAccount.maxAgentCallsTip')}
-          >
-            <InputNumber min={0} max={100000} style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item
-            name="maxStartsPerHour"
-            label={t('pages.serviceAccount.maxStarts')}
-            extra={t('pages.serviceAccount.maxStartsTip')}
-          >
-            <InputNumber min={0} max={100000} style={{ width: '100%' }} />
-          </Form.Item>
-        </Form>
-      </Modal>
-      <Modal
-        title={t('pages.common.edit')}
+        {renderAccountFields()}
+      </DrawerForm>
+      <DrawerForm
+        id={editAccount?.id || ''}
         open={Boolean(editAccount)}
-        onCancel={() => setEditAccount(undefined)}
-        onOk={submitEdit}
-        okText={t('pages.common.confirm')}
-        destroyOnClose
+        setOpen={(open) => {
+          if (!open) setEditAccount(undefined)
+        }}
+        form={editForm}
+        request={async () => ({
+          code: 200,
+          success: true,
+          data: {
+            name: editAccount?.name,
+            description: editAccount?.description,
+            allowedAgentIds: editAccount?.allowedAgentIds || [],
+            allowedWorkflowIds: editAccount?.allowedWorkflowIds || [],
+            maxAgentCallsPerHour: editAccount?.maxAgentCallsPerHour || 0,
+            maxStartsPerHour: editAccount?.maxStartsPerHour || 0,
+          },
+        })}
+        onSuccess={submitEdit}
+        drawerProps={{ title: t('pages.common.edit'), width: 560 }}
       >
-        <Form form={editForm} layout="vertical">
-          <Form.Item
-            name="name"
-            label={t('pages.serviceAccount.name')}
-            rules={[{ required: true, max: 128 }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item name="description" label={t('pages.serviceAccount.description')}>
-            <Input.TextArea rows={3} maxLength={1024} />
-          </Form.Item>
-          <Form.Item
-            name="allowedAgentIds"
-            label={t('pages.serviceAccount.allowedAgents')}
-            extra={t('pages.serviceAccount.allowedAgentsTip')}
-          >
-            <Select mode="multiple" options={agentOptions} />
-          </Form.Item>
-          <Form.Item
-            name="allowedWorkflowIds"
-            label={t('pages.serviceAccount.allowedWorkflows')}
-            extra={t('pages.serviceAccount.allowedWorkflowsTip')}
-          >
-            <Select mode="multiple" options={workflowOptions} />
-          </Form.Item>
-          <Form.Item
-            name="maxAgentCallsPerHour"
-            label={t('pages.serviceAccount.maxAgentCalls')}
-            extra={t('pages.serviceAccount.maxAgentCallsTip')}
-          >
-            <InputNumber min={0} max={100000} style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item
-            name="maxStartsPerHour"
-            label={t('pages.serviceAccount.maxStarts')}
-            extra={t('pages.serviceAccount.maxStartsTip')}
-          >
-            <InputNumber min={0} max={100000} style={{ width: '100%' }} />
-          </Form.Item>
-        </Form>
-      </Modal>
+        {renderAccountFields()}
+      </DrawerForm>
       <Modal
         title={t('pages.serviceAccount.secretTitle')}
         open={Boolean(secret)}

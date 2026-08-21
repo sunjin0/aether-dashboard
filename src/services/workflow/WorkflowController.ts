@@ -120,6 +120,7 @@ export const getWorkflowOperationsMetrics = () => request<ResponseStructure<Work
 export const getWorkflowDeadLetters = (limit = 50) => request<ResponseStructure<WorkflowDeadLetter[]>>('/api/agent/workflow/operations/dead-letters', { params: { limit } })
 export const startWorkflow = (id: string, variables: Record<string, unknown>) => request<ResponseStructure<string>>(`/api/agent/workflow/${id}/instances`, { method: 'POST', data: { variables } })
 export const startBusinessWorkflow = (id: string, data: WorkflowBusinessStart, headers?: Record<string, string>) => request<ResponseStructure<string>>(`/api/agent/workflow/${id}/business-instances`, { method: 'POST', data, headers })
+export const startExternalBusinessWorkflow = (id: string, data: WorkflowBusinessStart, headers?: Record<string, string>) => request<ResponseStructure<string>>(`/api/business/workflows/${id}/instances`, { method: 'POST', data, headers })
 export const getWorkflowInstances = (data: WorkflowInstanceQuery) => request<ResponseStructure<WorkflowInstance[]>>('/api/agent/workflow/instances/list', { method: 'POST', data })
 export const getWorkflowInstance = (id: string) => request<ResponseStructure<WorkflowInstance>>(`/api/agent/workflow/instances/${id}`)
 export const getWorkflowCallbacks = (id: string) => request<ResponseStructure<WorkflowCallbackDelivery[]>>(`/api/agent/workflow/instances/${id}/callbacks`)

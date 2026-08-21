@@ -47,6 +47,11 @@ export default [
         component: './sys/service-account',
       },
       {
+        path: '/sys/service-account/monitor',
+        name: '服务账号监控',
+        component: './sys/service-account/monitor',
+      },
+      {
         path: '/sys/role',
         name: '角色管理',
         component: './sys/role',

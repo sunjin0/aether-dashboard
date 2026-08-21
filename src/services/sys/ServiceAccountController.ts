@@ -6,9 +6,10 @@ export interface ServiceAccount {
   name: string
   description?: string
   clientId: string
-  roleIds: string[]
   allowedWorkflowIds: string[]
+  allowedAgentIds: string[]
   maxStartsPerHour: number
+  maxAgentCallsPerHour: number
   enabled: boolean
   lastUsedAt?: number
 }
@@ -26,8 +27,25 @@ export interface ServiceAccountToken {
   expiresIn: number
 }
 
-export type ServiceAccountCreate = Omit<Pick<ServiceAccount, 'name' | 'description' | 'clientId' | 'roleIds' | 'allowedWorkflowIds' | 'maxStartsPerHour'>, 'clientId'> & { clientId?: string }
-export type ServiceAccountUpdate = Pick<ServiceAccount, 'name' | 'description' | 'roleIds' | 'allowedWorkflowIds' | 'maxStartsPerHour'>
+export interface ServiceAccountUsageItem {
+  id: string
+  name: string
+  calls: number
+  tokens: number
+}
+
+export interface ServiceAccountUsage {
+  totalCalls: number
+  agentCalls: number
+  workflowStarts: number
+  totalTokens: number
+  accounts: ServiceAccountUsageItem[]
+  agents: ServiceAccountUsageItem[]
+  workflows: ServiceAccountUsageItem[]
+}
+
+export type ServiceAccountCreate = Omit<Pick<ServiceAccount, 'name' | 'description' | 'clientId' | 'allowedWorkflowIds' | 'allowedAgentIds' | 'maxStartsPerHour' | 'maxAgentCallsPerHour'>, 'clientId'> & { clientId?: string }
+export type ServiceAccountUpdate = Pick<ServiceAccount, 'name' | 'description' | 'allowedWorkflowIds' | 'allowedAgentIds' | 'maxStartsPerHour' | 'maxAgentCallsPerHour'>
 
 export const getServiceAccountList = (data: Record<string, unknown> = {}) =>
   request<ResponseStructure<ServiceAccount[]>>('/api/sys/service-account/list', { method: 'POST', data })
@@ -43,3 +61,5 @@ export const deleteServiceAccount = (id: string) =>
   request<ResponseStructure<void>>(`/api/sys/service-account/${id}`, { method: 'DELETE' })
 export const issueServiceAccountToken = (clientId: string, clientSecret: string) =>
   request<ResponseStructure<ServiceAccountToken>>('/api/auth/service-account/token', { method: 'POST', data: { clientId, clientSecret } })
+export const getServiceAccountUsage = () =>
+  request<ResponseStructure<ServiceAccountUsage>>('/api/sys/service-account/usage')

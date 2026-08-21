@@ -15,11 +15,11 @@ import {
   Tag,
   message,
 } from 'antd'
-import { CopyOutlined, PlusOutlined } from '@ant-design/icons'
+import { BarChartOutlined, CopyOutlined, PlusOutlined } from '@ant-design/icons'
 import { useAccess } from '@@/exports'
 import TableActionMenu from '@/components/TableActionMenu'
-import { getRoleOptions } from '@/services/sys/AdminController'
-import { getWorkflowList, startBusinessWorkflow } from '@/services/workflow/WorkflowController'
+import { getAgentDefinitionOptions } from '@/services/agent/AgentDefinitionController'
+import { getWorkflowList, startExternalBusinessWorkflow } from '@/services/workflow/WorkflowController'
 import {
   ServiceAccount,
   ServiceAccountCreate,
@@ -45,13 +45,13 @@ const ServiceAccountPage: React.FC = () => {
   const [secret, setSecret] = useState<ServiceAccountSecret>()
   const [editAccount, setEditAccount] = useState<ServiceAccount>()
   const [testAccount, setTestAccount] = useState<ServiceAccount>()
-  const [roleOptions, setRoleOptions] = useState<any[]>([])
+  const [agentOptions, setAgentOptions] = useState<any[]>([])
   const [workflowOptions, setWorkflowOptions] = useState<any[]>([])
   const write = Boolean(access[history.location.pathname])
   const t = (id: string, values?: Record<string, any>) => intl.formatMessage({ id }, values)
 
   useEffect(() => {
-    getRoleOptions().then(setRoleOptions)
+    getAgentDefinitionOptions(1).then(setAgentOptions)
     getWorkflowList({ current: 1, pageSize: 100 }).then((result: any) => {
       setWorkflowOptions(
         (result.data || []).map((item: any) => ({ label: item.name, value: item.id })),
@@ -64,7 +64,9 @@ const ServiceAccountPage: React.FC = () => {
     const result = await createServiceAccount({
       ...values,
       clientId: values.clientId?.trim() || undefined,
+      allowedAgentIds: values.allowedAgentIds || [],
       allowedWorkflowIds: values.allowedWorkflowIds || [],
+      maxAgentCallsPerHour: values.maxAgentCallsPerHour || 0,
       maxStartsPerHour: values.maxStartsPerHour || 0,
     })
     if (result.code !== 200) return
@@ -104,7 +106,7 @@ const ServiceAccountPage: React.FC = () => {
     const tokenResult = await issueServiceAccountToken(testAccount!.clientId, values.clientSecret)
     if (tokenResult.code !== 200 || !tokenResult.data?.accessToken)
       return
-    const result = await startBusinessWorkflow(
+    const result = await startExternalBusinessWorkflow(
       values.workflowId,
       {
         businessType: values.businessType,
@@ -124,7 +126,9 @@ const ServiceAccountPage: React.FC = () => {
     const values = await editForm.validateFields()
     const result = await updateServiceAccount(editAccount!.id, {
       ...values,
+      allowedAgentIds: values.allowedAgentIds || [],
       allowedWorkflowIds: values.allowedWorkflowIds || [],
+      maxAgentCallsPerHour: values.maxAgentCallsPerHour || 0,
       maxStartsPerHour: values.maxStartsPerHour || 0,
     })
     if (result.code !== 200) return
@@ -156,6 +160,24 @@ const ServiceAccountPage: React.FC = () => {
         ) : (
           <Tag>{t('pages.serviceAccount.workflowCount', { count: ids.length })}</Tag>
         ),
+    },
+    {
+      title: t('pages.serviceAccount.allowedAgents'),
+      dataIndex: 'allowedAgentIds',
+      hideInSearch: true,
+      render: (ids: string[]) =>
+        !ids?.length ? (
+          <Tag>{t('pages.serviceAccount.noAgents')}</Tag>
+        ) : (
+          <Tag>{t('pages.serviceAccount.agentCount', { count: ids.length })}</Tag>
+        ),
+    },
+    {
+      title: t('pages.serviceAccount.maxAgentCalls'),
+      dataIndex: 'maxAgentCallsPerHour',
+      width: 130,
+      hideInSearch: true,
+      render: (value: number) => value || t('pages.serviceAccount.unlimited'),
     },
     {
       title: t('pages.serviceAccount.maxStarts'),
@@ -207,8 +229,9 @@ const ServiceAccountPage: React.FC = () => {
                   editForm.setFieldsValue({
                     name: record.name,
                     description: record.description,
-                    roleIds: record.roleIds,
+                    allowedAgentIds: record.allowedAgentIds,
                     allowedWorkflowIds: record.allowedWorkflowIds,
+                    maxAgentCallsPerHour: record.maxAgentCallsPerHour,
                     maxStartsPerHour: record.maxStartsPerHour,
                   })
                 },
@@ -280,11 +303,23 @@ const ServiceAccountPage: React.FC = () => {
                 icon={<PlusOutlined />}
                 onClick={() => {
                   form.resetFields()
-                  form.setFieldsValue({ allowedWorkflowIds: [], maxStartsPerHour: 0 })
+                  form.setFieldsValue({
+                    allowedAgentIds: [],
+                    allowedWorkflowIds: [],
+                    maxAgentCallsPerHour: 0,
+                    maxStartsPerHour: 0,
+                  })
                   setCreateOpen(true)
                 }}
               >
                 {t('pages.serviceAccount.create')}
+              </Button>,
+              <Button
+                key="monitor"
+                icon={<BarChartOutlined />}
+                onClick={() => history.push('/sys/service-account/monitor')}
+              >
+                {t('pages.serviceAccount.monitor')}
               </Button>,
             ]
             : []
@@ -330,11 +365,11 @@ const ServiceAccountPage: React.FC = () => {
             <Input />
           </Form.Item>
           <Form.Item
-            name="roleIds"
-            label={t('pages.serviceAccount.roles')}
-            rules={[{ required: true }]}
+            name="allowedAgentIds"
+            label={t('pages.serviceAccount.allowedAgents')}
+            extra={t('pages.serviceAccount.allowedAgentsTip')}
           >
-            <Select mode="multiple" options={roleOptions} />
+            <Select mode="multiple" options={agentOptions} />
           </Form.Item>
           <Form.Item
             name="allowedWorkflowIds"
@@ -342,6 +377,13 @@ const ServiceAccountPage: React.FC = () => {
             extra={t('pages.serviceAccount.allowedWorkflowsTip')}
           >
             <Select mode="multiple" options={workflowOptions} />
+          </Form.Item>
+          <Form.Item
+            name="maxAgentCallsPerHour"
+            label={t('pages.serviceAccount.maxAgentCalls')}
+            extra={t('pages.serviceAccount.maxAgentCallsTip')}
+          >
+            <InputNumber min={0} max={100000} style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item
             name="maxStartsPerHour"
@@ -372,11 +414,11 @@ const ServiceAccountPage: React.FC = () => {
             <Input.TextArea rows={3} maxLength={1024} />
           </Form.Item>
           <Form.Item
-            name="roleIds"
-            label={t('pages.serviceAccount.roles')}
-            rules={[{ required: true }]}
+            name="allowedAgentIds"
+            label={t('pages.serviceAccount.allowedAgents')}
+            extra={t('pages.serviceAccount.allowedAgentsTip')}
           >
-            <Select mode="multiple" options={roleOptions} />
+            <Select mode="multiple" options={agentOptions} />
           </Form.Item>
           <Form.Item
             name="allowedWorkflowIds"
@@ -384,6 +426,13 @@ const ServiceAccountPage: React.FC = () => {
             extra={t('pages.serviceAccount.allowedWorkflowsTip')}
           >
             <Select mode="multiple" options={workflowOptions} />
+          </Form.Item>
+          <Form.Item
+            name="maxAgentCallsPerHour"
+            label={t('pages.serviceAccount.maxAgentCalls')}
+            extra={t('pages.serviceAccount.maxAgentCallsTip')}
+          >
+            <InputNumber min={0} max={100000} style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item
             name="maxStartsPerHour"

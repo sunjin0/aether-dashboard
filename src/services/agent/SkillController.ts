@@ -3,6 +3,7 @@ import { Option, ResponseStructure } from '@/services/entity/Common'
 import {
   AgentDefinitionSkillBinding,
   AgentSkill,
+  AgentSkillSearchParams,
   AgentSkillBindingUpdateDto,
   AgentSkillDetail,
   AgentSkillDraftDto,
@@ -12,7 +13,6 @@ import {
   AgentSkillPublishCheck,
   AgentSkillStatistics,
   AgentSkillResource,
-  AgentSkillSearchParams,
   AgentSkillVersion,
 } from '@/services/entity/Agent'
 
@@ -158,7 +158,7 @@ export const getAgentSkillBindingList = async (
   return request(`/api/agent/definition/${agentId}/skills/list`, { method: 'POST', data: params })
 }
 
-export const getAvailableAgentSkills = async (agentId: string, params: AgentSkill): Promise<ResponseStructure<AgentSkill[]>> => {
+export const getAvailableAgentSkills = async (agentId: string, params: AgentSkillSearchParams): Promise<ResponseStructure<AgentSkill[]>> => {
   return request(`/api/agent/definition/${agentId}/skills/available`, { method: 'POST', data: params })
 }
 

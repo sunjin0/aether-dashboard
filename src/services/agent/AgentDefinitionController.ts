@@ -6,6 +6,7 @@ import {
   AgentDefinitionStatusParams,
   AgentToolBinding,
   AgentTool,
+  AgentToolSearchParams,
   BindToolRequest,
   UpdateToolPriorityRequest,
 } from '@/services/entity/Agent'
@@ -22,7 +23,7 @@ export const getAgentDefinitionList = async (
   })
 }
 
-export const getAvailableAgentTools = async (agentId: string, params: AgentTool): Promise<ResponseStructure<AgentTool[]>> => {
+export const getAvailableAgentTools = async (agentId: string, params: AgentToolSearchParams): Promise<ResponseStructure<AgentTool[]>> => {
   return request(`/api/agent/definition/${agentId}/tools/available`, { method: 'POST', data: params })
 }
 export const getAgentDefinitionOptions = async (status = 1): Promise<Option[]> => {

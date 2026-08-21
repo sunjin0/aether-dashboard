@@ -25,6 +25,7 @@ import {
   CheckCircleFilled,
   ClearOutlined,
   CloseCircleFilled,
+  CloseOutlined,
   CommentOutlined,
   LoadingOutlined,
   MenuFoldOutlined,
@@ -42,7 +43,7 @@ import {
   uploadAgentChatAttachments,
 } from '@/services/agent/ChatController'
 import { cancelAgentRun, getAgentRunPlan } from '@/services/agent/RunController'
-import { deleteAgentSessionMemory, getAgentSessionByConversation, getAgentSessionMemories, getAgentSessionTimeline, getAgentTaskSnapshot, submitAgentTaskFeedback } from '@/services/agent/SessionController'
+import { getAgentSessionByConversation, getAgentSessionTimeline, getAgentTaskSnapshot, submitAgentTaskFeedback } from '@/services/agent/SessionController'
 import { getAgentArtifactByRun } from '@/services/agent/ArtifactController'
 import { cancelSandboxTask, decideSandboxTask, getSandboxTaskByRun, retrySandboxTask } from '@/services/agent/SandboxTaskController'
 import {
@@ -65,14 +66,13 @@ import {
   AgentStreamToolCallData,
   KnowledgeSource,
   AgentRunPlan,
-  AgentSessionMemory,
   AgentTask,
   AgentTaskEvent,
 } from '@/services/entity/Agent'
 import { Option } from '@/services/entity/Common'
 import AgentMessageBubble from '@/components/AgentMessageBubble'
 import TemporaryUrlPreviewModal from '@/components/TemporaryUrlPreviewModal'
-import FormattedContent from '@/components/FormattedContent'
+import ConversationMemoryPanel from './ConversationMemoryPanel'
 import { createChatAttachmentPreviewUrl } from '@/services/file/FileController'
 import {
   cancelDeepRun,
@@ -150,6 +150,7 @@ const ChatDebugPage: React.FC = () => {
   const [loadingMessages, setLoadingMessages] = useState(false)
   const [sending, setSending] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [isMobileLayout, setIsMobileLayout] = useState(false)
   const [searchText, setSearchText] = useState('')
   const [showScrollBottom, setShowScrollBottom] = useState(false)
   const [thinking, setThinking] = useState(false)
@@ -164,8 +165,8 @@ const ChatDebugPage: React.FC = () => {
   const [persistedDeepTasks, setPersistedDeepTasks] = useState<DeepTask[]>([])
   const [taskPlanDrawerOpen, setTaskPlanDrawerOpen] = useState(false)
   const [activeDeepSessionId, setActiveDeepSessionId] = useState<string>()
-  const [sessionMemories, setSessionMemories] = useState<AgentSessionMemory[]>([])
-  const [sessionMemoryModalOpen, setSessionMemoryModalOpen] = useState(false)
+  const [memoryPanelOpen, setMemoryPanelOpen] = useState(false)
+  const [memoryPanelSessionId, setMemoryPanelSessionId] = useState<string>()
   const [selectedSessionTask, setSelectedSessionTask] = useState<AgentTask>()
   const [taskFeedbackOpen, setTaskFeedbackOpen] = useState(false)
   const [taskFeedbackRating, setTaskFeedbackRating] = useState(5)
@@ -190,6 +191,17 @@ const ChatDebugPage: React.FC = () => {
   const shownSandboxApprovalTaskRef = useRef<string>()
   const loadedPlanRunIdRef = useRef<string>()
 
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)')
+    const updateLayout = () => {
+      setIsMobileLayout(mediaQuery.matches)
+      if (mediaQuery.matches) setSidebarCollapsed(true)
+    }
+    updateLayout()
+    mediaQuery.addEventListener('change', updateLayout)
+    return () => mediaQuery.removeEventListener('change', updateLayout)
+  }, [])
+
   const findPendingQuestionMessage = (messageList: ChatMessage[]) =>
     messageList.find(
       (item) => item.messageType === 'interaction' && item.interactionStatus === 'pending',
@@ -209,7 +221,8 @@ const ChatDebugPage: React.FC = () => {
     setDeepRunSteps([])
     setPersistedDeepTasks([])
     setActiveDeepSessionId(undefined)
-    setSessionMemories([])
+    setMemoryPanelOpen(false)
+    setMemoryPanelSessionId(undefined)
     setSelectedSessionTask(undefined)
     setSessionTasks([])
     setSessionTaskTimeline([])
@@ -365,24 +378,24 @@ const ChatDebugPage: React.FC = () => {
   }
 
   const openSessionMemory = async () => {
-    if (!activeDeepSessionId) return
-    try {
-      const response = await getAgentSessionMemories(activeDeepSessionId)
-      if (response.code === 200) {
-        setSessionMemories(response.data || [])
-        setSessionMemoryModalOpen(true)
-      }
-    } catch {
-      message.error(intl.formatMessage({ id: 'pages.agent.chat.session.memoryLoadFailed' }))
+    if (!conversationId) {
+      message.info(intl.formatMessage({ id: 'pages.agent.chat.session.memoryNoSession' }))
+      return
     }
+    const sessionId = await resolveMemorySessionId()
+    setMemoryPanelSessionId(sessionId)
+    setMemoryPanelOpen(true)
   }
 
-  const removeSessionMemory = async (memoryId?: string) => {
-    if (!activeDeepSessionId || !memoryId) return
-    const response = await deleteAgentSessionMemory(activeDeepSessionId, memoryId)
-    if (response.code === 200) {
-      setSessionMemories((items) => items.filter((item) => item.id !== memoryId))
-      message.success(intl.formatMessage({ id: 'pages.agent.chat.session.memoryDeleted' }))
+  /** 解析当前会话的 Session：Deep 会话直接使用；标准会话按会话ID查询。 */
+  const resolveMemorySessionId = async (): Promise<string | undefined> => {
+    if (activeDeepSessionId) return activeDeepSessionId
+    if (!conversationId) return undefined
+    try {
+      const response = await getAgentSessionByConversation(conversationId)
+      return response.code === 200 ? response.data?.session?.id : undefined
+    } catch {
+      return undefined
     }
   }
 
@@ -1662,6 +1675,7 @@ const ChatDebugPage: React.FC = () => {
                     setMessages([])
                     setConversationContext(undefined)
                     resetConversationTurnState()
+                    if (isMobileLayout) setSidebarCollapsed(true)
                   }}
                   options={agents
                     .filter((item) => item.id)
@@ -1685,7 +1699,10 @@ const ChatDebugPage: React.FC = () => {
                   block
                   icon={<PlusOutlined />}
                   disabled={sending}
-                  onClick={handleNewConversation}
+                  onClick={() => {
+                    handleNewConversation()
+                    if (isMobileLayout) setSidebarCollapsed(true)
+                  }}
                 >
                   {intl.formatMessage({ id: 'pages.agent.chat.newConversation' })}
                 </Button>
@@ -1713,7 +1730,10 @@ const ChatDebugPage: React.FC = () => {
                             className={
                               item.id === conversationId ? 'agent-chat-session-active' : undefined
                             }
-                            onClick={() => handleSelectConversation(item)}
+                            onClick={() => {
+                              handleSelectConversation(item)
+                              if (isMobileLayout) setSidebarCollapsed(true)
+                            }}
                           >
                             <List.Item.Meta
                               title={
@@ -1749,6 +1769,14 @@ const ChatDebugPage: React.FC = () => {
             </>
           )}
         </div>
+        {isMobileLayout && !sidebarCollapsed && (
+          <button
+            type="button"
+            className="agent-chat-mobile-backdrop"
+            aria-label={intl.formatMessage({ id: 'pages.agent.chat.collapseSidebar' })}
+            onClick={() => setSidebarCollapsed(true)}
+          />
+        )}
 
         {/* 主面板 */}
         <div className={`agent-chat-panel ${!messages.length ? 'agent-chat-panel-empty' : ''} ${taskPlanDrawerOpen && shouldShowTaskPlan ? 'agent-chat-panel-plan-open' : ''}`}>
@@ -1781,200 +1809,179 @@ const ChatDebugPage: React.FC = () => {
                   : intl.formatMessage({ id: 'pages.agent.chat.newConversationTitle' })}
               </div>
             </div>
-            {shouldShowTaskPlan && (
-              <Button
-                className="agent-chat-plan-trigger"
-                type="text"
-                icon={<UnorderedListOutlined />}
-                onClick={() => setTaskPlanDrawerOpen((value) => !value)}
-              >
-                {intl.formatMessage({ id: 'pages.agent.chat.deepTaskPlan' })}
-                {visibleDeepTasks.length > 0 && ` · ${visibleDeepTasks.filter((task) => task.status === 'completed').length}/${visibleDeepTasks.length}`}
-              </Button>
-            )}
+            <div className="agent-chat-panel-actions">
+              {shouldShowTaskPlan && (
+                <Button
+                  className="agent-chat-plan-trigger"
+                  type="text"
+                  icon={<UnorderedListOutlined />}
+                  onClick={() => setTaskPlanDrawerOpen((value) => !value)}
+                >
+                  {intl.formatMessage({ id: 'pages.agent.chat.deepTaskPlan' })}
+                  {visibleDeepTasks.length > 0 && ` · ${visibleDeepTasks.filter((task) => task.status === 'completed').length}/${visibleDeepTasks.length}`}
+                </Button>
+              )}
+              <Tooltip title={intl.formatMessage({ id: 'pages.agent.chat.session.memoryTooltip' })}>
+                <Button
+                  className="agent-chat-memory-trigger"
+                  type="text"
+                  icon={<BulbOutlined />}
+                  onClick={() => void openSessionMemory()}
+                >
+                  {intl.formatMessage({ id: 'pages.agent.chat.session.memory' })}
+                </Button>
+              </Tooltip>
+            </div>
           </div>
 
           {taskPlanDrawerOpen && shouldShowTaskPlan && (
-            <aside className="agent-chat-task-plan-drawer" aria-label={intl.formatMessage({ id: 'pages.agent.chat.deepTaskPlan' })}>
-              <div className="agent-chat-task-plan-header">
-                <Text strong>{intl.formatMessage({ id: 'pages.agent.chat.deepTaskPlan' })}</Text>
-                <div>
-                  {activeDeepSessionId && (
-                    <Tooltip title={intl.formatMessage({ id: 'pages.agent.chat.session.memoryTooltip' })}>
-                      <Button type="link" size="small" icon={<BulbOutlined />} onClick={() => void openSessionMemory()}>
-                        {intl.formatMessage({ id: 'pages.agent.chat.session.memory' })}
-                      </Button>
-                    </Tooltip>
-                  )}
-                  {selectedSessionTask?.status === 'COMPLETED' && (
-                    <Button type="link" size="small" onClick={() => setTaskFeedbackOpen(true)}>
-                      {intl.formatMessage({ id: 'pages.agent.chat.session.feedback' })}
-                    </Button>
-                  )}
-                  <Text type="secondary">
-                    {isDeepRequestProcessing
-                      ? intl.formatMessage({ id: 'pages.agent.chat.deepRunning' })
-                      : intl.formatMessage({ id: 'pages.agent.chat.deepTaskPlan' })}
-                  </Text>
-                </div>
-              </div>
-
-              {selectedSessionTask && (
-                <div className="agent-chat-session-task-header">
-                  <div className="agent-chat-session-task-title">
-                    <Text strong ellipsis style={{ display: 'block', flex: 1, minWidth: 0 }}>
-                      {selectedSessionTask.title || intl.formatMessage({ id: 'pages.agent.chat.session.currentTask' })}
-                    </Text>
-                    <Tag color={sessionTaskStatusColor(selectedSessionTask.status)}>
-                      {sessionTaskStatusLabel(selectedSessionTask.status)}
-                    </Tag>
-                  </div>
-                  {selectedSessionTask.pauseReason && (
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      {selectedSessionTask.pauseReason}
-                    </Text>
-                  )}
-                  <div className="agent-chat-session-task-actions">
-                    {taskWaitingUser && (
-                      <Button size="small" type="primary" ghost onClick={handleWorkspaceUserInput}>
-                        {intl.formatMessage({ id: 'pages.agent.chat.session.answer' })}
+            <>
+              {isMobileLayout && (
+                <button
+                  type="button"
+                  className="agent-chat-mobile-backdrop agent-chat-task-plan-backdrop"
+                  aria-label={intl.formatMessage({ id: 'pages.agent.chat.deepTaskPlan' })}
+                  onClick={() => setTaskPlanDrawerOpen(false)}
+                />
+              )}
+              <aside className="agent-chat-task-plan-drawer" aria-label={intl.formatMessage({ id: 'pages.agent.chat.deepTaskPlan' })}>
+                <div className="agent-chat-task-plan-header">
+                  <Text strong>{intl.formatMessage({ id: 'pages.agent.chat.deepTaskPlan' })}</Text>
+                  <div className="agent-chat-task-plan-header-meta">
+                    {selectedSessionTask?.status === 'COMPLETED' && (
+                      <Button type="link" size="small" onClick={() => setTaskFeedbackOpen(true)}>
+                        {intl.formatMessage({ id: 'pages.agent.chat.session.feedback' })}
                       </Button>
                     )}
+                    <Text type="secondary">
+                      {isDeepRequestProcessing
+                        ? intl.formatMessage({ id: 'pages.agent.chat.deepRunning' })
+                        : intl.formatMessage({ id: 'pages.agent.chat.deepTaskPlan' })}
+                    </Text>
+                    <Button
+                      className="agent-chat-task-plan-close"
+                      type="text"
+                      size="small"
+                      icon={<CloseOutlined />}
+                      aria-label={intl.formatMessage({ id: 'pages.agent.chat.deepTaskPlan' })}
+                      onClick={() => setTaskPlanDrawerOpen(false)}
+                    />
                   </div>
                 </div>
-              )}
 
-              <div className="agent-chat-deep-task-list">
-                {showVersionedPlan ? (
-                  // 只展示最新任务规划版本，不展示全部历史版本。
-                  (sessionTaskPlan?.versions || []).slice(-1).map((version) => (
-                    <div key={version.version || 0} className="agent-chat-plan-version">
-                      <Text strong style={{ fontSize: 12 }}>
-                        {intl.formatMessage({ id: 'pages.agent.chat.session.planVersion' }, { version: version.version })}：{version.summary || version.reason}
+                {selectedSessionTask && (
+                  <div className="agent-chat-session-task-header">
+                    <div className="agent-chat-session-task-title">
+                      <Text strong ellipsis style={{ display: 'block', flex: 1, minWidth: 0 }}>
+                        {selectedSessionTask.title || intl.formatMessage({ id: 'pages.agent.chat.session.currentTask' })}
                       </Text>
-                      {version.steps?.map((step) => (
-                        <div
-                          key={step.id || step.stepKey || step.sequence}
-                          className={`agent-chat-plan-step agent-chat-plan-step-${(step.status || 'pending').toLowerCase()}`}
-                        >
-                          <span className="agent-chat-plan-step-index">
-                            {step.sequence ? `${step.sequence}.` : ''}
-                          </span>
-                          <span className="agent-chat-plan-step-title">{step.title}</span>
-                          {step.status && (
-                            <Tag color={step.status.toUpperCase() === 'COMPLETED' ? 'success' : step.status.toUpperCase() === 'RUNNING' ? 'processing' : 'default'}>
-                              {sessionTaskStatusLabel(step.status)}
-                            </Tag>
+                      <Tag color={sessionTaskStatusColor(selectedSessionTask.status)}>
+                        {sessionTaskStatusLabel(selectedSessionTask.status)}
+                      </Tag>
+                    </div>
+                    {selectedSessionTask.pauseReason && (
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        {selectedSessionTask.pauseReason}
+                      </Text>
+                    )}
+                    <div className="agent-chat-session-task-actions">
+                      {taskWaitingUser && (
+                        <Button size="small" type="primary" ghost onClick={handleWorkspaceUserInput}>
+                          {intl.formatMessage({ id: 'pages.agent.chat.session.answer' })}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="agent-chat-deep-task-list">
+                  {showVersionedPlan ? (
+                    // 只展示最新任务规划版本，不展示全部历史版本。
+                    (sessionTaskPlan?.versions || []).slice(-1).map((version) => (
+                      <div key={version.version || 0} className="agent-chat-plan-version">
+                        <Text strong style={{ fontSize: 12 }}>
+                          {intl.formatMessage({ id: 'pages.agent.chat.session.planVersion' }, { version: version.version })}：{version.summary || version.reason}
+                        </Text>
+                        {version.steps?.map((step) => (
+                          <div
+                            key={step.id || step.stepKey || step.sequence}
+                            className={`agent-chat-plan-step agent-chat-plan-step-${(step.status || 'pending').toLowerCase()}`}
+                          >
+                            <span className="agent-chat-plan-step-index">
+                              {step.sequence ? `${step.sequence}.` : ''}
+                            </span>
+                            <span className="agent-chat-plan-step-title">{step.title}</span>
+                            {step.status && (
+                              <Tag color={step.status.toUpperCase() === 'COMPLETED' ? 'success' : step.status.toUpperCase() === 'RUNNING' ? 'processing' : 'default'}>
+                                {sessionTaskStatusLabel(step.status)}
+                              </Tag>
+                            )}
+                            {step.resultSummary && (
+                              <Text type="secondary" className="agent-chat-plan-step-summary">
+                                {step.resultSummary}
+                              </Text>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ))
+                  ) : (
+                    <>
+                      {visibleDeepTasks.length === 0 && (
+                        <div className="agent-chat-deep-task-preparing">
+                          <LoadingOutlined spin />
+                          <span>{intl.formatMessage({ id: 'pages.agent.chat.deepRunning' })}</span>
+                        </div>
+                      )}
+                      {visibleDeepTasks.map((task) => (
+                        <div className={`agent-chat-deep-task agent-chat-deep-task-${task.status}`} key={task.id}>
+                          {task.status === 'completed' ? (
+                            <CheckCircleFilled className="agent-chat-deep-task-state-completed" />
+                          ) : task.status === 'failed' ? (
+                            <CloseCircleFilled className="agent-chat-deep-task-state-failed" />
+                          ) : task.status === 'running' ? (
+                            <LoadingOutlined spin className="agent-chat-deep-task-state-running" />
+                          ) : (
+                            <span className="agent-chat-deep-task-state-pending" />
                           )}
-                          {step.resultSummary && (
-                            <Text type="secondary" className="agent-chat-plan-step-summary">
-                              {step.resultSummary}
-                            </Text>
-                          )}
+                          <span>{task.title}</span>
+                          <Text type="secondary" className="agent-chat-deep-task-status">
+                            {intl.formatMessage({ id: `pages.agent.chat.deepTaskStatus.${task.status}` })}
+                          </Text>
                         </div>
                       ))}
-                    </div>
-                  ))
-                ) : (
-                  <>
-                    {visibleDeepTasks.length === 0 && (
-                      <div className="agent-chat-deep-task-preparing">
-                        <LoadingOutlined spin />
-                        <span>{intl.formatMessage({ id: 'pages.agent.chat.deepRunning' })}</span>
-                      </div>
-                    )}
-                    {visibleDeepTasks.map((task) => (
-                      <div className={`agent-chat-deep-task agent-chat-deep-task-${task.status}`} key={task.id}>
-                        {task.status === 'completed' ? (
-                          <CheckCircleFilled className="agent-chat-deep-task-state-completed" />
-                        ) : task.status === 'failed' ? (
-                          <CloseCircleFilled className="agent-chat-deep-task-state-failed" />
-                        ) : task.status === 'running' ? (
-                          <LoadingOutlined spin className="agent-chat-deep-task-state-running" />
-                        ) : (
-                          <span className="agent-chat-deep-task-state-pending" />
-                        )}
-                        <span>{task.title}</span>
-                        <Text type="secondary" className="agent-chat-deep-task-status">
-                          {intl.formatMessage({ id: `pages.agent.chat.deepTaskStatus.${task.status}` })}
+                    </>
+                  )}
+                </div>
+
+                {sessionTaskTimeline.length > 0 && (
+                  <div className="agent-chat-session-timeline">
+                    <Text strong style={{ fontSize: 12 }}>
+                      {intl.formatMessage({ id: 'pages.agent.chat.session.recentEvents' })}
+                    </Text>
+                    {sessionTaskTimeline.slice(-8).map((event) => (
+                      <div
+                        key={event.id || `${event.eventType}-${event.occurredAt}`}
+                        className="agent-chat-session-timeline-item"
+                      >
+                        <span className="agent-chat-session-timeline-dot" />
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          {sessionEventLabel(event)}
                         </Text>
                       </div>
                     ))}
-                  </>
+                  </div>
                 )}
-              </div>
-
-              {sessionTaskTimeline.length > 0 && (
-                <div className="agent-chat-session-timeline">
-                  <Text strong style={{ fontSize: 12 }}>
-                    {intl.formatMessage({ id: 'pages.agent.chat.session.recentEvents' })}
-                  </Text>
-                  {sessionTaskTimeline.slice(-8).map((event) => (
-                    <div
-                      key={event.id || `${event.eventType}-${event.occurredAt}`}
-                      className="agent-chat-session-timeline-item"
-                    >
-                      <span className="agent-chat-session-timeline-dot" />
-                      <Text type="secondary" style={{ fontSize: 12 }}>
-                        {sessionEventLabel(event)}
-                      </Text>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </aside>
+              </aside>
+            </>
           )}
 
-          <Modal
-            title={intl.formatMessage({ id: 'pages.agent.chat.session.memoryModalTitle' })}
-            open={sessionMemoryModalOpen}
-            footer={null}
-            width={600}
-            onCancel={() => setSessionMemoryModalOpen(false)}
-          >
-            {sessionMemories.length === 0 ? (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description={intl.formatMessage({ id: 'pages.agent.chat.session.memoryEmpty' })}
-                style={{ padding: '32px 0' }}
-              />
-            ) : (
-              <div className="agent-chat-memory-list">
-                {sessionMemories.map((memory) => (
-                  <div key={memory.id} className="agent-chat-memory-card">
-                    <div className="agent-chat-memory-card-head">
-                      <Text strong className="agent-chat-memory-card-title">
-                        {memory.summary || intl.formatMessage({ id: 'pages.agent.chat.session.memoryFallbackTitle' })}
-                      </Text>
-                      <Button
-                        type="text"
-                        danger
-                        size="small"
-                        onClick={() => void removeSessionMemory(memory.id)}
-                      >
-                        {intl.formatMessage({ id: 'pages.agent.chat.session.memoryDelete' })}
-                      </Button>
-                    </div>
-                    <div className="agent-chat-memory-card-content">
-                      <FormattedContent content={memory.content} maxHeight={140} />
-                    </div>
-                    <div className="agent-chat-memory-card-meta">
-                      {memory.importance != null && (
-                        <Tag>
-                          {intl.formatMessage({ id: 'pages.agent.chat.session.memoryImportance' }, { value: memory.importance })}
-                        </Tag>
-                      )}
-                      {memory.sourceTaskId && (
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                          {memory.sourceTaskId}
-                        </Text>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Modal>
+          <ConversationMemoryPanel
+            conversationId={conversationId}
+            sessionId={memoryPanelSessionId}
+            open={memoryPanelOpen}
+            onClose={() => setMemoryPanelOpen(false)}
+          />
 
           <Modal
             title={intl.formatMessage({ id: 'pages.agent.chat.session.feedbackTitle' })}

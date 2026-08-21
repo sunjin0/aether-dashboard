@@ -216,6 +216,28 @@ const getMessageMeta = (
       value: message.reasoningTokens,
     })
   }
+  if (message.contextTokens !== undefined && message.contextTokens > 0) {
+    const budget = message.contextBudgetTokens ? ` / ${message.contextBudgetTokens}` : ''
+    items.push({
+      label: formatMessage({ id: 'components.agentMessageBubble.historyContribution' }),
+      value: `${message.contextTokens}${budget}`,
+    })
+  }
+  if (message.contextMetric?.inputBudgetTokens) {
+    const used =
+      message.contextMetric.promptTokens ?? message.contextMetric.estimatedPromptTokens ?? 0
+    const percent =
+      message.contextMetric.occupancyPercent !== undefined
+        ? ` (${message.contextMetric.occupancyPercent.toFixed(1)}%)`
+        : ''
+    const estimated = message.contextMetric.promptTokens === undefined
+      ? formatMessage({ id: 'components.agentMessageBubble.estimatedContext' })
+      : ''
+    items.push({
+      label: formatMessage({ id: 'components.agentMessageBubble.requestContext' }),
+      value: `${estimated}${used} / ${message.contextMetric.inputBudgetTokens}${percent}`,
+    })
+  }
   if (message.latencyMs !== undefined && message.latencyMs > 0) {
     items.push({
       label: formatMessage({ id: 'components.agentMessageBubble.latency' }),

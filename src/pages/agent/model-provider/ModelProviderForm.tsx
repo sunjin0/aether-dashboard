@@ -2,6 +2,7 @@ import DrawerForm from '@/components/DrawerForm'
 import {
   ProFormDigit,
   ProFormSelect,
+  ProFormSwitch,
   ProFormText,
   ProFormTextArea,
 } from '@ant-design/pro-components'
@@ -77,6 +78,22 @@ const ModelProviderForm = (props: {
         rules={[{ required: !id }]}
         fieldProps={{ autoComplete: 'new-password' }}
         extra={id ? format('pages.agent.modelProvider.apiKeyUnchanged') : undefined}
+      />
+      <ProFormSwitch
+        name="compressionOutboundAllowed"
+        label={format('pages.agent.modelProvider.compressionOutboundAllowed')}
+        initialValue={true}
+      />
+      <ProFormText
+        name="processingRegion"
+        label={format('pages.agent.modelProvider.processingRegion')}
+        placeholder="CN / US / EU / GLOBAL"
+      />
+      <ProFormTextArea
+        name="dataProcessingPolicy"
+        label={format('pages.agent.modelProvider.dataProcessingPolicy')}
+        extra={format('pages.agent.modelProvider.dataProcessingPolicyHint')}
+        fieldProps={{ maxLength: 500, showCount: true }}
       />
       <ProFormSelect
         name="status"

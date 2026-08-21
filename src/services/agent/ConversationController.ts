@@ -3,12 +3,24 @@ import { ResponseStructure } from '@/services/entity/Common'
 import {
   AgentConversation,
   AgentConversationContext,
+  AgentContextOperationsMetrics,
   AgentConversationSearchParams,
+  AgentSessionMemory,
   AgentMessage,
   AgentMessageSearchParams,
   ConversationLifecycle,
   MessageStatistics,
 } from '@/services/entity/Agent'
+
+const memoryWriteHeaders = (memoryVersion: number | undefined, idempotencyKey: string) => {
+  const headers: Record<string, string> = {
+    'Idempotency-Key': idempotencyKey,
+  }
+  if (memoryVersion != null) {
+    headers['If-Match'] = String(memoryVersion)
+  }
+  return headers
+}
 
 /**
  * @description 获取 Agent 会话列表
@@ -56,6 +68,66 @@ export const getAgentConversationContext = async (
     method: 'GET',
   })
 }
+
+/**
+ * @description 获取上下文组装、压缩和容量压力的运营聚合指标
+ */
+export const getAgentContextOperationsMetrics = async (
+  sinceCreatedAt?: number,
+): Promise<ResponseStructure<AgentContextOperationsMetrics>> => {
+  return request('/api/agent/conversation/context/operations/metrics', {
+    method: 'GET',
+    params: sinceCreatedAt == null ? undefined : { sinceCreatedAt },
+  })
+}
+
+/** 查询当前会话可见的会话记忆。 */
+export const getAgentConversationMemories = async (
+  id: string,
+): Promise<ResponseStructure<AgentSessionMemory[]>> =>
+  request(`/api/agent/conversation/${id}/memory`, { method: 'GET' })
+
+/** 通过取代旧记录修正会话记忆。 */
+export const correctAgentConversationMemory = async (
+  id: string,
+  memoryId: string,
+  payload: { content: string; reason: string; memoryVersion?: number },
+  idempotencyKey: string,
+): Promise<ResponseStructure<AgentSessionMemory>> =>
+  request(`/api/agent/conversation/${id}/memory/${memoryId}`, {
+    method: 'PUT',
+    data: payload,
+    headers: memoryWriteHeaders(payload.memoryVersion, idempotencyKey),
+  })
+
+/** 从后续上下文中移除会话记忆。 */
+export const deleteAgentConversationMemory = async (
+  id: string,
+  memoryId: string,
+  memoryVersion: number | undefined,
+  idempotencyKey: string,
+): Promise<ResponseStructure<void>> =>
+  request(`/api/agent/conversation/${id}/memory/${memoryId}`, {
+    method: 'DELETE',
+    headers: memoryWriteHeaders(memoryVersion, idempotencyKey),
+  })
+
+/** 反馈会话记忆准确性或过期状态。 */
+export const submitAgentConversationMemoryFeedback = async (
+  id: string,
+  payload: {
+    memoryId: string
+    memoryVersion?: number
+    verdict: 'ACCURATE' | 'INACCURATE' | 'EXPIRED'
+    reason?: string
+  },
+  idempotencyKey: string,
+): Promise<ResponseStructure<AgentSessionMemory>> =>
+  request(`/api/agent/conversation/${id}/memory/feedback`, {
+    method: 'POST',
+    data: payload,
+    headers: memoryWriteHeaders(payload.memoryVersion, idempotencyKey),
+  })
 
 /**
  * @description 关闭 Agent 会话

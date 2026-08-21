@@ -512,6 +512,27 @@ const ModelProviderPage: React.FC = () => {
                               children: selected.contextWindow || '-',
                             },
                             {
+                              key: 'compressionOutboundAllowed',
+                              label: text('pages.agent.modelProvider.compressionOutboundAllowed'),
+                              children:
+                                selected.compressionOutboundAllowed === false ? (
+                                  <Tag>{text('pages.common.disabled')}</Tag>
+                                ) : (
+                                  <Tag color="success">{text('pages.common.enabled')}</Tag>
+                                ),
+                            },
+                            {
+                              key: 'processingRegion',
+                              label: text('pages.agent.modelProvider.processingRegion'),
+                              children: selected.processingRegion || '-',
+                            },
+                            {
+                              key: 'dataProcessingPolicy',
+                              label: text('pages.agent.modelProvider.dataProcessingPolicy'),
+                              children: selected.dataProcessingPolicy || '-',
+                              span: 2,
+                            },
+                            {
                               key: 'sort',
                               label: text('pages.common.sort.number'),
                               children: selected.sort || '-',

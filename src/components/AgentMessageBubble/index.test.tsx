@@ -27,6 +27,13 @@ describe('AgentMessageBubble', () => {
           promptTokens: 1,
           completionTokens: 2,
           totalTokens: 3,
+          contextTokens: 12,
+          contextBudgetTokens: 100,
+          contextMetric: {
+            inputBudgetTokens: 1000,
+            promptTokens: 250,
+            occupancyPercent: 25,
+          },
           latencyMs: 42,
         }}
       />,
@@ -38,6 +45,8 @@ describe('AgentMessageBubble', () => {
     expect(screen.getByText('Assistant')).toBeTruthy();
     expect(screen.queryByText('🤖')).toBeNull();
     expect(screen.getByText(/Model: gpt-test/)).toBeTruthy();
+    expect(screen.getByText(/History contribution: 12 \/ 100/)).toBeTruthy();
+    expect(screen.getByText(/Request context: 250 \/ 1000 \(25.0%\)/)).toBeTruthy();
     expect(screen.getByText(/Latency: 42ms/)).toBeTruthy();
   });
 

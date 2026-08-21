@@ -45,7 +45,7 @@ describe('SessionController', () => {
   it('uses documented memory, metrics and feedback endpoints', async () => {
     await getAgentSessionMemories('session-1')
     await getAgentSessionMetrics('session-1')
-    await deleteAgentSessionMemory('session-1', 'memory-1')
+    await deleteAgentSessionMemory('session-1', 'memory-1', 3, 'idem-delete')
     await submitAgentTaskFeedback('task-1', { rating: 5, note: '很准确' })
 
     expect(mockedRequest).toHaveBeenNthCalledWith(1, '/api/agent/session/session-1/memory', {
@@ -56,6 +56,10 @@ describe('SessionController', () => {
     })
     expect(mockedRequest).toHaveBeenNthCalledWith(3, '/api/agent/session/session-1/memory/memory-1', {
       method: 'DELETE',
+      headers: {
+        'Idempotency-Key': 'idem-delete',
+        'If-Match': '3',
+      },
     })
     expect(mockedRequest).toHaveBeenNthCalledWith(4, '/api/agent/session/task/task-1/feedback', {
       method: 'POST',

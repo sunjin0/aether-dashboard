@@ -343,15 +343,17 @@ const ConfirmLayout: React.FC<{
   const approvalQuestion = config.questions?.[0];
   const statusInfo = statusLabelMap[status];
   const isPlanApproval = config.approvalType === 'deep_plan_approval';
+  const toolApprovalQuestion = isPlanApproval ? undefined : approvalQuestion;
 
-  if (!isPlanApproval && !approvalQuestion) return null;
+  if (!isPlanApproval && !toolApprovalQuestion) return null;
+  const currentApprovalQuestion = toolApprovalQuestion;
 
   const submit = (answer: AskUserAnswer) => {
     if (isPlanApproval) {
       onSubmit?.({ plan_approved: answer })
       return
     }
-    onSubmit?.({ [approvalQuestion.id]: answer })
+    onSubmit?.({ [currentApprovalQuestion!.id]: answer })
   }
 
   /** 方案反馈：不新增聊天消息，直接触发 deep-agent 按反馈重规划并重新提交审批。 */
@@ -390,7 +392,7 @@ const ConfirmLayout: React.FC<{
         </>
       ) : (
         <>
-          <div className="iq-card-confirm-layout-description">{approvalQuestion.question}</div>
+          <div className="iq-card-confirm-layout-description">{currentApprovalQuestion!.question}</div>
           <div className="iq-card-confirm-layout-details">
             <div>
               <Text type="secondary">
@@ -454,7 +456,7 @@ const ConfirmLayout: React.FC<{
         </div>
       )}
       {!disabled && !isPlanApproval &&
-        (approvalQuestion.type === 'confirm' ? (
+        (currentApprovalQuestion!.type === 'confirm' ? (
           <div className="iq-card-confirm">
             <Button
               type="primary"
@@ -462,7 +464,7 @@ const ConfirmLayout: React.FC<{
               onClick={() => submit({ confirmed: true })}
               className="iq-card-confirm-btn"
             >
-              {approvalQuestion.confirmText ||
+              {currentApprovalQuestion!.confirmText ||
                 intl.formatMessage({ id: 'components.interactiveQuestionCard.confirm' })}
             </Button>
             <Button
@@ -471,14 +473,14 @@ const ConfirmLayout: React.FC<{
               onClick={() => submit({ confirmed: false })}
               className="iq-card-confirm-btn"
             >
-              {approvalQuestion.cancelText ||
+              {currentApprovalQuestion!.cancelText ||
                 intl.formatMessage({ id: 'components.interactiveQuestionCard.cancel' })}
             </Button>
           </div>
         ) : (
           <>
             <SingleChoiceQuestion
-              config={approvalQuestion}
+              config={currentApprovalQuestion as ChoiceQuestionConfig}
               customInputPlaceholder={intl.formatMessage({
                 id: 'components.interactiveQuestionCard.customInputPlaceholder',
               })}
@@ -491,17 +493,17 @@ const ConfirmLayout: React.FC<{
               customValue={customValue}
               onCustomChange={(value) => {
                 setCustomValue(value);
-                if (value) setSelected(approvalQuestion.multiple ? [] : '');
+                if (value) setSelected((currentApprovalQuestion as ChoiceQuestionConfig).multiple ? [] : '');
               }}
             />
             <Button
               type="primary"
               className="iq-card-submit-btn"
               disabled={
-                !isAnswerFilled(getChoiceAnswer(selected, customValue, approvalQuestion.multiple))
+                !isAnswerFilled(getChoiceAnswer(selected, customValue, (currentApprovalQuestion as ChoiceQuestionConfig).multiple))
               }
               onClick={() =>
-                submit(getChoiceAnswer(selected, customValue, approvalQuestion.multiple))
+                submit(getChoiceAnswer(selected, customValue, (currentApprovalQuestion as ChoiceQuestionConfig).multiple))
               }
             >
               {intl.formatMessage({ id: 'components.interactiveQuestionCard.confirm' })}
@@ -665,16 +667,18 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
       <ConfirmLayout config={groupConfig} disabled={disabled} status={status} onSubmit={onSubmit} />
     );
   }
+  if (!groupConfig || groupConfig.layout !== 'tabs') return null;
+  const groupQuestions = groupConfig.questions;
 
   // ─── Group（Tabs）模式 ────────────────────────────────────────────────
   const [internalAnswers, setInternalAnswers] = useState<Record<string, AskUserAnswer>>({});
   const [customValues, setCustomValues] = useState<Record<string, string>>({});
-  const [activeTabKey, setActiveTabKey] = useState<string>(config.questions[0]?.id || '0');
+  const [activeTabKey, setActiveTabKey] = useState<string>(groupQuestions[0]?.id || '0');
 
   // 构建每道题的答案：优先 history → external → internal
   const resolvedAnswers = useMemo(() => {
     const map: Record<string, { source: 'history' | 'interactive'; answer: AskUserAnswer }> = {};
-    for (const q of config.questions) {
+    for (const q of groupQuestions) {
       const historyAnswer = getQuestionAnswer(q.id, q, groupConfig);
       if (
         historyAnswer &&
@@ -695,7 +699,7 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
       }
     }
     return map;
-  }, [config.questions, groupConfig, status, externalAnswer, internalAnswers]);
+  }, [groupQuestions, groupConfig, status, externalAnswer, internalAnswers]);
 
   const handleAnswerChange = useCallback((questionId: string, answer: AskUserAnswer) => {
     setInternalAnswers((prev) => ({ ...prev, [questionId]: answer }));
@@ -707,7 +711,7 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
 
   const allFilled = useMemo(
     () =>
-      config.questions.every((q) => {
+      groupQuestions.every((q) => {
         const r = resolvedAnswers[q.id];
         if (q.type === 'choice') {
           const value =
@@ -716,12 +720,12 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
         }
         return r && isAnswerFilled(r.answer);
       }),
-    [config.questions, customValues, resolvedAnswers],
+    [groupQuestions, customValues, resolvedAnswers],
   );
 
   const answeredCount = useMemo(
     () =>
-      config.questions.filter((q) => {
+      groupQuestions.filter((q) => {
         const r = resolvedAnswers[q.id];
         if (q.type === 'choice') {
           const value =
@@ -730,13 +734,13 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
         }
         return !!r;
       }).length,
-    [config.questions, customValues, resolvedAnswers],
+    [groupQuestions, customValues, resolvedAnswers],
   );
 
   const handleSubmit = useCallback(() => {
     if (!allFilled) return;
     const result: Record<string, AskUserAnswer> = {};
-    for (const q of config.questions) {
+    for (const q of groupQuestions) {
       const r = resolvedAnswers[q.id];
       if (q.type === 'choice') {
         const value =
@@ -747,7 +751,7 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
       }
     }
     onSubmit?.(result);
-  }, [onSubmit, config.questions, customValues, resolvedAnswers, allFilled]);
+  }, [onSubmit, groupQuestions, customValues, resolvedAnswers, allFilled]);
 
   const className = [
     'iq-card',
@@ -761,7 +765,7 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
   const statusInfo = statusLabelMap[status];
   const isAllHistory = status === 'answered' || status === 'cancelled' || status === 'expired';
 
-  const tabItems = config.questions.map((q, index) => {
+  const tabItems = groupQuestions.map((q, index) => {
     const resolved = resolvedAnswers[q.id];
     const filled = !!resolved;
     const isHistory = resolved?.source === 'history';
@@ -860,11 +864,11 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
         <div className="iq-card-progress-bar">
           <div
             className="iq-card-progress-fill"
-            style={{ width: `${(answeredCount / config.questions.length) * 100}%` }}
+            style={{ width: `${(answeredCount / groupQuestions.length) * 100}%` }}
           />
         </div>
         <Text className="iq-card-progress-text">
-          {answeredCount}/{config.questions.length}
+          {answeredCount}/{groupQuestions.length}
         </Text>
       </div>
 
@@ -887,7 +891,7 @@ const InteractiveQuestionCard: React.FC<InteractiveQuestionCardProps> = ({
             ? intl.formatMessage({ id: 'components.interactiveQuestionCard.confirmSubmit' })
             : intl.formatMessage(
                 { id: 'components.interactiveQuestionCard.remainingQuestions' },
-                { count: config.questions.length - answeredCount },
+                { count: groupQuestions.length - answeredCount },
               )}
         </Button>
       )}

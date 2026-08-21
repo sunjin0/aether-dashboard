@@ -9,6 +9,9 @@ export interface ModelProvider {
   apiKey?: string;
   defaultModel?: string;
   contextWindow?: number;
+  compressionOutboundAllowed?: boolean;
+  processingRegion?: string;
+  dataProcessingPolicy?: string;
   status?: number;
   sort?: number;
   remark?: string;
@@ -41,6 +44,7 @@ export interface AgentDefinition {
   description?: string;
   systemPrompt?: string;
   modelId?: string;
+  contextCompressionModelId?: string;
   /** Resolved catalog model name for display only. */
   model?: string;
   temperature?: number;
@@ -480,14 +484,9 @@ export interface ConfirmQuestionConfig {
  */
 export type QuestionItemConfig = ChoiceQuestionConfig | ConfirmQuestionConfig;
 
-/**
- * @description 批量提问组配置（group interaction）
- */
-export interface GroupQuestionConfig {
+interface BaseGroupQuestionConfig {
   type: 'group';
-  layout: 'tabs' | 'confirm';
   question: string;
-  questions: QuestionItemConfig[];
   approvalType?: string;
   toolName?: string;
   arguments?: Record<string, unknown>;
@@ -503,6 +502,19 @@ export interface GroupQuestionConfig {
     answers: Record<string, QuestionAnswer>;
   };
 }
+
+/**
+ * @description 批量提问组配置（group interaction）
+ */
+export type GroupQuestionConfig =
+  | (BaseGroupQuestionConfig & {
+      layout: 'tabs';
+      questions: QuestionItemConfig[];
+    })
+  | (BaseGroupQuestionConfig & {
+      layout: 'confirm';
+      questions?: QuestionItemConfig[];
+    });
 
 /**
  * @description 提问配置（顶层联合类型）
@@ -696,6 +708,7 @@ export interface AgentMessage {
   promptTokens?: number;
   contextTokens?: number;
   contextBudgetTokens?: number;
+  contextMetric?: AgentConversationContext;
   completionTokens?: number;
   totalTokens?: number;
   latencyMs?: number;
@@ -982,6 +995,26 @@ export interface AgentConversationContext {
   currentMessageTokens?: number;
   trimmedMessageCount?: number;
   compressionStatus?: string;
+}
+
+/** Operational aggregate for context assembly, compression and pressure signals. */
+export interface AgentContextOperationsMetrics {
+  sinceCreatedAt?: number;
+  totalMetricCount?: number;
+  completedRequestMetricCount?: number;
+  averageOccupancyPercent?: number;
+  highPressureMetricCount?: number;
+  compressionMetricCount?: number;
+  compressionCompletedCount?: number;
+  compressionFailedFallbackCount?: number;
+  compressionPendingCount?: number;
+  trimmedMetricCount?: number;
+  trimmedMessageCount?: number;
+  compressedMetricCount?: number;
+  compressedMessageCount?: number;
+  latencyAvailable?: boolean;
+  byCallType?: Record<string, number>;
+  byCompressionStatus?: Record<string, number>;
 }
 
 /**
@@ -1343,11 +1376,19 @@ export interface AgentSessionMemory {
   memoryType?: string;
   content?: string;
   summary?: string;
+  sourceMessageId?: string;
   sourceTaskId?: string;
   sourceRunId?: string;
   importance?: number;
+  confidence?: number;
+  status?: string;
   sensitivityLevel?: string;
+  supersededById?: string;
+  correctionReason?: string;
+  expiresAt?: number;
+  memoryVersion?: number;
   createdAt?: number;
+  updatedAt?: number;
 }
 
 /** 当前 Deep 会话的脱敏运行概览。 */

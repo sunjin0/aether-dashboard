@@ -110,6 +110,15 @@ const AgentDefinitionForm = (props: {
         )}
       </ProFormDependency>
       <ProFormSelect
+        name="contextCompressionModelId"
+        label={format('pages.agent.definition.contextCompressionModel')}
+        tooltip={format('pages.agent.definition.contextCompressionModelTip')}
+        showSearch={true}
+        allowClear={true}
+        placeholder={format('pages.agent.definition.contextCompressionModelFollow')}
+        request={() => getModelCatalogOptions('CHAT,MULTIMODAL')}
+      />
+      <ProFormSelect
         name="status"
         label={format('pages.common.status')}
         request={async () => getOptionList('Agent_Definition_Status')}

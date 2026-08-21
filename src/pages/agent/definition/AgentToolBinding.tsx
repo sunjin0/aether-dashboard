@@ -3,7 +3,7 @@ import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import { Button, Card, Col, Empty, Input, InputNumber, Modal, Pagination, Popconfirm, Row, Select, Spin, Switch, Tag, Tabs, Tooltip, Typography } from 'antd'
 import { bindToolToAgent, getAgentToolBindingList, getAvailableAgentTools, unbindToolFromAgent, updateAgentToolBindingStatus, updateToolPriority } from '@/services/agent/AgentDefinitionController'
 import { getOptionList } from '@/services/sys/DictController'
-import { AgentTool, AgentToolBinding as AgentToolBindingEntity } from '@/services/entity/Agent'
+import { AgentTool, AgentToolBinding as AgentToolBindingEntity, AgentToolSearchParams } from '@/services/entity/Agent'
 import { useIntl } from '@umijs/max'
 import './binding.less'
 
@@ -32,7 +32,7 @@ const AgentToolBinding: React.FC<Props> = ({ agentId, open, setOpen }) => {
     if (!agentId) return
     setLoading(true)
     try {
-      const params: AgentTool = { current: page, pageSize, toolType: filters.toolType, [queryField]: filters.keyword || undefined }
+      const params: AgentToolSearchParams = { current: page, pageSize, toolType: filters.toolType, [queryField]: filters.keyword || undefined }
       const response = tab === 'bound'
         ? await getAgentToolBindingList(agentId, { current: page, pageSize, keyword: filters.keyword || undefined })
         : await getAvailableAgentTools(agentId, params)

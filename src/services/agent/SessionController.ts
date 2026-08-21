@@ -2,6 +2,23 @@ import { request } from '@umijs/max'
 import { ResponseStructure } from '@/services/entity/Common'
 import { AgentSessionMemory, AgentSessionMetrics, AgentSessionSnapshot, AgentSessionTimeline, AgentTaskSnapshot } from '@/services/entity/Agent'
 
+const memoryWriteHeaders = (memoryVersion: number | undefined, idempotencyKey: string) => {
+  const headers: Record<string, string> = {
+    'Idempotency-Key': idempotencyKey,
+  }
+  if (memoryVersion != null) {
+    headers['If-Match'] = String(memoryVersion)
+  }
+  return headers
+}
+
+const generatedIdempotencyKey = (action: string, id: string) => {
+  const random = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`
+  return `${action}:${id}:${random}`
+}
+
 /** 获取聊天会话对应的持续 Deep Agent Session 与任务列表。 */
 export const getAgentSessionByConversation = async (
   conversationId: string,
@@ -55,8 +72,13 @@ export const getAgentSessionMetrics = async (
 export const deleteAgentSessionMemory = async (
   sessionId: string,
   memoryId: string,
+  memoryVersion?: number,
+  idempotencyKey = generatedIdempotencyKey('delete', memoryId),
 ): Promise<ResponseStructure<void>> =>
-  request(`/api/agent/session/${sessionId}/memory/${memoryId}`, { method: 'DELETE' })
+  request(`/api/agent/session/${sessionId}/memory/${memoryId}`, {
+    method: 'DELETE',
+    headers: memoryWriteHeaders(memoryVersion, idempotencyKey),
+  })
 
 /** 记录用户对已完成任务的质量评分。 */
 export const submitAgentTaskFeedback = async (

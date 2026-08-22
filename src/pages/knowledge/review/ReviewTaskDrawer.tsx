@@ -42,12 +42,13 @@ const ReviewTaskDrawer: React.FC<Props> = ({ taskId, open, onClose, onSuccess })
   })
 
   const title = data?.documentTitle || intl.formatMessage({ id: 'pages.knowledge.review.detail.title' })
+  const isFinal = data?.status === 'approved' || data?.status === 'rejected'
   const [editedContent, setEditedContent] = useState<string>()
   const [mode, setMode] = useState<'preview' | 'edit'>('preview')
   const content = editedContent ?? data?.version?.content ?? ''
 
   const handleSaveDraft = async () => {
-    if (!taskId || editedContent === undefined) return
+    if (isFinal || !taskId || editedContent === undefined) return
     try {
       await editReviewTaskContent(taskId, { content: editedContent, expectedChecksum: data?.version?.contentChecksum ?? '' })
     } catch { /* handled globally */ }
@@ -81,18 +82,18 @@ const ReviewTaskDrawer: React.FC<Props> = ({ taskId, open, onClose, onSuccess })
                   <Button type={mode === 'preview' ? 'primary' : 'default'} onClick={() => setMode('preview')}>
                     {intl.formatMessage({ id: 'pages.knowledge.review.detail.preview' })}
                   </Button>
-                  <Button type={mode === 'edit' ? 'primary' : 'default'} onClick={() => setMode('edit')}>
+                  <Button type={mode === 'edit' ? 'primary' : 'default'} disabled={isFinal} onClick={() => setMode('edit')}>
                     {intl.formatMessage({ id: 'pages.knowledge.review.detail.edit' })}
                   </Button>
                 </Button.Group>
                 {taskId && (
-                  <Button type="link" size="small" onClick={handleSaveDraft} disabled={editedContent === undefined}>
+                  <Button type="link" size="small" onClick={handleSaveDraft} disabled={isFinal || editedContent === undefined}>
                     {intl.formatMessage({ id: 'pages.knowledge.review.detail.saveDraft' })}
                   </Button>
                 )}
               </Space>
             </div>
-            {mode === 'preview' ? (
+            {mode === 'preview' || isFinal ? (
               <div style={{ border: '1px solid #f0f0f0', borderRadius: 6, padding: 12, maxHeight: 400, overflow: 'auto' }}>
                 <ReactMarkdown>{content || '-'}</ReactMarkdown>
               </div>
@@ -100,7 +101,7 @@ const ReviewTaskDrawer: React.FC<Props> = ({ taskId, open, onClose, onSuccess })
               <MDEditor
                 height={300}
                 value={content}
-                onChange={(value) => setEditedContent(value ?? '')}
+                onChange={(value) => !isFinal && setEditedContent(value ?? '')}
               />
             )}
             <Typography.Title level={5}>

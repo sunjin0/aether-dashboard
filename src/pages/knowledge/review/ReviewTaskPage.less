@@ -1,9 +1,25 @@
 .knowledge-review-sidebar-card {
   height: 100%;
+  background: #fafcff;
+}
+
+.knowledge-review-workflow {
+  margin-bottom: 16px;
+  border: 1px solid #e8f0ff;
+  background: linear-gradient(90deg, #f7fbff 0%, #fff 100%);
+}
+
+.knowledge-review-scroll-card {
+  .ant-card-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #fff;
+  }
 }
 
 .knowledge-review-markdown-editor {
-  height: calc(100vh - 230px);
+  height: calc(100vh - 286px);
   border: 0;
   background: #fff;
 
@@ -23,7 +39,7 @@
 
 .knowledge-review-markdown-content {
   max-width: 900px;
-  min-height: calc(100vh - 310px);
+  min-height: calc(100vh - 366px);
   margin: 0 auto;
   padding: 28px 36px;
   color: #1f2937;

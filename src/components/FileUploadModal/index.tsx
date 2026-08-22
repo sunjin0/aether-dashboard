@@ -13,8 +13,8 @@ export interface UploadActionResult {
 export type UploadExtraValues = Record<string, unknown>;
 
 interface FileUploadModalProps {
-  accept: string;
-  allowedExtensions: string[];
+  accept?: string;
+  allowedExtensions?: string[];
   maxSize?: number;
   triggerText?: string;
   title?: string;
@@ -57,7 +57,7 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
   /** 仅选择文件，不使用 Upload 组件的默认上传行为。 */
   const beforeUpload = (selectedFile: File) => {
     const extension = selectedFile.name.split('.').pop()?.toLowerCase();
-    if (!extension || !allowedExtensions.includes(extension)) {
+    if (allowedExtensions?.length && (!extension || !allowedExtensions.includes(extension))) {
       message.error(
         intl.formatMessage(
           { id: 'components.fileUploadModal.unsupportedType' },
@@ -137,7 +137,7 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
             {intl.formatMessage(
               { id: 'components.fileUploadModal.uploadHint' },
               {
-                extensions: allowedExtensions.join(', '),
+                extensions: allowedExtensions?.join(', ') || intl.formatMessage({ id: 'components.fileUploadModal.allTypes' }),
                 maxSize: Math.floor(maxSize / 1024 / 1024),
               },
             )}

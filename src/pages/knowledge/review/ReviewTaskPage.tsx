@@ -28,19 +28,20 @@ import {
   toolbarPlugin,
 } from '@mdxeditor/editor'
 import { useIntl } from '@umijs/max'
-import { Alert, Button, Card, Col, Descriptions, Row, Space, Spin, Tag, Tooltip, Typography } from 'antd'
+import { Alert, Button, Card, Col, Descriptions, Row, Space, Spin, Steps, Tag, Tooltip, Typography, message } from 'antd'
 import React, { useEffect, useRef, useState } from 'react'
 import { useReviewTask } from '@/pages/knowledge/review/hooks/useReviewTask'
 import ReviewActionTimeline from '@/pages/knowledge/review/components/ReviewActionTimeline'
 import ReviewTaskActions from '@/pages/knowledge/review/components/ReviewTaskActions'
 import { editReviewTaskContent } from '@/services/knowledge/ReviewController'
-import { getDocumentVersionPreviewUrl, recognizeDocumentVersionContent } from '@/services/knowledge/DocumentController'
+import { getDocumentVersionPreviewUrl } from '@/services/knowledge/DocumentController'
 import {
   patchOperationLabelKey,
   severityColor,
   severityLabelKey,
 } from '@/pages/knowledge/review/detail/constants'
 import './ReviewTaskPage.less'
+import { formatMarkdown } from './markdownFormat'
 
 interface Props {
   taskId: string
@@ -113,6 +114,7 @@ const ReviewTaskPage: React.FC<Props> = ({ taskId, onClose, onSuccess }) => {
   }
 
   const title = data?.documentTitle || intl.formatMessage({ id: 'pages.knowledge.review.detail.title' })
+  const isFinal = data?.status === 'approved' || data?.status === 'rejected'
   const issueList = (
     <div>
       {(data?.issues || []).length === 0 ? (
@@ -151,7 +153,7 @@ const ReviewTaskPage: React.FC<Props> = ({ taskId, onClose, onSuccess }) => {
   const [editedContent, setEditedContent] = useState<string>()
   const [originalFileUrl, setOriginalFileUrl] = useState('')
   const [originalPreviewLoading, setOriginalPreviewLoading] = useState(false)
-  const [recognizing, setRecognizing] = useState(false)
+  const [formatting, setFormatting] = useState(false)
   const [contentMode, setContentMode] = useState<'preview' | 'edit'>('preview')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const markdownEditorRef = useRef<MDXEditorMethods>(null)
@@ -162,6 +164,10 @@ const ReviewTaskPage: React.FC<Props> = ({ taskId, onClose, onSuccess }) => {
     setOriginalFileUrl('')
     setContentMode('preview')
   }, [taskId])
+
+  useEffect(() => {
+    if (isFinal) setContentMode('preview')
+  }, [isFinal])
 
   useEffect(() => {
     const versionId = data?.version?.id
@@ -180,22 +186,21 @@ const ReviewTaskPage: React.FC<Props> = ({ taskId, onClose, onSuccess }) => {
   }, [content])
 
   const handleSaveDraft = async () => {
-    if (!taskId || editedContent === undefined) return
+    if (isFinal || !taskId || editedContent === undefined) return
     try {
       await editReviewTaskContent(taskId, { content: editedContent, expectedChecksum: data?.version?.contentChecksum ?? '' })
     } catch { /* handled globally */ }
   }
 
-  const handleRecognizeFile = async () => {
-    const versionId = data?.version?.id
-    if (!versionId) return
-    setRecognizing(true)
+  const handleFormatMarkdown = async () => {
+    if (isFinal) return
+    setFormatting(true)
     try {
-      const response = await recognizeDocumentVersionContent(versionId)
-      setEditedContent(response.data || '')
+      setEditedContent(await formatMarkdown(content))
       setContentMode('edit')
+      message.success(intl.formatMessage({ id: 'pages.knowledge.review.detail.markdownFormatted' }))
     } finally {
-      setRecognizing(false)
+      setFormatting(false)
     }
   }
 
@@ -211,6 +216,18 @@ const ReviewTaskPage: React.FC<Props> = ({ taskId, onClose, onSuccess }) => {
       onBack={onClose}
     >
       <Spin spinning={loading}>
+        <Card className="knowledge-review-workflow" size="small" bordered={false}>
+          <Steps
+            current={data?.status === 'approved' || data?.status === 'rejected' ? 3 : 2}
+            size="small"
+            items={[
+              { title: intl.formatMessage({ id: 'pages.knowledge.review.detail.workflow.submitted' }) },
+              { title: intl.formatMessage({ id: 'pages.knowledge.review.detail.workflow.formatted' }) },
+              { title: intl.formatMessage({ id: 'pages.knowledge.review.detail.workflow.reviewing' }) },
+              { title: intl.formatMessage({ id: 'pages.knowledge.review.detail.workflow.decided' }) },
+            ]}
+          />
+        </Card>
         {sidebarCollapsed && (
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
             <Button onClick={() => setSidebarCollapsed(false)}>
@@ -222,15 +239,15 @@ const ReviewTaskPage: React.FC<Props> = ({ taskId, onClose, onSuccess }) => {
           <Col xs={24} lg={sidebarCollapsed ? 24 : 16}>
             <Row gutter={[12, 12]}>
               <Col xs={24} xl={12}>
-                <Card size="small" title={intl.formatMessage({ id: 'pages.knowledge.review.detail.originalFile' })} styles={{ body: { padding: 0, height: 'calc(100vh - 230px)' } }}>
+                <Card size="small" title={intl.formatMessage({ id: 'pages.knowledge.review.detail.originalFile' })} styles={{ body: { padding: 0, height: 'calc(100vh - 286px)' } }}>
                   <Spin spinning={originalPreviewLoading}>
-                    {originalFileUrl ? <iframe title={intl.formatMessage({ id: 'pages.knowledge.review.detail.originalFile' })} src={originalFileUrl} style={{ width: '100%', height: 'calc(100vh - 230px)', border: 0 }} /> : <div style={{ padding: 24 }}><Typography.Text type="secondary">{intl.formatMessage({ id: 'pages.knowledge.review.detail.originalFileUnavailable' })}</Typography.Text></div>}
+                    {originalFileUrl ? <iframe title={intl.formatMessage({ id: 'pages.knowledge.review.detail.originalFile' })} src={originalFileUrl} style={{ width: '100%', height: 'calc(100vh - 286px)', border: 0 }} /> : <div style={{ padding: 24 }}><Typography.Text type="secondary">{intl.formatMessage({ id: 'pages.knowledge.review.detail.originalFileUnavailable' })}</Typography.Text></div>}
                   </Spin>
                 </Card>
               </Col>
               <Col xs={24} xl={12}>
-                <Card size="small" title={intl.formatMessage({ id: 'pages.knowledge.review.detail.versionContent' })} extra={<Space><Button size="small" loading={recognizing} onClick={handleRecognizeFile}>{intl.formatMessage({ id: 'pages.knowledge.review.detail.recognizeFile' })}</Button><Button.Group size="small"><Button type={contentMode === 'preview' ? 'primary' : 'default'} onClick={() => setContentMode('preview')}>{intl.formatMessage({ id: 'pages.knowledge.review.detail.preview' })}</Button><Button type={contentMode === 'edit' ? 'primary' : 'default'} onClick={() => setContentMode('edit')}>{intl.formatMessage({ id: 'pages.knowledge.review.detail.edit' })}</Button></Button.Group><Button type="link" size="small" onClick={handleSaveDraft} disabled={editedContent === undefined}>{intl.formatMessage({ id: 'pages.knowledge.review.detail.saveDraft' })}</Button></Space>} styles={{ body: { padding: 0, height: 'calc(100vh - 230px)' } }}>
-                  <MDXEditor ref={markdownEditorRef} markdown={content} readOnly={contentMode === 'preview'} className="knowledge-review-markdown-editor" contentEditableClassName="knowledge-review-markdown-content" plugins={markdownEditorPlugins} onChange={(value, initial) => { if (!initial) setEditedContent(value) }} />
+                <Card size="small" title={intl.formatMessage({ id: 'pages.knowledge.review.detail.versionContent' })} extra={<Space><Button size="small" loading={formatting} disabled={isFinal} onClick={handleFormatMarkdown}>{intl.formatMessage({ id: 'pages.knowledge.review.detail.formatMarkdown' })}</Button><Button.Group size="small"><Button type={contentMode === 'preview' ? 'primary' : 'default'} onClick={() => setContentMode('preview')}>{intl.formatMessage({ id: 'pages.knowledge.review.detail.preview' })}</Button><Button type={contentMode === 'edit' ? 'primary' : 'default'} disabled={isFinal} onClick={() => setContentMode('edit')}>{intl.formatMessage({ id: 'pages.knowledge.review.detail.edit' })}</Button></Button.Group><Button type="link" size="small" onClick={handleSaveDraft} disabled={isFinal || editedContent === undefined}>{intl.formatMessage({ id: 'pages.knowledge.review.detail.saveDraft' })}</Button></Space>} styles={{ body: { padding: 0, height: 'calc(100vh - 286px)' } }}>
+                  <MDXEditor ref={markdownEditorRef} markdown={content} readOnly={isFinal || contentMode === 'preview'} className="knowledge-review-markdown-editor" contentEditableClassName="knowledge-review-markdown-content" plugins={markdownEditorPlugins} onChange={(value, initial) => { if (!initial && !isFinal) setEditedContent(value) }} />
                 </Card>
               </Col>
             </Row>
@@ -264,7 +281,8 @@ const ReviewTaskPage: React.FC<Props> = ({ taskId, onClose, onSuccess }) => {
                   { id: 'pages.knowledge.review.detail.issueCount' },
                   { count: (data?.issues || []).length },
                 )}
-                styles={{ body: { maxHeight: 'calc(100vh - 500px)', overflow: 'auto' } }}
+                className="knowledge-review-scroll-card"
+                styles={{ body: { maxHeight: 300, overflowY: 'auto' } }}
               >
                 {issueList}
               </Card>
@@ -276,7 +294,7 @@ const ReviewTaskPage: React.FC<Props> = ({ taskId, onClose, onSuccess }) => {
                 onCommentChange={setComment}
                 onAct={act}
               />
-              <Card size="small" type="inner" title={intl.formatMessage({ id: 'pages.knowledge.review.detail.actionHistory' })}>
+              <Card size="small" type="inner" className="knowledge-review-scroll-card" title={intl.formatMessage({ id: 'pages.knowledge.review.detail.actionHistory' })} styles={{ body: { maxHeight: 240, overflowY: 'auto' } }}>
                 <ReviewActionTimeline actionLogs={data?.actionLogs} getUserName={getUserName} />
               </Card>
               </Space>

@@ -313,8 +313,6 @@ const KnowledgeDocumentPage: React.FC = () => {
             ? [
               <FileUploadModal
                 key="upload"
-                accept=".txt,.md,.pdf,.docx,.xlsx"
-                allowedExtensions={['txt', 'md', 'pdf', 'docx', 'xlsx']}
                 title={intl.formatMessage({ id: 'pages.knowledge.document.uploadTitle' })}
                 initialValues={{ selectedKnowledgeBaseId: knowledgeBase.id || undefined }}
                 extraFields={

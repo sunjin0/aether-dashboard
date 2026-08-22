@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import {
   PageContainer,
   DrawerForm,
+  ProFormInstance,
   ProFormSelect,
   ProFormTextArea,
   ProFormDependency,
@@ -97,6 +98,8 @@ export default function EvaluationPage() {
     [runVersionId, setRunVersionId] = useState<string>(),
     [configRun, setConfigRun] = useState<EvaluationRun>(),
     [modelOptionNames, setModelOptionNames] = useState<Record<string, string>>({}),
+    [documentNames, setDocumentNames] = useState<Record<string, string>>({}),
+    [chunkNames, setChunkNames] = useState<Record<string, string>>({}),
     [workspaceTab, setWorkspaceTab] = useState<'dataset' | 'runs'>('dataset'),
     [startingRun, setStartingRun] = useState(false),
     [labelCase, setLabelCase] = useState<EvaluationCase>(),
@@ -108,8 +111,13 @@ export default function EvaluationPage() {
     [importPreview, setImportPreview] = useState<EvaluationImportPreview>()
   const selectedRef = useRef<EvaluationSet>()
   const importInputRef = useRef<HTMLInputElement>(null)
+  const labelFormRef = useRef<ProFormInstance>()
   const healthIssue = (code: string) =>
     intl.formatMessage({ id: `pages.knowledge.evaluation.health.${code}` })
+  const documentName = (id?: string) =>
+    id ? (documentNames[id] ? `${documentNames[id]}（${id}）` : id) : '-'
+  const chunkName = (id?: string) =>
+    id ? (chunkNames[id] ? `${chunkNames[id]}（${id}）` : id) : '-'
   const parseRetrievalConfig = (snapshot?: string): RetrievalConfigSnapshot | undefined => {
     if (!snapshot) return undefined
     try {
@@ -212,9 +220,10 @@ export default function EvaluationPage() {
   }, [setId])
   const open = async (source: string | EvaluationSet) => {
     const id = typeof source === 'string' ? source : source.id!
-    const [nextCases, nextWorkbench] = await Promise.all([
+    const [nextCases, nextWorkbench, nextDocuments] = await Promise.all([
       getEvaluationCases(id),
       getEvaluationWorkbench(id),
+      getEvaluationDocuments(),
     ])
     const workbench = nextWorkbench.data
     if (!workbench) return
@@ -222,6 +231,9 @@ export default function EvaluationPage() {
     selectedRef.current = workbench.evaluationSet
     setSelected(workbench.evaluationSet)
     setCases(nextCases.data || [])
+    setDocumentNames(
+      Object.fromEntries(((nextDocuments.data || []).map((item) => [item.id, item.title]))),
+    )
     setRuns(workbench.runs || [])
     setHealth(workbench.health)
     setVersions(workbench.versions || [])
@@ -229,6 +241,24 @@ export default function EvaluationPage() {
     setCompareRunIds([])
     setComparison(undefined)
     setCaseIds([])
+  }
+  const openLabels = async (item: EvaluationCase) => {
+    setLabelCase(item)
+    setLabelIds([])
+    const nextLabels = (await getEvaluationCaseLabels(selected!.id!, item.id!)).data || []
+    const documentIds = [...new Set(nextLabels.map((label) => label.documentId).filter(Boolean))]
+    const chunkLists = await Promise.all(documentIds.map((documentId) => getEvaluationDocumentChunks(documentId)))
+    setChunkNames(
+      Object.fromEntries(
+        chunkLists.flatMap((response) =>
+          (response.data || []).map((chunk) => [
+            chunk.id,
+            `#${chunk.chunkIndex ?? '-'}${chunk.sectionPath ? ` · ${chunk.sectionPath}` : ''}`,
+          ]),
+        ),
+      ),
+    )
+    setLabels(nextLabels)
   }
   useEffect(() => {
     if (!selected || !progress || progress.finished) return undefined
@@ -711,6 +741,7 @@ export default function EvaluationPage() {
                     {
                       title: intl.formatMessage({ id: 'pages.knowledge.evaluation.document' }),
                       dataIndex: 'documentId',
+                      render: documentName,
                     },
                     {
                       title: intl.formatMessage({ id: 'pages.knowledge.evaluation.section' }),
@@ -721,13 +752,7 @@ export default function EvaluationPage() {
                       render: (_, item) => (
                         <Button
                           type="link"
-                          onClick={async () => {
-                            setLabelCase(item)
-                            setLabelIds([])
-                            setLabels(
-                              (await getEvaluationCaseLabels(selected!.id!, item.id!)).data || [],
-                            )
-                          }}
+                          onClick={() => openLabels(item)}
                         >
                           {intl.formatMessage({ id: 'pages.knowledge.evaluation.manageLabels' })}
                         </Button>
@@ -1107,6 +1132,7 @@ export default function EvaluationPage() {
                 {
                   title: intl.formatMessage({ id: 'pages.knowledge.evaluation.document' }),
                   dataIndex: 'documentId',
+                  render: documentName,
                 },
                 {
                   title: intl.formatMessage({ id: 'pages.knowledge.evaluation.section' }),
@@ -1116,7 +1142,7 @@ export default function EvaluationPage() {
                 {
                   title: intl.formatMessage({ id: 'pages.knowledge.evaluation.chunk' }),
                   dataIndex: 'chunkId',
-                  render: (value) => value || '-',
+                  render: chunkName,
                 },
                 {
                   title: intl.formatMessage({ id: 'pages.knowledge.evaluation.action' }),
@@ -1128,6 +1154,7 @@ export default function EvaluationPage() {
                         })}
                         onConfirm={async () => {
                           await deleteEvaluationCaseLabel(selected!.id!, labelCase.id!, label.id!)
+                          setLabelIds((ids) => ids.filter((id) => id !== label.id))
                           setLabels(
                             (await getEvaluationCaseLabels(selected!.id!, labelCase.id!)).data ||
                               [],
@@ -1169,12 +1196,11 @@ export default function EvaluationPage() {
                 </Popconfirm>
               <DrawerForm<EvaluationLabel>
                 title={intl.formatMessage({ id: 'pages.knowledge.evaluation.addPositiveLabel' })}
+                formRef={labelFormRef}
                 drawerProps={{ destroyOnClose: true }}
                 onFinish={async (value) => {
                   await saveEvaluationCaseLabel(selected!.id!, labelCase.id!, value)
-                  setLabels(
-                    (await getEvaluationCaseLabels(selected!.id!, labelCase.id!)).data || [],
-                  )
+                  await openLabels(labelCase)
                   await open(selected!)
                   return true
                 }}
@@ -1193,6 +1219,9 @@ export default function EvaluationPage() {
                     value,
                   }))}
                   rules={[{ required: true }]}
+                  fieldProps={{
+                    onChange: () => labelFormRef.current?.setFieldsValue({ sectionPath: undefined, chunkId: undefined }),
+                  }}
                 />
                 <ProFormSelect
                   name="documentId"
@@ -1205,6 +1234,9 @@ export default function EvaluationPage() {
                     }))
                   }
                   rules={[{ required: true }]}
+                  fieldProps={{
+                    onChange: () => labelFormRef.current?.setFieldsValue({ sectionPath: undefined, chunkId: undefined }),
+                  }}
                 />
                 <ProFormDependency name={['targetType', 'documentId']}>
                   {({ targetType, documentId }) => (
@@ -1214,6 +1246,8 @@ export default function EvaluationPage() {
                           name="sectionPath"
                           label={intl.formatMessage({ id: 'pages.knowledge.evaluation.section' })}
                           disabled={!documentId}
+                          params={{ documentId }}
+                          key={`section-${documentId || 'empty'}`}
                           request={async () =>
                             documentId
                               ? ((await getEvaluationDocumentSections(documentId)).data || []).map(
@@ -1229,6 +1263,8 @@ export default function EvaluationPage() {
                           name="chunkId"
                           label={intl.formatMessage({ id: 'pages.knowledge.evaluation.chunk' })}
                           disabled={!documentId}
+                          params={{ documentId }}
+                          key={`chunk-${documentId || 'empty'}`}
                           request={async () =>
                             documentId
                               ? ((await getEvaluationDocumentChunks(documentId)).data || []).map(

@@ -27,6 +27,7 @@ import {
   thematicBreakPlugin,
   toolbarPlugin,
 } from '@mdxeditor/editor'
+import { ProCard } from '@ant-design/pro-components'
 import { useIntl } from '@umijs/max'
 import { Alert, Button, Card, Col, Descriptions, Row, Space, Spin, Steps, Tag, Tooltip, Typography, message } from 'antd'
 import React, { useEffect, useRef, useState } from 'react'
@@ -166,6 +167,11 @@ const ReviewTaskPage: React.FC<Props> = ({ taskId, onClose, onSuccess }) => {
   }, [taskId])
 
   useEffect(() => {
+    document.body.classList.add('knowledge-review-page-active')
+    return () => document.body.classList.remove('knowledge-review-page-active')
+  }, [])
+
+  useEffect(() => {
     if (isFinal) setContentMode('preview')
   }, [isFinal])
 
@@ -260,43 +266,76 @@ const ReviewTaskPage: React.FC<Props> = ({ taskId, onClose, onSuccess }) => {
               extra={<Button type="link" size="small" onClick={() => setSidebarCollapsed(true)}>{intl.formatMessage({ id: 'pages.knowledge.review.detail.collapseSidebar' })}</Button>}
             >
               <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-              {data?.aiReview?.summary && <Alert showIcon type="info" message={data.aiReview.summary} />}
-              <Card size="small" type="inner" title={intl.formatMessage({ id: 'pages.knowledge.review.detail.reviewInfo' })}>
-                <Descriptions column={1} size="small" bordered>
-                  <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.review.detail.submitter' })}>
-                    {getUserName(data?.submitterId)}
-                  </Descriptions.Item>
-                  <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.review.detail.claimant' })}>
-                    {getUserName(data?.reviewerId)}
-                  </Descriptions.Item>
-                  <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.review.detail.aiScore' })}>
-                    {data?.aiReview?.score ?? '-'}
-                  </Descriptions.Item>
-                </Descriptions>
-              </Card>
-              <Card
-                size="small"
-                type="inner"
-                title={intl.formatMessage(
-                  { id: 'pages.knowledge.review.detail.issueCount' },
-                  { count: (data?.issues || []).length },
+                {data?.aiReview?.summary && (
+                  <ProCard
+                    size="small"
+                    type="inner"
+                    title={intl.formatMessage({ id: 'pages.knowledge.review.detail.aiReviewOpinion' })}
+                    collapsible="header"
+                    defaultCollapsed
+                  >
+                    <Alert showIcon type="info" message={data.aiReview.summary} />
+                  </ProCard>
                 )}
-                className="knowledge-review-scroll-card"
-                styles={{ body: { maxHeight: 300, overflowY: 'auto' } }}
-              >
-                {issueList}
-              </Card>
-              <ReviewTaskActions
-                status={data?.status}
-                canDecide={canDecide}
-                comment={comment}
-                acting={acting}
-                onCommentChange={setComment}
-                onAct={act}
-              />
-              <Card size="small" type="inner" className="knowledge-review-scroll-card" title={intl.formatMessage({ id: 'pages.knowledge.review.detail.actionHistory' })} styles={{ body: { maxHeight: 240, overflowY: 'auto' } }}>
-                <ReviewActionTimeline actionLogs={data?.actionLogs} getUserName={getUserName} />
-              </Card>
+                <ProCard
+                  size="small"
+                  type="inner"
+                  className="knowledge-review-info-card"
+                  title={intl.formatMessage({ id: 'pages.knowledge.review.detail.reviewInfo' })}
+                  collapsible="header"
+                  defaultCollapsed
+                >
+                  <Descriptions column={1} size="small" bordered>
+                    <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.review.detail.submitter' })}>
+                      {getUserName(data?.submitterId)}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.review.detail.claimant' })}>
+                      {getUserName(data?.reviewerId)}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={intl.formatMessage({ id: 'pages.knowledge.review.detail.aiScore' })}>
+                      {data?.aiReview?.score ?? '-'}
+                    </Descriptions.Item>
+                  </Descriptions>
+                </ProCard>
+                <ProCard
+                  size="small"
+                  type="inner"
+                  title={intl.formatMessage(
+                    { id: 'pages.knowledge.review.detail.issueCount' },
+                    { count: (data?.issues || []).length },
+                  )}
+                  className="knowledge-review-scroll-card"
+                  collapsible="header"
+                  defaultCollapsed
+                >
+                  {issueList}
+                </ProCard>
+                <ProCard
+                  size="small"
+                  type="inner"
+                  title={intl.formatMessage({ id: 'pages.knowledge.review.detail.reviewActions' })}
+                  collapsible="header"
+                  defaultCollapsed
+                >
+                  <ReviewTaskActions
+                    status={data?.status}
+                    canDecide={canDecide}
+                    comment={comment}
+                    acting={acting}
+                    onCommentChange={setComment}
+                    onAct={act}
+                  />
+                </ProCard>
+                <ProCard
+                  size="small"
+                  type="inner"
+                  className="knowledge-review-scroll-card"
+                  title={intl.formatMessage({ id: 'pages.knowledge.review.detail.actionHistory' })}
+                  collapsible="header"
+                  defaultCollapsed
+                >
+                  <ReviewActionTimeline actionLogs={data?.actionLogs} getUserName={getUserName} />
+                </ProCard>
               </Space>
             </Card>
           </Col>

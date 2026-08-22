@@ -1,4 +1,5 @@
 export default {
+  'menu.knowledge.evaluation': '知识库评测',
   'pages.agent.chat.artifactGenerating': '正在生成文件',
   'pages.agent.chat.artifactReady': '文件已生成，可以预览或下载',
   'pages.agent.artifact.total': '共 {total} 条',
@@ -1276,7 +1277,12 @@ export default {
   'pages.knowledge.review.detail.saveDraft': '保存修改',
   'pages.knowledge.review.detail.saveDraftSuccess': '修改已保存',
   'pages.knowledge.review.detail.issueCount': '问题 {count}',
+  'pages.knowledge.review.detail.aiReviewOpinion': 'AI 审查意见',
+  'pages.knowledge.review.detail.card.collapse': '收起卡片',
+  'pages.knowledge.review.detail.card.expand': '展开卡片',
   'pages.knowledge.review.detail.reviewInfo': '审批信息',
+  'pages.knowledge.review.detail.reviewInfo.collapse': '收起审批信息',
+  'pages.knowledge.review.detail.reviewInfo.expand': '展开审批信息',
   'pages.knowledge.review.detail.aiScore': 'AI 评分',
   'pages.knowledge.review.detail.actionHistory': '操作记录',
   'pages.knowledge.review.detail.reviewActions': '审批操作',

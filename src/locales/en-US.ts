@@ -1,4 +1,5 @@
 export default {
+  'menu.knowledge.evaluation': 'Knowledge Evaluation',
   'pages.agent.chat.artifactGenerating': 'Generating file',
   'pages.agent.chat.artifactReady': 'File generated. You can preview or download it now.',
   'pages.agent.artifact.total': '{total} items',
@@ -1315,7 +1316,12 @@ export default {
   'pages.knowledge.review.detail.saveDraft': 'Save Changes',
   'pages.knowledge.review.detail.saveDraftSuccess': 'Changes saved',
   'pages.knowledge.review.detail.issueCount': 'Issues {count}',
+  'pages.knowledge.review.detail.aiReviewOpinion': 'AI Review Opinion',
+  'pages.knowledge.review.detail.card.collapse': 'Collapse card',
+  'pages.knowledge.review.detail.card.expand': 'Expand card',
   'pages.knowledge.review.detail.reviewInfo': 'Review Information',
+  'pages.knowledge.review.detail.reviewInfo.collapse': 'Collapse review information',
+  'pages.knowledge.review.detail.reviewInfo.expand': 'Expand review information',
   'pages.knowledge.review.detail.aiScore': 'AI Score',
   'pages.knowledge.review.detail.actionHistory': 'Action History',
   'pages.knowledge.review.detail.reviewActions': 'Review Actions',

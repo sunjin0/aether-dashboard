@@ -36,6 +36,7 @@ import {
   WorkflowCallbackDelivery,
 } from '@/services/workflow/WorkflowController'
 import FormattedContent from '@/components/FormattedContent'
+import { HumanOption, normalizeHumanOptions } from './humanOptions'
 
 const statusColor: Record<string, string> = {
   RUNNING: 'processing',
@@ -63,7 +64,7 @@ const runStatusColor: Record<string, string> = {
   PENDING: '#bfbfbf',
 }
 type RunNodeData = { def: Record<string, any>; log?: Record<string, any> }
-type HumanQuestion = { key: string; question: string; required?: boolean; options?: string[] }
+type HumanQuestion = { key: string; question: string; required?: boolean; options?: HumanOption[] }
 
 const getHumanQuestions = (intl: ReturnType<typeof useIntl>, config: Record<string, any>): HumanQuestion[] => {
   const raw = Array.isArray(config.questions) ? config.questions : []
@@ -73,7 +74,7 @@ const getHumanQuestions = (intl: ReturnType<typeof useIntl>, config: Record<stri
       key: item?.key || item?.name || `answer_${index + 1}`,
       question: item?.question || item?.label || intl.formatMessage({ id: 'pages.agent.workflow.run.questionNumber' }, { number: index + 1 }),
       required: item?.required !== false,
-      options: Array.isArray(item?.options) ? item.options : undefined,
+      options: normalizeHumanOptions(item?.options),
     }
   }).filter((item) => item.question)
   return questions.length ? questions : [{ key: 'answer', question: config.question || intl.formatMessage({ id: 'pages.agent.workflow.run.defaultQuestion' }), required: true }]
@@ -701,7 +702,7 @@ const RunPage: React.FC = () => {
                                   {question.options?.length ? (
                                     <Radio.Group>
                                       <Space direction="vertical">
-                                        {question.options.map((option) => <Radio key={option} value={option}>{option}</Radio>)}
+                                        {question.options.map((option) => <Radio key={option.value} value={option.value}>{option.label}</Radio>)}
                                       </Space>
                                     </Radio.Group>
                                   ) : (

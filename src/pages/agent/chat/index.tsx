@@ -53,6 +53,7 @@ import {
   updateAgentConversationToolApprovalPolicy,
 } from '@/services/agent/ConversationController'
 import { getOptionList } from '@/services/sys/DictController'
+import { isDeepAgent } from './executionMode'
 import {
   AgentChatReplyRequest,
   AgentChatAttachment,
@@ -190,6 +191,9 @@ const ChatDebugPage: React.FC = () => {
   const sandboxPollingKeyRef = useRef<string>()
   const shownSandboxApprovalTaskRef = useRef<string>()
   const loadedPlanRunIdRef = useRef<string>()
+  const currentConversation = conversations.find((item) => item.id === conversationId)
+  const activeAgentId = currentConversation?.agentDefinitionId || agentId
+  const currentAgent = agents.find((item) => item.id === activeAgentId)
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 768px)')
@@ -413,6 +417,9 @@ const ChatDebugPage: React.FC = () => {
   }
 
   const acceptDeepRun = async (data: AgentStreamAcceptedData) => {
+    if (!isDeepAgent(agents, activeAgentId)) {
+      return
+    }
     deepRunIdRef.current = data.runId
     setDeepRunId(data.runId)
     setConversationId(data.conversationId)
@@ -566,12 +573,15 @@ const ChatDebugPage: React.FC = () => {
   }, [conversationId, messages])
 
   useEffect(() => {
+    if (!isDeepAgent(agents, activeAgentId)) {
+      return
+    }
     const messageWithRun = [...messages].reverse().find((item) => item.runId)
     if (!messageWithRun?.runId) return
     deepRunIdRef.current = messageWithRun.runId
     setDeepRunId(messageWithRun.runId)
     void loadPersistedTaskPlan(messageWithRun.runId)
-  }, [messages])
+  }, [messages, agents, activeAgentId])
 
   // 刷新/切换会话恢复工作区后，若当前任务仍可推进，则重新订阅该运行的 SSE 增量。
   // 只有历史的非终态任务才会触发，避免对已完成运行重复回放。
@@ -601,7 +611,11 @@ const ChatDebugPage: React.FC = () => {
     setLoadingAgents(true)
     try {
       const options = await getAgentDefinitionOptions()
-      setAgents(options.map((item) => ({ id: String(item.value), name: item.label }) as any))
+      setAgents(options.map((item) => ({
+        id: String(item.value),
+        name: item.label,
+        executionMode: item.code === 'DEEP' ? 'DEEP' : 'STANDARD',
+      })))
     } finally {
       setLoadingAgents(false)
     }
@@ -1525,9 +1539,6 @@ const ChatDebugPage: React.FC = () => {
     return groups
   }, [conversations, searchText])
 
-  const currentConversation = conversations.find((item) => item.id === conversationId)
-  const activeAgentId = currentConversation?.agentDefinitionId || agentId
-  const currentAgent = agents.find((item) => item.id === activeAgentId)
   const isDeepRequestProcessing = currentAgent?.executionMode === 'DEEP' && sending
   const shouldShowTaskPlan = visibleDeepTasks.length > 0 || isDeepRequestProcessing
   const inputDisabled =

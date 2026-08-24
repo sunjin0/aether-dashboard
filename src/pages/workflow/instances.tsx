@@ -121,7 +121,11 @@ const WorkflowInstancesPage: React.FC = () => {
         okText={t('pages.agent.workflow.instance.continue')}
         okButtonProps={{ disabled: !workflowId }}
         onCancel={() => setStartOpen(false)}
-        onOk={() => workflowId && history.push(`/workflow/workflow/${workflowId}/run`)}
+        onOk={() => {
+          if (!workflowId) return
+          setStartOpen(false)
+          history.push(`/workflow/workflow/${workflowId}/run`)
+        }}
       >
         <Select
           style={{ width: '100%' }}

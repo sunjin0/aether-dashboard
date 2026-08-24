@@ -5,15 +5,6 @@ import type { SandboxTask } from '@/services/entity/Agent'
 export const getSandboxTaskByRun = (runId: string): Promise<ResponseStructure<SandboxTask | null>> =>
   request(`/api/agent/sandbox/tasks/run/${runId}`, { method: 'GET' })
 
-export const approveSandboxTask = (id: string, reason?: string): Promise<ResponseStructure<void>> =>
-  request(`/api/agent/sandbox/tasks/${id}/approve`, { method: 'POST', data: { reason } })
-
-export const rejectSandboxTask = (id: string, reason?: string): Promise<ResponseStructure<void>> =>
-  request(`/api/agent/sandbox/tasks/${id}/reject`, { method: 'POST', data: { reason } })
-
-export const decideSandboxTask = (id: string, decision: 'APPROVE' | 'REJECT', reason?: string): Promise<ResponseStructure<void>> =>
-  request(`/api/agent/sandbox/tasks/${id}/decision`, { method: 'POST', data: { decision, reason } })
-
 export const cancelSandboxTask = (id: string, reason?: string): Promise<ResponseStructure<void>> =>
   request(`/api/agent/sandbox/tasks/${id}/cancel`, { method: 'POST', data: { reason } })
 

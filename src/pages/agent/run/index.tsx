@@ -48,12 +48,14 @@ import {
 
 const { Text } = Typography
 
-const renderStatusTag = (status: number | undefined, intl: ReturnType<typeof useIntl>) => {
+const renderStatusTag = (status: number | undefined, executionMode: AgentRun['executionMode'], intl: ReturnType<typeof useIntl>) => {
   const statusMap: Record<number, { color: string; text: string }> = {
     0: { color: 'success', text: intl.formatMessage({ id: 'pages.agent.run.status.success' }) },
     1: { color: 'error', text: intl.formatMessage({ id: 'pages.agent.run.status.failed' }) },
     2: { color: 'warning', text: intl.formatMessage({ id: 'pages.agent.run.status.timeout' }) },
-    3: { color: 'processing', text: intl.formatMessage({ id: 'pages.agent.run.status.queued' }) },
+    3: executionMode === 'STANDARD'
+      ? { color: 'warning', text: intl.formatMessage({ id: 'pages.agent.run.status.waitingUser' }) }
+      : { color: 'processing', text: intl.formatMessage({ id: 'pages.agent.run.status.queued' }) },
     4: { color: 'cyan', text: intl.formatMessage({ id: 'pages.agent.run.status.running' }) },
     5: { color: 'default', text: intl.formatMessage({ id: 'pages.agent.run.status.cancelled' }) },
     6: { color: 'gold', text: '已暂停' },
@@ -194,7 +196,7 @@ const AgentRunPage: React.FC = () => {
       dataIndex: 'status',
       valueType: 'select',
       request: async () => getOptionList('Agent_Run_Status'),
-      render: (_: any, record: AgentRun) => renderStatusTag(record.status, intl),
+      render: (_: any, record: AgentRun) => renderStatusTag(record.status, record.executionMode, intl),
     },
     {
       title: intl.formatMessage({ id: 'pages.agent.run.totalTokens' }),
@@ -450,7 +452,7 @@ const AgentRunPage: React.FC = () => {
                   {
                     title: intl.formatMessage({ id: 'pages.common.status' }),
                     dataIndex: 'status',
-                    render: (_: any, record: AgentRun) => renderStatusTag(record.status, intl),
+                    render: (_: any, record: AgentRun) => renderStatusTag(record.status, record.executionMode, intl),
                   },
                   {
                     title: intl.formatMessage({ id: 'pages.common.createTime' }),

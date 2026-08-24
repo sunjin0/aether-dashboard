@@ -50,7 +50,7 @@
     "antd-style": "^3.7.0",
     "classnames": "^2.5.1",
     "dayjs": "^1.11.13",
-    "mammoth": "^1.12.1",
+    "docx-preview": "^0.4.0",
     "mermaid": "^11.16.1",
     "monaco-editor": "^0.55.1",
     "querystring": "^0.2.1",

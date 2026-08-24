@@ -1,7 +1,7 @@
 import { Alert, Button, Empty, Modal, Spin, Table, Tabs } from 'antd'
-import React, { ReactNode, useState } from 'react'
+import React, { ReactNode, useEffect, useRef, useState } from 'react'
 import { useIntl } from '@umijs/max'
-import { convertToHtml } from 'mammoth'
+import { renderAsync } from 'docx-preview'
 import * as XLSX from 'xlsx'
 import './index.less'
 
@@ -27,8 +27,11 @@ const TemporaryUrlPreviewModal: React.FC<TemporaryUrlPreviewModalProps> = ({ get
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
   const [url, setUrl] = useState<string>()
-  const [docxHtml, setDocxHtml] = useState<string>()
+  const [docxFile, setDocxFile] = useState<Blob>()
+  const [docxRendering, setDocxRendering] = useState(false)
+  const [docxError, setDocxError] = useState(false)
   const [excelSheets, setExcelSheets] = useState<ExcelSheetPreview[]>([])
+  const docxContainerRef = useRef<HTMLDivElement>(null)
   const isDocx = /\.docx$/i.test(fileName || title || '')
   const isExcel = /\.(xlsx|xls)$/i.test(fileName || title || '')
 
@@ -38,28 +41,56 @@ const TemporaryUrlPreviewModal: React.FC<TemporaryUrlPreviewModalProps> = ({ get
       const response = await getUrl()
       if (response.code !== 200 || !response.data) return
       setUrl(response.data)
+      setDocxError(false)
+      setOpen(true)
       if (isDocx || isExcel) {
         const blob = await fetch(response.data).then(result => result.blob())
         if (isDocx) {
-          const result = await convertToHtml({ arrayBuffer: await blob.arrayBuffer() })
-          setDocxHtml(sanitizeDocxHtml(result.value))
+          setDocxFile(blob)
         } else {
           setExcelSheets(readExcelPreview(await blob.arrayBuffer()))
         }
       }
-      setOpen(true)
+    } catch {
+      if (isDocx) setDocxError(true)
     } finally { setLoading(false) }
   }
 
   const close = () => {
     if (url?.startsWith('blob:')) URL.revokeObjectURL(url)
-    setOpen(false); setUrl(undefined); setDocxHtml(undefined); setExcelSheets([])
+    setOpen(false); setUrl(undefined); setDocxFile(undefined); setDocxError(false); setExcelSheets([])
   }
+
+  useEffect(() => {
+    if (!open || !isDocx || !docxFile || !docxContainerRef.current) return
+    const container = docxContainerRef.current
+    container.replaceChildren()
+    let disposed = false
+    setDocxRendering(true)
+    const renderId = window.requestAnimationFrame(() => {
+      void renderAsync(docxFile, container, undefined, {
+        inWrapper: true,
+        breakPages: true,
+        ignoreLastRenderedPageBreak: false,
+        renderHeaders: true,
+        renderFooters: true,
+      }).then(() => {
+        if (!disposed) setDocxRendering(false)
+      }).catch(() => {
+        if (!disposed) { setDocxRendering(false); setDocxError(true) }
+      })
+    })
+    return () => { disposed = true; window.cancelAnimationFrame(renderId) }
+  }, [docxFile, isDocx, open])
 
   const modalTitle = title || intl.formatMessage({ id: 'components.temporaryUrlPreviewModal.filePreview' })
   return <><Button type="link" loading={loading} disabled={disabled} onClick={showPreview}>{triggerText || intl.formatMessage({ id: 'components.temporaryUrlPreviewModal.previewDownload' })}</Button>
     <Modal title={modalTitle} open={open} onCancel={close} footer={url ? <Button type="primary" href={url} target="_blank" rel="noreferrer">{intl.formatMessage({ id: 'components.temporaryUrlPreviewModal.download' })}</Button> : null} width={width} destroyOnClose>
-      {docxHtml ? <div className="temporary-url-preview-modal-docx" style={{ height: previewHeight }} dangerouslySetInnerHTML={{ __html: docxHtml }} />
+      {isDocx ? <div className="temporary-url-preview-modal-docx" style={{ height: previewHeight }}>
+        {docxRendering && <div className="temporary-url-preview-modal-docx-loading"><Spin /></div>}
+        {docxError && <Alert type="error" showIcon message={intl.formatMessage({ id: 'components.temporaryUrlPreviewModal.docxFailed' })} />}
+        <div ref={docxContainerRef} />
+      </div>
         : isExcel ? <ExcelPreview sheets={excelSheets} loading={loading} height={previewHeight} />
           : url && <iframe title={modalTitle} src={url} style={{ display: 'block', width: '100%', height: previewHeight, border: 0 }} />}
     </Modal></>
@@ -85,7 +116,7 @@ const ExcelSheetTable: React.FC<{ rows: string[][] }> = ({ rows }) => {
     headers.forEach((_, columnIndex) => { item[String(columnIndex)] = row[columnIndex] || '' })
     return item
   })
-  return <Table className="temporary-url-preview-modal-excel-table" size="small" pagination={false} scroll={{ x: 'max-content', y: 'calc(75vh - 150px)' }} columns={columns} dataSource={dataSource} />
+  return <Table className="temporary-url-preview-modal-excel-table" size="small" pagination={{ pageSize: 50, showSizeChanger: true, showQuickJumper: true }} scroll={{ x: 'max-content', y: 'calc(75vh - 190px)' }} columns={columns} dataSource={dataSource} />
 }
 
 const readExcelPreview = (arrayBuffer: ArrayBuffer): ExcelSheetPreview[] => {
@@ -102,15 +133,6 @@ const excelColumnName = (index: number): string => {
   let result = ''
   for (let value = index + 1; value > 0; value = Math.floor((value - 1) / 26)) result = String.fromCharCode(65 + ((value - 1) % 26)) + result
   return result
-}
-
-const sanitizeDocxHtml = (html: string): string => {
-  const body = new DOMParser().parseFromString(html, 'text/html').body
-  body.querySelectorAll('script, style, iframe, object, embed, form, input, button').forEach(node => node.remove())
-  body.querySelectorAll('*').forEach(node => Array.from(node.attributes).forEach(attribute => {
-    if (attribute.name.toLowerCase().startsWith('on') || attribute.name.toLowerCase() === 'srcdoc') node.removeAttribute(attribute.name)
-  }))
-  return body.innerHTML
 }
 
 export default TemporaryUrlPreviewModal

@@ -45,7 +45,7 @@ import {
 import { cancelAgentRun, getAgentRunPlan } from '@/services/agent/RunController'
 import { getAgentSessionByConversation, getAgentSessionTimeline, getAgentTaskSnapshot, submitAgentTaskFeedback } from '@/services/agent/SessionController'
 import { getAgentArtifactByRun } from '@/services/agent/ArtifactController'
-import { cancelSandboxTask, decideSandboxTask, getSandboxTaskByRun, retrySandboxTask } from '@/services/agent/SandboxTaskController'
+import { cancelSandboxTask, getSandboxTaskByRun, retrySandboxTask } from '@/services/agent/SandboxTaskController'
 import {
   getAgentConversationList,
   getAgentConversationContext,
@@ -140,9 +140,6 @@ const ChatDebugPage: React.FC = () => {
   const [conversations, setConversations] = useState<AgentConversation[]>([])
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [conversationContext, setConversationContext] = useState<AgentConversationContext>()
-  const [sandboxDecision, setSandboxDecision] = useState<{ id: string; decision: 'approve' | 'reject'; detail?: string }>()
-  const [sandboxDecisionReason, setSandboxDecisionReason] = useState('')
-  const [sandboxDecisionSubmitting, setSandboxDecisionSubmitting] = useState(false)
   const [input, setInput] = useState('')
   const [attachments, setAttachments] = useState<ChatAttachmentFile[]>([])
   const attachmentsRef = useRef<ChatAttachmentFile[]>([])
@@ -189,7 +186,6 @@ const ChatDebugPage: React.FC = () => {
   const artifactRequestedRef = useRef(false)
   const artifactPollingTimerRef = useRef<number>()
   const sandboxPollingKeyRef = useRef<string>()
-  const shownSandboxApprovalTaskRef = useRef<string>()
   const loadedPlanRunIdRef = useRef<string>()
   const currentConversation = conversations.find((item) => item.id === conversationId)
   const activeAgentId = currentConversation?.agentDefinitionId || agentId
@@ -468,24 +464,6 @@ const ChatDebugPage: React.FC = () => {
     }
   }
 
-  const openSandboxDecision = (id: string, decision: 'approve' | 'reject', detail?: string) => {
-    setSandboxDecisionReason('')
-    setSandboxDecision({ id, decision, detail })
-  }
-
-  const submitSandboxDecision = async (decision = sandboxDecision?.decision) => {
-    if (!sandboxDecision) return
-    setSandboxDecisionSubmitting(true)
-    try {
-      const result = await decideSandboxTask(sandboxDecision.id, decision === 'approve' ? 'APPROVE' : 'REJECT', sandboxDecisionReason)
-      if (result.code === 200) {
-        setSandboxDecision(undefined)
-      }
-    } finally {
-      setSandboxDecisionSubmitting(false)
-    }
-  }
-
   const startArtifactPolling = (targetConversationId?: string, targetMessageId?: string, runId?: string) => {
     if (!targetConversationId || !targetMessageId) return
     sandboxPollingKeyRef.current = runId ? `${targetConversationId}:${targetMessageId}:${runId}` : undefined
@@ -514,16 +492,12 @@ const ChatDebugPage: React.FC = () => {
             if (terminal && terminalAttemptAt === 0) terminalAttemptAt = attempts
             const plan = task.data.approvalSummary
             const approvalDetail = plan ? intl.formatMessage({ id: 'pages.agent.sandbox.chatApprovalDetail' }, { target: plan.targetUrl || '-', purpose: plan.purpose || '-', domains: (plan.allowedDomains || []).join(', '), subdomains: plan.allowSubdomains ? intl.formatMessage({ id: 'pages.agent.sandbox.chatSubdomains' }) : '', estimated: plan.estimatedRequests ?? '-', maximum: plan.maxRequests ?? '-', depth: plan.pageDepth ?? 0, maxDepth: plan.maxPageDepth ?? '-', sensitive: intl.formatMessage({ id: plan.externalSensitiveRisk ? 'pages.agent.sandbox.yes' : 'pages.agent.sandbox.no' }) }) : undefined
-            if (status === 'PENDING_APPROVAL' && task.data.id && shownSandboxApprovalTaskRef.current !== task.data.id) {
-              shownSandboxApprovalTaskRef.current = task.data.id
-              openSandboxDecision(task.data.id, 'approve', approvalDetail)
-            }
             appendExecutionEvent(targetMessageId, {
               id: `sandbox-${task.data.id || runId}`,
               title: `Sandbox: ${status}`,
               detail: task.data.failureReason || task.data.logSummary || approvalDetail,
               status: status === 'SUCCEEDED' ? 'completed' : terminal ? 'failed' : 'running',
-              actions: status !== 'PENDING_APPROVAL' && !terminal && task.data.id ? [
+              actions: !terminal && task.data.id ? [
                 { label: intl.formatMessage({ id: 'pages.agent.sandbox.cancel' }), danger: true, onClick: () => void cancelSandboxTask(task.data!.id!).then(() => void refresh()) },
               ] : ['FAILED', 'TIMED_OUT', 'CANCELLED'].includes(status) && task.data.id ? [
                 { label: intl.formatMessage({ id: 'pages.agent.sandbox.retry' }), onClick: () => void retrySandboxTask(task.data!.id!).then((result) => { if (result.code === 200) { message.success(intl.formatMessage({ id: 'pages.agent.sandbox.retryCreated' })); void refresh() } }) },
@@ -2369,21 +2343,6 @@ const ChatDebugPage: React.FC = () => {
           </div>
         </div>
       </div>
-      <Modal className="agent-chat-sandbox-approval"
-        title="Sandbox 执行审批"
-        open={Boolean(sandboxDecision)}
-        footer={[
-          <Button key="cancel" onClick={() => setSandboxDecision(undefined)}>稍后处理</Button>,
-          <Button key="reject" danger loading={sandboxDecisionSubmitting} onClick={() => void submitSandboxDecision('reject')}>拒绝</Button>,
-          <Button key="approve" type="primary" loading={sandboxDecisionSubmitting} onClick={() => void submitSandboxDecision('approve')}>批准并执行</Button>,
-        ]}
-        onCancel={() => setSandboxDecision(undefined)}
-      >
-        <Tag color="gold">需要你的确认 · 受控 Sandbox 执行</Tag>
-        <Typography.Title level={4} style={{ margin: '14px 0 6px' }}>是否允许此任务开始执行？</Typography.Title>
-        <Typography.Paragraph type="secondary">{sandboxDecision?.detail || '该任务将按已冻结的模板、策略与资源限制执行。'}</Typography.Paragraph>
-        <Input.TextArea value={sandboxDecisionReason} onChange={(event) => setSandboxDecisionReason(event.target.value)} rows={3} maxLength={1024} placeholder="审批意见（可选）" />
-      </Modal>
     </PageContainer>
   )
 }

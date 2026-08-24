@@ -545,6 +545,7 @@ export default {
   'components.temporaryUrlPreviewModal.previewDownload': '预览/下载',
   'components.temporaryUrlPreviewModal.getUrlFailed': '获取预览链接失败',
   'components.temporaryUrlPreviewModal.download': '下载文件',
+  'components.temporaryUrlPreviewModal.docxFailed': 'DOCX 文件预览失败，请下载后查看',
   'components.temporaryUrlPreviewModal.excelEmpty': '工作表为空',
   'components.temporaryUrlPreviewModal.excelLimit':
     '预览最多显示每个工作表的前 {rows} 行、前 {columns} 列；完整文件可下载查看。',
@@ -1057,6 +1058,7 @@ export default {
   'pages.agent.run.status.failed': '失败',
   'pages.agent.run.status.timeout': '超时',
   'pages.agent.run.status.queued': '排队中',
+  'pages.agent.run.status.waitingUser': '等待用户确认',
   'pages.agent.run.status.running': '执行中',
   'pages.agent.run.status.cancelled': '已取消',
   'pages.agent.run.status.unknown': '未知',

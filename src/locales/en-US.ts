@@ -565,6 +565,7 @@ export default {
   'components.temporaryUrlPreviewModal.previewDownload': 'Preview / download',
   'components.temporaryUrlPreviewModal.getUrlFailed': 'Failed to get preview link',
   'components.temporaryUrlPreviewModal.download': 'Download file',
+  'components.temporaryUrlPreviewModal.docxFailed': 'Unable to preview this DOCX file. Please download it to view.',
   'components.temporaryUrlPreviewModal.excelEmpty': 'The worksheet is empty',
   'components.temporaryUrlPreviewModal.excelLimit':
     'Preview shows the first {rows} rows and {columns} columns of each worksheet. Download the file to view all data.',
@@ -1091,6 +1092,7 @@ export default {
   'pages.agent.run.status.failed': 'Failed',
   'pages.agent.run.status.timeout': 'Timed out',
   'pages.agent.run.status.queued': 'Queued',
+  'pages.agent.run.status.waitingUser': 'Awaiting user confirmation',
   'pages.agent.run.status.running': 'Running',
   'pages.agent.run.status.cancelled': 'Cancelled',
   'pages.agent.run.status.unknown': 'Unknown',

@@ -98,6 +98,11 @@ export interface Admin {
   avatar?: string;
   phone?: string;
   email?: string;
+  smtpHost?: string;
+  smtpPort?: number;
+  smtpSecurity?: 'ssl' | 'starttls';
+  /** 仅写入，后端不会回传。 */
+  smtpAuthorizationCode?: string;
   status?: number;
   deleted?: number;
   createdAt?: string;

@@ -1,7 +1,7 @@
 import DrawerForm from '@/components/DrawerForm'
 import { request, useIntl } from '@umijs/max'
 import { Form } from 'antd'
-import { ProFormSelect, ProFormText } from '@ant-design/pro-components'
+import { ProCard, ProFormDigit, ProFormSelect, ProFormText } from '@ant-design/pro-components'
 import {
   addAdminInfo,
   getAdminInfo,
@@ -86,6 +86,52 @@ const AdminForm = (props: {
         label={intl.formatMessage({ id: 'pages.common.phone' })}
         rules={[{ required: true }]}
       />
+      <ProCard title="邮箱发送配置" bordered collapsible defaultCollapsed={!!id}>
+        <ProFormSelect
+          name={'smtpProvider'}
+          label="邮件服务商"
+          placeholder="选择后自动填充 SMTP 配置"
+          options={[
+            { label: 'QQ 邮箱', value: 'qq' },
+            { label: '网易 163 邮箱', value: '163' },
+            { label: '网易 126 邮箱', value: '126' },
+            { label: 'Gmail', value: 'gmail' },
+            { label: 'Microsoft Outlook / 365', value: 'outlook' },
+            { label: 'iCloud Mail', value: 'icloud' },
+            { label: '自定义', value: 'custom' },
+          ]}
+          fieldProps={{
+            onChange: (provider: string) => {
+              const presets: Record<string, { smtpHost: string; smtpPort: number; smtpSecurity: 'ssl' | 'starttls' }> = {
+                qq: { smtpHost: 'smtp.qq.com', smtpPort: 465, smtpSecurity: 'ssl' },
+                '163': { smtpHost: 'smtp.163.com', smtpPort: 465, smtpSecurity: 'ssl' },
+                '126': { smtpHost: 'smtp.126.com', smtpPort: 465, smtpSecurity: 'ssl' },
+                gmail: { smtpHost: 'smtp.gmail.com', smtpPort: 587, smtpSecurity: 'starttls' },
+                outlook: { smtpHost: 'smtp.office365.com', smtpPort: 587, smtpSecurity: 'starttls' },
+                icloud: { smtpHost: 'smtp.mail.me.com', smtpPort: 587, smtpSecurity: 'starttls' },
+              }
+              const preset = presets[provider]
+              if (preset) form.setFieldsValue(preset)
+            },
+          }}
+        />
+        <ProFormText name={'smtpHost'} label="SMTP 主机" placeholder="smtp.example.com" rules={[{ max: 255 }]} />
+        <ProFormDigit name={'smtpPort'} label="SMTP 端口" min={1} max={65535} />
+        <ProFormSelect
+          name={'smtpSecurity'}
+          label="SMTP 加密方式"
+          options={[
+            { label: 'SSL/TLS', value: 'ssl' },
+            { label: 'STARTTLS', value: 'starttls' },
+          ]}
+        />
+        <ProFormText.Password
+          name={'smtpAuthorizationCode'}
+          label="SMTP 授权码"
+          placeholder={id ? '留空则保留原授权码' : '邮箱服务商提供的授权码'}
+          rules={[{ max: 512 }]}
+        />
+      </ProCard>
       <ProFormText.Password
         required={!id}
         name={'password'}

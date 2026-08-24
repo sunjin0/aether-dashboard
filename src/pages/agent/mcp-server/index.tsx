@@ -246,7 +246,8 @@ const McpServerPage: React.FC = () => {
         closable={!importingTools}
         maskClosable={!importingTools}
         width="50%"
-        styles={{ body: { height: '60vh', overflow: 'hidden' } }}
+        // 工具卡片数量较多时让 Modal 主体承担滚动，避免 Spin 包装层未撑满高度而截断内容。
+        styles={{ body: { maxHeight: '60vh', overflowY: 'auto', overflowX: 'hidden' } }}
       >
         <Spin spinning={importingTools} style={{ height: '100%' }}>
           <div
@@ -254,8 +255,7 @@ const McpServerPage: React.FC = () => {
               display: 'flex',
               flexDirection: 'column',
               gap: 16,
-              height: '100%',
-              minHeight: 0,
+              minHeight: '100%',
             }}
           >
           <Space style={{ width: '100%', justifyContent: 'space-between', flex: 'none' }}>

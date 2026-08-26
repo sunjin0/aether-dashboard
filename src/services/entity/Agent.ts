@@ -53,6 +53,14 @@ export interface AgentDefinition {
   maxToolRounds?: number;
   accessType?: string;
   executionMode?: 'STANDARD' | 'DEEP';
+  /** Agent-specific mailbox used by send_email; it overrides the operator mailbox. */
+  smtpEnabled?: boolean;
+  smtpSenderEmail?: string;
+  smtpHost?: string;
+  smtpPort?: number;
+  smtpSecurity?: 'ssl' | 'starttls';
+  smtpAuthorizationCode?: string;
+  smtpAuthorizationCodeConfigured?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -689,7 +697,7 @@ export interface AgentMessage {
   id?: string;
   conversationId?: string;
   role?: string;
-  messageType?: 'chat' | 'interaction' | 'answer';
+  messageType?: 'chat' | 'interaction' | 'answer' | 'tool_call' | 'tool_result';
   interactionType?: 'choice' | 'confirm' | 'group';
   interactionStatus?: 'pending' | 'answered' | 'cancelled' | 'expired';
   questionConfig?: string;
@@ -703,6 +711,8 @@ export interface AgentMessage {
   reasoningContent?: string;
   reasoningTokens?: number;
   toolCalls?: string;
+  toolCallId?: string;
+  toolResult?: string;
   runId?: string;
   model?: string;
   promptTokens?: number;
@@ -1179,6 +1189,7 @@ export interface AgentSkillKnowledgeBinding {
   id?: string;
   skillVersionId?: string;
   knowledgeBaseId?: string;
+  declarationMode?: 'ALWAYS' | 'ROUTE_MATCHED' | 'RETRIEVE_ONLY' | string;
 }
 
 /**
@@ -1242,6 +1253,8 @@ export interface AgentSkillDraftDto {
   changeNote?: string;
   tools?: AgentSkillToolDto[];
   knowledgeBaseIds?: string[];
+  /** ALWAYS / ROUTE_MATCHED / RETRIEVE_ONLY; applied to this draft's selected bases. */
+  knowledgeDeclarationMode?: string;
 }
 
 /**

@@ -3,6 +3,7 @@ import { ResponseStructure } from '@/services/entity/Common';
 
 export interface ServiceAccount {
   id: string;
+  applicationId: string;
   name: string;
   description?: string;
   clientId: string;
@@ -63,6 +64,7 @@ export type ServiceAccountCreate = Omit<
   Pick<
     ServiceAccount,
     | 'name'
+    | 'applicationId'
     | 'description'
     | 'clientId'
     | 'allowedWorkflowIds'
@@ -75,6 +77,7 @@ export type ServiceAccountCreate = Omit<
 export type ServiceAccountUpdate = Pick<
   ServiceAccount,
   | 'name'
+  | 'applicationId'
   | 'description'
   | 'allowedWorkflowIds'
   | 'allowedAgentIds'

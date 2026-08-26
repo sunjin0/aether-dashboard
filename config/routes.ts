@@ -101,6 +101,16 @@ export default [
         component: './agent/definition',
       },
       {
+        path: '/agent/application',
+        name: '业务应用空间',
+        component: './agent/application',
+      },
+      {
+        path: '/agent/product-profile',
+        name: 'Agent 产品发布',
+        component: './agent/product-profile',
+      },
+      {
         path: '/agent/mcp-server',
         name: 'MCP 服务',
         component: './agent/mcp-server',

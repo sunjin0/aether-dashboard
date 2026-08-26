@@ -28,6 +28,7 @@ import { useAccess } from '@@/exports'
 import TableActionMenu from '@/components/TableActionMenu'
 import DrawerForm from '@/components/DrawerForm'
 import { getAgentDefinitionOptions } from '@/services/agent/AgentDefinitionController'
+import { getAgentApplicationList } from '@/services/agent/AgentApplicationController'
 import { getWorkflowList, startExternalBusinessWorkflow } from '@/services/workflow/WorkflowController'
 import {
   ServiceAccount,
@@ -58,11 +59,13 @@ const ServiceAccountPage: React.FC = () => {
   const [testAccount, setTestAccount] = useState<ServiceAccount>()
   const [agentOptions, setAgentOptions] = useState<any[]>([])
   const [workflowOptions, setWorkflowOptions] = useState<any[]>([])
+  const [applicationOptions, setApplicationOptions] = useState<any[]>([])
   const write = Boolean(access[history.location.pathname])
   const t = (id: string, values?: Record<string, any>) => intl.formatMessage({ id }, values)
 
   useEffect(() => {
     getAgentDefinitionOptions(1).then(setAgentOptions)
+    getAgentApplicationList({ current: 1, pageSize: 100 }).then((result) => setApplicationOptions((result.data || []).filter((item) => item.status === 1).map((item) => ({ label: item.name, value: item.id }))))
     getWorkflowList({ current: 1, pageSize: 100 }).then((result: any) => {
       setWorkflowOptions(
         (result.data || []).map((item: any) => ({ label: item.name, value: item.id })),
@@ -72,6 +75,7 @@ const ServiceAccountPage: React.FC = () => {
 
   const renderAccountFields = () => (
     <>
+      <ProFormSelect name="applicationId" label="业务应用空间" options={applicationOptions} rules={[{ required: true }]} />
       <ProFormText
         name="name"
         label={t('pages.serviceAccount.name')}

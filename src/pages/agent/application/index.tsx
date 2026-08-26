@@ -1,23 +1,26 @@
 import React, { useRef, useState } from 'react'
+import { useIntl } from '@umijs/max'
 import { PageContainer, ProTable, DrawerForm, ProFormText, ProFormTextArea, ProFormRadio, ProFormDigit } from '@ant-design/pro-components'
-import { Button, Descriptions, Modal } from 'antd'
+import { Button, Descriptions, Modal, Popconfirm, Space, message } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
-import { AgentApplication, AgentApplicationUsage, createAgentApplication, getAgentApplicationList, getAgentApplicationUsage, updateAgentApplication } from '@/services/agent/AgentApplicationController'
+import { AgentApplication, AgentApplicationUsage, createAgentApplication, deleteAgentApplication, getAgentApplicationList, getAgentApplicationUsage, updateAgentApplication } from '@/services/agent/AgentApplicationController'
 
 export default function AgentApplicationPage() {
+  const intl = useIntl()
+  const t = (id: string, values?: Record<string, string | number>) => intl.formatMessage({ id }, values)
   const ref = useRef<any>(); const [open, setOpen] = useState(false); const [current, setCurrent] = useState<AgentApplication | undefined>(); const [usage, setUsage] = useState<AgentApplicationUsage>(); const [usageOpen, setUsageOpen] = useState(false)
-  const submit = async (value: any) => { const result = current ? await updateAgentApplication(current.id, value) : await createAgentApplication(value); if (result.code === 200) { setOpen(false); ref.current?.reload(); return true }; return false }
-  return <PageContainer header={{ title: '业务应用空间', subTitle: '隔离业务系统的 Agent、工作流、知识库与服务账号' }}>
+  const submit = async (value: any) => { const result = current ? await updateAgentApplication(current.id, value) : await createAgentApplication(value); if (result.code === 200) { message.success(current ? t('pages.agent.application.updateSuccess') : t('pages.agent.application.createSuccess')); setOpen(false); ref.current?.reload(); return true }; return false }
+  return <PageContainer header={{ title: t('pages.agent.application.title'), subTitle: t('pages.agent.application.subtitle') }}>
     <ProTable<AgentApplication> actionRef={ref} rowKey="id" search={false} request={async () => { const r = await getAgentApplicationList({ current: 1, pageSize: 100 }); return { data: r.data || [], success: r.code === 200 } }}
-      toolBarRender={() => [<Button key="new" type="primary" icon={<PlusOutlined />} onClick={() => { setCurrent(undefined); setOpen(true) }}>新建应用空间</Button>]}
-      columns={[{ title: '编码', dataIndex: 'code' }, { title: '名称', dataIndex: 'name' }, { title: '说明', dataIndex: 'description', ellipsis: true }, { title: '应用配额', render: (_, r) => `Agent ${r.maxAgentCallsPerHour || 0}/h · 工作流 ${r.maxWorkflowStartsPerHour || 0}/h` }, { title: '状态', dataIndex: 'status', render: (_, r) => r.status === 1 ? '启用' : '停用' }, { title: '操作', valueType: 'option', render: (_, r) => [<a key="usage" onClick={async () => { const result = await getAgentApplicationUsage(r.id); if (result.code === 200) { setUsage(result.data); setUsageOpen(true) } }}>运行指标</a>, <a key="edit" onClick={() => { setCurrent(r); setOpen(true) }}>编辑</a>] }]} />
-    <DrawerForm open={open} onOpenChange={setOpen} title={current ? '编辑应用空间' : '新建应用空间'} initialValues={current || { status: 1 }} onFinish={submit}>
-      <ProFormText name="code" label="应用编码" rules={[{ required: true }, { pattern: /^[A-Za-z0-9_-]{2,64}$/, message: '仅支持字母、数字、下划线和短横线' }]} />
-      <ProFormText name="name" label="应用名称" rules={[{ required: true }]} /><ProFormTextArea name="description" label="说明" />
-      <ProFormDigit name="maxAgentCallsPerHour" label="每小时 Agent 调用上限" min={0} max={100000} fieldProps={{ precision: 0 }} extra="0 表示不限制" />
-      <ProFormDigit name="maxWorkflowStartsPerHour" label="每小时工作流启动上限" min={0} max={100000} fieldProps={{ precision: 0 }} extra="0 表示不限制" />
-      <ProFormRadio name="status" label="状态" options={[{ label: '启用', value: 1 }, { label: '停用', value: 0 }]} />
+      toolBarRender={() => [<Button key="new" type="primary" icon={<PlusOutlined />} onClick={() => { setCurrent(undefined); setOpen(true) }}>{t('pages.agent.application.create')}</Button>]}
+      columns={[{ title: t('pages.common.code'), dataIndex: 'code' }, { title: t('pages.common.name'), dataIndex: 'name' }, { title: t('pages.common.description'), dataIndex: 'description', ellipsis: true }, { title: t('pages.agent.application.quota'), render: (_, r) => t('pages.agent.application.quotaValue', { agent: r.maxAgentCallsPerHour || 0, workflow: r.maxWorkflowStartsPerHour || 0 }) }, { title: t('pages.common.status'), dataIndex: 'status', render: (_, r) => r.status === 1 ? t('pages.common.enabled') : t('pages.common.disabled') }, { title: t('pages.common.option'), valueType: 'option', render: (_, r) => <Space size={4}><Button type="link" size="small" onClick={async () => { const result = await getAgentApplicationUsage(r.id); if (result.code === 200) { setUsage(result.data); setUsageOpen(true) } }}>{t('pages.agent.application.usage')}</Button><Button type="link" size="small" onClick={() => { setCurrent(r); setOpen(true) }}>{t('pages.common.edit')}</Button>{r.id !== '0' && <Popconfirm title={t('pages.agent.application.deleteTitle')} description={t('pages.agent.application.deleteDescription')} okText={t('pages.common.delete')} cancelText={t('pages.common.close')} onConfirm={async () => { const result = await deleteAgentApplication(r.id); if (result.code === 200) { message.success(t('pages.agent.application.deleteSuccess')); ref.current?.reload() } }}><Button type="link" danger size="small">{t('pages.common.delete')}</Button></Popconfirm>}</Space> }]} />
+    <DrawerForm open={open} onOpenChange={setOpen} title={current ? t('pages.agent.application.editTitle') : t('pages.agent.application.createTitle')} initialValues={current || { status: 1 }} onFinish={submit}>
+      <ProFormText name="code" label={t('pages.agent.application.code')} rules={[{ required: true }, { pattern: /^[A-Za-z0-9_-]{2,64}$/, message: t('pages.agent.application.codeInvalid') }]} />
+      <ProFormText name="name" label={t('pages.agent.application.name')} rules={[{ required: true }]} /><ProFormTextArea name="description" label={t('pages.common.description')} />
+      <ProFormDigit name="maxAgentCallsPerHour" label={t('pages.agent.application.maxAgentCalls')} min={0} max={100000} fieldProps={{ precision: 0 }} extra={t('pages.agent.application.unlimitedHint')} />
+      <ProFormDigit name="maxWorkflowStartsPerHour" label={t('pages.agent.application.maxWorkflowStarts')} min={0} max={100000} fieldProps={{ precision: 0 }} extra={t('pages.agent.application.unlimitedHint')} />
+      <ProFormRadio name="status" label={t('pages.common.status')} options={[{ label: t('pages.common.enabled'), value: 1 }, { label: t('pages.common.disabled'), value: 0 }]} />
     </DrawerForm>
-    <Modal open={usageOpen} onCancel={() => setUsageOpen(false)} footer={null} title="应用空间运行指标"><Descriptions column={1} bordered items={[{ key: 'agent', label: 'Agent 运行', children: usage?.agentRuns || 0 }, { key: 'workflow', label: '工作流运行', children: usage?.workflowRuns || 0 }, { key: 'tokens', label: '累计 Token', children: usage?.totalTokens || 0 }, { key: 'callback', label: '回调失败', children: usage?.callbackFailed || 0 }]} /></Modal>
+    <Modal open={usageOpen} onCancel={() => setUsageOpen(false)} footer={null} title={t('pages.agent.application.usageTitle')}><Descriptions column={1} bordered items={[{ key: 'agent', label: t('pages.agent.application.agentRuns'), children: usage?.agentRuns || 0 }, { key: 'workflow', label: t('pages.agent.application.workflowRuns'), children: usage?.workflowRuns || 0 }, { key: 'tokens', label: t('pages.agent.application.totalTokens'), children: usage?.totalTokens || 0 }, { key: 'callback', label: t('pages.agent.application.callbackFailed'), children: usage?.callbackFailed || 0 }]} /></Modal>
   </PageContainer>
 }

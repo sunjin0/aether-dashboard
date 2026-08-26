@@ -91,69 +91,41 @@ export default [
     icon: 'robot',
     routes: [
       {
-        path: '/agent/model-provider',
-        name: '模型服务商',
-        component: './agent/model-provider',
+        path: '/agent/build',
+        name: '构建与发布',
+        routes: [
+          { path: '/agent/application', name: '业务应用空间', component: './agent/application' },
+          { path: '/agent/definition', name: '智能体配置', component: './agent/definition' },
+          { path: '/agent/product-profile', name: 'Agent 产品发布', component: './agent/product-profile' },
+        ],
       },
       {
-        path: '/agent/definition',
-        name: '智能体配置',
-        component: './agent/definition',
+        path: '/agent/capability',
+        name: '模型与能力',
+        routes: [
+          { path: '/agent/model-provider', name: '模型服务商', component: './agent/model-provider' },
+          { path: '/agent/mcp-server', name: 'MCP 服务', component: './agent/mcp-server' },
+          { path: '/agent/tool', name: '工具目录', component: './agent/tool' },
+          { path: '/agent/skill', name: '智能体技能', component: './agent/skill' },
+        ],
       },
       {
-        path: '/agent/application',
-        name: '业务应用空间',
-        component: './agent/application',
+        path: '/agent/operations',
+        name: '调试与运营',
+        routes: [
+          { path: '/agent/chat', name: '对话调试', component: './agent/chat' },
+          { path: '/agent/conversation', name: '会话管理', component: './agent/conversation' },
+          { path: '/agent/run', name: '执行记录', component: './agent/run' },
+          { path: '/agent/tool-call-log', name: '工具调用日志', component: './agent/tool-call-log' },
+          { path: '/agent/artifact', name: '生成文件库', component: './agent/artifact' },
+        ],
       },
       {
-        path: '/agent/product-profile',
-        name: 'Agent 产品发布',
-        component: './agent/product-profile',
-      },
-      {
-        path: '/agent/mcp-server',
-        name: 'MCP 服务',
-        component: './agent/mcp-server',
-      },
-      {
-        path: '/agent/tool',
-        name: '工具目录',
-        component: './agent/tool',
-      },
-      {
-        path: '/agent/conversation',
-        name: '会话管理',
-        component: './agent/conversation',
-      },
-      {
-        path: '/agent/chat',
-        name: '对话调试',
-        component: './agent/chat',
-      },
-      {
-        path: '/agent/run',
-        name: '执行记录',
-        component: './agent/run',
-      },
-      {
-        path: '/agent/tool-call-log',
-        name: '工具调用日志',
-        component: './agent/tool-call-log',
-      },
-      {
-        path: '/agent/skill',
-        name: '智能体技能',
-        component: './agent/skill',
-      },
-      {
-        path: '/agent/artifact',
-        name: '生成文件库',
-        component: './agent/artifact',
-      },
-      {
-        path: '/agent/sandbox',
-        name: '沙箱执行平台',
-        component: './agent/sandbox',
+        path: '/agent/runtime',
+        name: '运行保障',
+        routes: [
+          { path: '/agent/sandbox', name: '沙箱执行平台', component: './agent/sandbox' },
+        ],
       },
     ],
   },

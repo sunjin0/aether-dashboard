@@ -147,14 +147,6 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
           menuData.forEach((item: any) => {
             item.icon = iconMap[item.icon]
           })
-          const routes = new Array<object>()
-          menuData.forEach((item: any) => {
-            if (item.children) {
-              item.children.forEach((child: any) => {
-                routes[child.path] = { write: child.access?.includes('Write') }
-              })
-            }
-          })
           return menuData
         } catch {
           return []

@@ -60,6 +60,7 @@ const ServiceAccountPage: React.FC = () => {
   const [agentOptions, setAgentOptions] = useState<any[]>([])
   const [workflowOptions, setWorkflowOptions] = useState<any[]>([])
   const [applicationOptions, setApplicationOptions] = useState<any[]>([])
+  const [applicationFilter, setApplicationFilter] = useState<string>()
   const write = Boolean(access[history.location.pathname])
   const t = (id: string, values?: Record<string, any>) => intl.formatMessage({ id }, values)
 
@@ -354,9 +355,10 @@ const ServiceAccountPage: React.FC = () => {
           labelWidth: 120,
         }}
         columns={columns}
-        request={async (params) => getServiceAccountList(params)}
-        toolBarRender={() =>
-          write
+        request={async (params) => getServiceAccountList({ ...params, applicationId: applicationFilter })}
+        toolBarRender={() => [
+          <Select key="application" allowClear value={applicationFilter} placeholder="筛选业务应用空间" options={applicationOptions} style={{ width: 220 }} onChange={(value) => { setApplicationFilter(value); actionRef.current?.reload() }} />,
+          ...(write
             ? [
               <Button
                 key="create"
@@ -375,9 +377,8 @@ const ServiceAccountPage: React.FC = () => {
               >
                 {t('pages.serviceAccount.create')}
               </Button>,
-            ]
-            : []
-        }
+            ] : []),
+        ]}
       />
       <DrawerForm
         id={createOpen ? CREATE_ID : ''}

@@ -6,3 +6,5 @@ export const createAgentProductProfile = (data: Omit<AgentProductProfile, 'id' |
 export const updateAgentProductProfile = (id: string, data: Omit<AgentProductProfile, 'id' | 'status' | 'versionNo'>) => request<ResponseStructure<void>>(`/api/agent/product-profile/${id}`, { method: 'PUT', data })
 export const publishAgentProductProfile = (id: string) => request<ResponseStructure<AgentProductProfile>>(`/api/agent/product-profile/${id}/publish`, { method: 'POST' })
 export const copyAgentProductProfile = (id: string) => request<ResponseStructure<string>>(`/api/agent/product-profile/${id}/copy`, { method: 'POST' })
+export interface AgentProductProfileVersion { id: string; versionNo: number; snapshot: string; publishedBy?: string; publishedAt: number }
+export const getAgentProductProfileVersions = (id: string) => request<ResponseStructure<AgentProductProfileVersion[]>>(`/api/agent/product-profile/${id}/versions`)

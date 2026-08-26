@@ -327,6 +327,13 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
     return null
   }
 
+  // Tool protocol records remain in the conversation for model replay and audit.
+  // The assistant bubble already renders its aggregated tool cards underneath,
+  // so rendering them here would duplicate parameters and results above it.
+  if (agentMessage.messageType === 'tool_call' || agentMessage.messageType === 'tool_result') {
+    return null
+  }
+
   const renderContent = () => {
     const messageIdPrefix = agentMessage.id || `msg-${Math.random().toString(36).substr(2, 9)}`
     if (agentMessage.messageType === 'interaction' && agentMessage.questionConfig) {

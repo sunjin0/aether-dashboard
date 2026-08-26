@@ -3,6 +3,7 @@ import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons'
 import {
   Alert,
   Button,
+  Card,
   Form,
   Input,
   InputNumber,
@@ -136,6 +137,7 @@ const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen,
           knowledgeBaseIds: (data.knowledgeBases || [])
             .map((item) => item.knowledgeBaseId)
             .filter((value): value is string => Boolean(value)),
+          knowledgeDeclarationMode: data.knowledgeBases?.[0]?.declarationMode || 'RETRIEVE_ONLY',
         })
       }
       if (initialDetail?.draft) {
@@ -356,9 +358,8 @@ const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen,
           </div>
 
           <div hidden={activeStep !== 2}>
-          <Text strong style={{ display: 'block', margin: '16px 0 8px' }}>
-            {format('pages.agent.skill.sectionDependencies')}
-          </Text>
+          <Text strong style={{ display: 'block', margin: '16px 0 8px' }}>{format('pages.agent.skill.sectionDependencies')}</Text>
+          <Card size="small" title="知识库提示词声明" style={{ marginBottom: 16 }}>
           <Form.Item
             name="knowledgeBaseIds"
             label={format('pages.agent.skill.knowledgeBaseIds')}
@@ -374,7 +375,22 @@ const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen,
               placeholder={format('pages.agent.skill.selectKnowledgeBase')}
             />
           </Form.Item>
+          <Form.Item
+            name="knowledgeDeclarationMode"
+            label={format('pages.agent.skill.knowledgeDeclarationMode')}
+            initialValue="RETRIEVE_ONLY"
+            tooltip={format('pages.agent.skill.knowledgeDeclarationModeHint')}
+          >
+            <Select options={[
+              { value: 'ALWAYS', label: format('pages.agent.skill.knowledgeDeclarationMode.always') },
+              { value: 'ROUTE_MATCHED', label: format('pages.agent.skill.knowledgeDeclarationMode.routeMatched') },
+              { value: 'RETRIEVE_ONLY', label: format('pages.agent.skill.knowledgeDeclarationMode.retrieveOnly') },
+            ]} />
+          </Form.Item>
+          <Text type="secondary">知识库绑定独立保存并在运行快照中审计；运行时按检索策略决定是否注入内容。</Text>
+          </Card>
 
+          <Card size="small" title="Tools 能力与执行声明">
           <Form.Item
             label={format('pages.agent.skill.tools')}
             tooltip={format('pages.agent.skill.toolsHint')}
@@ -436,6 +452,8 @@ const SkillForm: React.FC<SkillFormProps> = ({ id, initialDetail, open, setOpen,
               )}
             </Form.List>
           </Form.Item>
+          <Text type="secondary">工具依赖独立保存；模型仅获得能力目录，完整定义与执行权限在路由命中后加载。</Text>
+          </Card>
           </div>
         </Form>
       </Spin>

@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react'
 import {
   PageContainer,
-  DrawerForm,
   ProFormInstance,
   ProFormSelect,
   ProFormTextArea,
   ProFormDependency,
 } from '@ant-design/pro-components'
+import DrawerForm from '@/components/DrawerForm'
 import {
   Alert,
   Button,

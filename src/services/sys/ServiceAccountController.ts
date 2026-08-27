@@ -7,8 +7,7 @@ export interface ServiceAccount {
   name: string;
   description?: string;
   clientId: string;
-  allowedWorkflowIds: string[];
-  allowedAgentIds: string[];
+  allowedProductIds: string[];
   maxStartsPerHour: number;
   maxAgentCallsPerHour: number;
   enabled: boolean;
@@ -67,8 +66,7 @@ export type ServiceAccountCreate = Omit<
     | 'applicationId'
     | 'description'
     | 'clientId'
-    | 'allowedWorkflowIds'
-    | 'allowedAgentIds'
+    | 'allowedProductIds'
     | 'maxStartsPerHour'
     | 'maxAgentCallsPerHour'
   >,
@@ -79,8 +77,7 @@ export type ServiceAccountUpdate = Pick<
   | 'name'
   | 'applicationId'
   | 'description'
-  | 'allowedWorkflowIds'
-  | 'allowedAgentIds'
+    | 'allowedProductIds'
   | 'maxStartsPerHour'
   | 'maxAgentCallsPerHour'
 >;

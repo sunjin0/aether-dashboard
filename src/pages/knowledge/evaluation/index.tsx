@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActionType,
-  DrawerForm,
   PageContainer,
   ProFormSelect,
   ProFormText,
   ProFormTextArea,
   ProTable,
 } from '@ant-design/pro-components';
+import DrawerForm from '@/components/DrawerForm';
 import { ArrowRightOutlined, PlusOutlined } from '@ant-design/icons';
 import { Badge, Button, Popconfirm, Space, Tag, Typography } from 'antd';
 import { history, useAccess, useIntl } from '@umijs/max';

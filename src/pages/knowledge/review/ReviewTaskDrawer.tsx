@@ -1,4 +1,4 @@
-import { DrawerForm } from '@ant-design/pro-components'
+import DrawerForm from '@/components/DrawerForm'
 import MDEditor from '@uiw/react-md-editor'
 import { useIntl } from '@umijs/max'
 import { Alert, Button, Descriptions, List, Space, Spin, Tag, Tooltip, Typography } from 'antd'

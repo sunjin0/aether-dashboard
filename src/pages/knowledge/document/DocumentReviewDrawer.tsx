@@ -1,4 +1,4 @@
-import { DrawerForm } from '@ant-design/pro-components'
+import DrawerForm from '@/components/DrawerForm'
 import { Alert, Button, Spin } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { KnowledgeDocumentVersion, ReviewStatus } from '@/services/entity/Agent'

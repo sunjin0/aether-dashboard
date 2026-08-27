@@ -16,6 +16,7 @@ import {
   WorkflowSchedule,
 } from '@/services/workflow/WorkflowController';
 import { getServiceAccountList, ServiceAccount } from '@/services/sys/ServiceAccountController';
+import { AgentProductProfile, getAgentProductProfiles } from '@/services/agent/AgentProductProfileController';
 
 const scheduleTypes = [
   'EVERY_5_MINUTES',
@@ -83,6 +84,7 @@ const WorkflowSchedulePage: React.FC = () => {
   const [editing, setEditing] = useState<WorkflowSchedule>();
   const [workflows, setWorkflows] = useState<AgentWorkflow[]>([]);
   const [serviceAccounts, setServiceAccounts] = useState<ServiceAccount[]>([]);
+  const [products, setProducts] = useState<AgentProductProfile[]>([]);
   const [workflowVariables, setWorkflowVariables] = useState<WorkflowVariable[]>([]);
   const [form] = Form.useForm();
   const workflowId = Form.useWatch('workflowId', form);
@@ -92,6 +94,9 @@ const WorkflowSchedulePage: React.FC = () => {
     getWorkflowList({ current: 1, pageSize: 1000 }).then((result) => {
       if (result.code === 200)
         setWorkflows((result.data || []).filter((workflow) => workflow.status === 1));
+    });
+    getAgentProductProfiles({ current: 1, pageSize: 100, status: 1 }).then((result) => {
+      if (result.code === 200) setProducts((result.data || []).filter((product) => product.status === 1));
     });
   }, []);
 
@@ -200,12 +205,10 @@ const WorkflowSchedulePage: React.FC = () => {
     if (result.code === 200) ref.current?.reload();
   };
 
-  const availableAccounts = serviceAccounts.filter(
-    (account) =>
-      account.enabled &&
-      (!workflowId ||
-        !account.allowedWorkflowIds?.length ||
-        account.allowedWorkflowIds.includes(workflowId)),
+  const availableAccounts = serviceAccounts.filter((account) =>
+    account.enabled && (!workflowId || products.some((product) =>
+      product.workflowId === workflowId && product.applicationId === account.applicationId
+      && account.allowedProductIds?.includes(product.id))),
   );
 
   return (

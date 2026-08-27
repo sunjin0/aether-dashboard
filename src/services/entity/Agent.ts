@@ -39,6 +39,7 @@ export interface ModelProviderStatusParams {
  */
 export interface AgentDefinition {
   id?: string;
+  applicationId?: string;
   name?: string;
   code?: string;
   description?: string;

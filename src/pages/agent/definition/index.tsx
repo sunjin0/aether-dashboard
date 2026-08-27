@@ -14,6 +14,7 @@ import {
   updateAgentDefinitionStatus,
 } from '@/services/agent/AgentDefinitionController'
 import { getModelCatalogOptions } from '@/services/agent/ModelProviderController'
+import { AgentApplication, getAgentApplicationList } from '@/services/agent/AgentApplicationController'
 import { getOptionList } from '@/services/sys/DictController'
 import { AgentDefinition, AgentDefinitionSearchParams } from '@/services/entity/Agent'
 import TableActionMenu from '@/components/TableActionMenu'
@@ -34,6 +35,12 @@ const AgentDefinitionPage: React.FC = () => {
   const [currentAgentId, setCurrentAgentId] = useState<string>('')
   const [knowledgeBaseBindingVisible, setKnowledgeBaseBindingVisible] = useState(false)
   const [skillBindingVisible, setSkillBindingVisible] = useState(false)
+  const [applications, setApplications] = useState<AgentApplication[]>([])
+  const applicationOptions = applications.map((item) => ({ label: item.name, value: item.id }))
+
+  React.useEffect(() => {
+    getAgentApplicationList({ current: 1, pageSize: 100 }).then(({ data }) => setApplications((data || []).filter((item) => item.status === 1)))
+  }, [])
 
   const handleDelete = async (record: AgentDefinition) => {
     if (!record.id) {
@@ -83,6 +90,13 @@ const AgentDefinitionPage: React.FC = () => {
   }
 
   const columns: any[] = [
+    {
+      title: '业务应用空间',
+      dataIndex: 'applicationId',
+      valueType: 'select',
+      fieldProps: { options: applicationOptions },
+      render: (value: string) => applications.find((item) => item.id === value)?.name || value,
+    },
     {
       title: format('pages.agent.definition.name'),
       dataIndex: 'name',
@@ -231,6 +245,9 @@ const AgentDefinitionPage: React.FC = () => {
       <ProTable
         actionRef={ref}
         rowKey="id"
+        search={{
+          labelWidth: 120,
+        }}
         scroll={{ x: 1400 }}
         request={async (params: AgentDefinitionSearchParams) => getAgentDefinitionList(params)}
         toolBarRender={() =>
@@ -254,6 +271,7 @@ const AgentDefinitionPage: React.FC = () => {
         id={id}
         open={open}
         setOpen={setOpen}
+        applications={applications}
         onSuccess={() => {
           setId(undefined)
           ref.current?.reload()

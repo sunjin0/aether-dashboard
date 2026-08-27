@@ -18,6 +18,7 @@ import {
 import { getModelCatalogOptions } from '@/services/agent/ModelProviderController'
 import { getAgentToolOptions } from '@/services/agent/ToolController'
 import { getOptionList } from '@/services/sys/DictController'
+import { AgentApplication } from '@/services/agent/AgentApplicationController'
 import { useIntl } from '@umijs/max'
 
 const AgentDefinitionForm = (props: {
@@ -25,8 +26,9 @@ const AgentDefinitionForm = (props: {
   open?: boolean;
   setOpen?: (open: boolean) => void;
   onSuccess: () => void;
+  applications: AgentApplication[];
 }) => {
-  const { id, open, setOpen, onSuccess } = props
+  const { id, open, setOpen, onSuccess, applications } = props
   const intl = useIntl()
   const format = (id: string) => intl.formatMessage({ id })
   const [form] = Form.useForm()
@@ -49,6 +51,13 @@ const AgentDefinitionForm = (props: {
       form={form}
     >
       <ProFormText name="id" hidden={true} />
+      <ProFormSelect
+        name="applicationId"
+        label="业务应用空间"
+        options={applications.map((item) => ({ label: item.name, value: item.id }))}
+        initialValue="0"
+        rules={[{ required: true }]}
+      />
       <ProFormText
         name="name"
         label={format('pages.agent.definition.name')}

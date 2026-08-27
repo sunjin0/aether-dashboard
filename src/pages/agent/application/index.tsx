@@ -8,28 +8,231 @@ import {
   ProFormRadio,
   ProFormDigit,
   ProFormSelect,
-} from '@ant-design/pro-components';
+} from '@ant-design/pro-components'
 import DrawerForm from '@/components/DrawerForm'
 import { Button, Descriptions, Modal, Popconfirm, Space, message } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
-import { AgentApplication, AgentApplicationUsage, createAgentApplication, deleteAgentApplication, getAgentApplicationList, getAgentApplicationUsage, updateAgentApplication } from '@/services/agent/AgentApplicationController'
+import {
+  AgentApplication,
+  AgentApplicationUsage,
+  createAgentApplication,
+  deleteAgentApplication,
+  getAgentApplicationList,
+  getAgentApplicationUsage,
+  updateAgentApplication,
+} from '@/services/agent/AgentApplicationController'
 
 export default function AgentApplicationPage() {
   const intl = useIntl()
-  const t = (id: string, values?: Record<string, string | number>) => intl.formatMessage({ id }, values)
-  const ref = useRef<any>(); const [open, setOpen] = useState(false); const [current, setCurrent] = useState<AgentApplication | undefined>(); const [usage, setUsage] = useState<AgentApplicationUsage>(); const [usageOpen, setUsageOpen] = useState(false)
-  const submit = async (value: any) => { const result = current ? await updateAgentApplication(current.id, value) : await createAgentApplication(value); if (result.code === 200) { message.success(current ? t('pages.agent.application.updateSuccess') : t('pages.agent.application.createSuccess')); setOpen(false); ref.current?.reload(); return true }; return false }
-  return <PageContainer header={{ title: t('pages.agent.application.title'), subTitle: t('pages.agent.application.subtitle') }}>
-    <ProTable<AgentApplication> actionRef={ref} rowKey="id" request={async params => { const r = await getAgentApplicationList(params); return { data: r.data || [], total: r.total, success: r.code === 200 } }}
-      toolBarRender={() => [<Button key="new" type="primary" icon={<PlusOutlined />} onClick={() => { setCurrent(undefined); setOpen(true) }}>{t('pages.agent.application.create')}</Button>]}
-      columns={[{ title: t('pages.common.code'), dataIndex: 'code' }, { title: t('pages.common.name'), dataIndex: 'name' }, { title: t('pages.common.description'), dataIndex: 'description', hideInTable: true }, { title: t('pages.agent.application.quota'), search: false, render: (_, r) => t('pages.agent.application.quotaValue', { agent: r.maxAgentCallsPerHour || 0, workflow: r.maxWorkflowStartsPerHour || 0 }) }, { title: t('pages.common.status'), dataIndex: 'status', valueType: 'select', fieldProps: { options: [{ label: t('pages.common.enabled'), value: 1 }, { label: t('pages.common.disabled'), value: 0 }] }, render: (_, r) => r.status === 1 ? t('pages.common.enabled') : t('pages.common.disabled') }, { title: t('pages.common.option'), search: false, valueType: 'option', render: (_, r) => <Space size={4}><Button type="link" size="small" onClick={async () => { const result = await getAgentApplicationUsage(r.id); if (result.code === 200) { setUsage(result.data); setUsageOpen(true) } }}>{t('pages.agent.application.usage')}</Button><Button type="link" size="small" onClick={() => { setCurrent(r); setOpen(true) }}>{t('pages.common.edit')}</Button>{r.id !== '0' && <Popconfirm title={t('pages.agent.application.deleteTitle')} description={t('pages.agent.application.deleteDescription')} okText={t('pages.common.delete')} cancelText={t('pages.common.close')} onConfirm={async () => { const result = await deleteAgentApplication(r.id); if (result.code === 200) { message.success(t('pages.agent.application.deleteSuccess')); ref.current?.reload() } }}><Button type="link" danger size="small">{t('pages.common.delete')}</Button></Popconfirm>}</Space> }]} />
-    <DrawerForm open={open} onOpenChange={setOpen} title={current ? t('pages.agent.application.editTitle') : t('pages.agent.application.createTitle')} initialValues={current || { status: 1 }} onFinish={submit}>
-      <ProFormText name="code" label={t('pages.agent.application.code')} rules={[{ required: true }, { pattern: /^[A-Za-z0-9_-]{2,64}$/, message: t('pages.agent.application.codeInvalid') }]} />
-      <ProFormText name="name" label={t('pages.agent.application.name')} rules={[{ required: true }]} /><ProFormTextArea name="description" label={t('pages.common.description')} />
-      <ProFormDigit name="maxAgentCallsPerHour" label={t('pages.agent.application.maxAgentCalls')} min={0} max={100000} fieldProps={{ precision: 0 }} extra={t('pages.agent.application.unlimitedHint')} />
-      <ProFormDigit name="maxWorkflowStartsPerHour" label={t('pages.agent.application.maxWorkflowStarts')} min={0} max={100000} fieldProps={{ precision: 0 }} extra={t('pages.agent.application.unlimitedHint')} />
-      <ProFormSelect name="status" label={t('pages.common.status')} options={[{ label: t('pages.common.enabled'), value: 1 }, { label: t('pages.common.disabled'), value: 0 }]} />
-    </DrawerForm>
-    <Modal open={usageOpen} onCancel={() => setUsageOpen(false)} footer={null} title={t('pages.agent.application.usageTitle')}><Descriptions column={1} bordered items={[{ key: 'agent', label: t('pages.agent.application.agentRuns'), children: usage?.agentRuns || 0 }, { key: 'workflow', label: t('pages.agent.application.workflowRuns'), children: usage?.workflowRuns || 0 }, { key: 'tokens', label: t('pages.agent.application.totalTokens'), children: usage?.totalTokens || 0 }, { key: 'callback', label: t('pages.agent.application.callbackFailed'), children: usage?.callbackFailed || 0 }]} /></Modal>
-  </PageContainer>
+  const t = (id: string, values?: Record<string, string | number>) =>
+    intl.formatMessage({ id }, values)
+  const ref = useRef<any>()
+  const [open, setOpen] = useState(false)
+  const [current, setCurrent] = useState<AgentApplication | undefined>()
+  const [usage, setUsage] = useState<AgentApplicationUsage>()
+  const [usageOpen, setUsageOpen] = useState(false)
+  const submit = async (value: any) => {
+    const result = current
+      ? await updateAgentApplication(current.id, value)
+      : await createAgentApplication(value)
+    if (result.code === 200) {
+      setOpen(false)
+      ref.current?.reload()
+      return true
+    }
+    return false
+  }
+  return (
+    <PageContainer
+      header={{
+        title: t('pages.agent.application.title'),
+        subTitle: t('pages.agent.application.subtitle'),
+      }}
+    >
+      <ProTable<AgentApplication>
+        actionRef={ref}
+        rowKey="id"
+        request={async (params) => {
+          const r = await getAgentApplicationList(params)
+          return { data: r.data || [], total: r.total, success: r.code === 200 }
+        }}
+        toolBarRender={() => [
+          <Button
+            key="new"
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              setCurrent(undefined)
+              setOpen(true)
+            }}
+          >
+            {t('pages.agent.application.create')}
+          </Button>,
+        ]}
+        columns={[
+          { title: t('pages.common.code'), dataIndex: 'code' },
+          { title: t('pages.common.name'), dataIndex: 'name' },
+          { title: t('pages.common.description'), dataIndex: 'description', hideInTable: true },
+          {
+            title: t('pages.agent.application.quota'),
+            search: false,
+            render: (_, r) =>
+              t('pages.agent.application.quotaValue', {
+                agent: r.maxAgentCallsPerHour || 0,
+                workflow: r.maxWorkflowStartsPerHour || 0,
+              }),
+          },
+          {
+            title: t('pages.common.status'),
+            dataIndex: 'status',
+            valueType: 'select',
+            fieldProps: {
+              options: [
+                { label: t('pages.common.enabled'), value: 1 },
+                { label: t('pages.common.disabled'), value: 0 },
+              ],
+            },
+            render: (_, r) =>
+              r.status === 1 ? t('pages.common.enabled') : t('pages.common.disabled'),
+          },
+          {
+            title: t('pages.common.option'),
+            search: false,
+            fixed: 'right',
+            width: 160,
+            valueType: 'option',
+            render: (_, r) => (
+              <Space size={4}>
+                <Button
+                  type="link"
+                  size="small"
+                  onClick={async () => {
+                    const result = await getAgentApplicationUsage(r.id)
+                    if (result.code === 200) {
+                      setUsage(result.data)
+                      setUsageOpen(true)
+                    }
+                  }}
+                >
+                  {t('pages.agent.application.usage')}
+                </Button>
+                <Button
+                  type="link"
+                  size="small"
+                  onClick={() => {
+                    setCurrent(r)
+                    setOpen(true)
+                  }}
+                >
+                  {t('pages.common.edit')}
+                </Button>
+                {r.id !== '0' && (
+                  <Popconfirm
+                    title={t('pages.agent.application.deleteTitle')}
+                    description={t('pages.agent.application.deleteDescription')}
+                    okText={t('pages.common.delete')}
+                    cancelText={t('pages.common.close')}
+                    onConfirm={async () => {
+                      const result = await deleteAgentApplication(r.id)
+                      if (result.code === 200) {
+                        message.success(t('pages.agent.application.deleteSuccess'))
+                        ref.current?.reload()
+                      }
+                    }}
+                  >
+                    <Button type="link" danger size="small">
+                      {t('pages.common.delete')}
+                    </Button>
+                  </Popconfirm>
+                )}
+              </Space>
+            ),
+          },
+        ]}
+      />
+      <DrawerForm
+        open={open}
+        onOpenChange={setOpen}
+        title={
+          current
+            ? t('pages.agent.application.editTitle')
+            : t('pages.agent.application.createTitle')
+        }
+        initialValues={current || { status: 1 }}
+        onFinish={submit}
+      >
+        <ProFormText
+          name="code"
+          label={t('pages.agent.application.code')}
+          rules={[
+            { required: true },
+            { pattern: /^[A-Za-z0-9_-]{2,64}$/, message: t('pages.agent.application.codeInvalid') },
+          ]}
+        />
+        <ProFormText
+          name="name"
+          label={t('pages.agent.application.name')}
+          rules={[{ required: true }]}
+        />
+        <ProFormTextArea name="description" label={t('pages.common.description')} />
+        <ProFormDigit
+          name="maxAgentCallsPerHour"
+          label={t('pages.agent.application.maxAgentCalls')}
+          min={0}
+          max={100000}
+          fieldProps={{ precision: 0 }}
+          extra={t('pages.agent.application.unlimitedHint')}
+        />
+        <ProFormDigit
+          name="maxWorkflowStartsPerHour"
+          label={t('pages.agent.application.maxWorkflowStarts')}
+          min={0}
+          max={100000}
+          fieldProps={{ precision: 0 }}
+          extra={t('pages.agent.application.unlimitedHint')}
+        />
+        <ProFormSelect
+          name="status"
+          label={t('pages.common.status')}
+          options={[
+            { label: t('pages.common.enabled'), value: 1 },
+            { label: t('pages.common.disabled'), value: 0 },
+          ]}
+        />
+      </DrawerForm>
+      <Modal
+        open={usageOpen}
+        onCancel={() => setUsageOpen(false)}
+        footer={null}
+        title={t('pages.agent.application.usageTitle')}
+      >
+        <Descriptions
+          column={1}
+          bordered
+          items={[
+            {
+              key: 'agent',
+              label: t('pages.agent.application.agentRuns'),
+              children: usage?.agentRuns || 0,
+            },
+            {
+              key: 'workflow',
+              label: t('pages.agent.application.workflowRuns'),
+              children: usage?.workflowRuns || 0,
+            },
+            {
+              key: 'tokens',
+              label: t('pages.agent.application.totalTokens'),
+              children: usage?.totalTokens || 0,
+            },
+            {
+              key: 'callback',
+              label: t('pages.agent.application.callbackFailed'),
+              children: usage?.callbackFailed || 0,
+            },
+          ]}
+        />
+      </Modal>
+    </PageContainer>
+  )
 }

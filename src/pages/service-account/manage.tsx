@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react'
 import {
   ActionType,
   PageContainer,
-  ProFormDependency,
   ProFormDigit,
   ProFormSelect,
   ProFormText,
@@ -65,24 +64,34 @@ const ServiceAccountPage: React.FC = () => {
           .map((item) => ({ label: item.name, value: item.id })),
       ),
     )
-    getAgentProductProfiles({ current: 1, pageSize: 100, status: 1 }).then((result) =>
-      setProducts(result.data || []),
-    )
   }, [])
-  const productOptions = (applicationId?: string) =>
+  const loadProducts = async (applicationId?: string) => {
+    if (!applicationId) {
+      setProducts([])
+      return
+    }
+    const result = await getAgentProductProfiles({ current: 1, pageSize: 100, status: 1, applicationId })
+    setProducts(result.code === 200 ? result.data || [] : [])
+  }
+  const productOptions = () =>
     products
-      .filter((item) => item.applicationId === applicationId)
       .map((item) => ({
         label: `${item.name} · v${item.versionNo} (${item.productType === 'WORKFLOW' ? t('pages.agent.product.workflow') : t('pages.agent.product.agent')})`,
         value: item.id,
       }))
-  const renderAccountFields = () => (
+  const renderAccountFields = (accountForm: ReturnType<typeof Form.useForm<ServiceAccountCreate>>[0]) => (
     <>
       <ProFormSelect
         name="applicationId"
         label={t('pages.serviceAccount.application')}
         options={applicationOptions}
         rules={[{ required: true }]}
+        fieldProps={{
+          onChange: (applicationId: string) => {
+            accountForm.setFieldsValue({ allowedProductIds: [] })
+            loadProducts(applicationId)
+          },
+        }}
       />
       <ProFormText
         name="name"
@@ -106,18 +115,14 @@ const ServiceAccountPage: React.FC = () => {
         ]}
         fieldProps={{ disabled: Boolean(editAccount) }}
       />
-      <ProFormDependency name={['applicationId']}>
-        {({ applicationId }) => (
-          <ProFormSelect
-            name="allowedProductIds"
-            label={t('pages.serviceAccount.allowedProducts')}
-            extra={t('pages.serviceAccount.allowedProductsTip')}
-            options={productOptions(applicationId)}
-            fieldProps={{ mode: 'multiple' }}
-            rules={[{ required: true, message: t('pages.serviceAccount.productsRequired') }]}
-          />
-        )}
-      </ProFormDependency>
+      <ProFormSelect
+        name="allowedProductIds"
+        label={t('pages.serviceAccount.allowedProducts')}
+        extra={t('pages.serviceAccount.allowedProductsTip')}
+        options={productOptions()}
+        fieldProps={{ mode: 'multiple' }}
+        rules={[{ required: true, message: t('pages.serviceAccount.productsRequired') }]}
+      />
       <ProFormDigit
         name="maxAgentCallsPerHour"
         label={t('pages.serviceAccount.maxAgentCalls')}
@@ -238,7 +243,10 @@ const ServiceAccountPage: React.FC = () => {
                 key: 'edit',
                 label: t('pages.common.edit'),
                 primary: true,
-                onClick: () => setEditAccount(record),
+                onClick: () => {
+                  setEditAccount(record)
+                  loadProducts(record.applicationId)
+                },
               },
               {
                 key: 'rotate',
@@ -290,6 +298,7 @@ const ServiceAccountPage: React.FC = () => {
                     maxAgentCallsPerHour: 0,
                     maxStartsPerHour: 0,
                   })
+                  setProducts([])
                   setCreateOpen(true)
                 }}
               >
@@ -312,7 +321,7 @@ const ServiceAccountPage: React.FC = () => {
         onSuccess={submit}
         drawerProps={{ title: t('pages.serviceAccount.create') }}
       >
-        {renderAccountFields()}
+        {renderAccountFields(form)}
       </DrawerForm>
       <DrawerForm
         id={editAccount?.id || ''}
@@ -336,7 +345,7 @@ const ServiceAccountPage: React.FC = () => {
         onSuccess={submitEdit}
         drawerProps={{ title: t('pages.common.edit') }}
       >
-        {renderAccountFields()}
+        {renderAccountFields(editForm)}
       </DrawerForm>
       <Modal
         title={t('pages.serviceAccount.secretTitle')}

@@ -26,8 +26,8 @@ export const getAgentDefinitionList = async (
 export const getAvailableAgentTools = async (agentId: string, params: AgentToolSearchParams): Promise<ResponseStructure<AgentTool[]>> => {
   return request(`/api/agent/definition/${agentId}/tools/available`, { method: 'POST', data: params })
 }
-export const getAgentDefinitionOptions = async (status = 1): Promise<Option[]> => {
-  const { data } = await request<ResponseStructure<Option[]>>('/api/agent/definition/options', { method: 'GET', params: { status } })
+export const getAgentDefinitionOptions = async ({ applicationId, status = 1 }: { applicationId?: string; status?: number } = {}): Promise<Option[]> => {
+  const { data } = await request<ResponseStructure<Option[]>>('/api/agent/definition/options', { method: 'GET', params: { applicationId, status } })
   return data || []
 }
 

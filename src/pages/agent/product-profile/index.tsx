@@ -71,7 +71,7 @@ export default function AgentProductProfilePage() {
         ] },
       ]}
     />
-    <DrawerForm open={open} onOpenChange={setOpen} width={560} title={current ? t('pages.agent.product.edit') : t('pages.agent.product.create')} initialValues={current} onFinish={submit}>
+    <DrawerForm open={open} onOpenChange={setOpen}  title={current ? t('pages.agent.product.edit') : t('pages.agent.product.create')} initialValues={current} onFinish={submit}>
       <ProFormText name="name" label={t('pages.agent.product.name')} extra={t('pages.agent.product.nameTip')} rules={[{ required: true }]} />
       <ProFormSelect name="applicationId" label={t('pages.agent.product.application')} options={apps.map(a => ({ label: a.name, value: a.id }))} rules={[{ required: true }]} />
       <ProFormRadio.Group name="productType" label={t('pages.agent.product.type')} options={targetTypes.map(value => ({ value, label: t(value === 'AGENT' ? 'pages.agent.product.agent' : 'pages.agent.product.workflow') }))} rules={[{ required: true }]} />

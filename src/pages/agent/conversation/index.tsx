@@ -193,6 +193,16 @@ const AgentConversationPage: React.FC = () => {
       ellipsis: true,
     },
     {
+      title: intl.formatMessage({ id: 'pages.agent.conversation.source' }),
+      dataIndex: 'external',
+      valueType: 'select',
+      valueEnum: {
+        false: { text: intl.formatMessage({ id: 'pages.agent.conversation.source.console' }) },
+        true: { text: intl.formatMessage({ id: 'pages.agent.conversation.source.external' }), status: 'Processing' },
+      },
+      hideInSearch: true,
+    },
+    {
       title: intl.formatMessage({ id: 'pages.common.status' }),
       key: 'agent-conversation-status',
       dataIndex: 'status',
@@ -230,7 +240,7 @@ const AgentConversationPage: React.FC = () => {
               key: 'close',
               label: intl.formatMessage({ id: 'pages.common.close' }),
               primary: true,
-              visible: write && record.status === 0,
+              visible: write && !record.external && record.status === 0,
               confirm: {
                 title: intl.formatMessage({ id: 'pages.agent.conversation.closeConfirm' }),
               },
@@ -241,7 +251,7 @@ const AgentConversationPage: React.FC = () => {
               label: intl.formatMessage({ id: 'pages.common.delete' }),
               primary: true,
               danger: true,
-              visible: !!write,
+              visible: !!write && !record.external,
               confirm: {
                 title: intl.formatMessage({ id: 'pages.agent.conversation.deleteConfirm' }),
               },

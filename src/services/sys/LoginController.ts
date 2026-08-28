@@ -22,6 +22,17 @@ export const login = async (params: any): Promise<ResponseStructure<any>> => {
   })
 }
 /**
+ * 用 refresh token 换取新的 access/refresh token 对。
+ */
+export const refreshToken = async (refreshToken: string): Promise<ResponseStructure<any>> => {
+  return await request('/api/sys/refresh', {
+    data: { refreshToken },
+    method: 'POST',
+    skipAuthRefresh: true,
+    skipSuccessMessage: true,
+  })
+}
+/**
  * 获取用户信息
  */
 export const info = async (): Promise<ResponseStructure<any>> => {

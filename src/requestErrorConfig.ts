@@ -2,7 +2,40 @@
 import type { RequestConfig } from '@umijs/max'
 import { message, notification } from 'antd'
 import { getIntl, getLocale } from '@@/exports'
+import { request } from '@umijs/max'
 import { ErrorShowType, ResponseStructure } from '@/services/entity/Common'
+
+let refreshPromise: Promise<boolean> | null = null
+
+const clearSession = () => {
+  localStorage.removeItem('token')
+  localStorage.removeItem('refreshToken')
+}
+
+const refreshSession = async (): Promise<boolean> => {
+  if (refreshPromise) return refreshPromise
+  const refreshToken = localStorage.getItem('refreshToken')
+  if (!refreshToken) return false
+
+  refreshPromise = request<ResponseStructure<{ token?: string; refreshToken?: string }>>('/api/sys/refresh', {
+    data: { refreshToken },
+    method: 'POST',
+    skipAuthRefresh: true,
+    skipErrorHandler: true,
+    skipSuccessMessage: true,
+  })
+    .then((result) => {
+      if (result?.code !== 200 || !result.data?.token || !result.data?.refreshToken) return false
+      localStorage.setItem('token', result.data.token)
+      localStorage.setItem('refreshToken', result.data.refreshToken)
+      return true
+    })
+    .catch(() => false)
+    .finally(() => {
+      refreshPromise = null
+    })
+  return refreshPromise
+}
 
 const isBlobResponse = (data: unknown): data is Blob =>
   typeof Blob !== 'undefined' && data instanceof Blob
@@ -75,8 +108,7 @@ export const errorConfig: RequestConfig = {
                 type: 'error',
               })
               if (errorCode === 401) {
-                localStorage.removeItem('token')
-                localStorage.removeItem('refreshToken')
+                clearSession()
                 window.location.href = '/login'
               }
 
@@ -130,11 +162,27 @@ export const errorConfig: RequestConfig = {
 
   // 响应拦截器
   responseInterceptors: [
-    (response) => {
+    async (response) => {
       // 拦截响应数据，进行个性化处理
       const { data } = response as { data: ResponseStructure<any> }
       if (!data || typeof data !== 'object' || isBlobResponse(data)) {
         return response
+      }
+      const config = (response as any).config || {}
+      const isAuthFailure = data.code === 401
+      if (isAuthFailure && !config.skipAuthRefresh && !config.__authRetried) {
+        const refreshed = await refreshSession()
+        if (refreshed) {
+          return request(config.url, {
+            ...config,
+            __authRetried: true,
+            headers: {
+              ...config.headers,
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+          }) as any
+        }
+        clearSession()
       }
       data.success = data.code === 200
       const skipSuccessMessage = (response as { config?: { skipSuccessMessage?: boolean } }).config?.skipSuccessMessage

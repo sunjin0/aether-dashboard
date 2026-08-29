@@ -1,20 +1,34 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { history, useIntl, useParams } from '@umijs/max'
 import { PageContainer } from '@ant-design/pro-components'
-import { Button, Card, Checkbox, Input, InputNumber, Modal, Popconfirm, Select, Space, Tag, Tooltip, message } from 'antd'
+import { Button, Card, Checkbox, Input, InputNumber, Modal, Popconfirm, Select, Space, Tabs, Tag, Tooltip, message } from 'antd'
 import {
-  AppstoreOutlined,
+  ApartmentOutlined,
+  BlockOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  ClusterOutlined,
   DeleteOutlined,
   DownOutlined,
+  FilterOutlined,
+  GlobalOutlined,
   HolderOutlined,
   InfoCircleOutlined,
+  NotificationOutlined,
+  PlayCircleFilled,
   PlusOutlined,
+  RobotOutlined,
   SaveOutlined,
   SendOutlined,
   SettingOutlined,
+  StopFilled,
+  SwapOutlined,
+  ToolOutlined,
+  UserOutlined,
 } from '@ant-design/icons'
 import {
   ReactFlow,
+  ReactFlowInstance,
   addEdge,
   Background,
   Connection,
@@ -39,10 +53,10 @@ import {
   publishWorkflow,
   updateWorkflow,
   validateWorkflowDraft,
-} from '@/services/workflow/WorkflowController'
+} from '@/services/workflow/workflow/WorkflowController'
 import { getAgentDefinitionOptions } from '@/services/agent/AgentDefinitionController'
 import { getAgentToolInfo, getAgentToolOptions } from '@/services/agent/ToolController'
-import StartVariablesBuilder from './StartVariablesBuilder'
+import StartVariablesBuilder from '../StartVariablesBuilder'
 
 type WorkflowData = { workflowNode: WorkflowNode };
 const FieldTip: React.FC<{ title: React.ReactNode }> = ({ title }) => (
@@ -58,12 +72,53 @@ const CardTitle: React.FC<{ title: React.ReactNode; tip: React.ReactNode }> = ({
 const color: Record<string, string> = {
   start: '#52c41a',
   agent: '#1677ff',
-  mcp: '#fa8c16',
+  tool: '#fa8c16',
   human: '#722ed1',
+  approval: '#eb2f96',
+  wait_event: '#13c2c2',
+  rule: '#9254de', transform: '#08979c', http: '#d46b08', notification: '#eb2f96',
+  subflow: '#2f54eb', parallel: '#531dab', join: '#531dab', delay: '#fa8c16',
   end: '#13c2c2',
 }
+const paletteIcon = (type: WorkflowNode['type']) => {
+  const style = { color: color[type] || '#1677ff', fontSize: 17 }
+  switch (type) {
+    case 'start': return <PlayCircleFilled style={style} />
+    case 'agent': return <RobotOutlined style={style} />
+    case 'tool': return <ToolOutlined style={style} />
+    case 'human': return <UserOutlined style={style} />
+    case 'approval': return <CheckCircleOutlined style={style} />
+    case 'rule': return <FilterOutlined style={style} />
+    case 'transform': return <SwapOutlined style={style} />
+    case 'http': return <GlobalOutlined style={style} />
+    case 'notification': return <NotificationOutlined style={style} />
+    case 'subflow': return <BlockOutlined style={style} />
+    case 'parallel': return <ApartmentOutlined style={style} />
+    case 'join': return <ClusterOutlined style={style} />
+    case 'wait_event': return <ClockCircleOutlined style={style} />
+    case 'delay': return <ClockCircleOutlined style={style} />
+    case 'end': return <StopFilled style={style} />
+    default: return <SettingOutlined style={style} />
+  }
+}
+const nodeUsage: Record<WorkflowNode['type'], string> = {
+  start: '配置流程启动时可接收的输入变量。', agent: '调用指定 Agent 处理提示词并将结果按状态映射写入变量池。',
+  tool: '调用已接入的工具；参数可引用流程变量。', human: '暂停流程，收集人工填写的信息后继续。',
+  approval: '等待服务账号提交审批结论。', rule: '按顺序判断条件并输出首个命中的结果。',
+  transform: '将已有变量按字段映射转换为新的流程变量。', http: '调用外部 HTTP 接口，并映射响应结果。',
+  notification: '向指定收件人发送流程通知。', subflow: '启动固定版本的子流程并接收其契约输出。',
+  parallel: '从多个入口并行执行业务分支。', join: '按策略汇聚并行分支的执行结果。',
+  wait_event: '等待指定事件及关联键匹配后恢复流程。', delay: '等待指定时长后继续执行。', end: '声明允许业务接口和回调返回的最终输出。',
+}
+const paletteGroups: Array<{ key: string; label: string; types: WorkflowNode['type'][] }> = [
+  { key: 'execute', label: '执行', types: ['agent', 'tool', 'rule', 'transform', 'http', 'notification'] },
+  { key: 'collaborate', label: '协作', types: ['human', 'approval', 'subflow', 'wait_event'] },
+  { key: 'control', label: '控制', types: ['delay', 'parallel', 'join'] },
+]
 const nodeLabel = (intl: ReturnType<typeof useIntl>, type: string) =>
   intl.formatMessage({ id: `pages.agent.workflow.run.node.${type}` })
+const textValue = (value: unknown) => typeof value === 'string' ? value : undefined
+const numberValue = (value: unknown) => typeof value === 'number' ? value : undefined
 const initial = (intl: ReturnType<typeof useIntl>): WorkflowNode[] => [
   { id: 'start', type: 'start', name: nodeLabel(intl, 'start'), position: { x: 80, y: 260 } },
   { id: 'end', type: 'end', name: nodeLabel(intl, 'end'), position: { x: 780, y: 260 } },
@@ -160,12 +215,12 @@ const WorkflowCanvasNode: React.FC<NodeProps<Node<WorkflowData>>> = ({ data, sel
   return (
     <div
       style={{
-        minWidth: 190,
-        border: `2px solid ${selected ? '#1677ff' : nodeColor}`,
-        borderRadius: 10,
+        minWidth: 176,
+        border: `1px solid ${selected ? '#1677ff' : '#e5eaf1'}`,
+        borderRadius: 8,
         overflow: 'visible',
         background: '#fff',
-        boxShadow: selected ? '0 0 0 3px #91caff66' : '0 3px 12px #0000001a',
+        boxShadow: selected ? '0 0 0 3px #91caff66, 0 5px 16px #0f172a1a' : '0 3px 10px #0f172a14',
       }}
     >
       <Handle
@@ -205,20 +260,17 @@ const WorkflowCanvasNode: React.FC<NodeProps<Node<WorkflowData>>> = ({ data, sel
         id="source-right"
         style={{ background: nodeColor, width: 12, height: 12 }}
       />
-      <div
-        style={{
-          padding: '6px 10px',
-          background: `${nodeColor}18`,
-          display: 'flex',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Tag color={nodeColor} style={{ margin: 0 }}>
-          {nodeLabel(intl, item.type)}
-        </Tag>
-        <span style={{ color: '#8c8c8c', fontSize: 12 }}>{intl.formatMessage({ id: 'pages.agent.workflow.editor.dragToMove' })}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '10px 12px 9px' }}>
+        <span style={{ width: 29, height: 29, borderRadius: 7, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `${nodeColor}16` }}>
+          {paletteIcon(item.type)}
+        </span>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ color: '#172033', fontWeight: 600, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {item.name || nodeLabel(intl, item.type)}
+          </div>
+          <div style={{ color: nodeColor, fontSize: 12, marginTop: 2 }}>{nodeLabel(intl, item.type)}</div>
+        </div>
       </div>
-      <div style={{ padding: '11px 12px', fontWeight: 600 }}>{item.name || nodeLabel(intl, item.type)}</div>
     </div>
   )
 }
@@ -234,7 +286,7 @@ const parseStateMapping = (value?: string): StateMappingRow[] => {
     return []
   }
 }
-const StateMappingEditor: React.FC<{ value?: string; onChange: (value: string) => void }> = ({ value, onChange }) => {
+const StateMappingEditor: React.FC<{ value?: string; onChange: (value: string) => void; options: { value: string; label: string }[] }> = ({ value, onChange, options }) => {
   const intl = useIntl()
   const [rows, setRows] = useState<StateMappingRow[]>(() => parseStateMapping(value))
   useEffect(() => { setRows(parseStateMapping(value)) }, [value])
@@ -255,11 +307,13 @@ const StateMappingEditor: React.FC<{ value?: string; onChange: (value: string) =
     <Space direction="vertical" size={6} style={{ width: '100%' }}>
       {rows.map((row, index) => (
         <Space key={index} size={6} style={{ display: 'flex' }}>
-          <Input
+          <Select
             style={{ width: 116 }}
             value={row.key}
+            options={options}
+            showSearch
             placeholder={intl.formatMessage({ id: 'pages.agent.workflow.editor.stateMappingKey' })}
-            onChange={(e) => updateRows(rows.map((item, i) => (i === index ? { ...item, key: e.target.value } : item)))}
+            onChange={(key) => updateRows(rows.map((item, i) => (i === index ? { ...item, key } : item)))}
           />
           <Input
             style={{ flex: 1, minWidth: 0 }}
@@ -289,56 +343,59 @@ const StateMappingEditor: React.FC<{ value?: string; onChange: (value: string) =
   </>
 }
 
-const OutputKeySelect: React.FC<{
-  value?: string
-  onChange: (value?: string) => void
-  options: { value: string; label: string }[]
-}> = ({ value, onChange, options }) => {
-  const intl = useIntl()
-  return <>
-    <label>
-      {intl.formatMessage({ id: 'pages.agent.workflow.editor.outputKey' })}
-      <FieldTip title={intl.formatMessage({ id: 'pages.agent.workflow.editor.outputKeyTip' })} />
-    </label>
-    <Select
-      style={{ width: '100%' }}
-      value={value || undefined}
-      options={options}
-      showSearch
-      allowClear
-      notFoundContent={intl.formatMessage({ id: 'pages.agent.workflow.editor.noStartVariables' })}
-      placeholder={intl.formatMessage({ id: 'pages.agent.workflow.editor.selectOutputKey' })}
-      filterOption={(input, option) =>
-        `${option?.value ?? ''} ${option?.label ?? ''}`
-          .toLowerCase()
-          .includes(input.toLowerCase())
-      }
-      onChange={(v) => onChange(v)}
-    />
-  </>
+type StructuredField = { key: string; label: string; placeholder?: string }
+const StructuredListEditor: React.FC<{
+  value?: unknown
+  fields: StructuredField[]
+  onChange: (value: Record<string, string>[]) => void
+  addText: string
+}> = ({ value, fields, onChange, addText }) => {
+  const rows = Array.isArray(value) ? value.filter((row): row is Record<string, string> => !!row && typeof row === 'object') : []
+  const update = (index: number, key: string, next: string) =>
+    onChange(rows.map((row, i) => i === index ? { ...row, [key]: next } : row))
+  return (
+    <Space direction="vertical" size={6} style={{ width: '100%' }}>
+      {rows.map((row, index) => (
+        <div key={index} style={{ display: 'grid', gridTemplateColumns: `repeat(${fields.length}, minmax(0, 1fr)) 28px`, gap: 6 }}>
+          {fields.map((field) => (
+            <Input key={field.key} value={row[field.key] || ''} placeholder={field.placeholder || field.label} onChange={(e) => update(index, field.key, e.target.value)} />
+          ))}
+          <Button type="text" danger icon={<DeleteOutlined />} onClick={() => onChange(rows.filter((_, i) => i !== index))} />
+        </div>
+      ))}
+      <Button type="dashed" block size="small" icon={<PlusOutlined />} onClick={() => onChange([...rows, Object.fromEntries(fields.map((field) => [field.key, '']))])}>
+        {addText}
+      </Button>
+    </Space>
+  )
 }
 
-const InternalKeyInput: React.FC<{
-  value?: string
-  onChange: (value?: string) => void
-}> = ({ value, onChange }) => {
+const TemplateObjectEditor: React.FC<{ value?: string; onChange: (value: string) => void }> = ({ value, onChange }) => {
   const intl = useIntl()
+  const parse = (): StateMappingRow[] => {
+    try {
+      const parsed = JSON.parse(value || '{}')
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+        ? Object.entries(parsed).map(([key, mapped]) => ({ key, value: String(mapped ?? '') })) : []
+    } catch { return [] }
+  }
+  const rows = parse()
+  const update = (next: StateMappingRow[]) => onChange(JSON.stringify(next.reduce<Record<string, string>>((result, row) => {
+    if (row.key.trim()) result[row.key.trim()] = row.value
+    return result
+  }, {})))
   return <>
-    <label>
-      {intl.formatMessage({ id: 'pages.agent.workflow.editor.internalKey' })}
-      <FieldTip title={intl.formatMessage({ id: 'pages.agent.workflow.editor.internalKeyTip' })} />
-    </label>
-    <Input
-      style={{ width: '100%' }}
-      value={value || ''}
-      onChange={(e) => {
-        const trimmed = e.target.value.trim()
-        onChange(
-          trimmed ? (trimmed.startsWith('_') ? trimmed : `_${trimmed}`) : undefined,
-        )
-      }}
-      placeholder={intl.formatMessage({ id: 'pages.agent.workflow.editor.internalKeyPlaceholder' })}
-    />
+    <label style={{ marginBottom: -6, fontWeight: 500 }}>{intl.formatMessage({ id: 'pages.agent.workflow.editor.argumentsTemplate' })}</label>
+    <Space direction="vertical" size={6} style={{ width: '100%' }}>
+      {rows.map((row, index) => (
+        <Space key={index} size={6} style={{ display: 'flex' }}>
+          <Input value={row.key} placeholder="参数名" onChange={(e) => update(rows.map((item, i) => i === index ? { ...item, key: e.target.value } : item))} />
+          <Input value={row.value} placeholder="值或 ${变量}" onChange={(e) => update(rows.map((item, i) => i === index ? { ...item, value: e.target.value } : item))} />
+          <Button type="text" danger icon={<DeleteOutlined />} onClick={() => update(rows.filter((_, i) => i !== index))} />
+        </Space>
+      ))}
+      <Button type="dashed" block size="small" icon={<PlusOutlined />} onClick={() => update([...rows, { key: '', value: '' }])}>添加参数</Button>
+    </Space>
   </>
 }
 
@@ -394,11 +451,12 @@ const Editor: React.FC = () => {
   const [agentOptions, setAgentOptions] = useState<any[]>([])
   const [toolOptions, setToolOptions] = useState<any[]>([])
   const [paletteOpen, setPaletteOpen] = useState(true)
+  const [paletteGroup, setPaletteGroup] = useState('execute')
   const [propertyOpen, setPropertyOpen] = useState(true)
-  const [startVariablesOpen, setStartVariablesOpen] = useState(true)
-  const [finalOutputOpen, setFinalOutputOpen] = useState(true)
+  const [propertyWidth, setPropertyWidth] = useState(338)
   const [panelOffsets, setPanelOffsets] = useState<Record<string, { x: number; y: number }>>({})
   const panelDrag = useRef<{ key: string; x: number; y: number; offsetX: number; offsetY: number } | null>(null)
+  const propertyResize = useRef<{ x: number; width: number } | null>(null)
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
   const [edgeModalOpen, setEdgeModalOpen] = useState(false)
   const [edgeCondition, setEdgeCondition] = useState('')
@@ -406,7 +464,31 @@ const Editor: React.FC = () => {
   const [edgeIsDefault, setEdgeIsDefault] = useState(false)
   const [edgeMaxIter, setEdgeMaxIter] = useState<number>(10)
   const [condRows, setCondRows] = useState<CondRow[]>(() => [EMPTY_COND_ROW()])
+  const [flow, setFlow] = useState<ReactFlowInstance<Node<WorkflowData>, Edge> | null>(null)
+  const [showGrid, setShowGrid] = useState(true)
+  const canvasRef = useRef<HTMLDivElement>(null)
+  const historyRef = useRef<{ past: Array<{ nodes: Node<WorkflowData>[]; edges: Edge[] }>; future: Array<{ nodes: Node<WorkflowData>[]; edges: Edge[] }> }>({ past: [], future: [] })
   const selected = nodes.find((node) => node.id === selectedId)?.data.workflowNode
+  const canvasSnapshot = () => ({
+    nodes: nodes.map((node) => ({ ...node, position: { ...node.position }, data: { ...node.data, workflowNode: { ...node.data.workflowNode } } })),
+    edges: edges.map((edge) => ({ ...edge, data: { ...(edge.data || {}) } })),
+  })
+  const recordHistory = () => {
+    historyRef.current.past = [...historyRef.current.past.slice(-39), canvasSnapshot()]
+    historyRef.current.future = []
+  }
+  const undo = () => {
+    const previous = historyRef.current.past.pop()
+    if (!previous) return
+    historyRef.current.future.push(canvasSnapshot())
+    setNodes(previous.nodes); setEdges(previous.edges)
+  }
+  const redo = () => {
+    const next = historyRef.current.future.pop()
+    if (!next) return
+    historyRef.current.past.push(canvasSnapshot())
+    setNodes(next.nodes); setEdges(next.edges)
+  }
   const panelStyle = (key: string, style?: React.CSSProperties): React.CSSProperties => {
     const offset = panelOffsets[key] || { x: 0, y: 0 }
     return { ...style, transform: `translate(${offset.x}px, ${offset.y}px)` }
@@ -430,6 +512,16 @@ const Editor: React.FC = () => {
     }))
   }
   const stopPanelDrag = () => { panelDrag.current = null }
+  const startPropertyResize = (event: React.PointerEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    propertyResize.current = { x: event.clientX, width: propertyWidth }
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+  const resizeProperty = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!propertyResize.current) return
+    setPropertyWidth(Math.max(338, Math.min(620, propertyResize.current.width + propertyResize.current.x - event.clientX)))
+  }
+  const stopPropertyResize = () => { propertyResize.current = null }
   const draggablePanelTitle = (key: string, title: React.ReactNode, tip: React.ReactNode) => (
     <span
       style={{ display: 'inline-flex', alignItems: 'center', cursor: 'move', touchAction: 'none' }}
@@ -457,15 +549,36 @@ const Editor: React.FC = () => {
       return []
     }
   }, [schema])
+  const outputFields = useMemo(() => {
+    try {
+      const parsed = JSON.parse(outputSchema || '[]')
+      return Array.isArray(parsed)
+        ? parsed.filter((item) => item && typeof item === 'object' && item.name).map((item) => ({
+            value: String(item.name),
+            label: item.label ? `${item.name}（${item.label}）` : String(item.name),
+          }))
+        : []
+    } catch { return [] }
+  }, [outputSchema])
+  const variableOptions = useMemo(() => [
+    ...schemaFields.map((item) => ({ ...item, label: `${item.label}（输入）` })),
+    ...outputFields.map((item) => ({ ...item, label: `${item.label}（输出）` })),
+  ], [schemaFields, outputFields])
+  const workflowNodeOptions = useMemo(
+    () => nodes.map((node) => ({ value: node.id, label: `${node.data.workflowNode.name || node.id} (${node.id})` })),
+    [nodes],
+  )
   useEffect(() => {
     if (!id) return
     getWorkflow(id).then((r) => {
       if (r.code !== 200 || !r.data) return
       setWorkflow(r.data)
+      getAgentDefinitionOptions({ applicationId: r.data.applicationId }).then(setAgentOptions)
       try {
         const parsedNodes = r.data.nodes ? JSON.parse(r.data.nodes) : []
         const restored =
-          Array.isArray(parsedNodes) && parsedNodes.length > 0 ? parsedNodes : initial(intl)
+          (Array.isArray(parsedNodes) && parsedNodes.length > 0 ? parsedNodes : initial(intl))
+            .map((node: WorkflowNode | any) => node.type === 'mcp' ? { ...node, type: 'tool' } : node)
         const parsedEdges = r.data.edges ? JSON.parse(r.data.edges) : []
         const restoredEdges =
           Array.isArray(parsedEdges) && parsedEdges.length > 0
@@ -484,7 +597,7 @@ const Editor: React.FC = () => {
         message.error(t('pages.agent.workflow.editor.canvasDataInvalid'))
       }
     })
-    getAgentDefinitionOptions().then(setAgentOptions)
+    if (!id) getAgentDefinitionOptions().then(setAgentOptions)
     getAgentToolOptions().then(setToolOptions)
   }, [id, intl, setEdges, setNodes])
   const onConnect = useCallback(
@@ -493,6 +606,7 @@ const Editor: React.FC = () => {
       const target = nodes.find((node) => node.id === connection.target)?.data.workflowNode
       if (source?.type === 'end') { message.warning(t('pages.agent.workflow.editor.endCannotConnect')); return }
       if (target?.type === 'start') { message.warning(t('pages.agent.workflow.editor.startCannotFollow')); return }
+      recordHistory()
       setEdges((current) =>
         addEdge(
           {
@@ -507,21 +621,23 @@ const Editor: React.FC = () => {
     },
     [nodes, setEdges, t],
   )
-  const add = (type: WorkflowNode['type']) => {
+  const add = (type: WorkflowNode['type'], position?: { x: number; y: number }) => {
+    recordHistory()
     const item: WorkflowNode = {
       id: `${type}_${Date.now()}`,
       type,
       name: nodeLabel(intl, type),
-      position: { x: 300 + Math.random() * 220, y: 120 + Math.random() * 300 },
+      position: position || { x: 300 + Math.random() * 220, y: 120 + Math.random() * 300 },
       // 开始表单默认为空；不要引用未声明变量，否则用户刚添加 Agent 就无法发布。
       prompt: type === 'agent' ? t('pages.agent.workflow.editor.defaultPrompt') : undefined,
       question: type === 'human' ? t('pages.agent.workflow.editor.defaultQuestion') : undefined,
-      argumentsTemplate: type === 'mcp' ? '{}' : undefined,
+      argumentsTemplate: type === 'tool' ? '{}' : undefined,
     }
     setNodes((current) => [...current, ...toFlowNodes([item])])
     setSelectedId(item.id)
   }
-  const updateSelected = (values: Partial<WorkflowNode>) =>
+  const updateSelected = (values: Partial<WorkflowNode>) => {
+    recordHistory()
     setNodes((current) =>
       current.map((node) =>
         node.id === selectedId
@@ -529,6 +645,7 @@ const Editor: React.FC = () => {
           : node,
       ),
     )
+  }
   const onEdgeClick = (_: React.MouseEvent, edge: Edge) => {
     setSelectedEdgeId(edge.id)
     setSelectedId('')
@@ -547,6 +664,7 @@ const Editor: React.FC = () => {
   }
   const removeSelectedEdge = () => {
     if (!selectedEdgeId) return
+    recordHistory()
     setEdges((current) => current.filter((edge) => edge.id !== selectedEdgeId))
     setSelectedEdgeId(null)
   }
@@ -567,6 +685,7 @@ const Editor: React.FC = () => {
   }
   const saveEdgeEdit = () => {
     if (!selectedEdgeId) return
+    recordHistory()
     setEdges((current) =>
       current.map((e) =>
         e.id === selectedEdgeId
@@ -592,6 +711,7 @@ const Editor: React.FC = () => {
     setEdgeModalOpen(false)
   }
   const autoArrange = () => {
+    recordHistory()
     const rank: Record<string, number> = { start: 0 }
     const visiting = new Set<string>()
     const visited = new Set<string>()
@@ -657,6 +777,7 @@ const Editor: React.FC = () => {
   }
   const removeSelected = () => {
     if (!selected || ['start', 'end'].includes(selected.type)) return
+    recordHistory()
     setNodes((current) => current.filter((node) => node.id !== selectedId))
     setEdges((current) =>
       current.filter((edge) => edge.source !== selectedId && edge.target !== selectedId),
@@ -714,10 +835,15 @@ const Editor: React.FC = () => {
   const nodeTypes = useMemo(() => ({ workflow: WorkflowCanvasNode }), [])
   return (
     <PageContainer
-      header={{ title: workflow?.name || t('components.routeTabs.workflowEditor'), breadcrumb: undefined }}
+      header={{
+        title: t('components.routeTabs.workflowEditor'),
+        breadcrumb: undefined,
+        tags: workflow?.publishedVersion ? <Tag color="blue">v{workflow.publishedVersion}.0</Tag> : <Tag>v0.0</Tag>,
+      }}
       extra={
         <Space>
           <Button onClick={() => history.push('/workflow/workflow')}>{t('pages.agent.workflow.editor.back')}</Button>
+          <Button onClick={() => id && validateWorkflowDraft(id)}>{t('pages.agent.workflow.editor.validate')}</Button>
           <Button icon={<SaveOutlined />} onClick={() => save(false)}>
             {t('pages.agent.workflow.editor.save')}
           </Button>
@@ -728,11 +854,13 @@ const Editor: React.FC = () => {
       }
     >
       <div
+        ref={canvasRef}
         style={{
-          height: 'calc(100vh - 208px)',
-          minHeight: 560,
-          border: '1px solid #e5e7eb',
-          borderRadius: 10,
+          height: 'calc(100vh - 196px)',
+          minHeight: 640,
+          background: '#fff',
+          border: '1px solid #edf0f4',
+          borderRadius: 8,
           overflow: 'hidden',
         }}
       >
@@ -743,6 +871,17 @@ const Editor: React.FC = () => {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
+          onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'move' }}
+          onDrop={(event) => {
+            event.preventDefault()
+            const type = event.dataTransfer.getData('application/aether-workflow-node') as WorkflowNode['type']
+            if (!type || type === 'start' || type === 'end' || !flow) return
+            add(type, flow.screenToFlowPosition({ x: event.clientX, y: event.clientY }))
+          }}
+          onInit={setFlow}
+          onNodeDragStart={recordHistory}
+          onNodesDelete={recordHistory}
+          onEdgesDelete={recordHistory}
           onNodeClick={(_: React.MouseEvent, node: Node<WorkflowData>) => { setSelectedId(node.id); setSelectedEdgeId(null) }}
           onEdgeClick={onEdgeClick as any}
           onEdgeDoubleClick={onEdgeDoubleClick as any}
@@ -755,25 +894,31 @@ const Editor: React.FC = () => {
           connectionMode={ConnectionMode.Loose}
           defaultEdgeOptions={{ type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClosed } }}
         >
-          <Background gap={16} size={1} />
+          {showGrid && <Background gap={16} size={1} color="#e8edf3" />}
           <MiniMap
             pannable
             zoomable
             nodeColor={(node) => color[(node.data as WorkflowData)?.workflowNode?.type] || '#999'}
           />
-          <Controls showInteractive={false} />
-          <Panel position="top-left">
+          <Controls position="bottom-right" showInteractive={false} />
+          <Panel position="top-left" style={{ margin: 12, zIndex: 5 }}>
+            <Space.Compact>
+              <Button aria-label="undo" disabled={!historyRef.current.past.length} onClick={undo}>↶</Button>
+              <Button aria-label="redo" disabled={!historyRef.current.future.length} onClick={redo}>↷</Button>
+              <Button aria-label="zoom out" onClick={() => flow?.zoomOut()}>−</Button>
+              <Button aria-label="reset zoom" onClick={() => flow?.setViewport({ x: 0, y: 0, zoom: 1 })}>100%</Button>
+              <Button aria-label="zoom in" onClick={() => flow?.zoomIn()}>＋</Button>
+              <Button aria-label="fullscreen" onClick={() => canvasRef.current?.requestFullscreen?.()}>⛶</Button>
+              <Button aria-label="auto arrange" onClick={autoArrange}>▦</Button>
+              <Button aria-label="toggle grid" type={showGrid ? 'primary' : 'default'} onClick={() => setShowGrid((current) => !current)}>⋮</Button>
+            </Space.Compact>
+          </Panel>
+          <Panel position="top-left" style={{ margin: '70px 12px 12px', zIndex: 5 }}>
             {paletteOpen ? (
               <Card
                 size="small"
-                style={panelStyle('palette', { width: 220 })}
-                title={
-                  draggablePanelTitle(
-                    'palette',
-                    t('pages.agent.workflow.editor.nodeLibrary'),
-                    t('pages.agent.workflow.editor.nodeLibraryTip'),
-                  )
-                }
+                style={panelStyle('palette', { width: 174, borderRadius: 8, boxShadow: '0 4px 16px #00000012' })}
+                title={<CardTitle title={t('pages.agent.workflow.editor.componentLibrary')} tip={t('pages.agent.workflow.editor.nodeLibraryTip')} />}
                 extra={
                   <Button
                     type="text"
@@ -782,22 +927,40 @@ const Editor: React.FC = () => {
                   />
                 }
               >
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  <Button icon={<PlusOutlined />} onClick={() => add('agent')}>
-                    {t('pages.agent.workflow.run.node.agent')}
-                  </Button>
-                  <Button icon={<PlusOutlined />} onClick={() => add('mcp')}>
-                    {t('pages.agent.workflow.run.node.mcp')}
-                  </Button>
-                  <Button icon={<PlusOutlined />} onClick={() => add('human')}>
-                    {t('pages.agent.workflow.run.node.human')}
-                  </Button>
-                  <Tooltip title={t('pages.agent.workflow.editor.autoArrangeTip')}>
-                    <Button icon={<AppstoreOutlined />} onClick={autoArrange}>
-                      {t('pages.agent.workflow.editor.autoArrange')}
-                    </Button>
-                  </Tooltip>
-                </Space>
+                <Tabs activeKey={paletteGroup} onChange={setPaletteGroup} size="small" items={paletteGroups.map((group) => ({
+                  key: group.key,
+                  label: group.label,
+                  children: <Space direction="vertical" size={6} style={{ width: '100%' }}>
+                  {group.types.map((type) => {
+                    const fixed = type === 'start' || type === 'end'
+                    return (
+                      <Button
+                        key={type}
+                        block
+                        disabled={fixed}
+                        icon={paletteIcon(type)}
+                        onClick={() => add(type)}
+                        draggable={!fixed}
+                        onDragStart={(event) => {
+                          event.dataTransfer.setData('application/aether-workflow-node', type)
+                          event.dataTransfer.effectAllowed = 'move'
+                        }}
+                        style={{
+                          height: 34,
+                          paddingInline: 10,
+                          textAlign: 'left',
+                          color: fixed ? '#94a3b8' : '#334155',
+                          borderColor: '#e6eaf0',
+                          background: '#fff',
+                          boxShadow: 'none',
+                        }}
+                      >
+                        {nodeLabel(intl, type)}
+                      </Button>
+                    )
+                  })}
+                  </Space>,
+                }))} />
               </Card>
             ) : (
               <Tooltip title={t('pages.agent.workflow.editor.expandNodeLibrary')}>
@@ -810,11 +973,20 @@ const Editor: React.FC = () => {
               </Tooltip>
             )}
           </Panel>
-          <Panel position="top-right">
+          <Panel position="top-right" style={{ margin: 12, zIndex: 5 }}>
             {propertyOpen ? (
+              <div style={panelStyle('properties', { width: propertyWidth, maxWidth: 'calc(100vw - 48px)', position: 'relative' })}>
+                <div
+                  aria-label="resize properties"
+                  onPointerDown={startPropertyResize}
+                  onPointerMove={resizeProperty}
+                  onPointerUp={stopPropertyResize}
+                  onPointerCancel={stopPropertyResize}
+                  style={{ position: 'absolute', left: -6, top: 0, bottom: 0, width: 10, cursor: 'ew-resize', zIndex: 2 }}
+                />
               <Card
                 size="small"
-                style={panelStyle('properties', { width: 380, maxWidth: 'calc(100vw - 48px)' })}
+                style={{ width: '100%', borderRadius: 8, boxShadow: '0 4px 16px #00000012' }}
                 styles={{
                   body: {
                     maxHeight: 'calc(100vh - 310px)',
@@ -822,13 +994,7 @@ const Editor: React.FC = () => {
                     padding: '16px 18px',
                   },
                 }}
-                title={
-                  draggablePanelTitle(
-                    'properties',
-                    t('pages.agent.workflow.editor.nodeProperties'),
-                    t('pages.agent.workflow.editor.nodePropertiesTip'),
-                  )
-                }
+                title={<CardTitle title={t('pages.agent.workflow.editor.nodeProperties')} tip={t('pages.agent.workflow.editor.nodePropertiesTip')} />}
                 extra={
                   <Button
                     type="text"
@@ -852,6 +1018,11 @@ const Editor: React.FC = () => {
                       value={selected.name}
                       onChange={(e) => updateSelected({ name: e.target.value })}
                     />
+                    <div style={{ padding: '9px 10px', borderRadius: 6, background: '#f5f8fc', color: '#526074', fontSize: 12, lineHeight: 1.6 }}>
+                      <strong style={{ color: '#334155' }}>节点作用与使用说明：</strong>{nodeUsage[selected.type]}
+                    </div>
+                    {selected.type === 'start' && <StartVariablesBuilder value={schema} onChange={setSchema} />}
+                    {selected.type === 'end' && <StartVariablesBuilder value={outputSchema} onChange={setOutputSchema} mode="output" />}
                     {selected.type === 'agent' && (
                       <>
                         <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.run.node.agent')}</label>
@@ -867,24 +1038,16 @@ const Editor: React.FC = () => {
                           rows={5}
                           onChange={(e) => updateSelected({ prompt: e.target.value })}
                         />
-                        <OutputKeySelect
-                          value={selected.outputKey}
-                          options={schemaFields}
-                          onChange={(v) => updateSelected({ outputKey: v })}
-                        />
-                        <InternalKeyInput
-                          value={selected.internalKey}
-                          onChange={(v) => updateSelected({ internalKey: v })}
-                        />
                         <StateMappingEditor
                           value={selected.stateMapping}
+                          options={variableOptions}
                           onChange={(v) => updateSelected({ stateMapping: v })}
                         />
                       </>
                     )}
-                    {selected.type === 'mcp' && (
+                    {selected.type === 'tool' && (
                       <>
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.run.node.mcp')}</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{nodeLabel(intl, 'tool')}</label>
                         <Select
                           style={{ width: '100%' }}
                           value={selected.resourceId}
@@ -907,23 +1070,10 @@ const Editor: React.FC = () => {
                           value={selected.toolName}
                           onChange={(e) => updateSelected({ toolName: e.target.value })}
                         />
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.argumentsTemplate')}</label>
-                        <Input.TextArea
-                          value={selected.argumentsTemplate}
-                          rows={4}
-                          onChange={(e) => updateSelected({ argumentsTemplate: e.target.value })}
-                        />
-                        <OutputKeySelect
-                          value={selected.outputKey}
-                          options={schemaFields}
-                          onChange={(v) => updateSelected({ outputKey: v })}
-                        />
-                        <InternalKeyInput
-                          value={selected.internalKey}
-                          onChange={(v) => updateSelected({ internalKey: v })}
-                        />
+                        <TemplateObjectEditor value={selected.argumentsTemplate} onChange={(argumentsTemplate) => updateSelected({ argumentsTemplate })} />
                         <StateMappingEditor
                           value={selected.stateMapping}
+                          options={variableOptions}
                           onChange={(v) => updateSelected({ stateMapping: v })}
                         />
                       </>
@@ -943,36 +1093,122 @@ const Editor: React.FC = () => {
                           {t('pages.agent.workflow.editor.multiQuestionConfig')}
                           <FieldTip title={t('pages.agent.workflow.editor.multiQuestionConfigTip')} />
                         </label>
-                        <Input.TextArea
-                          key={selected.id}
-                          defaultValue={selected.questions?.length ? JSON.stringify(selected.questions, null, 2) : ''}
-                          rows={6}
-                          placeholder={t('pages.agent.workflow.editor.multiQuestionConfigPlaceholder')}
-                          onBlur={(e) => {
-                            const value = e.target.value.trim()
-                            if (!value) { updateSelected({ questions: undefined }); return }
-                            try {
-                              const parsed = JSON.parse(value)
-                              if (!Array.isArray(parsed)) throw new Error()
-                              updateSelected({ questions: parsed })
-                            } catch {
-                              message.warning(t('pages.agent.workflow.editor.multiQuestionConfigInvalid'))
-                            }
-                          }}
-                        />
-                        <OutputKeySelect
-                          value={selected.outputKey}
-                          options={schemaFields}
-                          onChange={(v) => updateSelected({ outputKey: v })}
-                        />
-                        <InternalKeyInput
-                          value={selected.internalKey}
-                          onChange={(v) => updateSelected({ internalKey: v })}
+                        <StructuredListEditor
+                          value={selected.questions}
+                          fields={[{ key: 'key', label: '字段名', placeholder: 'reason' }, { key: 'question', label: '问题', placeholder: '请输入原因' }]}
+                          onChange={(questions) => updateSelected({ questions })}
+                          addText="添加问题"
                         />
                         <StateMappingEditor
                           value={selected.stateMapping}
+                          options={variableOptions}
                           onChange={(v) => updateSelected({ stateMapping: v })}
                         />
+                      </>
+                    )}
+                    {selected.type === 'approval' && (
+                      <>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.approvalDescription')}</label>
+                        <Input.TextArea value={selected.question} rows={3} onChange={(e) => updateSelected({ question: e.target.value })} />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.approverServiceAccount')}</label>
+                        <Input value={selected.approverServiceAccountId} onChange={(e) => updateSelected({ approverServiceAccountId: e.target.value })} />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.approvalMode')}</label>
+                        <Select value={selected.approvalMode || 'ANY'} options={[{ value: 'ANY', label: t('pages.agent.workflow.editor.anyApproval') }]} onChange={(approvalMode) => updateSelected({ approvalMode })} />
+                        <StateMappingEditor value={selected.stateMapping} options={variableOptions} onChange={(stateMapping) => updateSelected({ stateMapping })} />
+                      </>
+                    )}
+                    {selected.type === 'wait_event' && (
+                      <>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.eventType')}</label>
+                        <Input value={selected.eventType} placeholder="payment.completed" onChange={(e) => updateSelected({ eventType: e.target.value })} />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.correlationKeyTemplate')}</label>
+                        <Input value={selected.correlationKeyTemplate} placeholder="${orderId}" onChange={(e) => updateSelected({ correlationKeyTemplate: e.target.value })} />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.timeoutMillis')}</label>
+                        <InputNumber min={1} value={selected.timeoutMillis} onChange={(timeoutMillis) => updateSelected({ timeoutMillis: timeoutMillis || undefined })} style={{ width: '100%' }} />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.timeoutTargetId')}</label>
+                        <Input value={selected.timeoutTargetId} placeholder="timeout-handler" onChange={(e) => updateSelected({ timeoutTargetId: e.target.value })} />
+                        <StateMappingEditor value={selected.stateMapping} options={variableOptions} onChange={(stateMapping) => updateSelected({ stateMapping })} />
+                      </>
+                    )}
+                    {selected.type === 'rule' && (
+                      <>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>规则条件与结果</label>
+                        <StructuredListEditor value={selected.rules} fields={[{ key: 'condition', label: '条件', placeholder: '${amount} > 1000' }, { key: 'value', label: '结果', placeholder: 'high' }]} onChange={(rules) => updateSelected({ rules })} addText="添加规则" />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>默认结果</label>
+                        <Input value={selected.defaultValue as string} onChange={(e) => updateSelected({ defaultValue: e.target.value })} />
+                        <StateMappingEditor value={selected.stateMapping} options={variableOptions} onChange={(stateMapping) => updateSelected({ stateMapping })} />
+                      </>
+                    )}
+                    {selected.type === 'transform' && (
+                      <>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>字段映射</label>
+                        <StructuredListEditor value={selected.mappings} fields={[{ key: 'target', label: '目标字段', placeholder: 'customerName' }, { key: 'source', label: '来源路径', placeholder: 'customer.name' }, { key: 'template', label: '模板', placeholder: '${customer.name}' }]} onChange={(mappings) => updateSelected({ mappings })} addText="添加映射" />
+                        <StateMappingEditor value={selected.stateMapping} options={variableOptions} onChange={(stateMapping) => updateSelected({ stateMapping })} />
+                      </>
+                    )}
+                    {selected.type === 'http' && (
+                      <>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>请求方法</label>
+                        <Select value={selected.method || 'POST'} options={['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].map((value) => ({ value, label: value }))} onChange={(method) => updateSelected({ method })} />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>请求地址</label>
+                        <Input value={textValue(selected.url)} placeholder="https://api.example.com/orders/${orderId}" onChange={(e) => updateSelected({ url: e.target.value })} />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>请求体模板</label>
+                        <Input.TextArea value={textValue(selected.bodyTemplate)} rows={4} onChange={(e) => updateSelected({ bodyTemplate: e.target.value })} />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>幂等键模板</label>
+                        <Input value={textValue(selected.idempotencyKeyTemplate)} placeholder="${orderId}" onChange={(e) => updateSelected({ idempotencyKeyTemplate: e.target.value })} />
+                        <StateMappingEditor value={selected.stateMapping} options={variableOptions} onChange={(stateMapping) => updateSelected({ stateMapping })} />
+                      </>
+                    )}
+                    {selected.type === 'notification' && (
+                      <>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>通知渠道</label>
+                        <Select value={selected.channel || 'email'} options={[{ value: 'email', label: 'Email' }]} onChange={(channel) => updateSelected({ channel })} />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>收件人模板</label>
+                        <Input value={textValue(selected.toTemplate)} placeholder="${requesterEmail}" onChange={(e) => updateSelected({ toTemplate: e.target.value })} />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>邮件主题</label>
+                        <Input value={textValue(selected.subjectTemplate)} onChange={(e) => updateSelected({ subjectTemplate: e.target.value })} />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>邮件内容</label>
+                        <Input.TextArea value={textValue(selected.bodyTemplate)} rows={4} onChange={(e) => updateSelected({ bodyTemplate: e.target.value })} />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>幂等键模板</label>
+                        <Input value={textValue(selected.idempotencyKeyTemplate)} onChange={(e) => updateSelected({ idempotencyKeyTemplate: e.target.value })} />
+                        <StateMappingEditor value={selected.stateMapping} options={variableOptions} onChange={(stateMapping) => updateSelected({ stateMapping })} />
+                      </>
+                    )}
+                    {selected.type === 'subflow' && (
+                      <>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>子流程 ID</label>
+                        <Input value={textValue(selected.workflowId)} onChange={(e) => updateSelected({ workflowId: e.target.value })} />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>固定版本</label>
+                        <InputNumber min={1} value={numberValue(selected.versionNo)} onChange={(versionNo) => updateSelected({ versionNo: versionNo || undefined })} style={{ width: '100%' }} />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>超时（毫秒）</label>
+                        <InputNumber min={1} value={selected.timeoutMillis} onChange={(timeoutMillis) => updateSelected({ timeoutMillis: timeoutMillis || undefined })} style={{ width: '100%' }} />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>输入映射</label>
+                        <StructuredListEditor value={selected.inputMappings} fields={[{ key: 'target', label: '子流程字段' }, { key: 'source', label: '父流程变量' }]} onChange={(inputMappings) => updateSelected({ inputMappings })} addText="添加输入映射" />
+                        <StateMappingEditor value={selected.stateMapping} options={variableOptions} onChange={(stateMapping) => updateSelected({ stateMapping })} />
+                      </>
+                    )}
+                    {selected.type === 'parallel' && (
+                      <>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>分支入口节点</label>
+                        <Select mode="multiple" value={Array.isArray(selected.branches) ? selected.branches : []} options={workflowNodeOptions.filter((option) => option.value !== selected.id)} onChange={(branches) => updateSelected({ branches })} />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>汇聚节点</label>
+                        <Select value={selected.joinNodeId} options={workflowNodeOptions.filter((option) => nodes.find((node) => node.id === option.value)?.data.workflowNode.type === 'join')} onChange={(joinNodeId) => updateSelected({ joinNodeId })} allowClear />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>最大分支数</label>
+                        <InputNumber min={1} max={50} value={numberValue(selected.maxBranches)} onChange={(maxBranches) => updateSelected({ maxBranches: maxBranches || undefined })} style={{ width: '100%' }} />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>分支超时（毫秒）</label>
+                        <InputNumber min={1} value={numberValue(selected.branchTimeoutMillis)} onChange={(branchTimeoutMillis) => updateSelected({ branchTimeoutMillis: branchTimeoutMillis || undefined })} style={{ width: '100%' }} />
+                      </>
+                    )}
+                    {selected.type === 'join' && (
+                      <>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>汇聚策略</label>
+                        <Select value={selected.joinMode || 'ALL_SUCCESS'} options={[{ value: 'ALL_SUCCESS', label: '全部成功' }, { value: 'ANY_SUCCESS', label: '任一成功' }, { value: 'ALLOW_PARTIAL_FAILURE', label: '允许部分失败' }]} onChange={(joinMode) => updateSelected({ joinMode })} />
+                      </>
+                    )}
+                    {selected.type === 'delay' && (
+                      <>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>延时时长（毫秒）</label>
+                        <InputNumber min={1} value={numberValue(selected.delayMillis)} onChange={(delayMillis) => updateSelected({ delayMillis: delayMillis || undefined })} style={{ width: '100%' }} />
                       </>
                     )}
                     {!['start', 'end'].includes(selected.type) && (
@@ -987,6 +1223,7 @@ const Editor: React.FC = () => {
                   <span style={{ color: '#8c8c8c' }}>{t('pages.agent.workflow.editor.selectNodeTip')}</span>
                 )}
               </Card>
+              </div>
             ) : (
               <Tooltip title={t('pages.agent.workflow.editor.expandNodeProperties')}>
                 <Button
@@ -994,74 +1231,6 @@ const Editor: React.FC = () => {
                   size="large"
                   icon={<SettingOutlined />}
                   onClick={() => setPropertyOpen(true)}
-                />
-              </Tooltip>
-            )}
-          </Panel>
-          <Panel position="bottom-left">
-            {startVariablesOpen ? (
-              <Card
-                size="small"
-                title={
-                  draggablePanelTitle(
-                    'startVariables',
-                    t('pages.agent.workflow.editor.startVariables'),
-                    t('pages.agent.workflow.editor.startVariablesTip'),
-                  )
-                }
-                extra={
-                  <Button
-                    type="text"
-                    icon={<DownOutlined />}
-                    onClick={() => setStartVariablesOpen(false)}
-                  />
-                }
-                style={panelStyle('startVariables', { width: 320 })}
-                styles={{ body: { maxHeight: 360, overflow: 'auto' } }}
-              >
-                <StartVariablesBuilder value={schema} onChange={setSchema} />
-              </Card>
-            ) : (
-              <Tooltip title={t('pages.agent.workflow.editor.expandStartVariables')}>
-                <Button
-                  shape="round"
-                  size="large"
-                  icon={<DownOutlined rotate={-90} />}
-                  onClick={() => setStartVariablesOpen(true)}
-                />
-              </Tooltip>
-            )}
-          </Panel>
-          <Panel position="bottom-right">
-            {finalOutputOpen ? (
-              <Card
-                size="small"
-                title={
-                  draggablePanelTitle(
-                    'finalOutput',
-                    t('pages.agent.workflow.editor.finalOutput'),
-                    t('pages.agent.workflow.editor.finalOutputTip'),
-                  )
-                }
-                extra={
-                  <Button
-                    type="text"
-                    icon={<DownOutlined />}
-                    onClick={() => setFinalOutputOpen(false)}
-                  />
-                }
-                style={panelStyle('finalOutput', { width: 320 })}
-                styles={{ body: { maxHeight: 360, overflow: 'auto' } }}
-              >
-                <StartVariablesBuilder value={outputSchema} onChange={setOutputSchema} mode="output" />
-              </Card>
-            ) : (
-              <Tooltip title={t('pages.agent.workflow.editor.expandFinalOutput')}>
-                <Button
-                  shape="round"
-                  size="large"
-                  icon={<DownOutlined rotate={90} />}
-                  onClick={() => setFinalOutputOpen(true)}
                 />
               </Tooltip>
             )}
@@ -1090,7 +1259,7 @@ const Editor: React.FC = () => {
                     size="small"
                     style={{ width: 116 }}
                     value={row.variable || undefined}
-                    options={schemaFields}
+                    options={variableOptions}
                     showSearch
                     placeholder={t('pages.agent.workflow.editor.variable')}
                     onChange={(v) => updateCondRow(i, { variable: v || '' })}

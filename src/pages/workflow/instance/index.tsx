@@ -3,7 +3,8 @@ import { history, useIntl, useModel } from '@umijs/max'
 import { PageContainer, ProTable, type ProColumns } from '@ant-design/pro-components'
 import { Button, Modal, Select, Tag, message } from 'antd'
 import { PlayCircleOutlined, PlusOutlined } from '@ant-design/icons'
-import { AgentWorkflow, getWorkflowInstances, getWorkflowList, WorkflowInstance } from '@/services/workflow/WorkflowController'
+import { AgentWorkflow, getWorkflowList } from '@/services/workflow/workflow/WorkflowController'
+import { getWorkflowInstances, WorkflowInstance } from '@/services/workflow/instance/WorkflowInstanceController'
 
 const statusColor: Record<string, string> = {
   RUNNING: 'processing', WAITING_USER: 'warning', FAILED: 'error', COMPLETED: 'success', TERMINATED: 'default', TIMED_OUT: 'error', PENDING: 'default',

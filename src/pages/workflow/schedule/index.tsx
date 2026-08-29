@@ -6,15 +6,17 @@ import { PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import {
   AgentWorkflow,
-  createWorkflowSchedule,
-  deleteWorkflowSchedule,
   getWorkflow,
   getWorkflowList,
+} from '@/services/workflow/workflow/WorkflowController';
+import {
+  createWorkflowSchedule,
+  deleteWorkflowSchedule,
   getWorkflowSchedules,
   setWorkflowScheduleEnabled,
   updateWorkflowSchedule,
   WorkflowSchedule,
-} from '@/services/workflow/WorkflowController';
+} from '@/services/workflow/schedule/WorkflowScheduleController';
 import { getServiceAccountList, ServiceAccount } from '@/services/sys/ServiceAccountController';
 import { AgentProductProfile, getAgentProductProfiles } from '@/services/agent/AgentProductProfileController';
 

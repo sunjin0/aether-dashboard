@@ -1,6 +1,6 @@
 import { request } from '@umijs/max'
 import { ResponseStructure } from '@/services/entity/Common'
-import { AgentWorkflow } from '@/services/workflow/WorkflowController'
+import { AgentWorkflow } from '@/services/workflow/workflow/WorkflowController'
 
 export type WorkbenchItem = {
   type: 'workflow-instance' | 'knowledge-review' | 'workflow-dead-letter'

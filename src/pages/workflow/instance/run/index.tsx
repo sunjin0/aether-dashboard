@@ -20,6 +20,9 @@ import {
 import '@xyflow/react/dist/style.css'
 import {
   getWorkflow,
+  AgentWorkflow,
+} from '@/services/workflow/workflow/WorkflowController'
+import {
   getWorkflowInstance,
   getWorkflowCallbacks,
   getWorkflowInstances,
@@ -31,12 +34,15 @@ import {
   terminateWorkflow,
   updateWorkflowVariables,
   retryWorkflowCallback,
-  AgentWorkflow,
+  getWorkflowExternalInvocations,
+  confirmWorkflowExternalInvocation,
+  retryWorkflowExternalInvocation,
   WorkflowInstance,
   WorkflowCallbackDelivery,
-} from '@/services/workflow/WorkflowController'
+  WorkflowExternalInvocation,
+} from '@/services/workflow/instance/WorkflowInstanceController'
 import FormattedContent from '@/components/FormattedContent'
-import { HumanOption, normalizeHumanOptions } from './humanOptions'
+import { HumanOption, normalizeHumanOptions } from '../humanOptions'
 
 const statusColor: Record<string, string> = {
   RUNNING: 'processing',
@@ -184,6 +190,7 @@ const RunPage: React.FC = () => {
   const [variablesJson, setVariablesJson] = useState('{}')
   const [savingVariables, setSavingVariables] = useState(false)
   const [callbackDeliveries, setCallbackDeliveries] = useState<WorkflowCallbackDelivery[]>([])
+  const [externalInvocations, setExternalInvocations] = useState<WorkflowExternalInvocation[]>([])
   useEffect(() => {
     if (id) getWorkflow(id).then((r) => r.data && setWorkflow(r.data))
   }, [id])
@@ -245,6 +252,9 @@ const RunPage: React.FC = () => {
     })
     getWorkflowCallbacks(instanceId).then((r) => {
       if (r.code === 200) setCallbackDeliveries(r.data || [])
+    })
+    getWorkflowExternalInvocations(instanceId).then((r) => {
+      if (r.code === 200) setExternalInvocations(r.data || [])
     })
   }
   useEffect(() => {
@@ -555,6 +565,25 @@ const RunPage: React.FC = () => {
                         )}
                       </Space>
                       {delivery.errorMessage && <span style={{ color: '#ff4d4f', width: '100%' }}>{delivery.errorMessage}</span>}
+                    </Space>
+                  ))}
+                </Space>
+              </Card>
+            )}
+            {externalInvocations.length > 0 && (
+              <Card size="small" title="外部调用记录" style={{ marginTop: 12 }}>
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  {externalInvocations.map((invocation) => (
+                    <Space key={invocation.id} style={{ justifyContent: 'space-between', width: '100%' }} wrap>
+                      <span>{invocation.invocationType} · {invocation.nodeId}</span>
+                      <Space>
+                        <Tag color={invocation.status === 'COMPLETED' ? 'success' : invocation.status === 'UNKNOWN' ? 'error' : 'processing'}>{invocation.status}</Tag>
+                        {invocation.status === 'UNKNOWN' && instance.status === 'FAILED' && <>
+                          <Button size="small" loading={acting} onClick={() => act(async () => { await confirmWorkflowExternalInvocation(instance.id, invocation.id); load(instance.id) })}>确认成功</Button>
+                          <Button size="small" danger loading={acting} onClick={() => act(async () => { await retryWorkflowExternalInvocation(instance.id, invocation.id); load(instance.id) })}>显式重试</Button>
+                        </>}
+                      </Space>
+                      {invocation.errorMessage && <span style={{ color: '#ff4d4f', width: '100%' }}>{invocation.errorMessage}</span>}
                     </Space>
                   ))}
                 </Space>

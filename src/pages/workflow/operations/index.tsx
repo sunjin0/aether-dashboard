@@ -8,7 +8,7 @@ import {
   getWorkflowOperationsMetrics,
   WorkflowDeadLetter,
   WorkflowOperationsMetrics,
-} from '@/services/workflow/WorkflowController'
+} from '@/services/workflow/operations/WorkflowOperationsController'
 
 const WorkflowOperationsPage: React.FC = () => {
   const intl = useIntl()

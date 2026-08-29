@@ -22,8 +22,9 @@ import {
   WorkflowTemplate,
   WorkflowVersion,
   WorkflowVersionDiff,
-} from '@/services/workflow/WorkflowController'
+} from '@/services/workflow/workflow/WorkflowController'
 import TableActionMenu from '@/components/TableActionMenu'
+import { AgentApplication, getAgentApplicationList } from '@/services/agent/AgentApplicationController'
 
 const WorkflowPage: React.FC = () => {
   const intl = useIntl()
@@ -42,6 +43,14 @@ const WorkflowPage: React.FC = () => {
   const importInput = useRef<HTMLInputElement>(null)
   const [form] = Form.useForm()
   const [templateForm] = Form.useForm()
+  const [applications, setApplications] = useState<AgentApplication[]>([])
+  const applicationOptions = applications.map((item) => ({ label: item.name, value: item.id }))
+
+  React.useEffect(() => {
+    getAgentApplicationList({ current: 1, pageSize: 100 }).then(({ data }) =>
+      setApplications((data || []).filter((item) => item.status === 1)),
+    )
+  }, [])
   const loadTemplates = async () => {
     const result = await getWorkflowTemplates()
     if (result.code === 200) setTemplates(result.data || [])
@@ -122,7 +131,7 @@ const WorkflowPage: React.FC = () => {
       return
     }
     setEditing(result.data)
-    form.setFieldsValue({ name: result.data.name, description: result.data.description, maxConcurrentInstances: result.data.maxConcurrentInstances ?? 0 })
+    form.setFieldsValue({ applicationId: result.data.applicationId, name: result.data.name, description: result.data.description, maxConcurrentInstances: result.data.maxConcurrentInstances ?? 0 })
     setOpen(true)
   }
   const action = async (record: AgentWorkflow, fn: (id: string) => Promise<any>, text: string) => {
@@ -181,6 +190,14 @@ const WorkflowPage: React.FC = () => {
           </Button>,
         ]}
         columns={[
+          {
+            title: t('pages.agent.product.application'),
+            dataIndex: 'applicationId',
+            width: 180,
+            valueType: 'select',
+            fieldProps: { options: applicationOptions },
+            render: (value) => applications.find((item) => item.id === value)?.name || value || '-',
+          },
           {
             title: t('pages.agent.workflow.name'),
             dataIndex: 'name',
@@ -296,11 +313,28 @@ const WorkflowPage: React.FC = () => {
       >
         <Form form={form} layout="vertical" preserve={false}>
           <Form.Item
+            name="applicationId"
+            label={t('pages.agent.product.application')}
+            rules={[{ required: true }]}
+          >
+            <Select options={applicationOptions} />
+          </Form.Item>
+          <Form.Item
             name="name"
             label={t('pages.agent.workflow.name')}
             rules={[{ required: true }]}
           >
             <Input maxLength={64} />
+          </Form.Item>
+          <Form.Item
+            name="code"
+            label="工作流编码"
+            rules={[
+              { required: true, message: '请输入工作流编码' },
+              { pattern: /^[A-Za-z][A-Za-z0-9_-]{2,63}$/, message: '编码必须为 3-64 位字母、数字、下划线或短横线，且以字母开头' },
+            ]}
+          >
+            <Input maxLength={64} placeholder="order_fulfillment" />
           </Form.Item>
           <Form.Item name="description" label={t('pages.agent.workflow.description')}>
             <Input.TextArea maxLength={512} />

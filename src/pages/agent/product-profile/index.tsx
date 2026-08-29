@@ -7,7 +7,7 @@ import JsonDisplay from '@/components/JsonDisplay'
 import DrawerForm from '@/components/DrawerForm'
 import { getAgentDefinitionList } from '@/services/agent/AgentDefinitionController'
 import { AgentApplication, getAgentApplicationList } from '@/services/agent/AgentApplicationController'
-import { getWorkflowList } from '@/services/workflow/WorkflowController'
+import { getWorkflowList } from '@/services/workflow/workflow/WorkflowController'
 import { AgentProductProfile, AgentProductProfileVersion, copyAgentProductProfile, createAgentProductProfile, deleteAgentProductProfile, getAgentProductProfileVersions, getAgentProductProfiles, publishAgentProductProfile, setAgentProductProfileEnabled, updateAgentProductProfile } from '@/services/agent/AgentProductProfileController'
 
 const targetTypes = ['AGENT', 'WORKFLOW']

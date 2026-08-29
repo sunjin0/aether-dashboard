@@ -49,7 +49,10 @@ import '@xyflow/react/dist/style.css'
 import {
   AgentWorkflow,
   WorkflowNode,
+  WorkflowVersion,
   getWorkflow,
+  getWorkflowList,
+  getWorkflowVersions,
   publishWorkflow,
   updateWorkflow,
   validateWorkflowDraft,
@@ -399,6 +402,81 @@ const TemplateObjectEditor: React.FC<{ value?: string; onChange: (value: string)
   </>
 }
 
+type SchemaFieldOption = { value: string; label: string }
+const parseSchemaFieldOptions = (schema?: string): SchemaFieldOption[] => {
+  try {
+    const parsed = JSON.parse(schema || '[]')
+    if (!Array.isArray(parsed)) return []
+    const options: SchemaFieldOption[] = []
+    parsed.forEach((item) => {
+      if (item && typeof item === 'object' && item.name) {
+        options.push({
+          value: String(item.name),
+          label: item.label ? `${item.name}（${item.label}）` : String(item.name),
+        })
+      }
+    })
+    return options
+  } catch {
+    return []
+  }
+}
+/** 优先下拉选择变量/字段；当没有可选项或需要自定义名称时回退为输入框。 */
+const MappingFieldSelect: React.FC<{
+  value?: string
+  options: SchemaFieldOption[]
+  placeholder?: string
+  onChange: (value: string) => void
+}> = ({ value, options, placeholder, onChange }) => {
+  const merged = useMemo(
+    () => (value && !options.some((item) => item.value === value) ? [...options, { value, label: value }] : options),
+    [options, value],
+  )
+  if (!merged.length) {
+    return <Input value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />
+  }
+  return (
+    <Select
+      style={{ width: '100%' }}
+      showSearch
+      optionFilterProp="label"
+      value={value || undefined}
+      placeholder={placeholder}
+      options={merged}
+      onChange={(next) => onChange(next || '')}
+    />
+  )
+}
+type SubflowMappingRow = { target: string; source: string }
+/** 子流程输入/输出映射：target 与 source 均通过下拉选择对应字段/变量。 */
+const SubflowMappingEditor: React.FC<{
+  value?: unknown
+  targetLabel: string
+  sourceLabel: string
+  targetOptions: SchemaFieldOption[]
+  sourceOptions: SchemaFieldOption[]
+  onChange: (value: SubflowMappingRow[]) => void
+  addText: string
+}> = ({ value, targetLabel, sourceLabel, targetOptions, sourceOptions, onChange, addText }) => {
+  const rows = Array.isArray(value) ? value.filter((row): row is SubflowMappingRow => !!row && typeof row === 'object') : []
+  const update = (index: number, patch: Partial<SubflowMappingRow>) =>
+    onChange(rows.map((row, i) => (i === index ? { ...row, ...patch } : row)))
+  return (
+    <Space direction="vertical" size={6} style={{ width: '100%' }}>
+      {rows.map((row, index) => (
+        <div key={index} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) 28px', gap: 6 }}>
+          <MappingFieldSelect value={row.target} options={targetOptions} placeholder={targetLabel} onChange={(target) => update(index, { target })} />
+          <MappingFieldSelect value={row.source} options={sourceOptions} placeholder={sourceLabel} onChange={(source) => update(index, { source })} />
+          <Button type="text" danger icon={<DeleteOutlined />} onClick={() => onChange(rows.filter((_, i) => i !== index))} />
+        </div>
+      ))}
+      <Button type="dashed" block size="small" icon={<PlusOutlined />} onClick={() => onChange([...rows, { target: '', source: '' }])}>
+        {addText}
+      </Button>
+    </Space>
+  )
+}
+
 type CondRow = { variable: string; op: string; value: string; logic: '&&' | '||' }
 const COND_OPS = ['==', '!=', '>', '>=', '<', '<='].map((v) => ({ value: v, label: v }))
 const COND_LOGIC: { value: '&&' | '||'; label: string }[] = [
@@ -450,6 +528,8 @@ const Editor: React.FC = () => {
   const [outputSchema, setOutputSchema] = useState('[]')
   const [agentOptions, setAgentOptions] = useState<any[]>([])
   const [toolOptions, setToolOptions] = useState<any[]>([])
+  const [subflowWorkflows, setSubflowWorkflows] = useState<AgentWorkflow[]>([])
+  const [subflowVersions, setSubflowVersions] = useState<WorkflowVersion[]>([])
   const [paletteOpen, setPaletteOpen] = useState(true)
   const [paletteGroup, setPaletteGroup] = useState('execute')
   const [propertyOpen, setPropertyOpen] = useState(true)
@@ -568,6 +648,18 @@ const Editor: React.FC = () => {
     () => nodes.map((node) => ({ value: node.id, label: `${node.data.workflowNode.name || node.id} (${node.id})` })),
     [nodes],
   )
+  const selectedSubflowWorkflowId = selected?.type === 'subflow' ? textValue(selected.workflowId) : undefined
+  const selectedSubflowVersionNo = selected?.type === 'subflow' ? numberValue(selected.versionNo) : undefined
+  const subflowWorkflowOptions = subflowWorkflows
+    .filter((workflow) => workflow.status === 1 && workflow.publishedVersion != null && workflow.id !== id)
+    .map((workflow) => ({ value: workflow.id as string, label: workflow.code ? `${workflow.name || workflow.id}（${workflow.code}）` : workflow.name || (workflow.id as string) }))
+  const subflowVersionOptions = subflowVersions.map((version) => ({
+    value: version.versionNo,
+    label: `v${version.versionNo}${version.publishedAt ? ` · ${new Date(Number(version.publishedAt)).toLocaleDateString()}` : ''}`,
+  }))
+  const selectedSubflowVersion = subflowVersions.find((version) => version.versionNo === selectedSubflowVersionNo)
+  const subflowInputFields = useMemo(() => parseSchemaFieldOptions(selectedSubflowVersion?.inputSchema), [selectedSubflowVersion])
+  const subflowOutputFields = useMemo(() => parseSchemaFieldOptions(selectedSubflowVersion?.outputSchema), [selectedSubflowVersion])
   useEffect(() => {
     if (!id) return
     getWorkflow(id).then((r) => {
@@ -600,6 +692,32 @@ const Editor: React.FC = () => {
     if (!id) getAgentDefinitionOptions().then(setAgentOptions)
     getAgentToolOptions().then(setToolOptions)
   }, [id, intl, setEdges, setNodes])
+  useEffect(() => {
+    getWorkflowList({ status: 1, current: 1, pageSize: 100 }).then((r) => {
+      if (r.code === 200) setSubflowWorkflows(r.data || [])
+    })
+  }, [])
+  // 选中子流程节点时按引用的工作流加载已发布版本；未选版本则默认取最新。
+  useEffect(() => {
+    if (!selectedSubflowWorkflowId) { setSubflowVersions([]); return }
+    let cancelled = false
+    getWorkflowVersions(selectedSubflowWorkflowId).then((r) => {
+      if (cancelled || r.code !== 200) return
+      const versions = r.data || []
+      setSubflowVersions(versions)
+      const latest = versions.reduce((max, version) => Math.max(max, version.versionNo), 0)
+      if (latest > 0) {
+        setNodes((current) =>
+          current.map((node) =>
+            node.id === selectedId && !numberValue(node.data.workflowNode.versionNo)
+              ? { ...node, data: { workflowNode: { ...node.data.workflowNode, versionNo: latest } } }
+              : node,
+          ),
+        )
+      }
+    })
+    return () => { cancelled = true }
+  }, [selectedSubflowWorkflowId, selectedId, setNodes])
   const onConnect = useCallback(
     (connection: Connection) => {
       const source = nodes.find((node) => node.id === connection.source)?.data.workflowNode
@@ -645,6 +763,10 @@ const Editor: React.FC = () => {
           : node,
       ),
     )
+  }
+  // 切换子流程引用时清空固定版本，由上面的 effect 加载版本并默认选最新。
+  const onSubflowWorkflowChange = (workflowId?: string) => {
+    updateSelected({ workflowId: workflowId || undefined, versionNo: undefined })
   }
   const onEdgeClick = (_: React.MouseEvent, edge: Edge) => {
     setSelectedEdgeId(edge.id)
@@ -1070,6 +1192,17 @@ const Editor: React.FC = () => {
                           value={selected.toolName}
                           onChange={(e) => updateSelected({ toolName: e.target.value })}
                         />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.toolApprovalPolicy')}</label>
+                        <Select
+                          style={{ width: '100%' }}
+                          value={selected.toolApprovalPolicy || 'ask'}
+                          options={[
+                            { value: 'ask', label: t('pages.agent.workflow.editor.toolApproval.ask') },
+                            { value: 'risky', label: t('pages.agent.workflow.editor.toolApproval.risky') },
+                            { value: 'never', label: t('pages.agent.workflow.editor.toolApproval.never') },
+                          ]}
+                          onChange={(toolApprovalPolicy) => updateSelected({ toolApprovalPolicy })}
+                        />
                         <TemplateObjectEditor value={selected.argumentsTemplate} onChange={(argumentsTemplate) => updateSelected({ argumentsTemplate })} />
                         <StateMappingEditor
                           value={selected.stateMapping}
@@ -1176,14 +1309,48 @@ const Editor: React.FC = () => {
                     )}
                     {selected.type === 'subflow' && (
                       <>
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>子流程 ID</label>
-                        <Input value={textValue(selected.workflowId)} onChange={(e) => updateSelected({ workflowId: e.target.value })} />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>子流程</label>
+                        <Select
+                          style={{ width: '100%' }}
+                          showSearch
+                          optionFilterProp="label"
+                          allowClear
+                          placeholder="选择已发布的工作流"
+                          value={selectedSubflowWorkflowId || undefined}
+                          options={subflowWorkflowOptions}
+                          onChange={onSubflowWorkflowChange}
+                        />
                         <label style={{ marginBottom: -6, fontWeight: 500 }}>固定版本</label>
-                        <InputNumber min={1} value={numberValue(selected.versionNo)} onChange={(versionNo) => updateSelected({ versionNo: versionNo || undefined })} style={{ width: '100%' }} />
+                        <Select
+                          style={{ width: '100%' }}
+                          placeholder={selectedSubflowWorkflowId ? '选择发布版本' : '请先选择子流程'}
+                          value={selectedSubflowVersionNo ?? undefined}
+                          options={subflowVersionOptions}
+                          disabled={!selectedSubflowWorkflowId || subflowVersions.length === 0}
+                          onChange={(versionNo) => updateSelected({ versionNo: versionNo || undefined })}
+                        />
                         <label style={{ marginBottom: -6, fontWeight: 500 }}>超时（毫秒）</label>
                         <InputNumber min={1} value={selected.timeoutMillis} onChange={(timeoutMillis) => updateSelected({ timeoutMillis: timeoutMillis || undefined })} style={{ width: '100%' }} />
                         <label style={{ marginBottom: -6, fontWeight: 500 }}>输入映射</label>
-                        <StructuredListEditor value={selected.inputMappings} fields={[{ key: 'target', label: '子流程字段' }, { key: 'source', label: '父流程变量' }]} onChange={(inputMappings) => updateSelected({ inputMappings })} addText="添加输入映射" />
+                        <SubflowMappingEditor
+                          value={selected.inputMappings}
+                          targetLabel="子流程输入字段"
+                          sourceLabel="父流程变量"
+                          targetOptions={subflowInputFields}
+                          sourceOptions={variableOptions}
+                          onChange={(inputMappings) => updateSelected({ inputMappings })}
+                          addText="添加输入映射"
+                        />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>输出映射</label>
+                        <SubflowMappingEditor
+                          value={selected.outputMappings}
+                          targetLabel="父流程变量"
+                          sourceLabel="子流程输出字段"
+                          targetOptions={variableOptions}
+                          sourceOptions={subflowOutputFields}
+                          onChange={(outputMappings) => updateSelected({ outputMappings })}
+                          addText="添加输出映射"
+                        />
                         <StateMappingEditor value={selected.stateMapping} options={variableOptions} onChange={(stateMapping) => updateSelected({ stateMapping })} />
                       </>
                     )}

@@ -47,6 +47,7 @@ import { HumanOption, normalizeHumanOptions } from '../humanOptions'
 const statusColor: Record<string, string> = {
   RUNNING: 'processing',
   WAITING_USER: 'warning',
+  WAITING_SUBFLOW: 'warning',
   FAILED: 'error',
   COMPLETED: 'success',
   TERMINATED: 'default',
@@ -63,6 +64,7 @@ const nodeColor: Record<string, string> = {
 const runStatusColor: Record<string, string> = {
   RUNNING: '#1677ff',
   WAITING_USER: '#fa8c16',
+  WAITING_SUBFLOW: '#fa8c16',
   COMPLETED: '#52c41a',
   FAILED: '#ff4d4f',
   TERMINATED: '#999',
@@ -351,6 +353,28 @@ const RunPage: React.FC = () => {
       setAnswering(false)
     }
   }
+  // 子流程待处理面板：父流程发起人可直接代答子流程的人工交互/审批（answer 打到子实例）。
+  const answerChild = async () => {
+    if (!instance) return
+    const sub = instance.pendingSubflowInteraction
+    if (!sub?.childInstanceId) return
+    setAnswering(true)
+    try {
+      const result = await answerWorkflow(
+        sub.childInstanceId,
+        sub.interactionType === 'mcp_tool_approval'
+          ? { decision: answerForm.getFieldValue('decision') }
+          : answerForm.getFieldsValue(),
+      )
+      if (result.code === 200) {
+        answerForm.resetFields()
+        load(instance.id)
+        loadHistory()
+      }
+    } finally {
+      setAnswering(false)
+    }
+  }
   const act = async (action: () => Promise<void>) => {
     setActing(true)
     try {
@@ -392,6 +416,7 @@ const RunPage: React.FC = () => {
     }
   }
   const detailNodeId = selectedNodeId ?? instance?.currentNodeId
+  const pendingSub = instance?.status === 'WAITING_SUBFLOW' ? instance.pendingSubflowInteraction : undefined
   const flowNodes = useMemo(() => {
     if (!instance) return []
     let defs: Record<string, any>[] = []
@@ -571,16 +596,16 @@ const RunPage: React.FC = () => {
               </Card>
             )}
             {externalInvocations.length > 0 && (
-              <Card size="small" title="外部调用记录" style={{ marginTop: 12 }}>
+              <Card size="small" title={t('pages.agent.workflow.run.externalInvocations')} style={{ marginTop: 12 }}>
                 <Space direction="vertical" style={{ width: '100%' }}>
                   {externalInvocations.map((invocation) => (
                     <Space key={invocation.id} style={{ justifyContent: 'space-between', width: '100%' }} wrap>
-                      <span>{invocation.invocationType} · {invocation.nodeId}</span>
+                      <span>{intl.formatMessage({ id: `pages.agent.workflow.run.invocationType.${invocation.invocationType}`, defaultMessage: invocation.invocationType })} · {invocation.nodeId}</span>
                       <Space>
-                        <Tag color={invocation.status === 'COMPLETED' ? 'success' : invocation.status === 'UNKNOWN' ? 'error' : 'processing'}>{invocation.status}</Tag>
+                        <Tag color={invocation.status === 'COMPLETED' ? 'success' : invocation.status === 'UNKNOWN' ? 'error' : 'processing'}>{intl.formatMessage({ id: `pages.agent.workflow.run.invocationStatus.${invocation.status}`, defaultMessage: invocation.status })}</Tag>
                         {invocation.status === 'UNKNOWN' && instance.status === 'FAILED' && <>
-                          <Button size="small" loading={acting} onClick={() => act(async () => { await confirmWorkflowExternalInvocation(instance.id, invocation.id); load(instance.id) })}>确认成功</Button>
-                          <Button size="small" danger loading={acting} onClick={() => act(async () => { await retryWorkflowExternalInvocation(instance.id, invocation.id); load(instance.id) })}>显式重试</Button>
+                          <Button size="small" loading={acting} onClick={() => act(async () => { await confirmWorkflowExternalInvocation(instance.id, invocation.id); load(instance.id) })}>{t('pages.agent.workflow.run.confirmSuccess')}</Button>
+                          <Button size="small" danger loading={acting} onClick={() => act(async () => { await retryWorkflowExternalInvocation(instance.id, invocation.id); load(instance.id) })}>{t('pages.agent.workflow.run.explicitRetry')}</Button>
                         </>}
                       </Space>
                       {invocation.errorMessage && <span style={{ color: '#ff4d4f', width: '100%' }}>{invocation.errorMessage}</span>}
@@ -749,9 +774,87 @@ const RunPage: React.FC = () => {
                     </Card>
                   </Panel>
                 )}
+                {pendingSub && (
+                  <Panel position="bottom-left">
+                    <Card
+                      size="small"
+                      style={{ width: 360 }}
+                      title={t('pages.agent.workflow.run.waitingSubflow')}
+                      extra={
+                        <a
+                          onClick={() => {
+                            history.push(`/workflow/workflow/${pendingSub.childWorkflowId}/run?instanceId=${encodeURIComponent(pendingSub.childInstanceId)}`)
+                          }}
+                        >
+                          {t('pages.agent.workflow.run.openSubflow')}
+                        </a>
+                      }
+                    >
+                      {(() => {
+                        const sub = pendingSub
+                        const waiting = sub.status === 'WAITING_USER'
+                        const approvalOnly = waiting && sub.answerable === false
+                        return (
+                          <>
+                            <p>
+                              <strong>{sub.childWorkflowName || sub.childWorkflowId}</strong>
+                              {sub.nodeId ? ` · ${sub.nodeId}` : ''}
+                              {sub.question ? `：${sub.question}` : ''}
+                            </p>
+                            {!waiting && <p>{t('pages.agent.workflow.run.subflowExecuting')}</p>}
+                            {approvalOnly && <p>{t('pages.agent.workflow.run.subflowPendingApprover')}</p>}
+                            {waiting && !approvalOnly && (
+                              <Form form={answerForm} layout="vertical">
+                                {sub.interactionType === 'mcp_tool_approval' ? (
+                                  <>
+                                    <p>{sub.question || t('pages.agent.workflow.run.confirmMcpToolCall')}</p>
+                                    {sub.arguments && <FormattedContent content={sub.arguments} />}
+                                    <Form.Item name="decision" rules={[{ required: true, message: t('pages.agent.workflow.run.selectDecision') }]}>
+                                      <Radio.Group>
+                                        <Space direction="vertical">
+                                          <Radio value="once">{t('pages.agent.workflow.run.mcpOnce')}</Radio>
+                                          <Radio value="allow_10m">{t('pages.agent.workflow.run.mcpAllowTenMinutes')}</Radio>
+                                          <Radio value="reject">{t('pages.agent.workflow.run.mcpReject')}</Radio>
+                                        </Space>
+                                      </Radio.Group>
+                                    </Form.Item>
+                                  </>
+                                ) : (
+                                  <>
+                                    {getHumanQuestions(intl, sub).map((question, index) => (
+                                      <Form.Item
+                                        key={question.key}
+                                        name={question.key}
+                                        label={question.question}
+                                        rules={question.required ? [{ required: true, message: t('pages.agent.workflow.run.answerRequired') }] : undefined}
+                                      >
+                                        {question.options?.length ? (
+                                          <Radio.Group>
+                                            <Space direction="vertical">
+                                              {question.options.map((option) => <Radio key={option.value} value={option.value}>{option.label}</Radio>)}
+                                            </Space>
+                                          </Radio.Group>
+                                        ) : (
+                                          <Input.TextArea autoSize={{ minRows: index === 0 ? 3 : 2, maxRows: 6 }} />
+                                        )}
+                                      </Form.Item>
+                                    ))}
+                                  </>
+                                )}
+                                <Button type="primary" loading={answering} onClick={answerChild}>
+                                  {t('pages.agent.workflow.run.submitAndContinue')}
+                                </Button>
+                              </Form>
+                            )}
+                          </>
+                        )
+                      })()}
+                    </Card>
+                  </Panel>
+                )}
               </ReactFlow>
             </div>
-            {['RUNNING', 'WAITING_USER', 'FAILED'].includes(instance.status) && (
+            {['RUNNING', 'WAITING_USER', 'WAITING_SUBFLOW', 'WAITING_EVENT', 'WAITING_DELAY', 'FAILED'].includes(instance.status) && (
               <Space style={{ marginTop: 16 }}>
                 {instance.status === 'FAILED' && <Button
                   type="primary"

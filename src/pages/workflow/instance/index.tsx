@@ -7,7 +7,7 @@ import { AgentWorkflow, getWorkflowList } from '@/services/workflow/workflow/Wor
 import { getWorkflowInstances, WorkflowInstance } from '@/services/workflow/instance/WorkflowInstanceController'
 
 const statusColor: Record<string, string> = {
-  RUNNING: 'processing', WAITING_USER: 'warning', FAILED: 'error', COMPLETED: 'success', TERMINATED: 'default', TIMED_OUT: 'error', PENDING: 'default',
+  RUNNING: 'processing', WAITING_USER: 'warning', WAITING_SUBFLOW: 'warning', WAITING_EVENT: 'warning', WAITING_DELAY: 'warning', FAILED: 'error', COMPLETED: 'success', TERMINATED: 'default', TIMED_OUT: 'error', PENDING: 'default',
 }
 
 const WorkflowInstancesPage: React.FC = () => {

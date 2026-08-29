@@ -1757,6 +1757,7 @@ export default {
   'pages.agent.workflow.run.status.PENDING': 'Pending',
   'pages.agent.workflow.run.status.RUNNING': 'Running',
   'pages.agent.workflow.run.status.WAITING_USER': 'Waiting for user',
+  'pages.agent.workflow.run.status.WAITING_SUBFLOW': 'Waiting for subflow',
   'pages.agent.workflow.run.status.FAILED': 'Failed',
   'pages.agent.workflow.run.status.COMPLETED': 'Completed',
   'pages.agent.workflow.run.status.TERMINATED': 'Terminated',
@@ -1828,6 +1829,21 @@ export default {
   'pages.agent.workflow.run.selectDecision': 'Select an action',
   'pages.agent.workflow.run.answerRequired': 'Enter or select an answer',
   'pages.agent.workflow.run.submitAndContinue': 'Submit and continue',
+  'pages.agent.workflow.run.waitingSubflow': 'Subflow pending',
+  'pages.agent.workflow.run.openSubflow': 'Open subflow',
+  'pages.agent.workflow.run.subflowExecuting': 'Subflow is executing, please wait…',
+  'pages.agent.workflow.run.subflowPendingApprover': 'Awaiting the designated approver; cannot be answered from the parent',
+  'pages.agent.workflow.run.externalInvocations': 'External invocation records',
+  'pages.agent.workflow.run.confirmSuccess': 'Confirm success',
+  'pages.agent.workflow.run.explicitRetry': 'Retry explicitly',
+  'pages.agent.workflow.run.invocationType.TOOL': 'Tool call',
+  'pages.agent.workflow.run.invocationType.HTTP': 'HTTP call',
+  'pages.agent.workflow.run.invocationType.NOTIFICATION': 'Notification',
+  'pages.agent.workflow.run.invocationType.SUBFLOW': 'Subflow',
+  'pages.agent.workflow.run.invocationStatus.RECORDED': 'Recorded',
+  'pages.agent.workflow.run.invocationStatus.RUNNING': 'Running',
+  'pages.agent.workflow.run.invocationStatus.COMPLETED': 'Completed',
+  'pages.agent.workflow.run.invocationStatus.UNKNOWN': 'Unknown',
   'pages.agent.workflow.editor.validation.startEnd':
     'A workflow must contain exactly one start node and one end node',
   'pages.agent.workflow.editor.validation.deletedEdge':
@@ -1903,6 +1919,10 @@ export default {
   'pages.agent.workflow.editor.prompt': 'Prompt',
   'pages.agent.workflow.editor.mcpMethodName': 'MCP method name',
   'pages.agent.workflow.editor.argumentsTemplate': 'Arguments template',
+  'pages.agent.workflow.editor.toolApprovalPolicy': 'Tool approval policy',
+  'pages.agent.workflow.editor.toolApproval.ask': 'Ask always',
+  'pages.agent.workflow.editor.toolApproval.risky': 'High risk only',
+  'pages.agent.workflow.editor.toolApproval.never': 'Auto approve',
   'pages.agent.workflow.editor.question': 'Question',
   'pages.agent.workflow.editor.questionTip':
     'An answer in a human node is internal input. It is not written to shared state unless a shared or internal variable is specified.',
@@ -2067,7 +2087,7 @@ export default {
   'pages.agent.workflow.schemaBuilder.moveDown': 'Move down',
   'pages.agent.workflow.schemaBuilder.placeholderHint': 'Placeholder hint (optional)',
   'pages.agent.workflow.schemaBuilder.duplicateVariable':
-    'Duplicate variable name. The $\{${name}\} reference will conflict.',
+    'Duplicate variable name. The ${name} reference will conflict.',
   'pages.agent.workflow.schemaBuilder.addField': 'Add field',
   'pages.knowledge.base.form.retrieval.retrievalSettings': 'Retrieval Settings',
   'pages.knowledge.base.form.retrieval.topK': 'Final Chunk Count',
@@ -2589,4 +2609,4 @@ export default {
     'Existing tasks are unaffected after publication; new tasks only reference this published version.',
   'pages.agent.sandbox.checkItem.4':
     'When provided, advanced JSON must be an object; common boundary fields use the values in this form.',
-};
+}

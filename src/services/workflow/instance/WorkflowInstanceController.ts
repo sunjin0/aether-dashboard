@@ -2,7 +2,24 @@ import { request } from '@umijs/max'
 import { ResponseStructure } from '@/services/entity/Common'
 
 export type WorkflowNodeInstance = { id: string; nodeId: string; nodeType: string; status: string; outputData?: string; errorMessage?: string; interactionConfig?: string; retryCount?: number }
-export type WorkflowInstance = { id: string; workflowId: string; workflowName?: string; status: string; variables?: string; currentNodeId?: string; errorMessage?: string; versionNodes?: string; versionEdges?: string; nodes?: WorkflowNodeInstance[]; businessType?: string; businessId?: string; idempotencyKey?: string; deadlineAt?: number; current?: number; pageSize?: number }
+export type WorkflowPendingSubflowInteraction = {
+  childInstanceId: string
+  childWorkflowId?: string
+  childWorkflowVersionId?: string
+  childWorkflowName?: string
+  status?: string
+  nodeId?: string
+  nodeType?: string
+  interactionType?: string
+  question?: string
+  questions?: Array<string | Record<string, unknown>>
+  arguments?: string
+  approvalMode?: string
+  approverServiceAccountId?: string
+  answerable?: boolean
+  deadlineAt?: number
+}
+export type WorkflowInstance = { id: string; workflowId: string; workflowName?: string; status: string; variables?: string; currentNodeId?: string; errorMessage?: string; versionNodes?: string; versionEdges?: string; nodes?: WorkflowNodeInstance[]; businessType?: string; businessId?: string; idempotencyKey?: string; deadlineAt?: number; current?: number; pageSize?: number; pendingSubflowInteraction?: WorkflowPendingSubflowInteraction }
 export type WorkflowInstanceQuery = Partial<Pick<WorkflowInstance, 'workflowId' | 'status' | 'businessType' | 'businessId' | 'current' | 'pageSize'>>
 export type WorkflowBusinessStart = { variables: Record<string, unknown>; businessType: string; businessId: string; idempotencyKey: string; callbackUrl?: string; deadlineAt?: number }
 export type WorkflowCallbackDelivery = { id: string; instanceId: string; eventType: string; status: string; attemptCount?: number; responseStatus?: number; errorMessage?: string; deliveredAt?: number }

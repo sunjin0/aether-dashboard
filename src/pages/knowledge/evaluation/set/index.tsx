@@ -24,6 +24,7 @@ import {
   Tooltip,
 } from 'antd'
 import { history, useAccess, useIntl, useParams } from '@umijs/max'
+import { downloadBlob } from '@/utils/desktop'
 import {
   EvaluationCase,
   EvaluationHealth,
@@ -370,13 +371,10 @@ export default function EvaluationPage() {
                     <Button
                       onClick={async () => {
                         const items = (await exportEvaluationCases(selected!.id!)).data || []
-                        const link = document.createElement('a')
-                        link.href = URL.createObjectURL(
+                        await downloadBlob(
                           new Blob([JSON.stringify(items, null, 2)], { type: 'application/json' }),
+                          `${selected!.name || 'evaluation-cases'}.json`,
                         )
-                        link.download = `${selected!.name || 'evaluation-cases'}.json`
-                        link.click()
-                        URL.revokeObjectURL(link.href)
                       }}
                     >
                       {intl.formatMessage({ id: 'pages.knowledge.evaluation.exportCases' })}

@@ -23,6 +23,7 @@ import { errorConfig } from './requestErrorConfig'
 import { getRoutes, info } from '@/services/sys/LoginController'
 
 const isDev = process.env.NODE_ENV === 'development'
+const isElectronDesktop = typeof window !== 'undefined' && Boolean(window.aetherDesktop?.isDesktop)
 const loginPath = '/login'
 const iconMap: Record<string, React.ReactNode> = {
   ApartmentOutlined: <ApartmentOutlined />,
@@ -194,7 +195,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
         width: '331px',
       },
     ],
-    links: isDev
+    links: isDev && !isElectronDesktop
       ? [
         <Link key="openapi" to="/umi/plugin/openapi" target="_blank">
           <LinkOutlined />
@@ -211,7 +212,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       // if (initialState?.loading) return <PageLoading />;
       return (
         <AliveScope>
-          <div style={{ paddingBottom: 72 }}>
+          <div style={{ paddingBottom: isElectronDesktop ? 16 : 72 }}>
             <RouteTabs pathname={history.location.pathname}>{children}</RouteTabs>
           </div>
           {isDev && (

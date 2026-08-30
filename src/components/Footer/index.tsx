@@ -7,6 +7,7 @@ type FooterProps = {
 };
 
 const Footer: React.FC<FooterProps> = ({ fixed = false }) => {
+  if (window.aetherDesktop?.isDesktop) return null;
   return (
     <DefaultFooter
       className={fixed ? 'fixed-footer' : undefined}

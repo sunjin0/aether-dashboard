@@ -27,6 +27,38 @@ body,
   z-index: 12;
 }
 
+// Electron 使用原生窗口标题栏，内容区按桌面端的宽屏与窗口化交互进行微调。
+html[data-platform='electron'] {
+  body {
+    overflow: hidden;
+    background: #f5f7fa;
+  }
+
+  .ant-pro-layout,
+  .ant-layout {
+    min-width: 1100px;
+  }
+
+  .ant-pro-page-container-children-container {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .ant-pro-sider {
+    box-shadow: 1px 0 0 rgba(5, 5, 5, 0.06);
+  }
+
+  .ant-pro-global-header {
+    border-bottom: 1px solid rgba(5, 5, 5, 0.06);
+  }
+}
+
+html[data-platform='electron'][data-system-theme='dark'] {
+  body {
+    background: #141414;
+  }
+}
+
 canvas {
   display: block;
 }

@@ -44,3 +44,25 @@ docker compose up -d --build dashboard
 | `AETHER_ADMIN_UPSTREAM` | Nginx 代理目标，容器内通常为 `http://aether-admin:8080`。 |
 
 完整平台部署请使用 Java 项目的 `docker-compose.all.yml`。
+
+## Windows 桌面版
+
+桌面版使用 Electron，并在本机回环地址启动静态页面和 `/api/` 代理，因此现有前端接口与 SSE 流式聊天无需改为绝对地址。
+
+```powershell
+# 开发调试（先构建 Dashboard，再启动 Electron）
+npm run desktop:dev
+
+# 生成 NSIS 安装程序和便携版 exe
+npm run desktop:pack
+```
+
+产物位于 `release/`；桌面构建文件使用独立的 `dist-desktop/` 目录，不会和正在运行的 Web 开发服务或标准 `dist/` 构建冲突。默认连接 `http://localhost:8080` 的 Aether Admin。连接远端 Admin 时，在 `%APPDATA%/aether-dashboard/config.json` 中创建以下配置后重新打开应用：
+
+```json
+{ "adminUrl": "https://admin.example.com" }
+```
+
+也可在启动程序的环境中设置 `AETHER_ADMIN_URL`；该变量优先于配置文件。桌面版只封装 Dashboard，Admin、数据库、Redis 与 MinIO 等服务仍需单独运行或部署。
+
+桌面版会跟随 Windows 明暗主题，记住上次窗口尺寸和位置，并提供原生菜单快捷键：`Ctrl+R` 刷新、`Ctrl+Shift+R` 强制刷新、`Ctrl+=`/`Ctrl+-` 缩放、`F11` 全屏。通过菜单“应用 → 打开连接配置目录”可以直接配置 Admin 地址。

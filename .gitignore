@@ -8,6 +8,8 @@ _roadhog-api-doc
 
 # production
 /dist
+/dist-desktop
+/release
 
 # misc
 .DS_Store

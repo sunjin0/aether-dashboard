@@ -1,5 +1,6 @@
 import { request } from '@umijs/max'
 import type { ResponseStructure } from '@/services/entity/Common'
+import { saveBlob } from '@/utils/desktop'
 
 export interface FileUploadResult {
   objectKey: string;
@@ -58,7 +59,9 @@ export const createChatAttachmentPreviewUrl = async (file: FileReference): Promi
   URL.createObjectURL(await getFileBlob('/api/file/chat/preview', file))
 
 export const downloadFile = async (file: FileReference): Promise<void> => {
-  const url = URL.createObjectURL(await getFileBlob('/api/file/download', file))
+  const blob = await getFileBlob('/api/file/download', file)
+  if (await saveBlob(blob, file.fileName || 'file')) return
+  const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
   link.download = file.fileName || 'file'

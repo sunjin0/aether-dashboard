@@ -18,3 +18,12 @@ declare module 'react-fittext';
 declare module 'bizcharts-plugin-slider';
 
 declare const REACT_APP_ENV: 'test' | 'dev' | 'pre' | false
+
+interface Window {
+  aetherDesktop?: {
+    isDesktop: boolean;
+    onThemeChange: (listener: (theme: 'light' | 'dark') => void) => () => void;
+    saveFile: (fileName: string, data: ArrayBuffer) => Promise<boolean>;
+    openConfigFolder: () => Promise<void>;
+  };
+}

@@ -7,6 +7,8 @@ import routes from './routes';
 
 const { REACT_APP_ENV = 'dev' } = process.env;
 const isProduction = process.env.NODE_ENV === 'production';
+// Electron 打包使用独立目录，避免与正在运行的 Web 开发/部署构建争用 dist。
+const outputPath = process.env.DESKTOP_BUILD === 'true' ? 'dist-desktop' : 'dist';
 
 /**
  * @name 使用公共路径
@@ -17,6 +19,7 @@ const PUBLIC_PATH: string = '/';
 const publicUrl = (path: string) => `${PUBLIC_PATH.replace(/\/?$/, '/')}${path}`;
 
 export default defineConfig({
+  outputPath,
   /**
    * @name 开启 hash 模式
    * @description 让 build 之后的产物包含 hash 后缀。通常用于增量发布和避免浏览器加载缓存。

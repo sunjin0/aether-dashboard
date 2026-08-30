@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { history, useIntl } from '@umijs/max'
+import { downloadBlob } from '@/utils/desktop'
 import { PageContainer, ProTable, type ActionType } from '@ant-design/pro-components'
 import { Button, Descriptions, Form, Input, InputNumber, Modal, Select, Table, Tag, message } from 'antd'
 import { AppstoreOutlined, DownloadOutlined, HistoryOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons'
@@ -82,11 +83,7 @@ const WorkflowPage: React.FC = () => {
     if (!record.id) return
     const result = await exportWorkflow(record.id)
     if (result.code !== 200 || !result.data) return
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(new Blob([JSON.stringify(result.data, null, 2)], { type: 'application/json' }))
-    link.download = `${record.name || 'workflow'}.json`
-    link.click()
-    URL.revokeObjectURL(link.href)
+    await downloadBlob(new Blob([JSON.stringify(result.data, null, 2)], { type: 'application/json' }), `${record.name || 'workflow'}.json`)
   }
   const uploadWorkflow = async (file?: File) => {
     if (!file) return

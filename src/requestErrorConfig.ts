@@ -1,6 +1,7 @@
 ﻿import type { RequestOptions } from '@@/plugin-request/request'
 import type { RequestConfig } from '@umijs/max'
-import { message, notification } from 'antd'
+import { Button, message, notification } from 'antd'
+import React from 'react'
 import { getIntl, getLocale } from '@@/exports'
 import { request } from '@umijs/max'
 import { ErrorShowType, ResponseStructure } from '@/services/entity/Common'
@@ -131,6 +132,19 @@ export const errorConfig: RequestConfig = {
           message: error.response.status,
           type: 'error',
         })
+        if (error.response.status === 502 && window.aetherDesktop?.isDesktop) {
+          notification.open({
+            message: '无法连接 Aether Admin',
+            description: '请确认 Admin 服务已启动，或打开连接配置目录修改 adminUrl。',
+            btn: React.createElement(Button, {
+              type: 'primary',
+              size: 'small',
+              onClick: () => window.aetherDesktop?.openConfigFolder(),
+              children: '打开连接配置',
+            }),
+            type: 'error',
+          })
+        }
       } else if (error.request) {
         // 请求已经成功发起，但没有收到响应
         // \`error.request\` 在浏览器中是 XMLHttpRequest 的实例，

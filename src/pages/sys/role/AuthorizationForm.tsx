@@ -43,22 +43,28 @@ const AuthorizationForm = (props: {
       open={open}
       setOpen={setOpen}
       id={id}
-      request={async (params) => {
-        const info = async () => {
-          const resourceList = await getResourceList()
-          const resources = resourceList.data
-          if (id) {
-            const promise = await getRoleAuthorization({ id })
-            const halfCheckedResources: Array<string> = []
-            setResourceIds(resources)
-            removeParentSelected(resources, promise.data, halfCheckedResources)
-            setCheckedKeys(promise.data)
-            setHalfCheckedKeys(halfCheckedResources)
-          } else {
-            setResourceIds(resources)
-          }
+      request={async () => {
+        const resourceList = await getResourceList()
+        const resources = Array.isArray(resourceList.data) ? resourceList.data : []
+        setResourceIds(resources)
+
+        if (id) {
+          const authorization = await getRoleAuthorization({ id })
+          // 复制接口返回值，避免 removeParentSelected 修改请求缓存中的数组。
+          const selectedResources = Array.isArray(authorization.data)
+            ? [...authorization.data]
+            : []
+          const halfCheckedResources: Array<string> = []
+          removeParentSelected(resources, selectedResources, halfCheckedResources)
+          setCheckedKeys(selectedResources)
+          setHalfCheckedKeys(halfCheckedResources)
+        } else {
+          setCheckedKeys([])
+          setHalfCheckedKeys([])
         }
-        await info()
+
+        // DrawerForm 的加载状态依赖 request 返回值；仅完成副作用而不返回响应会导致抽屉持续加载。
+        return { data: {}, success: true, code: 200 }
       }}
       onSuccess={async () => {
         const { code } = await saveRoleAuthorization({

@@ -646,6 +646,13 @@ export interface AgentStreamAcceptedData {
   conversationId: string;
 }
 
+/** 服务端校验失败后，用于替换已输出内容的事件。 */
+export interface AgentStreamReplaceData {
+  conversationId?: string;
+  requestId?: string;
+  content?: string;
+}
+
 export interface KnowledgeSource {
   citationIndex: number;
   similarity?: number;
@@ -666,6 +673,7 @@ export type AgentStreamEvent =
   | { event: 'question'; data: AgentStreamQuestionData }
   | { event: 'accepted'; data: AgentStreamAcceptedData }
   | { event: 'run_step'; data: AgentStreamRunStepData }
+  | { event: 'replace'; data: AgentStreamReplaceData }
   | { event: 'done'; data: AgentStreamDoneData }
   | { event: 'error'; data: AgentStreamErrorData };
 

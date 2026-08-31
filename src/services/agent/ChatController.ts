@@ -13,6 +13,7 @@ import {
   AgentStreamMessageData,
   AgentStreamQuestionData,
   AgentStreamReasoningData,
+  AgentStreamReplaceData,
   AgentStreamRunStepData,
   AgentStreamToolCallData,
 } from '@/services/entity/Agent'
@@ -26,6 +27,7 @@ export interface StreamAgentChatOptions {
   onRunStep?: (data: AgentStreamRunStepData) => void
   onProgress?: (data: { stage?: string; message?: string }) => void
   onQuestion?: (data: AgentStreamQuestionData) => void
+  onReplace?: (data: AgentStreamReplaceData) => void
   onDone?: (data: AgentStreamDoneData) => void
   onError?: (data: AgentStreamErrorData) => void
 }
@@ -66,6 +68,9 @@ const dispatchStreamEvent = (event: EventSourceMessage, options: StreamAgentChat
       return
     case 'run_step':
       options.onRunStep?.(data as AgentStreamRunStepData)
+      return
+    case 'replace':
+      options.onReplace?.(data as AgentStreamReplaceData)
       return
     case 'done':
       options.onDone?.(data as AgentStreamDoneData)

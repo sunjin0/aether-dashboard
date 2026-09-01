@@ -23,7 +23,9 @@ import {
   getAgentRunStatistics,
   pauseAgentRun,
   resumeAgentRun,
+  downloadToolAuditCsv,
 } from '@/services/agent/RunController'
+import { downloadBlob } from '@/utils/desktop'
 import { getOptionList } from '@/services/sys/DictController'
 import {
   AgentRun,
@@ -44,6 +46,7 @@ import {
   DatabaseOutlined,
   FieldTimeOutlined,
   WarningOutlined,
+  DownloadOutlined,
 } from '@ant-design/icons'
 
 const { Text } = Typography
@@ -393,6 +396,12 @@ const AgentRunPage: React.FC = () => {
           return getAgentRunList(queryParams)
         }}
         columns={columns}
+        toolBarRender={() => [
+          <Button key="export-audit" icon={<DownloadOutlined />} onClick={async () => {
+            const blob = await downloadToolAuditCsv(dateRange ? { startTime: dateRange[0].valueOf(), endTime: dateRange[1].valueOf() } : undefined)
+            await downloadBlob(blob, 'tool-audit.csv')
+          }}>导出审计 CSV</Button>,
+        ]}
       />
       <Drawer
         title={intl.formatMessage({ id: 'pages.agent.run.detail' })}

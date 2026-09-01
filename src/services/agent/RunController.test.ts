@@ -5,6 +5,7 @@ import {
   getAgentRunList,
   getAgentRunStatistics,
   getAgentRunSteps,
+  downloadToolAuditCsv,
 } from './RunController'
 
 jest.mock('@umijs/max', () => ({
@@ -30,6 +31,7 @@ describe('RunController', () => {
     await getAgentRunSteps('run-1')
     await cancelAgentRun('run-1')
     await getAgentRunStatistics({ agentDefinitionId: 'agent-1', startTime: 100, endTime: 200 })
+    await downloadToolAuditCsv({ startTime: 100, endTime: 200 })
 
     expect(mockedRequest).toHaveBeenNthCalledWith(1, '/api/agent/run/list', {
       method: 'POST',
@@ -56,6 +58,11 @@ describe('RunController', () => {
         startTime: 100,
         endTime: 200,
       },
+    })
+    expect(mockedRequest).toHaveBeenNthCalledWith(6, '/api/agent/governance/audit/tool-calls/export', {
+      method: 'GET',
+      params: { startTime: 100, endTime: 200 },
+      responseType: 'blob',
     })
   })
 })

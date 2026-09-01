@@ -96,6 +96,13 @@ const McpServerForm = (props: {
           fieldProps={{ autoComplete: 'new-password' }}
         />
       )}
+      <ProFormText
+        name="credentialRef"
+        label="凭据引用"
+        tooltip="仅保存 Secret Provider 引用，不填写或显示明文凭据"
+        placeholder="例如 prometheus-prod"
+        rules={[{ pattern: /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/, message: '仅允许字母、数字、点、下划线、冒号和连字符' }]}
+      />
       <ProFormDigit
         name="timeoutMs"
         label={format('pages.agent.tool.timeout')}

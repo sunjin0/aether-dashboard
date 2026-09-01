@@ -939,6 +939,7 @@ export interface McpServer {
   requestHeaders?: string;
   authType?: 'none' | 'bearer' | 'api_key';
   authToken?: string;
+  credentialRef?: string;
   timeoutMs?: number;
   status?: number;
   remark?: string;

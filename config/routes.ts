@@ -11,6 +11,12 @@ export default [
     icon: 'smile',
     component: './Dashboard',
   },
+  // Stable end-user entry aliases; the original /agent/* routes remain available to administrators.
+  { path: '/chat', name: 'Chat', hideInMenu: true, component: './agent/chat' },
+  { path: '/tasks', name: 'Tasks', hideInMenu: true, component: './agent/run' },
+  { path: '/files', name: 'Files', hideInMenu: true, component: './agent/artifact' },
+  { path: '/history', name: 'History', hideInMenu: true, component: './agent/conversation' },
+  { path: '/apps', name: 'Apps', hideInMenu: true, component: './agent/product-profile' },
   {
     path: '/',
     redirect: '/dashboard',
@@ -40,6 +46,26 @@ export default [
         path: '/sys/admin',
         name: '管理员管理',
         component: './sys/admin',
+      },
+      {
+        path: '/sys/tenant',
+        name: '租户目录',
+        component: './sys/tenant',
+      },
+      {
+        path: '/sys/workspace',
+        name: '工作空间目录',
+        component: './sys/workspace',
+      },
+      {
+        path: '/sys/project',
+        name: '项目目录',
+        component: './sys/project',
+      },
+      {
+        path: '/sys/identity',
+        name: '企业身份集成',
+        component: './sys/identity',
       },
       {
         path: '/sys/role',
@@ -91,6 +117,7 @@ export default [
     icon: 'robot',
     routes: [
       { path: '/agent/application', name: '业务应用空间', component: './agent/application' },
+      { path: '/agent/solution', name: 'Solution 管理', component: './agent/solution' },
       { path: '/agent/definition', name: '智能体配置', component: './agent/definition' },
       { path: '/agent/product-profile', name: 'Agent 产品发布', component: './agent/product-profile' },
       { path: '/agent/model-provider', name: '模型服务商', component: './agent/model-provider' },

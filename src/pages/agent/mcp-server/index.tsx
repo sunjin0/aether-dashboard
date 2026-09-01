@@ -17,6 +17,7 @@ import {
   Checkbox,
   Drawer,
   Empty,
+  Form,
   Input,
   message,
   Modal,
@@ -28,6 +29,7 @@ import {
 import React, { useRef, useState } from 'react'
 import JsonDisplay from '@/components/JsonDisplay'
 import TableActionMenu from '@/components/TableActionMenu'
+import { putConnectorCredential, revokeConnectorCredential } from '@/services/agent/ConnectorCredentialController'
 
 const McpServerPage: React.FC = () => {
   const intl = useIntl()
@@ -42,6 +44,8 @@ const McpServerPage: React.FC = () => {
   const [toolKeyword, setToolKeyword] = useState('')
   const [discoveringServerId, setDiscoveringServerId] = useState<string>()
   const [importingTools, setImportingTools] = useState(false)
+  const [credentialOpen, setCredentialOpen] = useState(false)
+  const [credentialForm] = Form.useForm()
   const permissions = useAccess()
   const write = permissions[history.location.pathname]
   const format = (key: string) => intl.formatMessage({ id: key })
@@ -211,6 +215,7 @@ const McpServerPage: React.FC = () => {
         columns={columns}
         toolBarRender={() =>
           write && [
+            <Button key="credentials" onClick={() => { credentialForm.resetFields(); setCredentialOpen(true) }}>管理连接器凭据</Button>,
             <Button
               key="new"
               icon={<PlusOutlined />}
@@ -225,6 +230,25 @@ const McpServerPage: React.FC = () => {
           ]
         }
       />
+      <Modal title="管理连接器凭据" open={credentialOpen} onCancel={() => setCredentialOpen(false)} onOk={async () => {
+        const values = await credentialForm.validateFields()
+        const credentialValues = Object.fromEntries(
+          Object.entries({ endpoint: values.endpoint, token: values.token, datasourceUid: values.datasourceUid, namespace: values.namespace })
+            .filter(([, value]) => value !== undefined && value !== ''),
+        ) as Record<string, string>
+        await putConnectorCredential(values.credentialRef, credentialValues)
+        message.success('凭据已保存'); setCredentialOpen(false)
+      }}>
+        <Form form={credentialForm} layout="vertical">
+          <Form.Item name="credentialRef" label="凭据引用" rules={[{ required: true }, { pattern: /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/, message: '凭据引用格式无效' }]}><Input placeholder="例如 prometheus-prod" /></Form.Item>
+          <Form.Item name="endpoint" label="Endpoint" rules={[{ required: true }, { pattern: /^https:\/\/[^\s]+$/, message: 'Endpoint 必须使用 HTTPS' }]}><Input placeholder="https://..." /></Form.Item>
+          <Form.Item name="token" label="Token" rules={[{ required: true }]}><Input.Password autoComplete="new-password" /></Form.Item>
+          <Form.Item name="datasourceUid" label="Grafana Datasource UID" rules={[{ max: 128 }]}><Input placeholder="Grafana 查询时使用" /></Form.Item>
+          <Form.Item name="namespace" label="Kubernetes Namespace" rules={[{ max: 128 }]}><Input placeholder="Kubernetes 查询时使用" /></Form.Item>
+          <Typography.Text type="secondary">凭据只提交到 Secret Provider，页面不会读取或显示已保存内容。</Typography.Text>
+          <Button danger type="link" onClick={async () => { const ref = credentialForm.getFieldValue('credentialRef'); if (!ref) { message.warning('请先填写凭据引用'); return }; await revokeConnectorCredential(ref); message.success('凭据已撤销'); credentialForm.resetFields() }}>撤销此引用</Button>
+        </Form>
+      </Modal>
       <McpServerForm
         id={id}
         open={open}

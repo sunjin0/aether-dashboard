@@ -62,3 +62,6 @@ export const getAgentRunStatistics = async (
     params,
   })
 }
+
+export const downloadToolAuditCsv = async (params?: { startTime?: number; endTime?: number }): Promise<Blob> =>
+  request('/api/agent/governance/audit/tool-calls/export', { method: 'GET', params, responseType: 'blob' })

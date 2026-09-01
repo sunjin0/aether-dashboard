@@ -38,6 +38,7 @@ const iconMap: Record<string, React.ReactNode> = {
 }
 
 const pagePermissionPaths = [
+  '/agent/solution',
   '/agent/model-provider',
   '/agent/definition',
   '/agent/mcp-server',
@@ -56,6 +57,10 @@ const pagePermissionPaths = [
   '/knowledge/index-job',
   '/knowledge/evaluation',
   '/sys/admin',
+  '/sys/tenant',
+  '/sys/workspace',
+  '/sys/project',
+  '/sys/identity',
   '/service-account/manage',
   '/service-account/monitor',
   '/sys/role',

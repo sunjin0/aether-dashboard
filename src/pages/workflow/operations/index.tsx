@@ -47,7 +47,8 @@ const WorkflowOperationsPage: React.FC = () => {
           rowKey="id" loading={loading} pagination={false} dataSource={deadLetters}
           locale={{ emptyText: t('pages.agent.workflow.noDeadLetters') }}
           columns={[
-            { title: t('pages.agent.workflow.deadLetter.type'), dataIndex: 'type', width: 150 },
+            { title: t('pages.agent.workflow.deadLetter.type'), dataIndex: 'type', width: 150,
+              render: (value: string) => t(`pages.workbench.deadLetter.type.${value}`) },
             { title: t('pages.agent.workflow.deadLetter.instance'), dataIndex: 'instanceId', ellipsis: true },
             { title: t('pages.agent.workflow.deadLetter.attempts'), dataIndex: 'attemptCount', width: 100 },
             { title: t('pages.agent.workflow.deadLetter.error'), dataIndex: 'errorMessage', ellipsis: true },

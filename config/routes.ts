@@ -48,26 +48,6 @@ export default [
         component: './sys/admin',
       },
       {
-        path: '/sys/tenant',
-        name: '租户目录',
-        component: './sys/tenant',
-      },
-      {
-        path: '/sys/workspace',
-        name: '工作空间目录',
-        component: './sys/workspace',
-      },
-      {
-        path: '/sys/project',
-        name: '项目目录',
-        component: './sys/project',
-      },
-      {
-        path: '/sys/identity',
-        name: '企业身份集成',
-        component: './sys/identity',
-      },
-      {
         path: '/sys/role',
         name: '角色管理',
         component: './sys/role',

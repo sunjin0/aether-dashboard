@@ -2,7 +2,7 @@ import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro-components'
 import { Button, Form, Input, Modal, Select, Space, Switch, Tag, message } from 'antd'
 import React, { useRef, useState } from 'react'
-import { getApplicationList, ApplicationRecord } from '@/services/sys/TenantController'
+import { getApplicationList, ApplicationRecord } from '@/services/agent/AgentApplicationController'
 import { deleteSolution, getSolutionInstallations, getSolutionList, installSolution, rollbackSolution, saveSolution, SolutionInstallation, SolutionRecord, uninstallSolution } from '@/services/agent/SolutionController'
 
 const SolutionPage: React.FC = () => {

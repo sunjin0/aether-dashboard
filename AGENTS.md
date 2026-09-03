@@ -30,3 +30,7 @@
 - Jest config is async via `@umijs/max/test`, uses browser target, `url: http://localhost:8000`, and setup file `tests/setupTests.jsx` for `localStorage`, `URL.createObjectURL`, `Worker`, and `matchMedia` mocks.
 - Jenkins is the only checked-in CI config; it runs `npm install --prefer-offline`, `npm run build`, then copies `dist/*` to `/var/www/html/aether-dashboard` and reports GitHub commit status under `jenkins-ci`.
 - Commit messages are expected to satisfy `@commitlint/config-conventional`; lint-staged runs ESLint for JS/TS and Prettier for JS/TS/Less/Markdown/JSON/YAML if hooks are installed.
+
+## Git commit convention
+
+Use Conventional Commits: `<type>(<scope>): <中文提交描述>`. 类型使用 `feat`、`fix`、`refactor`、`perf`、`docs`、`test`、`build`、`ci` 或 `chore`；scope 使用 `dashboard` 或实际受影响的功能。提交描述必须使用中文，保持简洁并聚焦单一变更；提交正文必须说明修改了哪些页面、路由、权限、服务或配置，以及验证结果。提交前检查 `git diff`，排除密钥和生成文件；路由、权限或服务变更需执行 `npm run tsc` 和 `npm run build`。

@@ -9,17 +9,23 @@ import {
 } from '@ant-design/pro-components'
 import { Form } from 'antd'
 import { useIntl } from '@umijs/max'
+import React, { useEffect } from 'react'
+import { McpServer } from '@/services/entity/Agent'
 
 const McpServerForm = (props: {
   id?: string;
   open: boolean;
   setOpen: (open: boolean) => void;
   onSuccess: () => void;
+  initialValues?: Partial<McpServer>;
 }) => {
-  const { id, open, setOpen, onSuccess } = props
+  const { id, open, setOpen, onSuccess, initialValues } = props
   const intl = useIntl()
   const [form] = Form.useForm()
   const authType = Form.useWatch('authType', form)
+  useEffect(() => {
+    if (open && !id && initialValues) form.setFieldsValue(initialValues)
+  }, [open, id, initialValues, form])
   const format = (key: string, values?: Record<string, string>) =>
     intl.formatMessage({ id: key }, values)
   const validateJson = async (_: unknown, value?: string) => {

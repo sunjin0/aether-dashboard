@@ -167,7 +167,9 @@ export const errorConfig: RequestConfig = {
         'Accept-Language': getLocale(),
       }
       const item = localStorage.getItem('token')
-      if (item && !config.headers.Authorization) {
+      // 刷新令牌请求必须匿名发送：携带已过期 access token 会被全局认证过滤器
+      // 在到达 /api/sys/refresh 前拦截，导致 refresh token 永远无法参与轮换。
+      if (item && !config.headers.Authorization && !config.skipAuthRefresh) {
         config.headers.Authorization = 'Bearer ' + item
       }
       return { ...config }

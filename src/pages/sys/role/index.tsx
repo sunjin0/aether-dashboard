@@ -60,6 +60,7 @@ const Role: React.FC = () => {
                 key: 'auth',
                 label: intl.formatMessage({ id: 'pages.sys.auth.role.resource' }),
                 primary: true,
+                visible: record.scope === undefined || record.scope === 'PLATFORM',
                 onClick: () => {
                   setId(record.id)
                   setAuthorizationOpen(true)

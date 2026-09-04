@@ -2583,7 +2583,7 @@ export default {
   'pages.organization.architecture.name': '名称',
   'pages.organization.architecture.code': '编码',
   'pages.organization.architecture.userId': '用户 ID',
-  'pages.organization.architecture.role': '角色',
+  'pages.organization.architecture.role': '身份',
   'pages.organization.architecture.action': '操作',
   'pages.organization.architecture.selected': '已选择组织',
   'pages.organization.architecture.selectOrganization': '请先选择组织',

@@ -2704,7 +2704,7 @@ export default {
   'pages.organization.architecture.name': 'Name',
   'pages.organization.architecture.code': 'Code',
   'pages.organization.architecture.userId': 'User ID',
-  'pages.organization.architecture.role': 'Role',
+  'pages.organization.architecture.role': 'Identity',
   'pages.organization.architecture.action': 'Action',
   'pages.organization.architecture.selected': 'Organization selected',
   'pages.organization.architecture.selectOrganization': 'Select an organization first',

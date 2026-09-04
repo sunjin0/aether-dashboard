@@ -54,6 +54,7 @@ export interface Role {
   id?: number;
   name?: string;
   description?: string;
+  scope?: string;
   status?: number;
   deleted?: number;
   createdAt?: string;

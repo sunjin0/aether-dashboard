@@ -90,11 +90,12 @@ export interface Resource {
   sortNum?: number;
 }
 export interface Admin {
-  id?: number;
+  id?: string;
   username?: string;
   password?: string;
   sex?: string;
   type?: string;
+  roleIds?: string[];
   avatar?: string;
   phone?: string;
   email?: string;

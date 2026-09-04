@@ -72,6 +72,11 @@ export default [
         name: '管理员偏好',
         component: './sys/admin-preference',
       },
+      {
+        path: '/sys/organization',
+        name: '组织架构',
+        component: './sys/organization',
+      },
     ],
   },
   {

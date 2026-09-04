@@ -60,7 +60,7 @@ const AdminForm = (props: {
         name={'sex'}
         label={intl.formatMessage({ id: 'pages.common.gender' })}
         rules={[{ required: true }]}
-        request={async () => getOptionList('Gender_Type')}
+        request={async () => getOptionList('Gender_Type', false)}
       />
       <ProFormFileUpload
         name={'avatar'}
@@ -74,7 +74,7 @@ const AdminForm = (props: {
         name={'type'}
         label={intl.formatMessage({ id: 'pages.common.type' })}
         rules={[{ required: true }]}
-        request={async () => getOptionList('System_Role')}
+        request={async () => getOptionList('System_Role', false)}
       />
       <ProFormText
         name={'email'}

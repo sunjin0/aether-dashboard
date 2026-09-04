@@ -15,7 +15,6 @@
     "desktop:pack": "npm run desktop:build && electron-builder --win nsis portable",
     "gh-pages": "gh-pages -d dist",
     "i18n-remove": "pro i18n-remove --locale=zh-CN --write",
-
     "postinstall": "max setup",
     "jest": "jest",
     "lint": "npm run lint:js && npm run lint:prettier && npm run tsc",
@@ -46,6 +45,7 @@
   "dependencies": {
     "@ant-design/icons": "^4.8.3",
     "@ant-design/pro-components": "^2.7.19",
+    "@antv/g6": "^5.0.49",
     "@mdxeditor/editor": "^4.2.0",
     "@microsoft/fetch-event-source": "^2.0.1",
     "@monaco-editor/react": "^4.7.0",

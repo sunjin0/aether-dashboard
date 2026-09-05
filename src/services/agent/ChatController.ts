@@ -166,7 +166,10 @@ export const streamDeepRun = async (runId: string, options: StreamAgentChatOptio
   })
 }
 
-/** 上传文件并完成文本识别；聊天请求仅携带该接口返回的识别结果。 */
+/**
+ * 上传聊天附件。请求会携带接口返回的对象键：支持原生文件输入的模型使用短时签名链接读取原文件，
+ * 其他模型回退使用同一接口返回的文本识别结果。
+ */
 export const uploadAgentChatAttachments = async (
   files: File[],
   onProgress?: (percent: number) => void,

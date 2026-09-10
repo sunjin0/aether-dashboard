@@ -27,4 +27,10 @@ server {
     location / {
         try_files $uri $uri/ /index.html;
     }
+
+    # Keep the HTML entry fresh after a dashboard image release; hashed assets remain cacheable.
+    location = /index.html {
+        add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+        try_files /index.html =404;
+    }
 }

@@ -71,6 +71,10 @@ const getRouteLabel = (
     return formatMessage({ id: 'components.routeTabs.evaluationRun' });
   if (/^\/knowledge\/evaluation\/sets\/[^/]+$/.test(pathname))
     return formatMessage({ id: 'components.routeTabs.evaluationWorkspace' });
+  if (/^\/evaluation\/experiments\/[^/]+$/.test(pathname))
+    return formatMessage({ id: 'components.routeTabs.agentEvaluationExperiment' });
+  if (/^\/evaluation\/datasets\/[^/]+$/.test(pathname))
+    return formatMessage({ id: 'components.routeTabs.agentEvaluationDataset' });
   if (/^\/(?:agent\/workflow|workflow\/workflow)\/[^/]+\/run$/.test(pathname))
     return formatMessage({ id: 'components.routeTabs.workflowRun' });
   if (/^\/(?:agent\/workflow|workflow\/workflow)\/[^/]+$/.test(pathname))

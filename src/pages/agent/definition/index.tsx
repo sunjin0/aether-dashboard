@@ -206,6 +206,12 @@ const AgentDefinitionPage: React.FC = () => {
                 },
               },
               {
+                key: 'evaluation',
+                label: format('pages.agentEvaluation.entry.evaluate'),
+                primary: true,
+                onClick: () => record.id && history.push(`/evaluation/experiments?targetType=AGENT&targetId=${record.id}`),
+              },
+              {
                 key: 'copy',
                 label: format('pages.agent.definition.copy'),
                 confirm: { title: format('pages.agent.definition.copyConfirm') },

@@ -233,7 +233,7 @@ const WorkflowPage: React.FC = () => {
           },
           {
             title: t('pages.agent.workflow.action'),
-            width: 300,
+            width: 380,
             fixed: 'right',
             valueType: 'option',
             render: (_, r) => (
@@ -266,6 +266,12 @@ const WorkflowPage: React.FC = () => {
                     key: 'versions',
                     label: <><HistoryOutlined /> {t('pages.agent.workflow.versions')}</>,
                     onClick: () => showVersions(r),
+                  },
+                  {
+                    key: 'evaluation',
+                    label: t('pages.agentEvaluation.entry.evaluate'),
+                    primary: true,
+                    onClick: () => r.id && history.push(`/evaluation/experiments?targetType=WORKFLOW&targetId=${r.id}`),
                   },
                   {
                     key: 'export',

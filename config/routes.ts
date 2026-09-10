@@ -97,6 +97,19 @@ export default [
     ],
   },
   {
+    path: '/evaluation',
+    name: '评测中心',
+    icon: 'experiment',
+    routes: [
+      { path: '/evaluation/datasets', name: '评测集', component: './evaluation/datasets' },
+      { path: '/evaluation/datasets/:id', name: '评测集详情', hideInMenu: true, component: './evaluation/datasets/detail' },
+      { path: '/evaluation/evaluators', name: '评分器', component: './evaluation/evaluators' },
+      { path: '/evaluation/experiments', name: '评测实验', component: './evaluation/experiments' },
+      { path: '/evaluation/experiments/:id', name: '实验详情', hideInMenu: true, component: './evaluation/experiments/detail' },
+      { path: '/evaluation/compare', name: '评测对比', hideInMenu: true, component: './evaluation/compare' },
+    ],
+  },
+  {
     path: '/agent',
     name: '智能体平台',
     icon: 'robot',

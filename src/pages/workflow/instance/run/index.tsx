@@ -43,6 +43,7 @@ import {
 } from '@/services/workflow/instance/WorkflowInstanceController'
 import FormattedContent from '@/components/FormattedContent'
 import { HumanOption, normalizeHumanOptions } from '../humanOptions'
+import VariableStructEditor from '../VariableStructEditor'
 
 const statusColor: Record<string, string> = {
   RUNNING: 'processing',
@@ -57,8 +58,16 @@ const statusColor: Record<string, string> = {
 const nodeColor: Record<string, string> = {
   start: '#52c41a',
   agent: '#1677ff',
-  mcp: '#fa8c16',
-  human: '#722ed1',
+  tool: '#fa8c16',
+  interaction: '#722ed1',
+  rule: '#9254de',
+  http: '#d46b08',
+  notification: '#eb2f96',
+  subflow: '#2f54eb',
+  parallel: '#531dab',
+  join: '#531dab',
+  wait_event: '#13c2c2',
+  delay: '#fa8c16',
   end: '#13c2c2',
 }
 const runStatusColor: Record<string, string> = {
@@ -189,7 +198,7 @@ const RunPage: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false)
   const [historyInstances, setHistoryInstances] = useState<WorkflowInstance[]>([])
   const [variablesOpen, setVariablesOpen] = useState(false)
-  const [variablesJson, setVariablesJson] = useState('{}')
+  const [variablesDraft, setVariablesDraft] = useState<Record<string, unknown>>({})
   const [savingVariables, setSavingVariables] = useState(false)
   const [callbackDeliveries, setCallbackDeliveries] = useState<WorkflowCallbackDelivery[]>([])
   const [externalInvocations, setExternalInvocations] = useState<WorkflowExternalInvocation[]>([])
@@ -227,18 +236,14 @@ const RunPage: React.FC = () => {
       const defs = JSON.parse(instance?.versionNodes || '[]')
       if (Array.isArray(defs)) {
         defs.forEach((def: any) => {
-          if (def?.outputKey && !String(def.outputKey).startsWith('_')) names.add(def.outputKey)
-          if (def?.stateMapping) {
-            try {
-              const mapping = JSON.parse(def.stateMapping)
-              if (mapping && typeof mapping === 'object') {
-                Object.keys(mapping).forEach((k) => {
-                  if (!k.startsWith('_')) names.add(k)
-                })
+          if (Array.isArray(def?.outputs)) {
+            def.outputs.forEach((mapping: any) => {
+              const target = mapping?.target
+              if (target && !String(target).startsWith('_')) {
+                // 嵌套目标 result.order.total 对应顶层变量 result，仅登记根段
+                names.add(String(target).split('.')[0])
               }
-            } catch {
-              /* ignore */
-            }
+            })
           }
         })
       }
@@ -386,27 +391,24 @@ const RunPage: React.FC = () => {
     }
   }
   const openVariablesEditor = () => {
-    setVariablesJson(JSON.stringify(publicVariables, null, 2))
+    setVariablesDraft(JSON.parse(JSON.stringify(publicVariables)))
     setVariablesOpen(true)
   }
   const saveVariables = async () => {
     if (!instance) return
-    let variables: Record<string, unknown>
-    try {
-      const parsed = JSON.parse(variablesJson)
-      if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') throw new Error()
-      variables = parsed
-    } catch {
-      message.error(t('pages.agent.workflow.run.variablesMustObject'))
-      return
-    }
-    if (Object.keys(variables).some((key) => key.startsWith('_'))) {
+    const draft = variablesDraft
+    if (Object.keys(draft).some((key) => key.startsWith('_'))) {
       message.error(t('pages.agent.workflow.run.internalVariablesForbidden'))
       return
     }
+    // 后端 updateVariables 仅做顶层合并：不存在的 key 传 null 表示删除，其余整值替换
+    const payload: Record<string, unknown> = { ...draft }
+    Object.keys(publicVariables).forEach((key) => {
+      if (!Object.prototype.hasOwnProperty.call(draft, key)) payload[key] = null
+    })
     setSavingVariables(true)
     try {
-      const result = await updateWorkflowVariables(instance.id, variables)
+      const result = await updateWorkflowVariables(instance.id, payload)
       if (result.code === 200) {
         setVariablesOpen(false)
         load(instance.id)
@@ -906,12 +908,7 @@ const RunPage: React.FC = () => {
         destroyOnClose
       >
         <p style={{ color: '#8c8c8c' }}>{t('pages.agent.workflow.run.editVariablesTip')}</p>
-        <Input.TextArea
-          value={variablesJson}
-          onChange={(event) => setVariablesJson(event.target.value)}
-          rows={12}
-          style={{ fontFamily: 'Consolas, Monaco, monospace' }}
-        />
+        <VariableStructEditor value={variablesDraft} onChange={setVariablesDraft} />
       </Modal>
     </PageContainer>
   )

@@ -27,6 +27,7 @@ import {
   ReactFlow,
   ReactFlowInstance,
   addEdge,
+  reconnectEdge,
   Background,
   Connection,
   ConnectionMode,
@@ -886,27 +887,34 @@ const Editor: React.FC = () => {
     })
     return () => { cancelled = true }
   }, [selectedSubflowWorkflowId, selectedId, setNodes])
-  const onConnect = useCallback(
-    (connection: Connection) => {
+  const validateConnection = useCallback(
+    (connection: Connection, excludedEdgeId?: string) => {
       const source = nodes.find((node) => node.id === connection.source)?.data.workflowNode
       const target = nodes.find((node) => node.id === connection.target)?.data.workflowNode
-      if (source?.type === 'end') { message.warning(t('pages.agent.workflow.editor.endCannotConnect')); return }
-      if (target?.type === 'start') { message.warning(t('pages.agent.workflow.editor.startCannotFollow')); return }
+      if (!source || !target) { message.warning(t('pages.agent.workflow.editor.edgeEndpointRequired')); return false }
+      if (source.id === target.id) { message.warning(t('pages.agent.workflow.editor.edgeSelfReference')); return false }
+      if (source.type === 'end') { message.warning(t('pages.agent.workflow.editor.endCannotConnect')); return false }
+      if (target.type === 'start') { message.warning(t('pages.agent.workflow.editor.startCannotFollow')); return false }
       // 并行分叉内容只允许确定性节点：禁止并行直连汇聚，或把交互/等待/子流程节点接入任一分支区域。
-      if (source && target) {
-        const violation = parallelBranchViolation(
-          nodes.map((node) => node.data.workflowNode),
-          edges.map((edge) => ({ source: edge.source, target: edge.target })),
-          source,
-          target,
-        )
-        if (violation === 'join') { message.warning(t('pages.agent.workflow.editor.validation.parallelJoinDirect')); return }
-        if (violation === 'interactive') {
-          const warningText = t('pages.agent.workflow.editor.validation.parallelBranchInteractive', { name: target.name || target.id })
-          message.warning(warningText)
-          return
-        }
+      const violation = parallelBranchViolation(
+        nodes.map((node) => node.data.workflowNode),
+        edges.filter((edge) => edge.id !== excludedEdgeId).map((edge) => ({ source: edge.source, target: edge.target })),
+        source,
+        target,
+      )
+      if (violation === 'join') { message.warning(t('pages.agent.workflow.editor.validation.parallelJoinDirect')); return false }
+      if (violation === 'interactive') {
+        const warningText = t('pages.agent.workflow.editor.validation.parallelBranchInteractive', { name: target.name || target.id })
+        message.warning(warningText)
+        return false
       }
+      return true
+    },
+    [nodes, edges, t],
+  )
+  const onConnect = useCallback(
+    (connection: Connection) => {
+      if (!validateConnection(connection)) return
       recordHistory()
       setEdges((current) =>
         addEdge(
@@ -920,7 +928,15 @@ const Editor: React.FC = () => {
         ),
       )
     },
-    [nodes, edges, setEdges, t],
+    [validateConnection, setEdges],
+  )
+  const onReconnect = useCallback(
+    (oldEdge: Edge, connection: Connection) => {
+      if (!validateConnection(connection, oldEdge.id)) return
+      recordHistory()
+      setEdges((current) => reconnectEdge(oldEdge, connection, current, { shouldReplaceId: false }))
+    },
+    [validateConnection, setEdges],
   )
   const add = (type: WorkflowNode['type'], position?: { x: number; y: number }) => {
     recordHistory()
@@ -995,7 +1011,7 @@ const Editor: React.FC = () => {
     setEdges((current) =>
       current.map((e) =>
         e.id === selectedEdgeId
-          ? {
+            ? {
               ...e,
               label: edgeCondition ? (edgeLabel || edgeCondition) : edgeLabel || undefined,
               style: edgeCondition
@@ -1190,6 +1206,8 @@ const Editor: React.FC = () => {
           onNodeClick={(_: React.MouseEvent, node: Node<WorkflowData>) => { setSelectedId(node.id); setSelectedEdgeId(null) }}
           onEdgeClick={onEdgeClick as any}
           onEdgeDoubleClick={onEdgeDoubleClick as any}
+          onReconnect={onReconnect}
+          edgesReconnectable
           onPaneClick={() => { setSelectedId(''); setSelectedEdgeId(null) }}
           fitView
           deleteKeyCode={['Backspace', 'Delete']}

@@ -1909,7 +1909,9 @@ export default {
   'pages.agent.workflow.editor.nodePropertiesTip':
     '选中画布中的节点后，在此编辑节点名称与运行配置。',
   'pages.agent.workflow.editor.edgeSelected': '已选中连线',
-  'pages.agent.workflow.editor.edgeSelectedTip': '双击连线可编辑条件或标签。',
+  'pages.agent.workflow.editor.edgeSelectedTip': '拖动连线两端的圆点可改接节点；双击连线可编辑条件或标签。',
+  'pages.agent.workflow.editor.edgeEndpointRequired': '请选择连线的起始节点和目标节点',
+  'pages.agent.workflow.editor.edgeSelfReference': '连线不能连接节点自身',
   'pages.agent.workflow.editor.deleteEdgeConfirm': '删除该连线？',
   'pages.agent.workflow.editor.deleteEdge': '删除连线',
   'pages.agent.workflow.editor.prompt': '提示词',

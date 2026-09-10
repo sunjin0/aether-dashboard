@@ -1979,7 +1979,9 @@ export default {
     'Select a canvas node to edit its name and run configuration here.',
   'pages.agent.workflow.editor.edgeSelected': 'Edge selected',
   'pages.agent.workflow.editor.edgeSelectedTip':
-    'Double-click the edge to edit its condition or label.',
+    'Drag either endpoint to reconnect it; double-click the edge to edit its condition or label.',
+  'pages.agent.workflow.editor.edgeEndpointRequired': 'Select both source and target nodes',
+  'pages.agent.workflow.editor.edgeSelfReference': 'An edge cannot connect a node to itself',
   'pages.agent.workflow.editor.deleteEdgeConfirm': 'Delete this edge?',
   'pages.agent.workflow.editor.deleteEdge': 'Delete edge',
   'pages.agent.workflow.editor.prompt': 'Prompt',

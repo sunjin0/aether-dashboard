@@ -100,12 +100,12 @@ const paletteIcon = (type: WorkflowNode['type']) => {
   }
 }
 const nodeUsage: Record<WorkflowNode['type'], string> = {
-  start: '配置流程启动时可接收的输入变量。', agent: '调用指定 Agent 处理提示词，节点原始输出可通过输出映射写入变量池。',
+  start: '配置流程启动时可接收的输入变量。', agent: '调用指定智能体处理提示词，节点原始输出可通过输出映射写入变量池。',
   tool: '调用已接入的工具；参数可引用流程变量，执行结果可通过输出映射回填。', interaction: '暂停流程等待用户应答：表单模式收集人工填写信息，审批模式等待服务账号提交审批结论；输出为按问题 key 组织的回答对象。',
   rule: '按顺序判断条件并输出首个命中的结果，可通过输出映射发布为变量。',
   http: '调用外部 HTTP 接口，并把响应结果映射到流程变量。',
   notification: '向指定收件人发送流程通知。', subflow: '启动固定版本的子流程，其契约输出通过输出映射回填父流程变量。',
-  parallel: '从本节点引出多条连线定义并行分支，各分支汇聚到同一个汇聚节点；分支内支持普通 Agent 与确定性节点（规则/HTTP/通知/延时/无需确认的工具），不支持交互/子流程/等待。', join: '按策略汇聚并行分支的执行结果，可配置全部成功、任一成功或允许部分失败。',
+  parallel: '从本节点引出多条连线定义并行分支，各分支汇聚到同一个汇聚节点；分支内支持智能体与确定性节点（规则/HTTP/通知/延时/无需确认的工具），不支持交互/子流程/等待。', join: '按策略汇聚并行分支的执行结果，并可将各分支变量组装为统一结果。',
   wait_event: '等待指定事件及关联键匹配后恢复流程，事件数据通过输出映射发布为变量。', delay: '等待指定时长后继续执行。', end: '声明允许业务接口和回调返回的最终输出。',
 }
 const paletteGroups: Array<{ key: string; label: string; types: WorkflowNode['type'][] }> = [
@@ -1606,6 +1606,17 @@ const Editor: React.FC = () => {
                       <>
                         <label style={{ marginBottom: -6, fontWeight: 500 }}>汇聚策略</label>
                         <Select value={selected.joinMode || 'ALL_SUCCESS'} options={[{ value: 'ALL_SUCCESS', label: '全部成功' }, { value: 'ANY_SUCCESS', label: '任一成功' }, { value: 'ALLOW_PARTIAL_FAILURE', label: '允许部分失败' }]} onChange={(joinMode) => updateSelected({ joinMode })} />
+                        <div style={{ color: '#8c8c8c', fontSize: 12, lineHeight: 1.6 }}>
+                          各分支应先将输出写入不同变量；在此配置结果聚合，将这些变量写入统一的结构化结果，供后续节点使用。
+                        </div>
+                        <OutputsMappingEditor
+                          targetOptions={variableOptions}
+                          sourceSuggestions={variableOptions}
+                          outputStructure={selectedOutputStructure}
+                          outputStructureNote="来源选择分支写入的变量；目标可使用点号路径，如 aggregate.agentA。"
+                          value={selected.outputs}
+                          onChange={(outputs) => updateSelected({ outputs })}
+                        />
                       </>
                     )}
                     {selected.type === 'delay' && (

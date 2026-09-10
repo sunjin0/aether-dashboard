@@ -25,6 +25,11 @@
 - `yarn.lock` exists locally but `.gitignore` ignores lockfiles and CI uses npm, so do not assume the lockfile is the committed dependency source of truth.
 - `.yarnrc.yml` sets `nodeLinker: node-modules`; there is no Plug'n'Play setup despite the `.yarn/` install-state directory.
 
+## Internationalization and status codes
+
+- All user-facing text must come from locale resources through `useIntl` or `getIntl`; do not add hard-coded natural-language labels, placeholders, notifications, or API messages.
+- API status values, enums, and error codes are machine-readable values. Never render them directly. Use a backend dictionary or a locale-backed frontend mapping, and show a localized fallback for an unrecognized value.
+
 ## Tests And CI
 
 - Jest config is async via `@umijs/max/test`, uses browser target, `url: http://localhost:8000`, and setup file `tests/setupTests.jsx` for `localStorage`, `URL.createObjectURL`, `Worker`, and `matchMedia` mocks.

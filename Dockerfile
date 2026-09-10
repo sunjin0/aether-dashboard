@@ -1,10 +1,17 @@
 # syntax=docker/dockerfile:1
-# 生产发布使用本地已验证的 dist 静态产物，避免容器重复下载开发依赖。
+# 多阶段构建：由容器内的 Node 环境产出 dist，再交给 nginx 提供静态服务。
+# 这样从干净检出即可构建，部署机无需预装 Node，也不必先在宿主机上跑一次 npm build。
+# 依赖装在有 glibc 的 Debian slim 上，避免 umi/max 依赖链里的原生模块在 musl 上装不上。
+FROM node:20-bookworm-slim AS build
+WORKDIR /app
+# 依赖层单独成层：依赖只由 lock 文件决定，改源码时无需重装。
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY . .
+RUN npm run build
+
 FROM nginx:1.27-alpine
 COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template
-RUN rm -rf /usr/share/nginx/html/*
-COPY dist/ /usr/share/nginx/html/
-# Docker Desktop 的目录复制在部分 Windows 环境会遗漏入口文件；显式复制保证 SPA 回退可用。
-COPY dist/index.html /usr/share/nginx/html/index.html
+COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80

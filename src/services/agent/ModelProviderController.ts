@@ -37,7 +37,7 @@ export const discoverProviderModels = async (providerId: string): Promise<Option
 export const saveModelCatalog = async (data: ModelCatalog) =>
   request<ResponseStructure<string>>('/api/agent/model-provider/models', { method: 'POST', data })
 export const saveModelCatalogBatch = async (data: ModelCatalog[]) =>
-  request<ResponseStructure<number>>('/api/agent/model-provider/models/batch', { method: 'POST', data })
+  request<ResponseStructure<number>>('/api/agent/model-provider/models/batch', { method: 'POST', data: { models: data } })
 export const updateModelCatalog = async (id: string, data: ModelCatalog) =>
   request<ResponseStructure<void>>(`/api/agent/model-provider/models/${id}`, { method: 'PUT', data })
 export const deleteModelCatalog = async (id: string) =>

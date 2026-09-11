@@ -49,7 +49,10 @@ export const getKnowledgeBase = async (id: string): Promise<ResponseStructure<Kn
   const response = await request<ResponseStructure<KnowledgeBase>>(`/api/knowledge/base/${id}`, {
     method: 'GET',
   })
-  return { ...response, data: normalizeKnowledgeBase(response.data) }
+  return {
+    ...response,
+    data: response.data ? normalizeKnowledgeBase(response.data) : response.data,
+  }
 }
 
 export const addKnowledgeBase = async (

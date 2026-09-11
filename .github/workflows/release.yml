@@ -1,0 +1,98 @@
+name: release
+
+# 只接 tag：打 v* 标签即「类型检查 → 测试 → 构建 → 上传」。
+# 本仓不负责部署——部署由 aether 仓的 release workflow 在它自己的 tag 上执行（整套 compose 在那边）。
+on:
+  push:
+    tags:
+      - 'v*'
+
+# 全程不需要 registry 凭据：dist 经 SSH 直传部署机，镜像在部署机上构建。
+permissions:
+  contents: read
+
+concurrency:
+  group: aether-dashboard-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: 检出
+        uses: actions/checkout@v4
+
+      # 与 Dockerfile 的构建阶段保持一致，都用 Node 20。
+      - name: 安装 Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      # 用 npm ci 而不是 npm install：package-lock.json 是唯一提交的锁文件（yarn.lock 被 gitignore
+      # 排除且未提交），ci 会严格按锁文件安装，锁与 package.json 不同步时直接失败而不是悄悄改依赖。
+      - name: 安装依赖
+        run: npm ci --no-audit --no-fund
+
+      - name: 类型检查
+        run: npm run tsc
+
+      # 无排除清单：32 个套件 / 98 个用例全跑，全部为阻断式门禁。
+      - name: 单元测试
+        run: npx jest --ci
+
+      - name: 构建
+        run: npm run build
+
+      - name: 整理发布暂存区
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          STAGE="stage/release/${TAG}/dashboard"
+          if [ ! -d dist ]; then
+            echo "::error::npm run build 未产出 dist/"
+            exit 1
+          fi
+          mkdir -p "${STAGE}/deploy" "${STAGE}/nginx"
+          cp -r dist "${STAGE}/dist"
+          # 这个模板必须在：nginx 官方镜像只渲染 /etc/nginx/templates/*.template，
+          # 少了它镜像里就没有 /api/ 的反向代理配置。
+          cp nginx/default.conf.template "${STAGE}/nginx/"
+          cp deploy/dashboard.Dockerfile "${STAGE}/deploy/"
+          echo "dist 体积：$(du -sh "${STAGE}/dist" | cut -f1)，文件数：$(find "${STAGE}" -type f | wc -l)"
+
+      # 用 ed25519 专用部署密钥，不要复用个人密钥。公钥需追加到部署用户的 ~/.ssh/authorized_keys。
+      - name: 配置 SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+        run: |
+          set -euo pipefail
+          : "${DEPLOY_HOST:?未配置仓库变量 DEPLOY_HOST}"
+          : "${DEPLOY_USER:?未配置仓库变量 DEPLOY_USER}"
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "${DEPLOY_PORT:-22}" -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh -p "${DEPLOY_PORT:-22}" -o BatchMode=yes "${DEPLOY_USER}@${DEPLOY_HOST}" 'echo ssh-ok'
+
+      # --delete 只作用于 dashboard 这一个组件目录；其余组件的产物由各自仓库上传，
+      # 绝不对 release/<tag>/ 整层做 --delete。
+      - name: 上传产物
+        env:
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          : "${DEPLOY_PATH:?未配置仓库变量 DEPLOY_PATH}"
+          TAG="${GITHUB_REF_NAME}"
+          rsync -az --delete \
+            -e "ssh -p ${DEPLOY_PORT:-22} -o BatchMode=yes" \
+            "stage/release/${TAG}/dashboard/" \
+            "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/release/${TAG}/dashboard/"
+          echo "✓ 已上传 release/${TAG}/dashboard/ —— 部署需在 aether 仓打同一个 tag 后由它执行。"

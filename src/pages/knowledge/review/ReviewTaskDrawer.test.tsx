@@ -15,6 +15,7 @@ jest.mock('@/services/knowledge/ReviewController', () => ({
 }))
 jest.mock('@/services/sys/AdminController', () => ({
   getAdminList: jest.fn().mockResolvedValue({ data: [] }),
+  getAdminOptions: jest.fn().mockResolvedValue([]),
 }))
 jest.mock('@umijs/max', () => ({
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),

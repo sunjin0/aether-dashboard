@@ -12,6 +12,7 @@ jest.mock('@ant-design/pro-components', () => {
   return {
     ProFormDigit: () => null,
     ProFormSelect: ({ name }: any) => <select aria-label={name} />,
+    ProFormSwitch: () => null,
     ProFormText,
     ProFormTextArea: () => null,
   }
@@ -32,14 +33,13 @@ jest.mock('@umijs/max', () => ({
 const ModelProviderForm = require('./ModelProviderForm').default
 
 describe('ModelProviderForm', () => {
-  it('uses text inputs for the provider name and default model', () => {
+  it('uses a text input for the provider name', () => {
     render(<ModelProviderForm onSuccess={jest.fn()} />)
 
     expect(screen.getByRole('textbox', { name: 'pages.agent.modelProvider.name' })).toBeTruthy()
-    expect(
-      screen.getByRole('textbox', { name: 'pages.agent.modelProvider.defaultModel' }),
-    ).toBeTruthy()
     expect(screen.queryByRole('combobox', { name: 'name' })).toBeNull()
-    expect(screen.queryByRole('combobox', { name: 'defaultModel' })).toBeNull()
+    // 默认模型字段已由模型目录统一管理，供应商表单不再包含该输入项。
+    expect(screen.queryByLabelText('pages.agent.modelProvider.defaultModel')).toBeNull()
+    expect(screen.getByRole('combobox', { name: 'type' })).toBeTruthy()
   })
 })

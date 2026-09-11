@@ -11,6 +11,9 @@ jest.mock('@/services/knowledge/ReviewController', () => ({
   getLatestAiReview: jest.fn().mockResolvedValue({ data: { id: 'review-1' } }),
 }))
 jest.mock('../review/detail/DiffWorkspace', () => () => <div>AI review workspace</div>)
+jest.mock('@umijs/max', () => ({
+  useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
+}))
 
 describe('DocumentReviewDrawer', () => {
   it('renders the AI review workspace inside a drawer', async () => {

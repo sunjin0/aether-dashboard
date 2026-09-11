@@ -25,12 +25,12 @@ jest.mock('@ant-design/pro-components', () => ({
   ProTable: ({ columns }: any) => (
     <button
       type="button"
-      onClick={() =>
-        columns
+      onClick={() => {
+        const actions = columns
           .find((column: any) => column.valueType === 'option')
-          .render(null, { id: 'server-1' })[0]
-          .props.onClick()
-      }
+          .render(null, { id: 'server-1' })
+        actions.props.items.find((item: any) => item.key === 'discover').onClick()
+      }}
     >
       Discover
     </button>
@@ -53,6 +53,7 @@ jest.mock('antd', () => {
     Modal: ({ children, open }: any) => (open ? <>{children}</> : null),
     Popconfirm: ({ children }: any) => <>{children}</>,
     Space: ({ children }: any) => <div>{children}</div>,
+    Spin: ({ children }: any) => <>{children}</>,
     Tag: ({ children }: any) => <>{children}</>,
     Typography: {
       Text: ({ children }: any) => <span>{children}</span>,

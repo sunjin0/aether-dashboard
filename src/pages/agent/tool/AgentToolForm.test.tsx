@@ -4,6 +4,7 @@ import { Form } from 'antd'
 import AgentToolForm from './AgentToolForm'
 
 jest.mock('@/components/DrawerForm', () => ({ children }: any) => <>{children}</>)
+jest.mock('@/components/SystemIconPicker', () => () => null)
 jest.mock('@/components/JsonDisplay', () => ({ content }: any) => (
   <pre data-testid="schema-preview">{content}</pre>
 ))

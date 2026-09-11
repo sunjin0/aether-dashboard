@@ -48,24 +48,24 @@ describe('AdminPreferenceController', () => {
     await overrideAdminPreference('preference-1', { value: '详细' })
     await deleteAdminPreference('preference-1')
 
-    expect(mockedRequest).toHaveBeenNthCalledWith(1, '/api/sys/admin/preference/list', {
+    expect(mockedRequest).toHaveBeenNthCalledWith(1, '/api/sys/preference/list', {
       method: 'POST',
       data: { current: 1, pageSize: 20, category: 'style', keyName: 'output_length' },
     })
-    expect(mockedRequest).toHaveBeenNthCalledWith(2, '/api/sys/admin/preference/preference-1', {
+    expect(mockedRequest).toHaveBeenNthCalledWith(2, '/api/sys/preference/preference-1', {
       method: 'GET',
     })
-    expect(mockedRequest).toHaveBeenNthCalledWith(3, '/api/sys/admin/preference', {
+    expect(mockedRequest).toHaveBeenNthCalledWith(3, '/api/sys/preference', {
       method: 'POST',
       data: { category: 'style', keyName: 'output_length', value: '简洁', status: 1 },
     })
-    expect(mockedRequest).toHaveBeenNthCalledWith(4, '/api/sys/admin/preference/preference-1', {
+    expect(mockedRequest).toHaveBeenNthCalledWith(4, '/api/sys/preference/preference-1', {
       method: 'PUT',
       data: { id: 'preference-1', category: 'style', keyName: 'output_length', value: '详细' },
     })
     expect(mockedRequest).toHaveBeenNthCalledWith(
       5,
-      '/api/sys/admin/preference/preference-1/status',
+      '/api/sys/preference/preference-1/status',
       {
         method: 'PUT',
         data: { status: 0 },
@@ -73,27 +73,27 @@ describe('AdminPreferenceController', () => {
     )
     expect(mockedRequest).toHaveBeenNthCalledWith(
       6,
-      '/api/sys/admin/preference/preference-1/feedback',
+      '/api/sys/preference/preference-1/feedback',
       {
         method: 'POST',
       },
     )
     expect(mockedRequest).toHaveBeenNthCalledWith(
       7,
-      '/api/sys/admin/preference/preference-1/feedback',
+      '/api/sys/preference/preference-1/feedback',
       {
         method: 'DELETE',
       },
     )
     expect(mockedRequest).toHaveBeenNthCalledWith(
       8,
-      '/api/sys/admin/preference/preference-1/override',
+      '/api/sys/preference/preference-1/override',
       {
         method: 'PUT',
         data: { value: '详细' },
       },
     )
-    expect(mockedRequest).toHaveBeenNthCalledWith(9, '/api/sys/admin/preference/preference-1', {
+    expect(mockedRequest).toHaveBeenNthCalledWith(9, '/api/sys/preference/preference-1', {
       method: 'DELETE',
     })
   })

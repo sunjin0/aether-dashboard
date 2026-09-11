@@ -416,6 +416,12 @@ export default {
   'pages.agent.skill.selectTool': 'Select Tool',
   'pages.agent.skill.knowledgeBaseIds': 'Knowledge Bases',
   'pages.agent.skill.knowledgeBaseHint': 'Up to 3 knowledge bases',
+  'pages.agent.skill.knowledgeDeclarationMode': 'Declaration Mode',
+  'pages.agent.skill.knowledgeDeclarationMode.always': 'Always declare',
+  'pages.agent.skill.knowledgeDeclarationMode.routeMatched': 'Declare when route matched',
+  'pages.agent.skill.knowledgeDeclarationMode.retrieveOnly': 'Cite after retrieval only',
+  'pages.agent.skill.knowledgeDeclarationModeHint':
+    'The declaration only supplies knowledge base usage rules; document content is always served by the retrieval service according to permission and relevance.',
   'pages.agent.skill.selectKnowledgeBase': 'Select Knowledge Base',
   'pages.agent.skill.changeNote': 'Change Note',
   'pages.agent.skill.changeNotePlaceholder': 'Describe what changed in this draft',
@@ -2030,6 +2036,94 @@ export default {
   'pages.agent.workflow.editor.maxIterations': 'Maximum loop iterations',
   'pages.agent.workflow.editor.maxIterationsTip':
     'If this edge points to an upstream node (a loop back), execution ends automatically after this limit',
+  'pages.agent.workflow.editor.groupExecute': 'Execution',
+  'pages.agent.workflow.editor.groupCollaborate': 'Collaboration',
+  'pages.agent.workflow.editor.groupControl': 'Control',
+  'pages.agent.workflow.editor.nodeUsageTitle': 'Node purpose and usage:',
+  'pages.agent.workflow.editor.outputModePlaceholderSource': '$output or order.total',
+  'pages.agent.workflow.editor.outputModePlaceholderTemplate': "Template $'{'order.total'}'",
+  'pages.agent.workflow.editor.outputModePlaceholderValue': 'Constant (e.g. form / 100)',
+  'pages.agent.workflow.editor.outputSourceDuplicated': 'This output source is already used by a mapping row below',
+  'pages.agent.workflow.editor.outputStructureTitle':
+    'Node output structure · click to fill in the source automatically',
+  'pages.agent.workflow.editor.targetVariablePlaceholder':
+    'Target variable (may include a path such as result.order.total)',
+  'pages.agent.workflow.editor.paramNamePlaceholder': 'Parameter name',
+  'pages.agent.workflow.editor.paramValuePlaceholder': "Value or $'{'variable'}'",
+  'pages.agent.workflow.editor.addArgument': 'Add parameter',
+  'pages.agent.workflow.editor.producedBySuffix': '{value} (produced by {producedBy})',
+  'pages.agent.workflow.editor.inputSuffix': '{label} (input)',
+  'pages.agent.workflow.editor.outputSuffix': '{label} (output)',
+  'pages.agent.workflow.editor.singleQuestionAnswerLabel': 'Single question answer (answer)',
+  'pages.agent.workflow.editor.outputStructureNoteSubflow':
+    'This subflow version declares no output fields. Configure them on the end node of the subflow and publish it to see selectable structures here.',
+  'pages.agent.workflow.editor.outputStructureNoteNoQuestions':
+    'No question fields are configured, so there is no selectable structure yet.',
+  'pages.agent.workflow.editor.outputStructureNoteFreeform':
+    'This node produces a free-form structure at runtime that cannot be enumerated statically. Inspect the node output (outputData) of a run instance and enter the $output path manually.',
+  'pages.agent.workflow.editor.questionKeyLabel': 'Field key',
+  'pages.agent.workflow.editor.questionLabel': 'Question',
+  'pages.agent.workflow.editor.questionPlaceholder': 'Enter the reason',
+  'pages.agent.workflow.editor.addQuestion': 'Add question',
+  'pages.agent.workflow.editor.ruleConditionsTitle': 'Rule conditions and results',
+  'pages.agent.workflow.editor.conditionLabel': 'Condition',
+  'pages.agent.workflow.editor.resultLabel': 'Result',
+  'pages.agent.workflow.editor.addRule': 'Add rule',
+  'pages.agent.workflow.editor.defaultResult': 'Default result',
+  'pages.agent.workflow.editor.httpMethod': 'HTTP method',
+  'pages.agent.workflow.editor.httpUrl': 'Request URL',
+  'pages.agent.workflow.editor.httpBodyTemplate': 'Request body template',
+  'pages.agent.workflow.editor.idempotencyKeyTemplate': 'Idempotency key template',
+  'pages.agent.workflow.editor.notificationChannel': 'Notification channel',
+  'pages.agent.workflow.editor.notificationToTemplate': 'Recipient template',
+  'pages.agent.workflow.editor.notificationSubject': 'Email subject',
+  'pages.agent.workflow.editor.notificationBody': 'Email body',
+  'pages.agent.workflow.editor.subflowWorkflow': 'Subflow',
+  'pages.agent.workflow.editor.subflowSelectPlaceholder': 'Select a published workflow',
+  'pages.agent.workflow.editor.subflowVersionLabel': 'Pinned version',
+  'pages.agent.workflow.editor.subflowVersionPlaceholder': 'Select a published version',
+  'pages.agent.workflow.editor.subflowSelectFirst': 'Select a subflow first',
+  'pages.agent.workflow.editor.subflowTimeoutMillis': 'Timeout (ms)',
+  'pages.agent.workflow.editor.subflowInputMapping': 'Input mapping',
+  'pages.agent.workflow.editor.subflowInputField': 'Subflow input field',
+  'pages.agent.workflow.editor.parentFlowVariable': 'Parent flow variable',
+  'pages.agent.workflow.editor.addInputMapping': 'Add input mapping',
+  'pages.agent.workflow.editor.parallelHint':
+    'Parallel branches are defined by edges: draw at least two edges out of this node as branches, and every branch must eventually converge on the same join node. Branches support agents and deterministic nodes (rule/HTTP/notification/delay/tools that need no confirmation); interaction (manual/approval), subflow, wait, and other interactive or blocking nodes are not supported.',
+  'pages.agent.workflow.editor.maxBranches': 'Maximum branches',
+  'pages.agent.workflow.editor.branchTimeoutMillis': 'Branch timeout (ms)',
+  'pages.agent.workflow.editor.joinMode': 'Join mode',
+  'pages.agent.workflow.editor.joinModeAllSuccess': 'All succeed',
+  'pages.agent.workflow.editor.joinModeAnySuccess': 'Any succeeds',
+  'pages.agent.workflow.editor.joinModeAllowPartialFailure': 'Allow partial failure',
+  'pages.agent.workflow.editor.joinHint':
+    'Each branch should first write its output to a distinct variable; configure the aggregation here to merge those variables into a unified structured result for downstream nodes.',
+  'pages.agent.workflow.editor.joinOutputStructureNote':
+    'Pick a variable written by a branch as the source; the target may use a dotted path such as aggregate.agentA.',
+  'pages.agent.workflow.editor.delayMillis': 'Delay duration (ms)',
+  'pages.agent.workflow.editor.nodeUsageStart': 'Configure the input variables this flow can receive when it starts.',
+  'pages.agent.workflow.editor.nodeUsageAgent':
+    'Invoke the selected agent with the prompt; the raw node output can be written into the variable pool through output mappings.',
+  'pages.agent.workflow.editor.nodeUsageTool':
+    'Invoke a connected tool; arguments may reference flow variables and the result can be written back through output mappings.',
+  'pages.agent.workflow.editor.nodeUsageInteraction':
+    'Pause the flow and wait for a response: form mode collects manually entered values, approval mode waits for a service account to submit a decision. The output is an answer object keyed by question key.',
+  'pages.agent.workflow.editor.nodeUsageRule':
+    'Evaluate conditions in order and output the first match, which can be published as a variable through output mappings.',
+  'pages.agent.workflow.editor.nodeUsageHttp':
+    'Call an external HTTP endpoint and map the response into flow variables.',
+  'pages.agent.workflow.editor.nodeUsageNotification': 'Send a flow notification to the configured recipients.',
+  'pages.agent.workflow.editor.nodeUsageSubflow':
+    'Start a pinned version of a subflow; its contract outputs are written back into parent flow variables through output mappings.',
+  'pages.agent.workflow.editor.nodeUsageParallel':
+    'Branch out from this node with multiple edges; every branch must converge on the same join node. Branches support agents and deterministic nodes (rule/HTTP/notification/delay/tools that need no confirmation), but not interaction, subflow, or wait nodes.',
+  'pages.agent.workflow.editor.nodeUsageJoin':
+    'Merge parallel branch results according to the join mode, and optionally assemble branch variables into a unified result.',
+  'pages.agent.workflow.editor.nodeUsageWaitEvent':
+    'Wait for the specified event with a matching correlation key, then resume the flow; the event payload is published as variables through output mappings.',
+  'pages.agent.workflow.editor.nodeUsageDelay': 'Pause for the configured duration, then continue.',
+  'pages.agent.workflow.editor.nodeUsageEnd':
+    'Declare the final outputs that business APIs and callbacks are allowed to return.',
   'pages.serviceAccount.name': 'Service account name',
   'pages.serviceAccount.clientId': 'Client ID',
   'pages.serviceAccount.clientSecret': 'Client secret',
@@ -3009,6 +3103,9 @@ export default {
   'pages.agentEvaluation.detail.reason': 'Reason',
   'pages.agentEvaluation.detail.assertions': 'Hard Assertion Results',
   'pages.agentEvaluation.detail.reviewHistory': 'Review History',
+  'pages.agentEvaluation.detail.comment': 'Comment',
+  'pages.agentEvaluation.detail.reportRevision': 'Report Revision',
+  'pages.agentEvaluation.detail.reviewedAt': 'Reviewed At',
   'pages.agentEvaluation.detail.assertionType': 'Assertion Type',
   'pages.agentEvaluation.detail.assertionTarget': 'Target',
   'pages.agentEvaluation.detail.assertionStatus': 'Result',

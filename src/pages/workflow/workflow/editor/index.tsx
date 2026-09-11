@@ -99,19 +99,18 @@ const paletteIcon = (type: WorkflowNode['type']) => {
     default: return <SettingOutlined style={style} />
   }
 }
-const nodeUsage: Record<WorkflowNode['type'], string> = {
-  start: '配置流程启动时可接收的输入变量。', agent: '调用指定智能体处理提示词，节点原始输出可通过输出映射写入变量池。',
-  tool: '调用已接入的工具；参数可引用流程变量，执行结果可通过输出映射回填。', interaction: '暂停流程等待用户应答：表单模式收集人工填写信息，审批模式等待服务账号提交审批结论；输出为按问题 key 组织的回答对象。',
-  rule: '按顺序判断条件并输出首个命中的结果，可通过输出映射发布为变量。',
-  http: '调用外部 HTTP 接口，并把响应结果映射到流程变量。',
-  notification: '向指定收件人发送流程通知。', subflow: '启动固定版本的子流程，其契约输出通过输出映射回填父流程变量。',
-  parallel: '从本节点引出多条连线定义并行分支，各分支汇聚到同一个汇聚节点；分支内支持智能体与确定性节点（规则/HTTP/通知/延时/无需确认的工具），不支持交互/子流程/等待。', join: '按策略汇聚并行分支的执行结果，并可将各分支变量组装为统一结果。',
-  wait_event: '等待指定事件及关联键匹配后恢复流程，事件数据通过输出映射发布为变量。', delay: '等待指定时长后继续执行。', end: '声明允许业务接口和回调返回的最终输出。',
+const nodeUsageKeys: Record<WorkflowNode['type'], string> = {
+  start: 'nodeUsageStart', agent: 'nodeUsageAgent', tool: 'nodeUsageTool', interaction: 'nodeUsageInteraction',
+  rule: 'nodeUsageRule', http: 'nodeUsageHttp', notification: 'nodeUsageNotification', subflow: 'nodeUsageSubflow',
+  parallel: 'nodeUsageParallel', join: 'nodeUsageJoin', wait_event: 'nodeUsageWaitEvent', delay: 'nodeUsageDelay',
+  end: 'nodeUsageEnd',
 }
-const paletteGroups: Array<{ key: string; label: string; types: WorkflowNode['type'][] }> = [
-  { key: 'execute', label: '执行', types: ['agent', 'tool', 'rule', 'http', 'notification'] },
-  { key: 'collaborate', label: '协作', types: ['interaction', 'subflow', 'wait_event'] },
-  { key: 'control', label: '控制', types: ['delay', 'parallel', 'join'] },
+const nodeUsage = (intl: ReturnType<typeof useIntl>, type: WorkflowNode['type']) =>
+  intl.formatMessage({ id: `pages.agent.workflow.editor.${nodeUsageKeys[type]}` })
+const paletteGroups: Array<{ key: string; labelKey: string; types: WorkflowNode['type'][] }> = [
+  { key: 'execute', labelKey: 'pages.agent.workflow.editor.groupExecute', types: ['agent', 'tool', 'rule', 'http', 'notification'] },
+  { key: 'collaborate', labelKey: 'pages.agent.workflow.editor.groupCollaborate', types: ['interaction', 'subflow', 'wait_event'] },
+  { key: 'control', labelKey: 'pages.agent.workflow.editor.groupControl', types: ['delay', 'parallel', 'join'] },
 ]
 const nodeLabel = (intl: ReturnType<typeof useIntl>, type: string) =>
   intl.formatMessage({ id: `pages.agent.workflow.run.node.${type}` })
@@ -358,10 +357,10 @@ const parseOutputMappings = (value: unknown): OutputMappingRow[] =>
 /** 取值方式：每行三选一。与后端 applyNodeOutputs 判定一致（template > source > value），无键时缺省引用。 */
 type OutputMode = 'source' | 'template' | 'value'
 const outputModeKey = (id: 'outputMappingModeSource' | 'outputMappingModeTemplate' | 'outputMappingModeValue') => `pages.agent.workflow.editor.${id}`
-const outputModePlaceholder: Record<OutputMode, string> = {
-  source: '$output 或 order.total',
-  template: '模板 ${order.total}',
-  value: '常量（如 form / 100）',
+const outputModePlaceholderKey: Record<OutputMode, string> = {
+  source: 'pages.agent.workflow.editor.outputModePlaceholderSource',
+  template: 'pages.agent.workflow.editor.outputModePlaceholderTemplate',
+  value: 'pages.agent.workflow.editor.outputModePlaceholderValue',
 }
 const hasMappingKey = (row: OutputMappingRow, key: keyof OutputMappingRow) => Object.prototype.hasOwnProperty.call(row, key)
 const outputModeOf = (row: OutputMappingRow): OutputMode => {
@@ -410,7 +409,7 @@ const OutputsMappingEditor: React.FC<{
   const pickStructureLeaf = (leaf: OutputLeaf) => {
     const exists = rows.some((row) => outputModeOf(row) === 'source' && row.source === leaf.source)
     if (exists) {
-      message.info('该输出来源已在下方映射行中')
+      message.info(t('pages.agent.workflow.editor.outputSourceDuplicated'))
       return
     }
     onChange([...rows, { target: '', source: leaf.source }])
@@ -419,7 +418,7 @@ const OutputsMappingEditor: React.FC<{
     <Space direction="vertical" size={6} style={{ width: '100%' }}>
       {outputStructure && outputStructure.length > 0 && (
         <div>
-          <div style={{ color: '#8c8c8c', fontSize: 12, marginBottom: 4 }}>本节点输出结构 · 点击自动填入来源</div>
+          <div style={{ color: '#8c8c8c', fontSize: 12, marginBottom: 4 }}>{t('pages.agent.workflow.editor.outputStructureTitle')}</div>
           <Space size={[4, 4]} wrap>
             {outputStructure.map((leaf) => {
               const used = rows.some((row) => outputModeOf(row) === 'source' && row.source === leaf.source)
@@ -445,7 +444,7 @@ const OutputsMappingEditor: React.FC<{
           <div key={index} style={{ display: 'grid', gridTemplateColumns: 'minmax(90px,0.9fr) 92px minmax(0,1.1fr) 28px', gap: 6 }}>
             <AutoComplete
               value={row.target || ''}
-              placeholder="目标变量（可含层级 result.order.total）"
+              placeholder={t('pages.agent.workflow.editor.targetVariablePlaceholder')}
               options={targetOptions}
               onChange={(target) => editTarget(index, target)}
               style={{ width: '100%' }}
@@ -463,13 +462,13 @@ const OutputsMappingEditor: React.FC<{
             {mode === 'source' && sourceSuggestions?.length ? (
               <AutoComplete
                 value={outputModeText(row, mode)}
-                placeholder={outputModePlaceholder[mode]}
+                placeholder={t(outputModePlaceholderKey[mode])}
                 options={sourceSuggestions}
                 onChange={(text) => editValue(index, mode, text)}
                 style={{ width: '100%' }}
               />
             ) : (
-              <Input value={outputModeText(row, mode)} placeholder={outputModePlaceholder[mode]} onChange={(e) => editValue(index, mode, e.target.value)} />
+              <Input value={outputModeText(row, mode)} placeholder={t(outputModePlaceholderKey[mode])} onChange={(e) => editValue(index, mode, e.target.value)} />
             )}
             <Button type="text" danger icon={<DeleteOutlined />} onClick={() => onChange(rows.filter((_, i) => i !== index))} />
           </div>
@@ -511,6 +510,7 @@ const StructuredListEditor: React.FC<{
 
 const TemplateObjectEditor: React.FC<{ value?: string; onChange: (value: string) => void }> = ({ value, onChange }) => {
   const intl = useIntl()
+  const t = (id: string) => intl.formatMessage({ id })
   const parse = (): StateMappingRow[] => {
     try {
       const parsed = JSON.parse(value || '{}')
@@ -528,12 +528,12 @@ const TemplateObjectEditor: React.FC<{ value?: string; onChange: (value: string)
     <Space direction="vertical" size={6} style={{ width: '100%' }}>
       {rows.map((row, index) => (
         <Space key={index} size={6} style={{ display: 'flex' }}>
-          <Input value={row.key} placeholder="参数名" onChange={(e) => update(rows.map((item, i) => i === index ? { ...item, key: e.target.value } : item))} />
-          <Input value={row.value} placeholder="值或 ${变量}" onChange={(e) => update(rows.map((item, i) => i === index ? { ...item, value: e.target.value } : item))} />
+          <Input value={row.key} placeholder={t('pages.agent.workflow.editor.paramNamePlaceholder')} onChange={(e) => update(rows.map((item, i) => i === index ? { ...item, key: e.target.value } : item))} />
+          <Input value={row.value} placeholder={t('pages.agent.workflow.editor.paramValuePlaceholder')} onChange={(e) => update(rows.map((item, i) => i === index ? { ...item, value: e.target.value } : item))} />
           <Button type="text" danger icon={<DeleteOutlined />} onClick={() => update(rows.filter((_, i) => i !== index))} />
         </Space>
       ))}
-      <Button type="dashed" block size="small" icon={<PlusOutlined />} onClick={() => update([...rows, { key: '', value: '' }])}>添加参数</Button>
+      <Button type="dashed" block size="small" icon={<PlusOutlined />} onClick={() => update([...rows, { key: '', value: '' }])}>{t('pages.agent.workflow.editor.addArgument')}</Button>
     </Space>
   </>
 }
@@ -756,20 +756,20 @@ const Editor: React.FC = () => {
     })
     return Array.from(seen.entries()).map(([value, producedBy]) => ({
       value,
-      label: `${value}（${producedBy} 产出）`,
+      label: intl.formatMessage({ id: 'pages.agent.workflow.editor.producedBySuffix' }, { value, producedBy }),
     }))
-  }, [nodes])
+  }, [nodes, intl])
   const variableOptions = useMemo(() => {
     const base = [
-      ...schemaFields.map((item) => ({ ...item, label: `${item.label}（输入）` })),
-      ...outputFields.map((item) => ({ ...item, label: `${item.label}（输出）` })),
+      ...schemaFields.map((item) => ({ ...item, label: intl.formatMessage({ id: 'pages.agent.workflow.editor.inputSuffix' }, { label: item.label }) })),
+      ...outputFields.map((item) => ({ ...item, label: intl.formatMessage({ id: 'pages.agent.workflow.editor.outputSuffix' }, { label: item.label }) })),
     ]
     const known = new Set(base.map((item) => item.value))
     return [
       ...base,
       ...producedTargetOptions.filter((item) => !known.has(item.value)).map((item) => ({ ...item })),
     ]
-  }, [schemaFields, outputFields, producedTargetOptions])
+  }, [schemaFields, outputFields, producedTargetOptions, intl])
   const selectedSubflowWorkflowId = selected?.type === 'subflow' ? textValue(selected.workflowId) : undefined
   const selectedSubflowVersionNo = selected?.type === 'subflow' ? numberValue(selected.versionNo) : undefined
   const subflowWorkflowOptions = subflowWorkflows
@@ -802,17 +802,17 @@ const Editor: React.FC = () => {
         })
         .filter((leaf): leaf is OutputLeaf => !!leaf)
       if (leaves.length > 0) return leaves
-      return textValue(selected.question) ? [{ source: '$output.answer', label: '单个问题回答（answer）' }] : []
+      return textValue(selected.question) ? [{ source: '$output.answer', label: intl.formatMessage({ id: 'pages.agent.workflow.editor.singleQuestionAnswerLabel' }) }] : []
     }
     return []
-  }, [selected, selectedSubflowVersion, interactionFormMode])
+  }, [selected, selectedSubflowVersion, interactionFormMode, intl])
   const selectedOutputStructureNote = useMemo(() => {
     if (!selected || !isProducingNode(selected.type)) return undefined
     if (selectedOutputStructure.length > 0) return undefined
-    if (selected.type === 'subflow') return '该子流程版本未声明输出字段：在子流程结束节点配置输出字段并发布后，这里会列出可选结构。'
-    if (selected.type === 'interaction') return interactionFormMode ? '未配置问题字段，暂无可选结构。' : undefined
-    return '该节点输出为运行期自由结构，无法静态枚举：可在运行实例的节点输出（outputData）查看实际结构后，手填 $output 路径。'
-  }, [selected, selectedOutputStructure, interactionFormMode])
+    if (selected.type === 'subflow') return intl.formatMessage({ id: 'pages.agent.workflow.editor.outputStructureNoteSubflow' })
+    if (selected.type === 'interaction') return interactionFormMode ? intl.formatMessage({ id: 'pages.agent.workflow.editor.outputStructureNoteNoQuestions' }) : undefined
+    return intl.formatMessage({ id: 'pages.agent.workflow.editor.outputStructureNoteFreeform' })
+  }, [selected, selectedOutputStructure, interactionFormMode, intl])
   useEffect(() => {
     if (!id) return
     getWorkflow(id).then((r) => {
@@ -1252,7 +1252,7 @@ const Editor: React.FC = () => {
               >
                 <Tabs activeKey={paletteGroup} onChange={setPaletteGroup} size="small" items={paletteGroups.map((group) => ({
                   key: group.key,
-                  label: group.label,
+                  label: t(group.labelKey),
                   children: <Space direction="vertical" size={6} style={{ width: '100%' }}>
                   {group.types.map((type) => {
                     const fixed = type === 'start' || type === 'end'
@@ -1342,7 +1342,7 @@ const Editor: React.FC = () => {
                       onChange={(e) => updateSelected({ name: e.target.value })}
                     />
                     <div style={{ padding: '9px 10px', borderRadius: 6, background: '#f5f8fc', color: '#526074', fontSize: 12, lineHeight: 1.6 }}>
-                      <strong style={{ color: '#334155' }}>节点作用与使用说明：</strong>{nodeUsage[selected.type]}
+                      <strong style={{ color: '#334155' }}>{t('pages.agent.workflow.editor.nodeUsageTitle')}</strong>{nodeUsage(intl, selected.type)}
                     </div>
                     {selected.type === 'start' && <StartVariablesBuilder value={schema} onChange={setSchema} />}
                     {selected.type === 'end' && <StartVariablesBuilder value={outputSchema} onChange={setOutputSchema} mode="output" />}
@@ -1446,9 +1446,9 @@ const Editor: React.FC = () => {
                             </label>
                             <StructuredListEditor
                               value={selected.questions}
-                              fields={[{ key: 'key', label: '字段名', placeholder: 'reason' }, { key: 'question', label: '问题', placeholder: '请输入原因' }]}
+                              fields={[{ key: 'key', label: t('pages.agent.workflow.editor.questionKeyLabel'), placeholder: 'reason' }, { key: 'question', label: t('pages.agent.workflow.editor.questionLabel'), placeholder: t('pages.agent.workflow.editor.questionPlaceholder') }]}
                               onChange={(questions) => updateSelected({ questions })}
-                              addText="添加问题"
+                              addText={t('pages.agent.workflow.editor.addQuestion')}
                             />
                           </>
                         ) : (
@@ -1491,9 +1491,9 @@ const Editor: React.FC = () => {
                     )}
                     {selected.type === 'rule' && (
                       <>
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>规则条件与结果</label>
-                        <StructuredListEditor value={selected.rules} fields={[{ key: 'condition', label: '条件', placeholder: '${amount} > 1000' }, { key: 'value', label: '结果', placeholder: 'high' }]} onChange={(rules) => updateSelected({ rules })} addText="添加规则" />
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>默认结果</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.ruleConditionsTitle')}</label>
+                        <StructuredListEditor value={selected.rules} fields={[{ key: 'condition', label: t('pages.agent.workflow.editor.conditionLabel'), placeholder: '${amount} > 1000' }, { key: 'value', label: t('pages.agent.workflow.editor.resultLabel'), placeholder: 'high' }]} onChange={(rules) => updateSelected({ rules })} addText={t('pages.agent.workflow.editor.addRule')} />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.defaultResult')}</label>
                         <Input value={selected.defaultValue as string} onChange={(e) => updateSelected({ defaultValue: e.target.value })} />
                         <OutputsMappingEditor
                             targetOptions={variableOptions}
@@ -1507,13 +1507,13 @@ const Editor: React.FC = () => {
                     )}
                     {selected.type === 'http' && (
                       <>
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>请求方法</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.httpMethod')}</label>
                         <Select value={selected.method || 'POST'} options={['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].map((value) => ({ value, label: value }))} onChange={(method) => updateSelected({ method })} />
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>请求地址</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.httpUrl')}</label>
                         <Input value={textValue(selected.url)} placeholder="https://api.example.com/orders/${orderId}" onChange={(e) => updateSelected({ url: e.target.value })} />
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>请求体模板</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.httpBodyTemplate')}</label>
                         <Input.TextArea value={textValue(selected.bodyTemplate)} rows={4} onChange={(e) => updateSelected({ bodyTemplate: e.target.value })} />
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>幂等键模板</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.idempotencyKeyTemplate')}</label>
                         <Input value={textValue(selected.idempotencyKeyTemplate)} placeholder="${orderId}" onChange={(e) => updateSelected({ idempotencyKeyTemplate: e.target.value })} />
                         <OutputsMappingEditor
                             targetOptions={variableOptions}
@@ -1527,15 +1527,15 @@ const Editor: React.FC = () => {
                     )}
                     {selected.type === 'notification' && (
                       <>
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>通知渠道</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.notificationChannel')}</label>
                         <Select value={selected.channel || 'email'} options={[{ value: 'email', label: 'Email' }]} onChange={(channel) => updateSelected({ channel })} />
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>收件人模板</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.notificationToTemplate')}</label>
                         <Input value={textValue(selected.toTemplate)} placeholder="${requesterEmail}" onChange={(e) => updateSelected({ toTemplate: e.target.value })} />
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>邮件主题</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.notificationSubject')}</label>
                         <Input value={textValue(selected.subjectTemplate)} onChange={(e) => updateSelected({ subjectTemplate: e.target.value })} />
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>邮件内容</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.notificationBody')}</label>
                         <Input.TextArea value={textValue(selected.bodyTemplate)} rows={4} onChange={(e) => updateSelected({ bodyTemplate: e.target.value })} />
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>幂等键模板</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.idempotencyKeyTemplate')}</label>
                         <Input value={textValue(selected.idempotencyKeyTemplate)} onChange={(e) => updateSelected({ idempotencyKeyTemplate: e.target.value })} />
                         <OutputsMappingEditor
                             targetOptions={variableOptions}
@@ -1549,37 +1549,37 @@ const Editor: React.FC = () => {
                     )}
                     {selected.type === 'subflow' && (
                       <>
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>子流程</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.subflowWorkflow')}</label>
                         <Select
                           style={{ width: '100%' }}
                           showSearch
                           optionFilterProp="label"
                           allowClear
-                          placeholder="选择已发布的工作流"
+                          placeholder={t('pages.agent.workflow.editor.subflowSelectPlaceholder')}
                           value={selectedSubflowWorkflowId || undefined}
                           options={subflowWorkflowOptions}
                           onChange={onSubflowWorkflowChange}
                         />
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>固定版本</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.subflowVersionLabel')}</label>
                         <Select
                           style={{ width: '100%' }}
-                          placeholder={selectedSubflowWorkflowId ? '选择发布版本' : '请先选择子流程'}
+                          placeholder={selectedSubflowWorkflowId ? t('pages.agent.workflow.editor.subflowVersionPlaceholder') : t('pages.agent.workflow.editor.subflowSelectFirst')}
                           value={selectedSubflowVersionNo ?? undefined}
                           options={subflowVersionOptions}
                           disabled={!selectedSubflowWorkflowId || subflowVersions.length === 0}
                           onChange={(versionNo) => updateSelected({ versionNo: versionNo || undefined })}
                         />
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>超时（毫秒）</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.subflowTimeoutMillis')}</label>
                         <InputNumber min={1} value={selected.timeoutMillis} onChange={(timeoutMillis) => updateSelected({ timeoutMillis: timeoutMillis || undefined })} style={{ width: '100%' }} />
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>输入映射</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.subflowInputMapping')}</label>
                         <SubflowMappingEditor
                           value={selected.inputMappings}
-                          targetLabel="子流程输入字段"
-                          sourceLabel="父流程变量"
+                          targetLabel={t('pages.agent.workflow.editor.subflowInputField')}
+                          sourceLabel={t('pages.agent.workflow.editor.parentFlowVariable')}
                           targetOptions={subflowInputFields}
                           sourceOptions={variableOptions}
                           onChange={(inputMappings) => updateSelected({ inputMappings })}
-                          addText="添加输入映射"
+                          addText={t('pages.agent.workflow.editor.addInputMapping')}
                         />
                         <OutputsMappingEditor
                             targetOptions={variableOptions}
@@ -1594,26 +1594,26 @@ const Editor: React.FC = () => {
                     {selected.type === 'parallel' && (
                       <>
                         <div style={{ color: '#8c8c8c', fontSize: 12, lineHeight: 1.6, marginBottom: 4 }}>
-                          并行分支由连线定义：从本节点引出至少两条连线作为分支，各分支最终汇聚到同一个「汇聚节点」。分支内支持普通 Agent 与确定性节点（规则/HTTP/通知/延时/无需确认的工具），不支持交互（人工/审批）与子流程/等待等交互或阻塞性节点。
+                          {t('pages.agent.workflow.editor.parallelHint')}
                         </div>
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>最大分支数</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.maxBranches')}</label>
                         <InputNumber min={1} max={50} value={numberValue(selected.maxBranches)} onChange={(maxBranches) => updateSelected({ maxBranches: maxBranches || undefined })} style={{ width: '100%' }} />
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>分支超时（毫秒）</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.branchTimeoutMillis')}</label>
                         <InputNumber min={1} value={numberValue(selected.branchTimeoutMillis)} onChange={(branchTimeoutMillis) => updateSelected({ branchTimeoutMillis: branchTimeoutMillis || undefined })} style={{ width: '100%' }} />
                       </>
                     )}
                     {selected.type === 'join' && (
                       <>
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>汇聚策略</label>
-                        <Select value={selected.joinMode || 'ALL_SUCCESS'} options={[{ value: 'ALL_SUCCESS', label: '全部成功' }, { value: 'ANY_SUCCESS', label: '任一成功' }, { value: 'ALLOW_PARTIAL_FAILURE', label: '允许部分失败' }]} onChange={(joinMode) => updateSelected({ joinMode })} />
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.joinMode')}</label>
+                        <Select value={selected.joinMode || 'ALL_SUCCESS'} options={[{ value: 'ALL_SUCCESS', label: t('pages.agent.workflow.editor.joinModeAllSuccess') }, { value: 'ANY_SUCCESS', label: t('pages.agent.workflow.editor.joinModeAnySuccess') }, { value: 'ALLOW_PARTIAL_FAILURE', label: t('pages.agent.workflow.editor.joinModeAllowPartialFailure') }]} onChange={(joinMode) => updateSelected({ joinMode })} />
                         <div style={{ color: '#8c8c8c', fontSize: 12, lineHeight: 1.6 }}>
-                          各分支应先将输出写入不同变量；在此配置结果聚合，将这些变量写入统一的结构化结果，供后续节点使用。
+                          {t('pages.agent.workflow.editor.joinHint')}
                         </div>
                         <OutputsMappingEditor
                           targetOptions={variableOptions}
                           sourceSuggestions={variableOptions}
                           outputStructure={selectedOutputStructure}
-                          outputStructureNote="来源选择分支写入的变量；目标可使用点号路径，如 aggregate.agentA。"
+                          outputStructureNote={t('pages.agent.workflow.editor.joinOutputStructureNote')}
                           value={selected.outputs}
                           onChange={(outputs) => updateSelected({ outputs })}
                         />
@@ -1621,7 +1621,7 @@ const Editor: React.FC = () => {
                     )}
                     {selected.type === 'delay' && (
                       <>
-                        <label style={{ marginBottom: -6, fontWeight: 500 }}>延时时长（毫秒）</label>
+                        <label style={{ marginBottom: -6, fontWeight: 500 }}>{t('pages.agent.workflow.editor.delayMillis')}</label>
                         <InputNumber min={1} value={numberValue(selected.delayMillis)} onChange={(delayMillis) => updateSelected({ delayMillis: delayMillis || undefined })} style={{ width: '100%' }} />
                       </>
                     )}

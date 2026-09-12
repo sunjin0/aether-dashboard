@@ -1,0 +1,44 @@
+# Tag 发布专用；release.sh 设置产物目录和镜像版本。禁止 down 或 --remove-orphans。
+name: aether-prod
+services:
+  dashboard:
+    image: 'aether-dashboard:release-${AETHER_RELEASE_TAG:?}'
+    build:
+      context: '${AETHER_RELEASE_ROOT:?}/dashboard'
+      dockerfile: deploy/dashboard.Dockerfile
+    container_name: aether-dashboard
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 20m
+        max-file: '5'
+    security_opt:
+      - 'no-new-privileges:true'
+    stop_grace_period: 20s
+    mem_limit: '${DASHBOARD_MEM_LIMIT:-256m}'
+    mem_reservation: '${DASHBOARD_MEM_RESERVATION:-128m}'
+    ports:
+      - '${BIND_ADDR:-127.0.0.1}:${DASHBOARD_PORT:-8001}:80'
+    environment:
+      AETHER_ADMIN_UPSTREAM: '${AETHER_ADMIN_UPSTREAM:-http://aether-admin:8080}'
+    networks:
+      aether-services:
+        aliases:
+          - aether-dashboard
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - '-q'
+        - '-O'
+        - /dev/null
+        - 'http://127.0.0.1/'
+      interval: 15s
+      timeout: 5s
+      start_period: 10s
+      retries: 12
+networks:
+  aether-services:
+    external: true
+    name: '${AETHER_SHARED_NETWORK:-aether-prod-services}'

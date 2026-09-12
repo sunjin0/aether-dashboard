@@ -12,7 +12,7 @@ Aether 的 React 管理与聊天控制台，基于 Umi Max、Ant Design 5 和 An
 
 ## 开发
 
-要求 Node.js 20+（Docker 构建使用 Node 20）。
+要求 Node.js 20+（tag 工作流使用 Node 20）。
 
 ```powershell
 npm ci
@@ -30,20 +30,10 @@ npm run build
 
 Dashboard 通过 Nginx 将 `/api/` 代理至 Java Admin。聊天使用 `POST /api/agent/chat/stream` 的 SSE 协议，普通 Agent 与 Deep Agent 使用统一入口；Deep Agent 的任务状态、工具确认和用户追问由事件流渲染。
 
-## Docker
+## Tag 发布
 
-```powershell
-docker compose up -d --build dashboard
-```
-
-关键环境变量：
-
-| 变量 | 说明 |
-| --- | --- |
-| `DASHBOARD_PORT` | Dashboard 对外端口，默认 `8001`。 |
-| `AETHER_ADMIN_UPSTREAM` | Nginx 代理目标，容器内通常为 `http://aether-admin:8080`。 |
-
-完整平台部署请使用 Java 项目的 `docker-compose.all.yml`。
+仅通过本仓推送 v* tag 发布，各项目版本独立。部署文件、Dockerfile、配置模板和完整操作说明统一在 [deploy/](deploy/README.md)。
+服务器配置保存为 $DEPLOY_PATH/deploy/.env；GitHub Actions 完成测试、打包、上传和目标服务更新。
 
 ## Windows 桌面版
 

@@ -53,6 +53,6 @@ jobs:
           TAG="$GITHUB_REF_NAME"
           [[ "$TAG" =~ ^v[A-Za-z0-9_.-]+$ ]]
           RELEASE_ID="$(date -u +%Y%m%dT%H%M%SZ)-$TAG"; DEPLOY_PATH="$DEPLOY_ROOT/dashboard"
-          ssh -p "${DEPLOY_PORT:-22}" -o BatchMode=yes "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p '$DEPLOY_PATH/releases/$RELEASE_ID'"
-          rsync -az --delete -e "ssh -p ${DEPLOY_PORT:-22} -o BatchMode=yes" "stage/release/$TAG/dashboard/" "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/releases/$RELEASE_ID/dashboard/"
-          ssh -p "${DEPLOY_PORT:-22}" -o BatchMode=yes "$DEPLOY_USER@$DEPLOY_HOST" "bash '$DEPLOY_PATH/releases/$RELEASE_ID/dashboard/deploy/release.sh' dashboard '$TAG' '$DEPLOY_PATH' '$RELEASE_ID'"
+          ssh -p "${DEPLOY_PORT:-22}" -o BatchMode=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=120 "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p '$DEPLOY_PATH/releases/$RELEASE_ID'"
+          rsync -az --delete -e "ssh -p ${DEPLOY_PORT:-22} -o BatchMode=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=120" "stage/release/$TAG/dashboard/" "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/releases/$RELEASE_ID/dashboard/"
+          ssh -p "${DEPLOY_PORT:-22}" -o BatchMode=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=120 "$DEPLOY_USER@$DEPLOY_HOST" "bash '$DEPLOY_PATH/releases/$RELEASE_ID/dashboard/deploy/release.sh' dashboard '$TAG' '$DEPLOY_PATH' '$RELEASE_ID'"

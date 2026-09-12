@@ -13,6 +13,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -34,7 +35,7 @@ jobs:
         run: |
           set -euo pipefail
           TAG="$GITHUB_REF_NAME"; STAGE="stage/release/$TAG/dashboard"
-          docker build -f "$STAGE/deploy/dashboard.Dockerfile" -t "aether-dashboard:release-$TAG" "$STAGE"
+          docker buildx build --load --cache-from type=gha,scope=aether-dashboard --cache-to type=gha,mode=max -f "$STAGE/deploy/dashboard.Dockerfile" -t "aether-dashboard:release-$TAG" "$STAGE"
           docker save -o "$STAGE/images.tar" "aether-dashboard:release-$TAG"
       - name: 配置 SSH
         env:

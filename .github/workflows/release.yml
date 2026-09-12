@@ -30,6 +30,12 @@ jobs:
           cp deploy/dashboard.Dockerfile deploy/release.sh deploy/compose.yml deploy/README.md "$STAGE/deploy/"
           cp -r deploy/nginx "$STAGE/deploy/nginx"
           cp -r dist "$STAGE/dist"
+      - name: 构建镜像包
+        run: |
+          set -euo pipefail
+          TAG="$GITHUB_REF_NAME"; STAGE="stage/release/$TAG/dashboard"
+          docker build -f "$STAGE/deploy/dashboard.Dockerfile" -t "aether-dashboard:release-$TAG" "$STAGE"
+          docker save -o "$STAGE/images.tar" "aether-dashboard:release-$TAG"
       - name: 配置 SSH
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
@@ -55,4 +61,5 @@ jobs:
           RELEASE_ID="$(date -u +%Y%m%dT%H%M%SZ)-$TAG"; DEPLOY_PATH="$DEPLOY_ROOT/dashboard"
           ssh -p "${DEPLOY_PORT:-22}" -o BatchMode=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=120 "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p '$DEPLOY_PATH/releases/$RELEASE_ID'"
           rsync -az --delete -e "ssh -p ${DEPLOY_PORT:-22} -o BatchMode=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=120" "stage/release/$TAG/dashboard/" "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/releases/$RELEASE_ID/dashboard/"
-          ssh -p "${DEPLOY_PORT:-22}" -o BatchMode=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=120 "$DEPLOY_USER@$DEPLOY_HOST" "bash '$DEPLOY_PATH/releases/$RELEASE_ID/dashboard/deploy/release.sh' dashboard '$TAG' '$DEPLOY_PATH' '$RELEASE_ID'"
+          ssh -p "${DEPLOY_PORT:-22}" -o BatchMode=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=120 "$DEPLOY_USER@$DEPLOY_HOST" "docker load -i '$DEPLOY_PATH/releases/$RELEASE_ID/dashboard/images.tar'"
+          ssh -p "${DEPLOY_PORT:-22}" -o BatchMode=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=120 "$DEPLOY_USER@$DEPLOY_HOST" "AETHER_PREBUILT_IMAGES=true bash '$DEPLOY_PATH/releases/$RELEASE_ID/dashboard/deploy/release.sh' dashboard '$TAG' '$DEPLOY_PATH' '$RELEASE_ID'"

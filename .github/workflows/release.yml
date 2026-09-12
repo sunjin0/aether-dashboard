@@ -61,6 +61,18 @@ jobs:
           [[ "$TAG" =~ ^v[A-Za-z0-9_.-]+$ ]]
           RELEASE_ID="$(date -u +%Y%m%dT%H%M%SZ)-$TAG"; DEPLOY_PATH="$DEPLOY_ROOT/dashboard"
           ssh -p "${DEPLOY_PORT:-22}" -o BatchMode=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=120 "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p '$DEPLOY_PATH/releases/$RELEASE_ID'"
+          ssh -p "${DEPLOY_PORT:-22}" -o BatchMode=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=120 "$DEPLOY_USER@$DEPLOY_HOST" "bash -s -- '$DEPLOY_PATH/releases' '$DEPLOY_PATH/.releases/dashboard.previous'" <<'EOF'
+          set -euo pipefail
+          releases_dir="$1"; previous_state="$2"
+          previous_release="$(sed -n 's/^release_id=//p' "$previous_state" 2>/dev/null || true)"
+          if [[ -n "$previous_release" ]]; then
+            find "$releases_dir" -type f -name images.tar ! -path "$releases_dir/$previous_release/*" -delete
+          else
+            mapfile -t archives < <(find "$releases_dir" -type f -name images.tar -printf '%T@ %p\n' | sort -nr | tail -n +2 | cut -d' ' -f2-)
+            if ((${#archives[@]})); then rm -f -- "${archives[@]}"; fi
+          fi
+          EOF
           rsync -az --delete -e "ssh -p ${DEPLOY_PORT:-22} -o BatchMode=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=120" "stage/release/$TAG/dashboard/" "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/releases/$RELEASE_ID/dashboard/"
           ssh -p "${DEPLOY_PORT:-22}" -o BatchMode=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=120 "$DEPLOY_USER@$DEPLOY_HOST" "docker load -i '$DEPLOY_PATH/releases/$RELEASE_ID/dashboard/images.tar'"
+          ssh -p "${DEPLOY_PORT:-22}" -o BatchMode=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=120 "$DEPLOY_USER@$DEPLOY_HOST" "rm -f '$DEPLOY_PATH/releases/$RELEASE_ID/dashboard/images.tar'"
           ssh -p "${DEPLOY_PORT:-22}" -o BatchMode=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=120 "$DEPLOY_USER@$DEPLOY_HOST" "AETHER_PREBUILT_IMAGES=true bash '$DEPLOY_PATH/releases/$RELEASE_ID/dashboard/deploy/release.sh' dashboard '$TAG' '$DEPLOY_PATH' '$RELEASE_ID'"

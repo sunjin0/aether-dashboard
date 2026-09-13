@@ -47,3 +47,4 @@ build
 !/deploy/.env.example
 /.releases/
 /stage/
+/deploy/dev/.env.local

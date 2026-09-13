@@ -43,3 +43,8 @@ Use Conventional Commits: `<type>(<scope>): <中文提交描述>`. 类型使用 
 ## Deployment layout
 
 Only v* tags publish. Keep Compose, Dockerfiles, runtime proxy configuration, scripts and environment templates in deploy/. Do not restore root Dockerfiles/Compose or Jenkins publishing. See deploy/README.md for setup and rollback.
+
+## Local Docker debug
+
+Local Docker build-and-run configuration belongs in deploy/dev/. Keep production tag release configuration in deploy/. This repository owns its own local build command and release workflow; do not reuse another project's local Compose file, image, container, network, volume, or .env.local.
+

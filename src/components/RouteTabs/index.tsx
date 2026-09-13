@@ -3,7 +3,7 @@ import type { MenuProps, TabsProps } from 'antd';
 import { CloseOutlined, DownOutlined, ReloadOutlined } from '@ant-design/icons';
 import { history, useIntl } from '@umijs/max';
 import { KeepAlive, useAliveController } from 'react-activation';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import './index.less';
 
 type RouteTab = {
@@ -102,7 +102,20 @@ const RouteTabs = ({ pathname, children }: RouteTabsProps) => {
   const [tabs, setTabs] = useState<RouteTab[]>(() => [
     getTab(routePath, routeMenus, intl.formatMessage),
   ]);
+  const [isPageSwitching, setIsPageSwitching] = useState(false);
+  const firstRouteRender = useRef(true);
   const { drop, refresh } = useAliveController();
+
+  useLayoutEffect(() => {
+    if (firstRouteRender.current) {
+      firstRouteRender.current = false;
+      return;
+    }
+
+    setIsPageSwitching(true);
+    const timer = window.setTimeout(() => setIsPageSwitching(false), 220);
+    return () => window.clearTimeout(timer);
+  }, [routePath]);
 
   useEffect(() => {
     const updateMenus = () => {
@@ -211,9 +224,14 @@ const RouteTabs = ({ pathname, children }: RouteTabsProps) => {
           />
         )}
       </div>
-      <KeepAlive autoFreeze={false} cacheKey={routePath} name={routePath}>
-        {children}
-      </KeepAlive>
+      <div className={`route-tabs-page${isPageSwitching ? ' route-tabs-page-switching' : ''}`}>
+        <KeepAlive autoFreeze={false} cacheKey={routePath} name={routePath}>
+          {children}
+        </KeepAlive>
+        <div aria-hidden="true" className="route-tabs-page-loading">
+          <span className="route-tabs-page-loading-indicator" />
+        </div>
+      </div>
     </>
   );
 };

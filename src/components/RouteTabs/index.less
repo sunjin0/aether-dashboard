@@ -15,3 +15,54 @@
 .route-tabs-actions {
   margin-left: 8px;
 }
+
+.route-tabs-page {
+  position: relative;
+  min-height: 160px;
+}
+
+.route-tabs-page-switching > :first-child {
+  animation: route-tabs-page-enter 220ms ease-out;
+}
+
+.route-tabs-page-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(255 255 255 / 72%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease-out;
+}
+
+.route-tabs-page-switching .route-tabs-page-loading {
+  opacity: 1;
+}
+
+.route-tabs-page-loading-indicator {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgb(22 119 255 / 20%);
+  border-top-color: #1677ff;
+  border-radius: 50%;
+  animation: route-tabs-page-loading-spin 700ms linear infinite;
+}
+
+@keyframes route-tabs-page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes route-tabs-page-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

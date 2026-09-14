@@ -5,6 +5,7 @@ import { history, useIntl } from '@umijs/max';
 import { KeepAlive, useAliveController } from 'react-activation';
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import './index.less';
+import { allowRouteLeave } from '@/utils/routeLeaveGuard';
 
 type RouteTab = {
   key: string;
@@ -136,8 +137,10 @@ const RouteTabs = ({ pathname, children }: RouteTabsProps) => {
     );
   }, [menus, routePath]);
 
-  const closeTab = (targetKey: string) => {
+  const closeTab = async (targetKey: string) => {
     if (targetKey === '/dashboard') return;
+    const allowed = allowRouteLeave(targetKey);
+    if (allowed !== true && !(await allowed)) return;
     const targetIndex = tabs.findIndex((tab) => tab.key === targetKey);
     const nextTabs = tabs.filter((tab) => tab.key !== targetKey);
     drop(targetKey);
@@ -148,11 +151,17 @@ const RouteTabs = ({ pathname, children }: RouteTabsProps) => {
     }
   };
 
-  const refreshTab = () => {
+  const refreshTab = async () => {
+    const allowed = allowRouteLeave(routePath);
+    if (allowed !== true && !(await allowed)) return;
     refresh(routePath);
   };
 
-  const closeOtherTabs = () => {
+  const closeOtherTabs = async () => {
+    for (const tab of tabs.filter((tab) => tab.key !== '/dashboard' && tab.key !== routePath)) {
+      const allowed = allowRouteLeave(tab.key);
+      if (allowed !== true && !(await allowed)) return;
+    }
     const nextTabs = tabs.filter((tab) => tab.key === '/dashboard' || tab.key === routePath);
     tabs
       .filter((tab) => !nextTabs.some((nextTab) => nextTab.key === tab.key))
@@ -160,7 +169,11 @@ const RouteTabs = ({ pathname, children }: RouteTabsProps) => {
     setTabs(nextTabs);
   };
 
-  const closeAllTabs = () => {
+  const closeAllTabs = async () => {
+    for (const tab of tabs.filter((tab) => tab.key !== '/dashboard')) {
+      const allowed = allowRouteLeave(tab.key);
+      if (allowed !== true && !(await allowed)) return;
+    }
     tabs.filter((tab) => tab.key !== '/dashboard').forEach((tab) => drop(tab.key));
     setTabs((previousTabs) => previousTabs.filter((tab) => tab.key === '/dashboard'));
     if (routePath !== '/dashboard') history.push('/dashboard');

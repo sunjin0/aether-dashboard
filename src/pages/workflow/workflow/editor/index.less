@@ -1,0 +1,52 @@
+.page {
+  :global(.ant-page-header) {
+    padding-bottom: 12px;
+  }
+}
+.workspace {
+  display: flex;
+  gap: 10px;
+  height: calc(100dvh - 204px);
+  min-height: 480px;
+}
+.palette,
+.properties {
+  flex: none;
+  min-width: 0;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #eef0f3;
+  border-radius: 10px;
+}
+.properties {
+  overflow: visible;
+}
+.canvas {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.mobileTools {
+  display: flex;
+  margin-bottom: 8px;
+}
+.issues {
+  margin-bottom: 12px;
+  max-height: 220px;
+  overflow: auto;
+}
+@media (max-width: 1199px) {
+  .workspace {
+    height: calc(100dvh - 236px);
+  }
+  .canvas {
+    display: flex;
+    flex-direction: column;
+  }
+}

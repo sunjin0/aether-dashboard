@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Button, Checkbox, Input, Space, Tooltip } from 'antd'
+import { Button, Checkbox, Input, Select, Space, Tooltip } from 'antd'
 import {
   CodeOutlined,
   DeleteOutlined,
@@ -15,6 +15,7 @@ export interface StartVariableField {
   label?: string;
   placeholder?: string;
   required?: boolean;
+  type?: string;
 }
 
 const parseFields = (value?: string): StartVariableField[] => {
@@ -225,6 +226,10 @@ const StartVariablesBuilder: React.FC<StartVariablesBuilderProps> = ({ value, on
             </div>
             {!outputMode && (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
+                <Select size="small" style={{ width: 90 }} value={field.type || 'string'}
+                  aria-label={intl.formatMessage({ id: 'pages.workflowUX.fieldType' })}
+                  options={['string', 'number', 'integer', 'boolean', 'object', 'array'].map((value) => ({ value, label: intl.formatMessage({ id: `pages.workflowUX.type.${value}` }) }))}
+                  onChange={(type) => update(index, { type })} />
                 <Input
                   size="small"
                   style={{ flex: 1, minWidth: 0 }}

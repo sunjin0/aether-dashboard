@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { history, useIntl, useModel } from '@umijs/max'
+import { history, useIntl, useLocation, useModel } from '@umijs/max'
 import { PageContainer, ProTable, type ProColumns } from '@ant-design/pro-components'
 import { Button, Modal, Select, Tag, message } from 'antd'
 import { PlayCircleOutlined, PlusOutlined } from '@ant-design/icons'
@@ -12,12 +12,19 @@ const statusColor: Record<string, string> = {
 
 const WorkflowInstancesPage: React.FC = () => {
   const intl = useIntl()
+  const location = useLocation()
+  const filterWorkflowId = new URLSearchParams(location.search).get('workflowId') || undefined
   const t = (id: string) => intl.formatMessage({ id })
   const { initialState } = useModel('@@initialState')
   const canStart = Boolean(initialState?.currentUser?.permissionMap?.['/workflow/run'])
   const [startOpen, setStartOpen] = useState(false)
   const [workflows, setWorkflows] = useState<AgentWorkflow[]>([])
   const [workflowId, setWorkflowId] = useState<string>()
+  React.useEffect(() => {
+    getWorkflowList({ current: 1, pageSize: 1000 }).then((result) => {
+      if (result.code === 200) setWorkflows(result.data || [])
+    })
+  }, [])
   const openStart = async () => {
     const result = await getWorkflowList({ status: 1, current: 1, pageSize: 100 })
     if (result.code !== 200) return
@@ -28,9 +35,11 @@ const WorkflowInstancesPage: React.FC = () => {
   const columns: ProColumns<WorkflowInstance>[] = [
     {
       title: t('pages.agent.workflow.instance.workflow'),
-      dataIndex: 'workflowName',
+      dataIndex: 'workflowId',
+      valueType: 'select',
+      fieldProps: { showSearch: true, optionFilterProp: 'label', options: workflows.map((item) => ({ value: item.id, label: item.name })) },
       ellipsis: true,
-      render: (_, record) => record.workflowName || record.workflowId,
+      render: (_, record) => record.workflowName || workflows.find((item) => item.id === record.workflowId)?.name || t('pages.workflowUX.unknown'),
     },
     {
       title: t('pages.agent.workflow.instance.status'),
@@ -100,6 +109,7 @@ const WorkflowInstancesPage: React.FC = () => {
       }}
     >
       <ProTable<WorkflowInstance>
+        params={{ workflowId: filterWorkflowId }}
         rowKey="id"
         cardBordered
         search={{ labelWidth: 'auto', defaultCollapsed: false, span: 8 }}
@@ -129,6 +139,8 @@ const WorkflowInstancesPage: React.FC = () => {
         }}
       >
         <Select
+          showSearch
+          optionFilterProp="label"
           style={{ width: '100%' }}
           placeholder={t('pages.agent.workflow.instance.selectWorkflow')}
           value={workflowId}

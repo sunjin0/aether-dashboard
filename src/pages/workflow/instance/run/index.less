@@ -1,0 +1,42 @@
+.page {
+  :global(.ant-page-header) {
+    padding-bottom: 12px;
+  }
+}
+.startCard {
+  :global(.ant-card-head) {
+    min-height: 52px;
+  }
+}
+.runWorkspace {
+  display: flex;
+  align-items: stretch;
+  order: 1;
+  > div:first-child {
+    flex: 1;
+    min-width: 0;
+  }
+}
+.instanceContent {
+  display: flex;
+  flex-direction: column;
+}
+.secondarySection {
+  order: 2;
+}
+.canvas {
+  height: clamp(520px, calc(100dvh - 300px), 760px);
+  min-height: 420px;
+  overflow: hidden;
+  border: 1px solid #e8ebef;
+  border-radius: 10px;
+  background: #fbfcfe;
+}
+.sharedState {
+  max-height: 360px;
+  overflow: auto;
+
+  > button {
+    margin-bottom: 12px;
+  }
+}

@@ -119,6 +119,7 @@ export default [
       { path: '/agent/definition', name: '智能体配置', component: './agent/definition' },
       { path: '/agent/product-profile', name: 'Agent 产品发布', component: './agent/product-profile' },
       { path: '/agent/model-provider', name: '模型服务商', component: './agent/model-provider' },
+      { path: '/agent/workflow-capability', name: '工作流能力', component: './agent/workflow-capability' },
       { path: '/agent/mcp-server', name: 'MCP 服务', component: './agent/mcp-server' },
       { path: '/agent/tool', name: '工具目录', component: './agent/tool' },
       { path: '/agent/skill', name: '智能体技能', component: './agent/skill' },

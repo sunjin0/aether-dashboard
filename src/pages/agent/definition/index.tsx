@@ -1,12 +1,13 @@
 import React, { useRef, useState } from 'react'
 import { PlusOutlined } from '@ant-design/icons'
 import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
-import { Button, message, Modal } from 'antd'
+import { Alert, Button, message, Modal, Space } from 'antd'
 import { FormattedMessage, history, useAccess, useIntl } from '@@/exports'
 import AgentDefinitionForm from '@/pages/agent/definition/AgentDefinitionForm'
 import AgentToolBinding from '@/pages/agent/definition/AgentToolBinding'
 import AgentKnowledgeBaseBinding from '@/pages/agent/definition/AgentKnowledgeBaseBinding'
 import AgentSkillBinding from '@/pages/agent/definition/AgentSkillBinding'
+import AgentWorkflowCapabilityBinding from '@/pages/agent/definition/AgentWorkflowCapabilityBinding'
 import {
   copyAgentDefinitionInfo,
   deleteAgentDefinitionInfo,
@@ -35,8 +36,14 @@ const AgentDefinitionPage: React.FC = () => {
   const [currentAgentId, setCurrentAgentId] = useState<string>('')
   const [knowledgeBaseBindingVisible, setKnowledgeBaseBindingVisible] = useState(false)
   const [skillBindingVisible, setSkillBindingVisible] = useState(false)
+  const [workflowCapabilityBindingVisible, setWorkflowCapabilityBindingVisible] = useState(false)
+  const [nextStepsVisible, setNextStepsVisible] = useState(false)
   const [applications, setApplications] = useState<AgentApplication[]>([])
+  const [applicationScopeId, setApplicationScopeId] = useState(
+    () => new URLSearchParams(history?.location?.search || '').get('applicationId') || undefined,
+  )
   const applicationOptions = applications.map((item) => ({ label: item.name, value: item.id }))
+  const scopedApplication = applications.find((item) => item.id === applicationScopeId)
 
   React.useEffect(() => {
     getAgentApplicationList({ current: 1, pageSize: 100 }).then(({ data }) => setApplications((data || []).filter((item) => item.status === 1)))
@@ -91,7 +98,7 @@ const AgentDefinitionPage: React.FC = () => {
 
   const columns: any[] = [
     {
-      title: '业务应用空间',
+      title: format('pages.agent.application.title'),
       dataIndex: 'applicationId',
       valueType: 'select',
       fieldProps: { options: applicationOptions },
@@ -189,6 +196,25 @@ const AgentDefinitionPage: React.FC = () => {
                 },
               },
               {
+                key: 'debug-chat',
+                label: format('pages.agent.platform.debugAgent'),
+                primary: true,
+                onClick: () => {
+                  if (record.id) {
+                    history.push(`/agent/chat?agentId=${encodeURIComponent(record.id)}`)
+                  }
+                },
+              },
+              {
+                key: 'runs',
+                label: format('pages.agent.platform.viewRuns'),
+                onClick: () => {
+                  if (record.id) {
+                    history.push(`/agent/run?agentDefinitionId=${encodeURIComponent(record.id)}`)
+                  }
+                },
+              },
+              {
                 key: 'knowledge-base',
                 label: format('pages.agent.knowledgeBase.name'),
                 onClick: () => {
@@ -206,10 +232,23 @@ const AgentDefinitionPage: React.FC = () => {
                 },
               },
               {
+                key: 'workflow-capability',
+                label: format('pages.agent.workflowCapability.binding.manage'),
+                primary: true,
+                onClick: () => {
+                  setCurrentAgentId(record.id || '')
+                  setWorkflowCapabilityBindingVisible(true)
+                },
+              },
+              {
                 key: 'evaluation',
                 label: format('pages.agentEvaluation.entry.evaluate'),
                 primary: true,
-                onClick: () => record.id && history.push(`/evaluation/experiments?targetType=AGENT&targetId=${record.id}`),
+                onClick: () => {
+                  if (record.id) {
+                    history.push(`/evaluation/experiments?targetType=AGENT&targetId=${record.id}`)
+                  }
+                },
               },
               {
                 key: 'copy',
@@ -248,6 +287,27 @@ const AgentDefinitionPage: React.FC = () => {
 
   return (
     <PageContainer>
+      {applicationScopeId && (
+        <Alert
+          showIcon
+          type="info"
+          style={{ marginBottom: 12 }}
+          message={format('pages.agent.platform.applicationScope', {
+            name: scopedApplication?.name || format('pages.workflowUX.unknown'),
+          })}
+          action={
+            <Button
+              type="link"
+              onClick={() => {
+                setApplicationScopeId(undefined)
+                history.replace('/agent/definition')
+              }}
+            >
+              {format('pages.agent.platform.clearApplicationScope')}
+            </Button>
+          }
+        />
+      )}
       <ProTable
         actionRef={ref}
         rowKey="id"
@@ -255,7 +315,12 @@ const AgentDefinitionPage: React.FC = () => {
           labelWidth: 120,
         }}
         scroll={{ x: 1400 }}
-        request={async (params: AgentDefinitionSearchParams) => getAgentDefinitionList(params)}
+        request={async (params: AgentDefinitionSearchParams) =>
+          getAgentDefinitionList({
+            ...params,
+            applicationId: applicationScopeId || params.applicationId,
+          })
+        }
         toolBarRender={() =>
           write && [
             <Button
@@ -278,11 +343,72 @@ const AgentDefinitionPage: React.FC = () => {
         open={open}
         setOpen={setOpen}
         applications={applications}
-        onSuccess={() => {
+        initialApplicationId={applicationScopeId}
+        onSuccess={(createdId) => {
           setId(undefined)
           ref.current?.reload()
+          if (createdId) {
+            setCurrentAgentId(createdId)
+            setNextStepsVisible(true)
+          }
         }}
       />
+
+      <Modal
+        title={format('pages.agent.platform.nextSteps')}
+        open={nextStepsVisible}
+        onCancel={() => {
+          setNextStepsVisible(false)
+          setCurrentAgentId('')
+        }}
+        footer={
+          <Button
+            onClick={() => {
+              setNextStepsVisible(false)
+              setCurrentAgentId('')
+            }}
+          >
+            {format('pages.common.close')}
+          </Button>
+        }
+      >
+        <p>{format('pages.agent.platform.nextStepsTip')}</p>
+        <Space wrap>
+          <Button
+            type="primary"
+            onClick={() => {
+              setNextStepsVisible(false)
+              setToolBindingVisible(true)
+            }}
+          >
+            {format('pages.agent.tool.bind')}
+          </Button>
+          <Button
+            onClick={() => {
+              setNextStepsVisible(false)
+              setSkillBindingVisible(true)
+            }}
+          >
+            {format('pages.agent.skill.manage')}
+          </Button>
+          <Button
+            onClick={() => {
+              setNextStepsVisible(false)
+              setWorkflowCapabilityBindingVisible(true)
+            }}
+          >
+            {format('pages.agent.workflowCapability.binding.manage')}
+          </Button>
+          <Button
+            onClick={() => {
+              setNextStepsVisible(false)
+              setKnowledgeBaseBindingVisible(true)
+            }}
+          >
+            {format('pages.agent.knowledgeBase.name')}
+          </Button>
+        </Space>
+      </Modal>
 
       <AgentToolBinding
         agentId={currentAgentId}
@@ -314,6 +440,14 @@ const AgentDefinitionPage: React.FC = () => {
         open={skillBindingVisible}
         setOpen={(visible) => {
           setSkillBindingVisible(visible)
+          if (!visible) setCurrentAgentId('')
+        }}
+      />
+      <AgentWorkflowCapabilityBinding
+        agentId={currentAgentId}
+        open={workflowCapabilityBindingVisible}
+        setOpen={(visible) => {
+          setWorkflowCapabilityBindingVisible(visible)
           if (!visible) setCurrentAgentId('')
         }}
       />

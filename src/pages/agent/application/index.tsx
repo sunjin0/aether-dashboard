@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react'
-import { useIntl } from '@umijs/max'
+import { history, useIntl } from '@umijs/max'
 import {
   PageContainer,
   ProTable,
@@ -115,6 +115,13 @@ export default function AgentApplicationPage() {
                   }}
                 >
                   {t('pages.agent.application.usage')}
+                </Button>
+                <Button
+                  type="link"
+                  size="small"
+                  onClick={() => history.push(`/agent/definition?applicationId=${encodeURIComponent(r.id)}`)}
+                >
+                  {t('pages.agent.platform.manageAgents')}
                 </Button>
                 <Button
                   type="link"

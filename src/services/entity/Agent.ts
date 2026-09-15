@@ -877,8 +877,9 @@ export interface AgentTool {
   mcpServerName?: string;
   mcpBaseUrl?: string;
   mcpToolName?: string;
-    mcpInputSchema?: string;
-    timeoutMs?: number;
+  mcpInputSchema?: string;
+  resident?: boolean;
+  timeoutMs?: number;
     status?: number;
   callCount?: number;
   successRate?: number;

@@ -173,6 +173,40 @@ export const updateAgentToolBindingStatus = async (
     data: params,
   })
 }
+
+export interface AgentWorkflowCapabilityBinding {
+  id?: string
+  capabilityId?: string
+  priority?: number
+  status?: number
+  capabilityCode?: string
+  displayName?: string
+  description?: string
+  workflowId?: string
+  workflowVersionId?: string
+  riskLevel?: string
+}
+
+export interface AgentWorkflowCapabilityBindingRequest {
+  capabilityId: string
+  priority?: number
+  status?: number
+}
+
+export const getAgentWorkflowCapabilityBindingList = async (agentId: string, params: { current?: number; pageSize?: number; keyword?: string } = {}): Promise<ResponseStructure<AgentWorkflowCapabilityBinding[]>> =>
+  request(`/api/agent/definition/${agentId}/workflow-capabilities/list`, { method: 'POST', data: params })
+
+export const getAvailableAgentWorkflowCapabilities = async (agentId: string, params: { current?: number; pageSize?: number; keyword?: string } = {}): Promise<ResponseStructure<any[]>> =>
+  request(`/api/agent/definition/${agentId}/workflow-capabilities/available`, { method: 'POST', data: params })
+
+export const bindWorkflowCapabilityToAgent = async (agentId: string, params: AgentWorkflowCapabilityBindingRequest): Promise<ResponseStructure<void>> =>
+  request(`/api/agent/definition/${agentId}/workflow-capabilities`, { method: 'POST', data: params })
+
+export const unbindWorkflowCapabilityFromAgent = async (agentId: string, capabilityId: string): Promise<ResponseStructure<void>> =>
+  request(`/api/agent/definition/${agentId}/workflow-capabilities/${capabilityId}`, { method: 'DELETE' })
+
+export const updateWorkflowCapabilityBindingStatus = async (agentId: string, capabilityId: string, status: number): Promise<ResponseStructure<void>> =>
+  request(`/api/agent/definition/${agentId}/workflow-capabilities/${capabilityId}/status`, { method: 'PUT', data: { status } })
 /**
  * @description 获取模型供应商列表
  */

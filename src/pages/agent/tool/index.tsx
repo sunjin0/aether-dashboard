@@ -237,6 +237,13 @@ const AgentToolPage: React.FC = () => {
       ),
     },
     {
+      title: format('pages.agent.tool.resident'),
+      dataIndex: 'resident',
+      width: 110,
+      render: (_: unknown, record: AgentTool) =>
+        record.resident ? <Tag color="green">{format('pages.common.yes')}</Tag> : <Tag>{format('pages.common.no')}</Tag>,
+    },
+    {
       title: format('pages.agent.tool.integrationStatus'),
       dataIndex: 'status',
       width: 120,

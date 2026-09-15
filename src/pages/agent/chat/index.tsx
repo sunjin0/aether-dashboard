@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { PageContainer } from '@ant-design/pro-components'
-import { useIntl } from '@umijs/max'
+import { history, useIntl } from '@umijs/max'
 import {
   Button,
   Empty,
@@ -585,11 +585,16 @@ const ChatDebugPage: React.FC = () => {
     setLoadingAgents(true)
     try {
       const options = await getAgentDefinitionOptions()
-      setAgents(options.map((item) => ({
+      const availableAgents: AgentDefinition[] = options.map((item) => ({
         id: String(item.value),
         name: item.label,
         executionMode: item.code === 'DEEP' ? 'DEEP' : 'STANDARD',
-      })))
+      }))
+      setAgents(availableAgents)
+      const requestedAgentId = new URLSearchParams(history?.location?.search || '').get('agentId')
+      if (requestedAgentId && availableAgents.some((item) => item.id === requestedAgentId)) {
+        setAgentId(requestedAgentId)
+      }
     } finally {
       setLoadingAgents(false)
     }

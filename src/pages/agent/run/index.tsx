@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ActionType, PageContainer, ProDescriptions, ProTable } from '@ant-design/pro-components'
-import { useIntl } from '@umijs/max'
+import { history, useIntl } from '@umijs/max'
 import type { Dayjs } from 'dayjs'
 import {
   Alert,
@@ -88,6 +88,9 @@ const AgentRunPage: React.FC = () => {
   const [statistics, setStatistics] = useState<AgentRunStatistics>()
   const [statisticsLoading, setStatisticsLoading] = useState(false)
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | null>(null)
+  const [agentScopeId, setAgentScopeId] = useState(
+    () => new URLSearchParams(history?.location?.search || '').get('agentDefinitionId') || undefined,
+  )
   const agentDefinitionIdRef = useRef<string>()
   const detailRequestTokenRef = useRef(0)
   const statisticsRequestTokenRef = useRef(0)
@@ -173,6 +176,7 @@ const AgentRunPage: React.FC = () => {
       dataIndex: 'agentDefinitionId',
       valueType: 'text',
       ellipsis: true,
+      hideInSearch: Boolean(agentScopeId),
     },
     {
       title: intl.formatMessage({ id: 'pages.agent.run.conversationId' }),
@@ -262,6 +266,28 @@ const AgentRunPage: React.FC = () => {
 
   return (
     <PageContainer className="agent-run-page">
+      {agentScopeId && (
+        <Alert
+          showIcon
+          type="info"
+          style={{ marginBottom: 16 }}
+          message={intl.formatMessage({
+            id: 'pages.agent.platform.agentRunScope',
+          }, { id: agentScopeId })}
+          action={
+            <Button
+              type="link"
+              onClick={() => {
+                setAgentScopeId(undefined)
+                history.replace('/agent/run')
+                ref.current?.reload()
+              }}
+            >
+              {intl.formatMessage({ id: 'pages.agent.platform.clearAgentRunScope' })}
+            </Button>
+          }
+        />
+      )}
       <Card
         className="agent-run-statistics"
         title={intl.formatMessage({ id: 'pages.agent.run.statistics' })}
@@ -385,7 +411,10 @@ const AgentRunPage: React.FC = () => {
         }}
         request={async (params: AgentRunSearchFormParams) => {
           const { dateRange: tableDateRange, ...rest } = params
-          const queryParams: AgentRunSearchParams = { ...rest }
+          const queryParams: AgentRunSearchParams = {
+            ...rest,
+            agentDefinitionId: agentScopeId || rest.agentDefinitionId,
+          }
           if (tableDateRange) {
             // 设置为毫秒级时间戳
             queryParams.startTime = tableDateRange[0].valueOf()

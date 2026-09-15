@@ -11,6 +11,7 @@ import {
   ProFormSelect,
   ProFormText,
   ProFormTextArea,
+  ProFormSwitch,
 } from '@ant-design/pro-components'
 import { Form, Segmented } from 'antd'
 import { useIntl } from '@umijs/max'
@@ -122,6 +123,12 @@ const AgentToolForm = (props: {
           <JsonDisplay content={schema} />
         </Form.Item>
       )}
+      <ProFormSwitch
+        name="resident"
+        label={format('pages.agent.tool.resident')}
+        tooltip={format('pages.agent.tool.residentHint')}
+        initialValue={false}
+      />
       <ProFormDigit
         name="timeoutMs"
         label={format('pages.agent.tool.timeout')}

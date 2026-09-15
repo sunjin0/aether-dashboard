@@ -10,6 +10,7 @@ import {
   ProCard,
 } from '@ant-design/pro-components'
 import { Form } from 'antd'
+import React, { useEffect } from 'react'
 import {
   addAgentDefinitionInfo,
   getAgentDefinitionInfo,
@@ -25,13 +26,17 @@ const AgentDefinitionForm = (props: {
   id?: string;
   open?: boolean;
   setOpen?: (open: boolean) => void;
-  onSuccess: () => void;
+  onSuccess: (createdId?: string) => void;
   applications: AgentApplication[];
+  initialApplicationId?: string;
 }) => {
-  const { id, open, setOpen, onSuccess, applications } = props
+  const { id, open, setOpen, onSuccess, applications, initialApplicationId } = props
   const intl = useIntl()
   const format = (id: string) => intl.formatMessage({ id })
   const [form] = Form.useForm()
+  useEffect(() => {
+    if (open && !id) form.setFieldValue('applicationId', initialApplicationId || '0')
+  }, [form, id, initialApplicationId, open])
 
   return (
     <DrawerForm
@@ -42,10 +47,11 @@ const AgentDefinitionForm = (props: {
       onSuccess={async (values) => {
         if (id) {
           await updateAgentDefinitionInfo(values)
+          onSuccess()
         } else {
-          await addAgentDefinitionInfo(values)
+          const { data } = await addAgentDefinitionInfo(values)
+          onSuccess(data?.id)
         }
-        onSuccess()
         return true
       }}
       form={form}
@@ -53,9 +59,9 @@ const AgentDefinitionForm = (props: {
       <ProFormText name="id" hidden={true} />
       <ProFormSelect
         name="applicationId"
-        label="业务应用空间"
+        label={format('pages.agent.application.title')}
         options={applications.map((item) => ({ label: item.name, value: item.id }))}
-        initialValue="0"
+        initialValue={initialApplicationId || '0'}
         rules={[{ required: true }]}
       />
       <ProFormText

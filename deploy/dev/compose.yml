@@ -1,0 +1,20 @@
+# 本地调试覆盖层：并入 aether-local-debug 分组，与 Aether 仓的调试栈共用一套网络。
+# 网络由 Aether 仓的 deploy/dev/local-debug.sh 创建，这里只加入，不负责创建。
+name: aether-local-debug
+
+services:
+  dashboard:
+    image: 'aether-dashboard:dev-${AETHER_LOCAL_RELEASE_TAG:-local}'
+    # 基础文件的 build.context 引用 ${AETHER_RELEASE_ROOT:?}（发布专用，插值期就会硬失败），
+    # 整块替换后本地不再依赖该变量；实际启动始终带 --no-build。
+    build: !override
+      context: ..
+      dockerfile: deploy/dashboard.Dockerfile
+    container_name: aether-local-dashboard
+    ports: !override
+      - '${LOCAL_BIND_ADDR:-127.0.0.1}:${LOCAL_DASHBOARD_PORT:-18082}:80'
+
+networks:
+  aether-services:
+    external: true
+    name: aether-local-debug-services

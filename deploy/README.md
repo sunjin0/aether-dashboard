@@ -44,3 +44,16 @@ bash "releases/$release_id/dashboard/deploy/release.sh" dashboard "$tag" "$PWD" 
 ```
 
 数据库迁移为前向迁移，镜像回滚不会回退 schema。
+
+## 本地 Docker 调试
+
+本地调试栈的项目名统一为 `aether-local-debug`，与 Aether 仓、MCP、Deep Agent 的调试容器归入 Docker Desktop 的同一分组。网络 `aether-local-debug-services` 由 Aether 仓的 `deploy/dev/local-debug.sh` 创建，本仓只加入不创建，所以先起 Aether 调试栈。
+
+```bash
+bash deploy/dev/local-build.sh   # 构建 aether-dashboard:dev-local
+bash deploy/dev/local-up.sh      # 启动 aether-local-dashboard
+```
+
+访问 `http://127.0.0.1:18082`。`AETHER_LOCAL_RELEASE_TAG` 覆盖镜像标签，`LOCAL_DASHBOARD_PORT` 覆盖宿主端口，`AETHER_LOCAL_ENV_FILE` 覆盖环境文件路径。
+
+本仓的容器也可以由 Aether 仓的 `deploy/dev/local-debug.sh` 按需代拉起：在 Aether 仓的 `deploy/dev/.env.local` 里把 `AETHER_LOCAL_DASHBOARD_DIR` 指向本仓目录即可。

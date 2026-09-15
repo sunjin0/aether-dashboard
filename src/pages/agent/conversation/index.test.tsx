@@ -1,6 +1,7 @@
 const React = require('react')
 import { render } from '@testing-library/react'
 import AgentConversationPage from '.'
+import { getAgentConversationList } from '@/services/agent/ConversationController'
 
 const mockProTable = jest.fn((_props: any) => null)
 
@@ -34,7 +35,9 @@ jest.mock('@@/exports', () => ({
   }),
 }))
 
-jest.mock('@/services/agent/ConversationController', () => ({}))
+jest.mock('@/services/agent/ConversationController', () => ({
+  getAgentConversationList: jest.fn(() => Promise.resolve({ code: 200, data: [], total: 0 })),
+}))
 jest.mock('@/services/sys/DictController', () => ({}))
 jest.mock('@/components/AgentMessageBubble', () => () => null)
 
@@ -48,5 +51,20 @@ describe('AgentConversationPage', () => {
 
     expect(statusColumn.key).toBe('agent-conversation-status')
     expect(statusColumn.title).toBe('pages.common.status')
+  })
+
+  it('labels workflow sessions and asks the list API to include them', async () => {
+    render(<AgentConversationPage />)
+
+    const props = mockProTable.mock.calls[0][0]
+    const sourceColumn = props.columns.find((column: any) => column.dataIndex === 'source')
+
+    expect(Object.keys(sourceColumn.valueEnum)).toEqual(['CONSOLE', 'EXTERNAL', 'WORKFLOW'])
+
+    await props.request({ current: 1, pageSize: 20 })
+
+    expect(getAgentConversationList).toHaveBeenCalledWith(
+      expect.objectContaining({ includeWorkflow: true }),
+    )
   })
 })

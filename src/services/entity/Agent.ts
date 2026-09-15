@@ -684,6 +684,8 @@ export interface AgentConversation {
   id?: string;
   /** 是否由服务账号经对外接口发起；后台仅提供只读审计。 */
   external?: boolean;
+  /** 会话来源：控制台、外部接口或工作流节点。 */
+  source?: 'CONSOLE' | 'EXTERNAL' | 'WORKFLOW';
   agentDefinitionId?: string;
   executionMode?: 'STANDARD' | 'DEEP';
   title?: string;
@@ -699,6 +701,8 @@ export interface AgentConversation {
 export interface AgentConversationSearchParams extends AgentConversation {
   current?: number;
   pageSize?: number;
+  /** 会话管理页需要工作流节点会话；对话调试保持默认排除。 */
+  includeWorkflow?: boolean;
 }
 
 /**

@@ -194,13 +194,13 @@ const AgentConversationPage: React.FC = () => {
     },
     {
       title: intl.formatMessage({ id: 'pages.agent.conversation.source' }),
-      dataIndex: 'external',
+      dataIndex: 'source',
       valueType: 'select',
       valueEnum: {
-        false: { text: intl.formatMessage({ id: 'pages.agent.conversation.source.console' }) },
-        true: { text: intl.formatMessage({ id: 'pages.agent.conversation.source.external' }), status: 'Processing' },
+        CONSOLE: { text: intl.formatMessage({ id: 'pages.agent.conversation.source.console' }) },
+        EXTERNAL: { text: intl.formatMessage({ id: 'pages.agent.conversation.source.external' }), status: 'Processing' },
+        WORKFLOW: { text: intl.formatMessage({ id: 'pages.agent.conversation.source.workflow' }), status: 'Warning' },
       },
-      hideInSearch: true,
     },
     {
       title: intl.formatMessage({ id: 'pages.common.status' }),
@@ -268,7 +268,9 @@ const AgentConversationPage: React.FC = () => {
       <ProTable
         actionRef={ref}
         rowKey="id"
-        request={async (params: AgentConversationSearchParams) => getAgentConversationList(params)}
+        request={async (params: AgentConversationSearchParams) =>
+          getAgentConversationList({ ...params, includeWorkflow: true })
+        }
         columns={columns}
       />
       <Drawer

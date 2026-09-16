@@ -16,6 +16,9 @@ jest.mock('@ant-design/pro-components', () => ({
   ProFormDigit: () => null,
   ProFormSelect: () => null,
   ProFormText: () => null,
+  // 「工具常驻」那个开关。漏了它组件渲染时拿到 undefined 会直接抛
+  // "Element type is invalid ... Check the render method of AgentToolForm"。
+  ProFormSwitch: () => null,
   ProFormTextArea: ({ fieldProps, name }: any) => (
     <textarea aria-label={name} defaultValue="{}" {...fieldProps} />
   ),

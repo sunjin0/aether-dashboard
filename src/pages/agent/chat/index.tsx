@@ -74,6 +74,8 @@ import { Option } from '@/services/entity/Common'
 import AgentMessageBubble from '@/components/AgentMessageBubble'
 import TemporaryUrlPreviewModal from '@/components/TemporaryUrlPreviewModal'
 import ConversationMemoryPanel from './ConversationMemoryPanel'
+import WorkflowTaskList from './WorkflowTaskList'
+import useWorkflowTasks from './useWorkflowTasks'
 import { createChatAttachmentPreviewUrl } from '@/services/file/FileController'
 import {
   cancelDeepRun,
@@ -276,6 +278,24 @@ const ChatDebugPage: React.FC = () => {
   const deepRunTasks = useMemo(() => getDeepRunTasks(deepRunSteps), [deepRunSteps])
   const visibleDeepTasks = deepRunTasks.length > 0 ? deepRunTasks : persistedDeepTasks
   const activeDeepTask = visibleDeepTasks.find((task) => task.status === 'running')
+
+  // 工作任务挂在消息流末尾那条助手消息下面：全程只有一份，且会话结束、重开历史会话时都还在。
+  const lastAssistantIndex = useMemo(() => {
+    for (let index = messages.length - 1; index >= 0; index -= 1) {
+      if (messages[index].role === 'assistant') return index
+    }
+    return -1
+  }, [messages])
+  const {
+    tasks: workflowTasks,
+    total: workflowTaskTotal,
+    loading: workflowTasksLoading,
+    refresh: refreshWorkflowTasks,
+    state: workflowTaskState,
+    setState: setWorkflowTaskState,
+    current: workflowTaskPage,
+    setCurrent: setWorkflowTaskPage,
+  } = useWorkflowTasks(conversationId, chatTurnState === 'streaming')
 
   const toDeepTaskStatus = (status?: string): DeepTask['status'] => {
     switch (status?.toUpperCase()) {
@@ -2105,6 +2125,18 @@ const ChatDebugPage: React.FC = () => {
                                 })}
                               </div>
                             )}
+                          {index === lastAssistantIndex && (
+                            <WorkflowTaskList
+                              tasks={workflowTasks}
+                              total={workflowTaskTotal}
+                              loading={workflowTasksLoading}
+                              onRefresh={refreshWorkflowTasks}
+                              state={workflowTaskState}
+                              onStateChange={setWorkflowTaskState}
+                              current={workflowTaskPage}
+                              onPageChange={setWorkflowTaskPage}
+                            />
+                          )}
                         </React.Fragment>
                       ))}
                       <div ref={messageEndRef} />

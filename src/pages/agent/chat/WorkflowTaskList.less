@@ -1,0 +1,96 @@
+@line: #e8ebf0;
+@muted: #7c879b;
+
+// 与附近的「Deep 执行中」内嵌进度块同一套视觉，跟随消息气泡宽度而非铺满。
+.taskList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border: 1px solid @line;
+  border-radius: 6px;
+  background: #f6f8fa;
+}
+
+.header {
+  display: flex;
+  // 气泡很窄，筛选控件在长标题旁边会换行，别让它把计数挤出去。
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: @muted;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.count {
+  color: @muted;
+  font-weight: 400;
+}
+
+.headerRight {
+  display: flex;
+  margin-inline-start: auto;
+  align-items: center;
+  gap: 2px;
+}
+
+.refresh {
+  height: 20px;
+  padding: 0 4px;
+  color: @muted;
+}
+
+.empty {
+  padding: 2px 0;
+  color: @muted;
+  font-size: 12px;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 12px;
+}
+
+.name {
+  max-width: 180px;
+  overflow: hidden;
+  color: #172033;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status {
+  flex-shrink: 0;
+  margin-inline-end: 0;
+}
+
+.detail {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: @muted;
+}
+
+.node {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.time {
+  flex-shrink: 0;
+}

@@ -157,11 +157,11 @@
     background: #f8faff;
   }
 
-  .ant-pro-descriptions {
-    padding: 16px;
-    background: #fff;
-    border: 1px solid #e7edf6;
-    border-radius: 8px;
+  // 卡片之间统一用 flex gap 控制间距，避免每张卡各写一个 inline marginTop。
+  .agent-run-detail-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
 
   .agent-run-card {
@@ -173,7 +173,63 @@
     .ant-card-head {
       min-height: 44px;
       background: #fafcff;
+      border-bottom-color: #edf1f6;
     }
+  }
+
+  // 标识信息折在关键信息卡底部，去掉 ghost Collapse 默认的边框和留白。
+  .agent-run-identifiers {
+    margin-top: 4px;
+
+    .ant-collapse-header {
+      padding: 6px 0 !important;
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    .ant-collapse-content-box {
+      padding: 4px 0 8px !important;
+    }
+
+    .ant-pro-descriptions {
+      padding: 12px 14px;
+      background: #fafcff;
+      border-radius: 6px;
+    }
+  }
+
+  .agent-run-plan-version {
+    & + .agent-run-plan-version {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed #edf1f6;
+    }
+  }
+
+  .agent-run-plan-version-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .agent-run-plan-step {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: baseline;
+    padding: 3px 0 3px 4px;
+    font-size: 13px;
+  }
+
+  .agent-run-plan-step-title {
+    color: #334155;
+  }
+
+  .agent-run-plan-step-result {
+    font-size: 12px;
+    word-break: break-word;
   }
 }
 

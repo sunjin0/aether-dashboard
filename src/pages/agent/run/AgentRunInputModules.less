@@ -1,0 +1,153 @@
+.agent-run-input-modules {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .agent-run-input-meta {
+    font-size: 12px;
+  }
+
+  .agent-run-input-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+
+    .agent-run-input-request-id {
+      font-size: 12px;
+      word-break: break-all;
+    }
+  }
+
+  // 组合条：各模块按估算 token 占比分配宽度，替代原先每模块一根 Progress。
+  .agent-run-input-bars {
+    display: flex;
+    gap: 2px;
+    height: 8px;
+    overflow: hidden;
+    background: #eef2f9;
+    border-radius: 4px;
+  }
+
+  .agent-run-input-bar {
+    display: block;
+    min-width: 4px;
+    height: 100%;
+    border-radius: 2px;
+  }
+
+  .agent-run-input-module,
+  .agent-run-input-tool {
+    padding: 10px 12px;
+    background: #fafcff;
+    border: 1px solid #e7edf6;
+    border-radius: 8px;
+  }
+
+  .agent-run-input-module-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+
+  .agent-run-input-preview {
+    margin: 4px 0 0;
+    font-size: 12px;
+  }
+
+  .agent-run-input-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  // 分组折叠头：标题 + 计数压成一行，去掉 ghost Collapse 自带的多余留白。
+  .agent-run-input-fold {
+    .ant-collapse-header {
+      padding: 4px 0 !important;
+      align-items: center !important;
+    }
+
+    // 嵌套在「模块明细」里的模块行：进一步压缩行高，让 10 个模块能一屏排下。
+    .agent-run-input-module-list {
+      .ant-collapse-header {
+        padding: 5px 0 !important;
+      }
+
+      .ant-collapse-content-box {
+        padding: 4px 0 8px 20px !important;
+      }
+    }
+  }
+
+  .agent-run-input-section-label {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .agent-run-input-module-label {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .agent-run-input-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+  }
+
+  .agent-run-input-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .agent-run-input-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .agent-run-input-capability {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 2px 0;
+
+    .agent-run-input-capability-desc {
+      flex: 1;
+      min-width: 0;
+      font-size: 12px;
+    }
+  }
+
+  .agent-run-input-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 320px;
+    overflow: auto;
+  }
+
+  .agent-run-input-message-role {
+    font-size: 12px;
+  }
+
+  .agent-run-input-message-body {
+    margin: 2px 0 0;
+    padding: 8px;
+    font-family: Menlo, Consolas, 'Courier New', monospace;
+    font-size: 12px;
+    word-break: break-word;
+    white-space: pre-wrap;
+    background: #f5f7fb;
+    border: 1px solid #e7edf6;
+    border-radius: 6px;
+  }
+}

@@ -6,6 +6,7 @@ import {
   Alert,
   Button,
   Card,
+  Collapse,
   DatePicker,
   Drawer,
   Empty,
@@ -36,6 +37,7 @@ import {
 } from '@/services/entity/Agent'
 import JsonDisplay from '@/components/JsonDisplay'
 import MarkdownText from '@/components/MarkdownText'
+import AgentRunInputModules from './AgentRunInputModules'
 import AgentRunStepsTimeline from './AgentRunStepsTimeline'
 import './index.less'
 import {
@@ -61,7 +63,7 @@ const renderStatusTag = (status: number | undefined, executionMode: AgentRun['ex
       : { color: 'processing', text: intl.formatMessage({ id: 'pages.agent.run.status.queued' }) },
     4: { color: 'cyan', text: intl.formatMessage({ id: 'pages.agent.run.status.running' }) },
     5: { color: 'default', text: intl.formatMessage({ id: 'pages.agent.run.status.cancelled' }) },
-    6: { color: 'gold', text: '已暂停' },
+    6: { color: 'gold', text: intl.formatMessage({ id: 'pages.agent.run.status.paused' }) },
   }
   const item = statusMap[status ?? -1]
 
@@ -70,6 +72,19 @@ const renderStatusTag = (status: number | undefined, executionMode: AgentRun['ex
   ) : (
     <Tag>{intl.formatMessage({ id: 'pages.agent.run.status.unknown' })}</Tag>
   )
+}
+
+const renderPlanStepStatus = (status: string | undefined, intl: ReturnType<typeof useIntl>) => {
+  const statusMap: Record<string, { color: string; text: string }> = {
+    PENDING: { color: 'default', text: intl.formatMessage({ id: 'pages.agent.run.plan.stepStatus.pending' }) },
+    RUNNING: { color: 'processing', text: intl.formatMessage({ id: 'pages.agent.run.plan.stepStatus.running' }) },
+    COMPLETED: { color: 'success', text: intl.formatMessage({ id: 'pages.agent.run.plan.stepStatus.completed' }) },
+    FAILED: { color: 'error', text: intl.formatMessage({ id: 'pages.agent.run.plan.stepStatus.failed' }) },
+    CANCELLED: { color: 'default', text: intl.formatMessage({ id: 'pages.agent.run.plan.stepStatus.cancelled' }) },
+  }
+  const item = statusMap[(status || '').toUpperCase()]
+
+  return <Tag color={item?.color}>{item?.text || status}</Tag>
 }
 
 const { RangePicker } = DatePicker
@@ -264,6 +279,57 @@ const AgentRunPage: React.FC = () => {
     },
   ]
 
+  // 暂停/继续按钮挂在「执行计划」卡片右上角：脱离计划单独成卡时既无标题也无定位意义。
+  const renderRunActions = () => {
+    if (!run || run.executionMode !== 'DEEP' || !run.id) {
+      return null
+    }
+    const runId = run.id
+    const applyStatus = (status: NonNullable<AgentRun['status']>) =>
+      setRun((prev) => (prev ? { ...prev, status } : prev))
+
+    if (run.status === 6) {
+      return (
+        <Button
+          type="primary"
+          size="small"
+          onClick={async () => {
+            try {
+              await resumeAgentRun(runId)
+              message.success(intl.formatMessage({ id: 'pages.agent.run.action.resumed' }))
+              applyStatus(3)
+            } catch (e) {
+              message.error(intl.formatMessage({ id: 'pages.agent.run.action.failed' }))
+            }
+          }}
+        >
+          {intl.formatMessage({ id: 'pages.agent.run.action.resume' })}
+        </Button>
+      )
+    }
+
+    if (run.status !== 3 && run.status !== 4) {
+      return null
+    }
+
+    return (
+      <Button
+        size="small"
+        onClick={async () => {
+          try {
+            await pauseAgentRun(runId)
+            message.success(intl.formatMessage({ id: 'pages.agent.run.action.paused' }))
+            applyStatus(6)
+          } catch (e) {
+            message.error(intl.formatMessage({ id: 'pages.agent.run.action.failed' }))
+          }
+        }}
+      >
+        {intl.formatMessage({ id: 'pages.agent.run.action.pause' })}
+      </Button>
+    )
+  }
+
   return (
     <PageContainer className="agent-run-page">
       {agentScopeId && (
@@ -429,12 +495,12 @@ const AgentRunPage: React.FC = () => {
           <Button key="export-audit" icon={<DownloadOutlined />} onClick={async () => {
             const blob = await downloadToolAuditCsv(dateRange ? { startTime: dateRange[0].valueOf(), endTime: dateRange[1].valueOf() } : undefined)
             await downloadBlob(blob, 'tool-audit.csv')
-          }}>导出审计 CSV</Button>,
+          }}>{intl.formatMessage({ id: 'pages.agent.run.exportAudit' })}</Button>,
         ]}
       />
       <Drawer
         title={intl.formatMessage({ id: 'pages.agent.run.detail' })}
-        width={760}
+        width="min(1000px, 100vw)"
         className="agent-run-detail-drawer"
         open={drawerOpen}
         onClose={() => {
@@ -446,95 +512,157 @@ const AgentRunPage: React.FC = () => {
       >
         <Spin spinning={detailLoading}>
           {run ? (
-            <>
-              <ProDescriptions
-                column={1}
-                dataSource={run}
-                columns={[
-                  { title: intl.formatMessage({ id: 'pages.common.id' }), dataIndex: 'id' },
-                  {
-                    title: intl.formatMessage({ id: 'pages.agent.run.agentId' }),
-                    dataIndex: 'agentDefinitionId',
-                  },
-                  {
-                    title: intl.formatMessage({ id: 'pages.agent.run.executionMode' }),
-                    dataIndex: 'executionMode',
-                    render: (value: React.ReactNode) => (
-                      <Tag color={value === 'DEEP' ? 'purple' : 'blue'}>
-                        {value === 'DEEP'
-                          ? intl.formatMessage({ id: 'pages.agent.run.executionMode.deep' })
-                          : intl.formatMessage({ id: 'pages.agent.run.executionMode.standard' })}
-                      </Tag>
-                    ),
-                  },
-                  {
-                    title: intl.formatMessage({ id: 'pages.agent.run.externalRunId' }),
-                    dataIndex: 'externalRunId',
-                  },
-                  {
-                    title: intl.formatMessage({ id: 'pages.agent.run.userId' }),
-                    dataIndex: 'userId',
-                  },
-                  {
-                    title: intl.formatMessage({ id: 'pages.agent.run.conversationId' }),
-                    dataIndex: 'conversationId',
-                  },
-                  {
-                    title: intl.formatMessage({ id: 'pages.agent.run.messageId' }),
-                    dataIndex: 'messageId',
-                  },
-                  {
-                    title: intl.formatMessage({ id: 'pages.agent.run.model' }),
-                    dataIndex: 'model',
-                  },
-                  {
-                    title: intl.formatMessage({ id: 'pages.common.status' }),
-                    dataIndex: 'status',
-                    render: (_: any, record: AgentRun) => renderStatusTag(record.status, record.executionMode, intl),
-                  },
-                  {
-                    title: intl.formatMessage({ id: 'pages.common.createTime' }),
-                    dataIndex: 'createdAt',
-                    valueType: 'dateTime',
-                  },
-                  {
-                    title: intl.formatMessage({ id: 'pages.common.updateTime' }),
-                    dataIndex: 'updatedAt',
-                    valueType: 'dateTime',
-                  },
-                ]}
-              />
+            <div className="agent-run-detail-body">
+              <Card
+                className="agent-run-card"
+                title={intl.formatMessage({ id: 'pages.agent.run.section.keyInfo' })}
+                size="small"
+              >
+                <ProDescriptions
+                  column={{ xs: 1, sm: 2 }}
+                  dataSource={run}
+                  columns={[
+                    {
+                      title: intl.formatMessage({ id: 'pages.agent.run.executionMode' }),
+                      dataIndex: 'executionMode',
+                      render: (value: React.ReactNode) => (
+                        <Tag color={value === 'DEEP' ? 'purple' : 'blue'}>
+                          {value === 'DEEP'
+                            ? intl.formatMessage({ id: 'pages.agent.run.executionMode.deep' })
+                            : intl.formatMessage({ id: 'pages.agent.run.executionMode.standard' })}
+                        </Tag>
+                      ),
+                    },
+                    {
+                      title: intl.formatMessage({ id: 'pages.common.status' }),
+                      dataIndex: 'status',
+                      render: (_: any, record: AgentRun) =>
+                        renderStatusTag(record.status, record.executionMode, intl),
+                    },
+                    {
+                      title: intl.formatMessage({ id: 'pages.agent.run.model' }),
+                      dataIndex: 'model',
+                    },
+                    {
+                      title: intl.formatMessage({ id: 'pages.agent.run.totalLatency' }),
+                      dataIndex: 'latencyMs',
+                    },
+                    {
+                      title: intl.formatMessage({ id: 'pages.common.createTime' }),
+                      dataIndex: 'createdAt',
+                      valueType: 'dateTime',
+                    },
+                    {
+                      title: intl.formatMessage({ id: 'pages.common.updateTime' }),
+                      dataIndex: 'updatedAt',
+                      valueType: 'dateTime',
+                    },
+                  ]}
+                />
+                <Collapse
+                  ghost
+                  size="small"
+                  className="agent-run-identifiers"
+                  items={[
+                    {
+                      key: 'identifiers',
+                      label: intl.formatMessage({ id: 'pages.agent.run.section.identifiers' }),
+                      children: (
+                        <ProDescriptions
+                          column={{ xs: 1, sm: 2 }}
+                          dataSource={run}
+                          columns={[
+                            { title: intl.formatMessage({ id: 'pages.common.id' }), dataIndex: 'id' },
+                            {
+                              title: intl.formatMessage({ id: 'pages.agent.run.agentId' }),
+                              dataIndex: 'agentDefinitionId',
+                            },
+                            {
+                              title: intl.formatMessage({ id: 'pages.agent.run.externalRunId' }),
+                              dataIndex: 'externalRunId',
+                            },
+                            {
+                              title: intl.formatMessage({ id: 'pages.agent.run.userId' }),
+                              dataIndex: 'userId',
+                            },
+                            {
+                              title: intl.formatMessage({ id: 'pages.agent.run.conversationId' }),
+                              dataIndex: 'conversationId',
+                            },
+                            {
+                              title: intl.formatMessage({ id: 'pages.agent.run.messageId' }),
+                              dataIndex: 'messageId',
+                            },
+                          ]}
+                        />
+                      ),
+                    },
+                  ]}
+                />
+              </Card>
               {run.executionMode === 'DEEP' && run.id && (
-                <Card title="执行计划" size="small" style={{ marginTop: 16 }}>
-                  {plan?.versions?.slice().reverse().map((version) => (
-                    <div key={version.version} style={{ marginBottom: 12 }}>
-                      <Text strong>版本 {version.version}：{version.summary || version.reason}</Text>
-                      {version.steps?.map((step) => <div key={step.id || step.stepKey} style={{ padding: '4px 0 0 12px' }}><Tag color={step.status === 'COMPLETED' ? 'success' : step.status === 'RUNNING' ? 'processing' : 'default'}>{step.status}</Tag>{step.sequence}. {step.title}{step.resultSummary ? ` — ${step.resultSummary}` : ''}</div>)}
-                    </div>
-                  )) || <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无计划" />}
-                </Card>
-              )}
-              {run.executionMode === 'DEEP' && run.id && (
-                <Card size="small" style={{ marginTop: 16 }}>
-                  {run.status === 6 ? <Button type="primary" onClick={async () => { await resumeAgentRun(run.id as string); message.success('运行已继续'); setRun({ ...run, status: 3 }) }}>继续执行</Button> : (run.status === 3 || run.status === 4) && <Button onClick={async () => { await pauseAgentRun(run.id as string); message.success('运行已暂停'); setRun({ ...run, status: 6 }) }}>暂停执行</Button>}
+                <Card
+                  className="agent-run-card"
+                  title={intl.formatMessage({ id: 'pages.agent.run.plan.title' })}
+                  size="small"
+                  extra={renderRunActions()}
+                >
+                  {plan?.versions?.length ? (
+                    plan.versions
+                      .slice()
+                      .reverse()
+                      .map((version) => (
+                        <div className="agent-run-plan-version" key={version.version}>
+                          <div className="agent-run-plan-version-head">
+                            <Tag color="blue">
+                              {intl.formatMessage(
+                                { id: 'pages.agent.run.plan.version' },
+                                { version: version.version },
+                              )}
+                            </Tag>
+                            {(version.summary || version.reason) && (
+                              <Text type="secondary">{version.summary || version.reason}</Text>
+                            )}
+                          </div>
+                          {version.steps?.map((step) => (
+                            <div className="agent-run-plan-step" key={step.id || step.stepKey}>
+                              {renderPlanStepStatus(step.status, intl)}
+                              <span className="agent-run-plan-step-title">
+                                {step.sequence}. {step.title}
+                              </span>
+                              {step.resultSummary && (
+                                <Text type="secondary" className="agent-run-plan-step-result">
+                                  {step.resultSummary}
+                                </Text>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ))
+                  ) : (
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description={intl.formatMessage({ id: 'pages.agent.run.plan.empty' })}
+                    />
+                  )}
                 </Card>
               )}
               {run.executionMode === 'DEEP' && run.id && (
                 <Card
+                  className="agent-run-card"
                   title={intl.formatMessage({ id: 'pages.agent.run.steps' })}
                   size="small"
-                  style={{ marginTop: 16 }}
                 >
                   <AgentRunStepsTimeline runId={run.id} />
                 </Card>
               )}
               <Card
+                className="agent-run-card"
                 title={intl.formatMessage({ id: 'pages.agent.run.tokensAndLatency' })}
                 size="small"
-                style={{ marginTop: 16 }}
               >
                 <ProDescriptions
-                  column={2}
+                  column={{ xs: 1, sm: 2, md: 4 }}
                   dataSource={run}
                   columns={[
                     {
@@ -557,26 +685,23 @@ const AgentRunPage: React.FC = () => {
                 />
               </Card>
               <Card
+                className="agent-run-card"
                 title={intl.formatMessage({ id: 'pages.agent.run.inputSummary' })}
                 size="small"
-                style={{ marginTop: 16 }}
-                className="agent-run-card"
               >
-                <JsonDisplay content={run.inputContent} />
+                <AgentRunInputModules content={run.inputContent} model={run.model} />
               </Card>
               <Card
+                className="agent-run-card"
                 title={intl.formatMessage({ id: 'pages.agent.run.outputSummary' })}
                 size="small"
-                style={{ marginTop: 16 }}
-                className="agent-run-card"
               >
                 <MarkdownText content={run.outputContent} />
               </Card>
               <Card
+                className="agent-run-card"
                 title={intl.formatMessage({ id: 'pages.agent.run.rawResponse' })}
                 size="small"
-                style={{ marginTop: 16 }}
-                className="agent-run-card"
               >
                 {run.rawResponse ? (
                   <JsonDisplay content={run.rawResponse} />
@@ -586,21 +711,16 @@ const AgentRunPage: React.FC = () => {
                   </Text>
                 )}
               </Card>
-              <Card
-                title={intl.formatMessage({ id: 'pages.agent.run.errorInfo' })}
-                size="small"
-                style={{ marginTop: 16 }}
-                className="agent-run-card"
-              >
-                {run.errorMsg ? (
+              {run.errorMsg && (
+                <Card
+                  className="agent-run-card"
+                  title={intl.formatMessage({ id: 'pages.agent.run.errorInfo' })}
+                  size="small"
+                >
                   <MarkdownText content={run.errorMsg} error={true} />
-                ) : (
-                  <Text type="secondary">
-                    {intl.formatMessage({ id: 'pages.agent.run.noErrorInfo' })}
-                  </Text>
-                )}
-              </Card>
-            </>
+                </Card>
+              )}
+            </div>
           ) : (
             <Empty description={intl.formatMessage({ id: 'pages.agent.run.noDetail' })} />
           )}

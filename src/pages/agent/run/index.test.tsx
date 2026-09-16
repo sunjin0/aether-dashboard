@@ -30,11 +30,28 @@ jest.mock('@umijs/max', () => ({
 
 jest.mock('antd', () => ({
   Alert: () => null,
-  Card: ({ children }: any) => <>{children}</>,
+  Button: ({ children }: any) => <button>{children}</button>,
+  Card: ({ children, extra }: any) => (
+    <>
+      {extra}
+      {children}
+    </>
+  ),
+  // 抽屉里的「标识信息」等分组折叠：测试中直接展开，等价于未折叠的旧行为。
+  Collapse: ({ items }: any) => (
+    <>
+      {(items || []).map((item: any) => (
+        <div key={item.key}>
+          {item.label}
+          {item.children}
+        </div>
+      ))}
+    </>
+  ),
   DatePicker: { RangePicker: () => null },
   Drawer: ({ children, open }: any) => (open ? <>{children}</> : null),
   Empty: () => null,
-  message: { error: jest.fn() },
+  message: { error: jest.fn(), success: jest.fn() },
   Spin: ({ children }: any) => <>{children}</>,
   Statistic: ({ title, value, suffix }: any) => <div>{`${title}: ${value}${suffix || ''}`}</div>,
   Tag: ({ children }: any) => <>{children}</>,
@@ -46,6 +63,7 @@ jest.mock('@/components/TableActionMenu', () => ({ items }: any) => (
 ))
 jest.mock('@/components/JsonDisplay', () => ({ content }: any) => <div>{content}</div>)
 jest.mock('@/components/MarkdownText', () => () => null)
+jest.mock('./AgentRunInputModules', () => () => null)
 jest.mock('./AgentRunStepsTimeline', () => () => null)
 jest.mock('@/services/sys/DictController', () => ({ getOptionList: jest.fn() }))
 jest.mock('@/services/agent/RunController', () => ({
@@ -79,7 +97,8 @@ describe('AgentRunPage', () => {
     render(<AgentRunPage />)
 
     fireEvent.click(screen.getAllByRole('button')[0])
-    await waitFor(() => expect(screen.getAllByText('run-a')).toHaveLength(2))
+    // 不锁定渲染次数：抽屉里的详情块数量属于布局细节，这里只关心数据到达/被清空。
+    await waitFor(() => expect(screen.getAllByText('run-a').length).toBeGreaterThan(0))
 
     fireEvent.click(screen.getAllByRole('button')[1])
 
@@ -88,7 +107,7 @@ describe('AgentRunPage', () => {
     await act(async () => {
       resolveRunB({ code: 200, data: { id: 'run-b' } })
     })
-    await waitFor(() => expect(screen.getAllByText('run-b')).toHaveLength(2))
+    await waitFor(() => expect(screen.getAllByText('run-b').length).toBeGreaterThan(0))
   })
 
   it('shows the provider raw response in run detail', async () => {

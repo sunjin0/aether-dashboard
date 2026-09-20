@@ -149,6 +149,7 @@ export interface KnowledgeBase {
   description?: string;
   visibility?: 'platform' | 'private' | 'shared';
   retrievalConfig?: RetrievalConfig | string;
+  chunkingConfig?: ChunkingConfig | string;
   reviewConfig?: ReviewConfig;
   indexStatus?: 0 | 1 | 2;
   referenceCount?: number;
@@ -174,6 +175,14 @@ export interface RetrievalConfig {
   authorityScore?: number;
   authorityWeight?: number;
   freshnessWeight?: number;
+}
+
+/** Knowledge-base chunking configuration, constrained for text-embedding-v4. */
+export interface ChunkingConfig {
+  strategy?: 'SEMANTIC' | 'MARKDOWN' | 'PARAGRAPH' | 'FIXED_LENGTH';
+  maxChars?: number;
+  overlapChars?: number;
+  maxTokens?: number;
 }
 
 export interface ReviewConfig {

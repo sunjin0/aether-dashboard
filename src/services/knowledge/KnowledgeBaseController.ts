@@ -1,10 +1,11 @@
 import { request } from '@umijs/max'
-import { KnowledgeBase, KnowledgeBaseSearchParams, RetrievalConfig, ReviewConfig } from '@/services/entity/Agent'
+import { ChunkingConfig, KnowledgeBase, KnowledgeBaseSearchParams, RetrievalConfig, ReviewConfig } from '@/services/entity/Agent'
 import { Option, ResponseStructure } from '@/services/entity/Common'
 
-type KnowledgeBaseMutation = Omit<KnowledgeBase, 'reviewConfig' | 'retrievalConfig'> & {
+type KnowledgeBaseMutation = Omit<KnowledgeBase, 'reviewConfig' | 'retrievalConfig' | 'chunkingConfig'> & {
   reviewConfig?: string;
   retrievalConfig?: string;
+  chunkingConfig?: string;
 };
 
 const parseReviewConfig = (value: ReviewConfig | string | undefined): ReviewConfig | undefined => {
@@ -25,10 +26,20 @@ const parseRetrievalConfig = (value: RetrievalConfig | string | undefined): Retr
   }
 }
 
+const parseChunkingConfig = (value: ChunkingConfig | string | undefined): ChunkingConfig | undefined => {
+  if (!value || typeof value !== 'string') return value as ChunkingConfig | undefined
+  try {
+    return JSON.parse(value) as ChunkingConfig
+  } catch {
+    return undefined
+  }
+}
+
 const normalizeKnowledgeBase = (item: KnowledgeBase): KnowledgeBase => ({
   ...item,
   reviewConfig: parseReviewConfig(item.reviewConfig),
   retrievalConfig: parseRetrievalConfig(item.retrievalConfig),
+  chunkingConfig: parseChunkingConfig(item.chunkingConfig),
 })
 
 export const getKnowledgeBaseList = async (

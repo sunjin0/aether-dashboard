@@ -53,6 +53,7 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
           status: Number(values.status),
           reviewConfig: JSON.stringify(values.reviewConfig),
           retrievalConfig: JSON.stringify(values.retrievalConfig || {}),
+          chunkingConfig: JSON.stringify(values.chunkingConfig || {}),
         }
         if (id) await updateKnowledgeBase({ ...payload, id })
         else await addKnowledgeBase(payload)
@@ -122,6 +123,36 @@ const KnowledgeBaseForm: React.FC<KnowledgeBaseFormProps> = ({ id, open, setOpen
           label={intl.formatMessage({ id: 'pages.knowledge.base.form.description' })}
           fieldProps={{ rows: 2, maxLength: 1000, showCount: true }}
         />
+      </ProCard>
+
+      <ProCard
+        title={intl.formatMessage({ id: 'pages.knowledge.base.form.chunkingConfig' })}
+        style={{ marginTop: 16 }}
+        className="knowledge-base-form-card"
+      >
+        <p className="knowledge-base-form-hint">
+          {intl.formatMessage({ id: 'pages.knowledge.base.form.chunkingConfigHint' })}
+        </p>
+        <Row gutter={16}>
+          <Col xs={24} md={12}>
+            <ProFormSelect
+              name={['chunkingConfig', 'strategy']}
+              label={intl.formatMessage({ id: 'pages.knowledge.base.form.chunking.strategy' })}
+              initialValue="SEMANTIC"
+              options={[
+                { value: 'SEMANTIC', label: intl.formatMessage({ id: 'pages.knowledge.base.form.chunking.strategy.semantic' }) },
+                { value: 'MARKDOWN', label: intl.formatMessage({ id: 'pages.knowledge.base.form.chunking.strategy.markdown' }) },
+                { value: 'PARAGRAPH', label: intl.formatMessage({ id: 'pages.knowledge.base.form.chunking.strategy.paragraph' }) },
+                { value: 'FIXED_LENGTH', label: intl.formatMessage({ id: 'pages.knowledge.base.form.chunking.strategy.fixedLength' }) },
+              ]}
+            />
+          </Col>
+        </Row>
+        <Row gutter={16}>
+          <Col xs={24} md={8}><ProFormDigit name={['chunkingConfig', 'maxChars']} label={intl.formatMessage({ id: 'pages.knowledge.base.form.chunking.maxChars' })} initialValue={2400} min={256} max={4096} fieldProps={{ precision: 0 }} /></Col>
+          <Col xs={24} md={8}><ProFormDigit name={['chunkingConfig', 'overlapChars']} label={intl.formatMessage({ id: 'pages.knowledge.base.form.chunking.overlapChars' })} initialValue={320} min={0} max={1024} fieldProps={{ precision: 0 }} rules={[{ validator: async (_, value) => { const maxChars = form.getFieldValue(['chunkingConfig', 'maxChars']) || 2400; if (value !== undefined && value > maxChars / 2) throw new Error(intl.formatMessage({ id: 'pages.knowledge.base.form.chunking.overlapCharsInvalid' })); } }]} /></Col>
+          <Col xs={24} md={8}><ProFormDigit name={['chunkingConfig', 'maxTokens']} label={intl.formatMessage({ id: 'pages.knowledge.base.form.chunking.maxTokens' })} initialValue={1400} min={128} max={2048} fieldProps={{ precision: 0 }} /></Col>
+        </Row>
       </ProCard>
 
       <ProCard

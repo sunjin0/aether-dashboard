@@ -25,7 +25,7 @@ export interface StreamAgentChatOptions {
   onToolCall?: (data: AgentStreamToolCallData) => void
   onAccepted?: (data: AgentStreamAcceptedData) => void
   onRunStep?: (data: AgentStreamRunStepData) => void
-  onProgress?: (data: { stage?: string; message?: string }) => void
+  onProgress?: (data: { stage?: string; message?: string; messageKey?: string }) => void
   onQuestion?: (data: AgentStreamQuestionData) => void
   onReplace?: (data: AgentStreamReplaceData) => void
   onDone?: (data: AgentStreamDoneData) => void
@@ -56,7 +56,7 @@ const dispatchStreamEvent = (event: EventSourceMessage, options: StreamAgentChat
       options.onToolCall?.(data as AgentStreamToolCallData)
       return
     case 'progress':
-      options.onProgress?.(data as { stage?: string; message?: string })
+      options.onProgress?.(data as { stage?: string; message?: string; messageKey?: string })
       return
     case 'question':
       options.onQuestion?.(data as AgentStreamQuestionData)

@@ -52,6 +52,7 @@ export interface AgentDefinition {
   maxTokens?: number;
   status?: number;
   maxToolRounds?: number;
+  reasoningStrategy?: 'DIRECT' | 'REACT';
   accessType?: string;
   executionMode?: 'STANDARD' | 'DEEP';
   /** Agent-specific mailbox used by send_email; it overrides the operator mailbox. */

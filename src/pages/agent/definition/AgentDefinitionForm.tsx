@@ -92,6 +92,21 @@ const AgentDefinitionForm = (props: {
         ]}
       />
       <ProFormDependency name={['executionMode']}>
+        {({ executionMode }) => executionMode === 'STANDARD' ? (
+          <ProFormSelect
+            name="reasoningStrategy"
+            label={format('pages.agent.definition.reasoningStrategy')}
+            tooltip={format('pages.agent.definition.reasoningStrategyTip')}
+            initialValue="REACT"
+            rules={[{ required: true }]}
+            options={[
+              { label: format('pages.agent.definition.reasoningStrategy.direct'), value: 'DIRECT' },
+              { label: format('pages.agent.definition.reasoningStrategy.react'), value: 'REACT' },
+            ]}
+          />
+        ) : null}
+      </ProFormDependency>
+      <ProFormDependency name={['executionMode']}>
         {({ executionMode }) => (
           <Form.Item
             name="systemPrompt"

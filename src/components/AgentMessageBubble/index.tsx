@@ -35,6 +35,7 @@ export interface AgentMessageBubbleProps {
       status?: 'running' | 'completed' | 'failed' | 'pending'
       actions?: Array<{ label: string; danger?: boolean; onClick: () => void }>
     }>
+    embeddedInteraction?: AgentMessage
   }
   align?: 'left' | 'right'
   compact?: boolean
@@ -309,6 +310,20 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
   const copyText = currentContent || currentReasoning
   const attachments = getAttachments(agentMessage.attachments)
   const executionEvents = agentMessage.executionEvents || []
+  const activeExecutionEvent = executionEvents.filter((event) =>
+    event.status === 'running' || event.status === 'pending',
+  ).slice(-1)[0]
+  const embeddedInteraction = agentMessage.embeddedInteraction
+  const embeddedQuestionStatus: InteractiveQuestionCardStatus =
+    embeddedInteraction?.interactionStatus === 'answered'
+      ? 'answered'
+      : embeddedInteraction?.interactionStatus === 'cancelled'
+        ? 'cancelled'
+        : embeddedInteraction?.interactionStatus === 'expired'
+          ? 'expired'
+          : status === 'streaming'
+            ? 'submitting'
+            : 'pending'
 
   useEffect(() => {
     if (reasoningContainerRef.current) {
@@ -330,7 +345,8 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
   // Tool protocol records remain in the conversation for model replay and audit.
   // The assistant bubble already renders its aggregated tool cards underneath,
   // so rendering them here would duplicate parameters and results above it.
-  if (agentMessage.messageType === 'tool_call' || agentMessage.messageType === 'tool_result') {
+  if (agentMessage.messageType === 'tool_call' || agentMessage.messageType === 'tool_result'
+    || String(agentMessage.messageType) === 'answer') {
     return null
   }
 
@@ -363,6 +379,7 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
       !agentMessage.reasoningContent &&
       !agentMessage.reasoningStream &&
       !executionEvents.length &&
+      !embeddedInteraction &&
       !(agentMessage.toolCallLogs && agentMessage.toolCallLogs.length > 0)
     ) {
       if (status === 'streaming') {
@@ -378,6 +395,17 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
 
     return (
       <>
+        {embeddedInteraction?.questionConfig && (
+          <div className="agent-message-bubble-embedded-interaction">
+            <InteractiveQuestionCard
+              questionConfig={embeddedInteraction.questionConfig}
+              content={embeddedInteraction.content}
+              status={embeddedQuestionStatus}
+              onSubmit={onQuestionSubmit}
+            />
+          </div>
+        )}
+
         {(agentMessage.reasoningContent || agentMessage.reasoningStream) && (
           <div className="agent-message-bubble-reasoning">
             <Collapse
@@ -403,11 +431,31 @@ const AgentMessageBubble: React.FC<AgentMessageBubbleProps> = ({
           </div>
         )}
 
-        {!!executionEvents.length && (
+        {status === 'streaming' && agentMessage.progressMessage && (
+          <div className="agent-message-bubble-live-progress" role="status">
+            <Spin size="small" />
+            <Text type="secondary">{agentMessage.progressMessage}</Text>
+          </div>
+        )}
+
+        {status === 'streaming' && activeExecutionEvent && (
+          <div className="agent-message-bubble-execution agent-message-bubble-execution-live">
+            <div className="agent-message-bubble-execution-list">
+              <div className="agent-message-bubble-execution-item">
+                <span className={`agent-message-bubble-execution-status agent-message-bubble-execution-status-${activeExecutionEvent.status || 'pending'}`} />
+                <div className="agent-message-bubble-execution-body">
+                  <div>{activeExecutionEvent.title}</div>
+                  {activeExecutionEvent.detail && <pre className="agent-message-bubble-execution-detail">{activeExecutionEvent.detail}</pre>}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!!executionEvents.length && status !== 'streaming' && (
           <div className="agent-message-bubble-execution">
             <Collapse
               size="small"
-              defaultActiveKey={status === 'streaming' ? ['execution'] : []}
               items={[
                 {
                   key: 'execution',

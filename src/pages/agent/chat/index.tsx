@@ -42,7 +42,7 @@ import {
   streamReplyAgentChat,
   uploadAgentChatAttachments,
 } from '@/services/agent/ChatController'
-import { cancelAgentRun, getAgentRunPlan } from '@/services/agent/RunController'
+import { cancelAgentRun, getAgentRunList, getAgentRunPlan, getAgentRunSteps } from '@/services/agent/RunController'
 import { getAgentSessionByConversation, getAgentSessionTimeline, getAgentTaskSnapshot, submitAgentTaskFeedback } from '@/services/agent/SessionController'
 import { getAgentArtifactByRun } from '@/services/agent/ArtifactController'
 import { cancelSandboxTask, getSandboxTaskByRun, retrySandboxTask } from '@/services/agent/SandboxTaskController'
@@ -69,6 +69,7 @@ import {
   AgentRunPlan,
   AgentTask,
   AgentTaskEvent,
+  AgentRunStep,
 } from '@/services/entity/Agent'
 import { Option } from '@/services/entity/Common'
 import AgentMessageBubble from '@/components/AgentMessageBubble'
@@ -100,6 +101,8 @@ type ChatMessage = AgentMessage & {
   reasoningStream?: string
   progressMessage?: string
   executionEvents?: ChatExecutionEvent[]
+  /** An approval is a step inside its owning assistant reply, not a second reply bubble. */
+  embeddedInteraction?: AgentMessage
 }
 
 type ChatExecutionEvent = {
@@ -233,22 +236,79 @@ const ChatDebugPage: React.FC = () => {
     setTaskPlanDrawerOpen(false)
   }
 
-  const addDeepRunStep = (data: AgentStreamRunStepData) => {
-    if (currentAgent?.executionMode !== 'DEEP') {
-      return
+  const getRunStepDetail = (data: AgentStreamRunStepData): string | undefined => {
+    const payload = (data.data || {}) as Record<string, unknown>
+    const number = (key: string) => typeof payload[key] === 'number' ? payload[key] : undefined
+    const strings = (key: string) => Array.isArray(payload[key])
+      ? payload[key].filter((item): item is string => typeof item === 'string')
+      : []
+    const durationMs = number('durationMs')
+    const withDuration = (detail?: string) => {
+      if (durationMs === undefined) return detail
+      const duration = durationMs < 1000
+        ? `${durationMs} ms`
+        : `${(durationMs / 1000).toFixed(durationMs < 10000 ? 1 : 0)} s`
+      const durationText = intl.formatMessage({ id: 'pages.agent.run.steps.detail.duration' }, { duration })
+      return detail ? `${detail} · ${durationText}` : durationText
     }
-    if (!deepRunIdRef.current && data.runId) {
+    if (data.eventType === 'chat.skill.resolved' && strings('skills').length) {
+      return intl.formatMessage({ id: 'pages.agent.run.steps.detail.skills' }, { skills: strings('skills').join(', ') })
+    }
+    if (data.eventType === 'chat.retrieval.started' && number('knowledgeBaseCount') !== undefined) {
+      return withDuration(intl.formatMessage({ id: 'pages.agent.run.steps.detail.knowledgeBases' }, { count: number('knowledgeBaseCount') }))
+    }
+    if (data.eventType === 'chat.retrieval.completed' && number('chunkCount') !== undefined) {
+      return withDuration(intl.formatMessage({ id: 'pages.agent.run.steps.detail.retrievalResult' }, {
+        documents: number('documentCount') || 0, chunks: number('chunkCount'),
+      }))
+    }
+    if (data.eventType === 'chat.context.assembled' && number('messageCount') !== undefined && number('estimatedTokens') !== undefined) {
+      return withDuration(intl.formatMessage({ id: 'pages.agent.run.steps.detail.context' }, {
+        messages: number('messageCount'), tokens: number('estimatedTokens'),
+      }))
+    }
+    if ((data.eventType === 'chat.tool.planned' || data.eventType === 'chat.tool.started') && strings('tools').length) {
+      return withDuration(intl.formatMessage({ id: 'pages.agent.run.steps.detail.tools' }, { tools: strings('tools').join(', ') }))
+    }
+    if (data.eventType === 'chat.tool.completed' && number('callCount') !== undefined) {
+      return withDuration(intl.formatMessage({ id: 'pages.agent.run.steps.detail.toolCalls' }, {
+        count: number('callCount'), success: number('successCount') || 0,
+      }))
+    }
+    if (data.eventType === 'chat.tool.result.validated' && typeof payload.valid === 'boolean') {
+      return withDuration(intl.formatMessage({ id: payload.valid
+        ? 'pages.agent.run.steps.detail.toolValidation.valid'
+        : 'pages.agent.run.steps.detail.toolValidation.invalid' }))
+    }
+    if (data.eventType === 'chat.answer.grounded' && number('citationCount') !== undefined
+      && typeof payload.toolResultVerified === 'boolean') {
+      return withDuration(intl.formatMessage({ id: 'pages.agent.run.steps.detail.grounding' }, {
+        citations: number('citationCount'),
+        toolResult: intl.formatMessage({ id: payload.toolResultVerified
+          ? 'pages.agent.run.steps.detail.grounding.toolVerified'
+          : 'pages.agent.run.steps.detail.grounding.noTool' }),
+      }))
+    }
+    return withDuration(typeof payload.error === 'string' ? payload.error
+      : typeof payload.outputSummary === 'string' ? payload.outputSummary
+        : typeof payload.summary === 'string' ? payload.summary
+          : typeof payload.message === 'string' ? payload.message : undefined)
+  }
+
+  const addDeepRunStep = (data: AgentStreamRunStepData) => {
+    const isDeepRun = currentAgent?.executionMode === 'DEEP'
+    if (isDeepRun && !deepRunIdRef.current && data.runId) {
       deepRunIdRef.current = data.runId
       setDeepRunId(data.runId)
     }
-    setDeepRunSteps((current) => mergeDeepRunSteps(current, data))
-    if (data.eventType === 'plan.updated' && data.runId) {
+    if (isDeepRun) setDeepRunSteps((current) => mergeDeepRunSteps(current, data))
+    if (isDeepRun && data.eventType === 'plan.updated' && data.runId) {
       void loadPersistedTaskPlan(data.runId, true)
     }
     // Deep Agent reports MCP lifecycle through run_step rather than the
     // regular Agent's tool_call event. Start artifact completion tracking as
     // soon as the platform generator is actually invoked.
-    if (data.eventType === 'tool.started' && data.data?.toolName === 'generate_artifact') {
+    if (isDeepRun && data.eventType === 'tool.started' && data.data?.toolName === 'generate_artifact') {
       artifactRequestedRef.current = true
       appendExecutionEvent(streamingAssistantIdRef.current, {
         id: `artifact-${data.eventId || data.occurredAt || Date.now()}`,
@@ -257,20 +317,20 @@ const ChatDebugPage: React.FC = () => {
       })
     }
     const title = getDeepStepDisplayText(data, intl.formatMessage)
-    const detail = data.data?.error || data.data?.outputSummary || data.data?.summary || data.data?.message
+    const detail = getRunStepDetail(data)
     if (title) {
       appendExecutionEvent(streamingAssistantIdRef.current, {
         id: `deep-${data.eventId || `${data.eventType}-${data.occurredAt}`}`,
         title,
         detail,
         status:
-          data.eventType?.endsWith('.failed') || data.eventType === 'run.failed'
+          data.eventType?.endsWith('.failed') || data.eventType === 'run.failed' || data.eventType === 'chat.cancelled'
             ? 'failed'
             : data.eventType?.endsWith('.completed') || data.eventType === 'run.completed'
               ? 'completed'
-              : data.eventType?.endsWith('.started') || data.eventType === 'run.started'
-                ? 'running'
-                : 'pending',
+              : data.eventType?.startsWith('chat.waiting.')
+                ? 'pending'
+                : 'running',
       })
     }
   }
@@ -460,7 +520,7 @@ const ChatDebugPage: React.FC = () => {
     }).catch(() => undefined)
   }
 
-  const setConversationMessages = (messageList: ChatMessage[]) => {
+  const setConversationMessages = (messageList: ChatMessage[], targetConversationId?: string) => {
     const executionEventsByMessageId = new Map(
       messages
         .filter((item) => item.id && item.executionEvents?.length)
@@ -471,10 +531,59 @@ const ChatDebugPage: React.FC = () => {
       executionEvents: item.id ? executionEventsByMessageId.get(item.id) : undefined,
     }))
     const pendingQuestion = findPendingQuestionMessage(restoredMessages)
+    const embeddedInteractions = new Map<string, ChatMessage>()
+    restoredMessages.forEach((item) => {
+      if (item.messageType === 'interaction' && item.parentMessageId) {
+        embeddedInteractions.set(item.parentMessageId, item)
+      }
+    })
+    const displayMessages = restoredMessages
+      .filter((item) => !(item.messageType === 'interaction' && item.parentMessageId))
+      .map((item) => item.id && embeddedInteractions.has(item.id)
+        ? { ...item, embeddedInteraction: embeddedInteractions.get(item.id) }
+        : item)
 
-    setMessages(restoredMessages)
+    setMessages(displayMessages)
     setPendingQuestionMessage(pendingQuestion)
     setChatTurnState(pendingQuestion ? 'waiting_user' : 'idle')
+    if (!targetConversationId) return
+    // Reload recovery: the transcript itself intentionally does not duplicate run-step data.
+    // Rehydrate it from the durable run ledger, keyed by the assistant message ID.
+    void (async () => {
+      try {
+        const runsResponse = await getAgentRunList({ current: 1, pageSize: 100, conversationId: targetConversationId })
+        const runs = runsResponse.code === 200 ? runsResponse.data || [] : []
+        const stepResponses = await Promise.all(runs.filter((run) => run.id && run.messageId).map(async (run) => ({
+          run,
+          response: await getAgentRunSteps(run.id!),
+        })))
+        const restoredEvents = new Map<string, ChatExecutionEvent[]>()
+        stepResponses.forEach(({ run, response }) => {
+          if (response.code !== 200 || !run.messageId) return
+          const events = (response.data || []).map((step: AgentRunStep) => {
+            let data: AgentStreamRunStepData['data'] = undefined
+            try { data = JSON.parse(step.data || '{}') } catch { /* invalid historical payload is ignored */ }
+            const streamStep: AgentStreamRunStepData = { runId: run.id, eventId: step.eventId, eventType: step.eventType, occurredAt: step.occurredAt, data }
+            return {
+              id: `run-${step.eventId || `${step.eventType}-${step.occurredAt}`}`,
+              title: getDeepStepDisplayText(streamStep, intl.formatMessage)
+                || intl.formatMessage({ id: 'pages.agent.run.steps.unknown' }, { eventType: step.eventType || 'none' }),
+              detail: getRunStepDetail(streamStep),
+              status: step.eventType?.endsWith('.failed') || step.eventType === 'chat.cancelled'
+                ? 'failed' as const : step.eventType?.endsWith('.completed') || step.eventType === 'chat.completed'
+                  ? 'completed' as const : step.eventType?.startsWith('chat.waiting.') && run.status === 3
+                    ? 'pending' as const : 'completed' as const,
+            }
+          })
+          if (events.length) restoredEvents.set(run.messageId, events)
+        })
+        setMessages((current) => current.map((item) => item.id && restoredEvents.has(item.id)
+          ? { ...item, executionEvents: restoredEvents.get(item.id) }
+          : item))
+      } catch {
+        // History remains available even when the optional process ledger cannot be loaded.
+      }
+    })()
   }
 
   const stopArtifactPolling = () => {
@@ -644,7 +753,7 @@ const ChatDebugPage: React.FC = () => {
         pageSize: 100,
       })
       if (code === 200) {
-        setConversationMessages(data || [])
+        setConversationMessages(data || [], id)
         try {
           const contextResult = await getAgentConversationContext(id)
           setConversationContext(contextResult.code === 200 ? contextResult.data : undefined)
@@ -687,7 +796,11 @@ const ChatDebugPage: React.FC = () => {
       return
     }
     updateAssistantMessage(assistantClientId, (item) => {
-      const currentEvents = item.executionEvents || []
+      const currentEvents = (item.executionEvents || []).map((current) =>
+        event.status === 'running' && current.status === 'running'
+          ? { ...current, status: 'completed' as const }
+          : current,
+      )
       const existingIndex = currentEvents.findIndex((current) => current.id === event.id)
       const executionEvents =
         existingIndex < 0
@@ -927,15 +1040,16 @@ const ChatDebugPage: React.FC = () => {
     // 乐观更新：标记已回答 + 写入答案到 questionConfig
     setMessages((current) =>
       current.map((item) => {
-        if (item.id !== questionMessageId) return item
+        const interaction = item.id === questionMessageId ? item : item.embeddedInteraction
+        if (!interaction || interaction.id !== questionMessageId) return item
 
         // 解析现有 questionConfig
         let parsed: any = null
         try {
           parsed =
-            typeof item.questionConfig === 'string'
-              ? JSON.parse(item.questionConfig)
-              : item.questionConfig
+            typeof interaction.questionConfig === 'string'
+              ? JSON.parse(interaction.questionConfig)
+              : interaction.questionConfig
         } catch {
           // ignore
         }
@@ -982,11 +1096,21 @@ const ChatDebugPage: React.FC = () => {
           }
         }
 
-        return {
-          ...item,
+        const answeredInteraction: ChatMessage = {
+          ...interaction,
           interactionStatus: 'answered',
-          questionConfig: parsed ? JSON.stringify(parsed) : item.questionConfig,
+          questionConfig: parsed ? JSON.stringify(parsed) : interaction.questionConfig,
         }
+        return item.id === questionMessageId
+          ? answeredInteraction
+          : {
+              ...item,
+              embeddedInteraction: answeredInteraction,
+              progressMessage: undefined,
+              executionEvents: (item.executionEvents || []).map((event) =>
+                event.status === 'pending' ? { ...event, status: 'completed' as const } : event,
+              ),
+            }
       }),
     )
 
@@ -1037,10 +1161,17 @@ const ChatDebugPage: React.FC = () => {
         onRunStep: addDeepRunStep,
         onToolCall: (data) => appendToolCallEvents(assistantClientId, data),
         onProgress: (data) => {
-          if (data.message) {
+          const progressText = data.messageKey
+            ? intl.formatMessage({ id: data.messageKey })
+            : data.message
+          updateAssistantMessage(assistantClientId, (item) => ({
+            ...item,
+            progressMessage: progressText,
+          }))
+          if (progressText) {
             appendExecutionEvent(assistantClientId, {
               id: `progress-${data.stage || 'default'}-${Date.now()}`,
-              title: data.message,
+              title: progressText,
               status: 'running',
             })
           }
@@ -1066,6 +1197,13 @@ const ChatDebugPage: React.FC = () => {
             reasoningStream: (item.reasoningStream || '') + chunk,
           }))
         },
+        onReplace: (data) => {
+          flushTypewriterQueue(assistantClientId)
+          updateAssistantMessage(assistantClientId, (item) => ({
+            ...item,
+            content: data.content || item.content,
+          }))
+        },
         onError: (data) => {
           terminalEventReceived = true
           flushTypewriterQueue(assistantClientId)
@@ -1079,9 +1217,12 @@ const ChatDebugPage: React.FC = () => {
           // question 事件：追加交互卡片，不清空当前流式 assistant
           questionReceived = true
           flushTypewriterQueue(assistantClientId)
+          const waitingTitle = data.interactionType === 'group'
+            ? intl.formatMessage({ id: 'pages.agent.run.steps.event.chatWaitingUserApproval' })
+            : intl.formatMessage({ id: 'pages.agent.chat.execution.waitingForUser' })
           appendExecutionEvent(assistantClientId, {
             id: `question-${data.messageId || Date.now()}`,
-            title: intl.formatMessage({ id: 'pages.agent.chat.execution.waitingForUser' }),
+            title: waitingTitle,
             status: 'pending',
           })
 
@@ -1097,19 +1238,25 @@ const ChatDebugPage: React.FC = () => {
             questionConfig: data.questionConfig ? JSON.stringify(data.questionConfig) : undefined,
           }
 
-          // 追加交互卡片（保留当前流式 assistant 消息）
-          setMessages((current) => [...current, interactionMessage])
+          // 审批是当前回复的一个执行步骤，不创建第二个助手气泡。
+          updateAssistantMessage(assistantClientId, (item) => ({
+            ...item,
+            progressMessage: waitingTitle,
+            embeddedInteraction: interactionMessage,
+          }))
 
           setPendingQuestionMessage(interactionMessage)
           setChatTurnState('waiting_user')
         },
         onDone: (data) => {
           terminalEventReceived = true
-          appendExecutionEvent(assistantClientId, {
-            id: `done-${data.messageId || Date.now()}`,
-            title: intl.formatMessage({ id: 'pages.agent.chat.execution.completed' }),
-            status: 'completed',
-          })
+          if (!data.waitingUser) {
+            appendExecutionEvent(assistantClientId, {
+              id: `done-${data.messageId || Date.now()}`,
+              title: intl.formatMessage({ id: 'pages.agent.chat.execution.completed' }),
+              status: 'completed',
+            })
+          }
           const doneConversationId = data.conversationId
           if (doneConversationId) {
             setConversationId(doneConversationId)
@@ -1302,14 +1449,17 @@ const ChatDebugPage: React.FC = () => {
         },
         onRunStep: addDeepRunStep,
         onProgress: (data) => {
+          const progressText = data.messageKey
+            ? intl.formatMessage({ id: data.messageKey })
+            : data.message
           updateAssistantMessage(assistantClientId, (item) => ({
             ...item,
-            progressMessage: data.message,
+            progressMessage: progressText,
           }))
-          if (data.message) {
+          if (progressText) {
             appendExecutionEvent(assistantClientId, {
               id: `progress-${data.stage || 'default'}-${Date.now()}`,
-              title: data.message,
+              title: progressText,
               status: 'running',
             })
           }
@@ -1342,6 +1492,13 @@ const ChatDebugPage: React.FC = () => {
             reasoningStream: (item.reasoningStream || '') + chunk,
           }))
         },
+        onReplace: (data) => {
+          flushTypewriterQueue(assistantClientId)
+          updateAssistantMessage(assistantClientId, (item) => ({
+            ...item,
+            content: data.content || item.content,
+          }))
+        },
         onError: (data) => {
           terminalEventReceived = true
           flushTypewriterQueue(assistantClientId)
@@ -1355,9 +1512,12 @@ const ChatDebugPage: React.FC = () => {
           // question 事件：追加交互卡片，不清空当前流式 assistant
           questionReceived = true
           flushTypewriterQueue(assistantClientId)
+          const waitingTitle = data.interactionType === 'group'
+            ? intl.formatMessage({ id: 'pages.agent.run.steps.event.chatWaitingUserApproval' })
+            : intl.formatMessage({ id: 'pages.agent.chat.execution.waitingForUser' })
           appendExecutionEvent(assistantClientId, {
             id: `question-${data.messageId || Date.now()}`,
-            title: intl.formatMessage({ id: 'pages.agent.chat.execution.waitingForUser' }),
+            title: waitingTitle,
             status: 'pending',
           })
 
@@ -1373,19 +1533,25 @@ const ChatDebugPage: React.FC = () => {
             questionConfig: data.questionConfig ? JSON.stringify(data.questionConfig) : undefined,
           }
 
-          // 追加交互卡片（保留当前流式 assistant 消息）
-          setMessages((current) => [...current, interactionMessage])
+          // 审批是当前回复的一个执行步骤，不创建第二个助手气泡。
+          updateAssistantMessage(assistantClientId, (item) => ({
+            ...item,
+            progressMessage: waitingTitle,
+            embeddedInteraction: interactionMessage,
+          }))
 
           setPendingQuestionMessage(interactionMessage)
           setChatTurnState('waiting_user')
         },
         onDone: (data) => {
           terminalEventReceived = true
-          appendExecutionEvent(assistantClientId, {
-            id: `done-${data.messageId || Date.now()}`,
-            title: intl.formatMessage({ id: 'pages.agent.chat.execution.completed' }),
-            status: 'completed',
-          })
+          if (!data.waitingUser) {
+            appendExecutionEvent(assistantClientId, {
+              id: `done-${data.messageId || Date.now()}`,
+              title: intl.formatMessage({ id: 'pages.agent.chat.execution.completed' }),
+              status: 'completed',
+            })
+          }
           const doneConversationId = data.conversationId
           if (doneConversationId) {
             setConversationId(doneConversationId)
@@ -2066,8 +2232,8 @@ const ChatDebugPage: React.FC = () => {
                             status={item.streamStatus}
                             errorMessage={item.errorMsg}
                             onQuestionSubmit={
-                              item.messageType === 'interaction' &&
-                              item.interactionStatus === 'pending'
+                              (item.messageType === 'interaction' && item.interactionStatus === 'pending') ||
+                              item.embeddedInteraction?.interactionStatus === 'pending'
                                 ? handleReplyQuestion
                                 : undefined
                             }

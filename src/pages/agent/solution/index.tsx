@@ -3,6 +3,7 @@ import { ActionType, PageContainer, ProColumns, ProTable } from '@ant-design/pro
 import { Button, Form, Input, Modal, Select, Space, Switch, Tag, message } from 'antd'
 import React, { useRef, useState } from 'react'
 import { getApplicationList, ApplicationRecord } from '@/services/agent/AgentApplicationController'
+import { useCreatorSearchColumn } from '@/components/CreatorSearchColumn'
 import { deleteSolution, getSolutionInstallations, getSolutionList, installSolution, rollbackSolution, saveSolution, SolutionInstallation, SolutionRecord, uninstallSolution } from '@/services/agent/SolutionController'
 
 const SolutionPage: React.FC = () => {
@@ -13,8 +14,10 @@ const SolutionPage: React.FC = () => {
   const [installations, setInstallations] = useState<SolutionInstallation[]>([])
   const [selectedApplication, setSelectedApplication] = useState<string>()
   const [form] = Form.useForm()
+  const creatorColumn = useCreatorSearchColumn<SolutionRecord>()
 
   const columns: ProColumns<SolutionRecord>[] = [
+    ...(creatorColumn ? [creatorColumn] : []),
     { title: '名称', dataIndex: 'name' },
     { title: '编码', dataIndex: 'code' },
     { title: '版本', dataIndex: 'version' },

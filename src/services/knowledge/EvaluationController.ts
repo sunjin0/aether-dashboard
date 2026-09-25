@@ -6,6 +6,7 @@ export interface EvaluationSet {
   name: string;
   description?: string;
   status?: number;
+  creatorUserId?: string;
 }
 export interface EvaluationCase {
   id?: string;
@@ -139,6 +140,7 @@ export const getEvaluationSets = (params?: {
   pageSize?: number;
   name?: string;
   agentDefinitionId?: string;
+  creatorUserId?: string;
 }) =>
   request<ResponseStructure<EvaluationSet[]>>('/api/knowledge/evaluation/sets', {
     method: 'GET',

@@ -12,6 +12,7 @@ import {
 } from '@/services/knowledge/ReviewController'
 import type { KnowledgeReviewTask, KnowledgeReviewTaskSearchParams } from '@/services/entity/Agent'
 import { getAdminOptions } from '@/services/sys/AdminController'
+import { useCreatorSearchColumn } from '@/components/CreatorSearchColumn'
 
 const reviewViews: NonNullable<KnowledgeReviewTaskSearchParams['view']>[] = [
   'available',
@@ -33,6 +34,7 @@ const KnowledgeReviewPage: React.FC = () => {
   const intl = useIntl()
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
   const [batchActing, setBatchActing] = useState(false)
+  const creatorColumn = useCreatorSearchColumn<KnowledgeReviewTask>()
 
   const labels: Record<string, { text: string; color: string }> = {
     pending: {
@@ -158,6 +160,7 @@ const KnowledgeReviewPage: React.FC = () => {
           </Space>
         )}
         columns={[
+          ...(creatorColumn ? [creatorColumn] : []),
           {
             title: intl.formatMessage({ id: 'pages.knowledge.review.documentTitle' }),
             dataIndex: 'documentTitle',

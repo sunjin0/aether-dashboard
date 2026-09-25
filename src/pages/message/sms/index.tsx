@@ -9,6 +9,7 @@ import Model from '@/components/Model'
 import { getOptionList } from '@/services/sys/DictController'
 import { deleteSmsInfo, getSmsList } from '@/services/msg/SmsController'
 import { SmsSearchParams } from '@/services/entity/Msg'
+import { useCreatorSearchColumn } from '@/components/CreatorSearchColumn'
 
 const Sms: React.FC = () => {
   const intl = useIntl()
@@ -16,7 +17,9 @@ const Sms: React.FC = () => {
   const permissionMap = useAccess()
   const path = history.location.pathname
   const write = permissionMap[path]
+  const creatorColumn = useCreatorSearchColumn<SmsSearchParams>()
   const columns: any[] = [
+    ...(creatorColumn ? [creatorColumn] : []),
     {
       title: intl.formatMessage({ id: 'pages.common.id' }),
       dataIndex: 'id',

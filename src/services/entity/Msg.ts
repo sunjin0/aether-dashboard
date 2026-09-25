@@ -5,6 +5,7 @@
 export interface SmsSearchParams extends Sms {
   current?: number;
   pageSize?: number;
+  creatorUserId?: string;
 }
 
 /**
@@ -32,6 +33,7 @@ export interface Sms {
 export interface EmailSearchParams extends Email {
   current?: number;
   pageSize?: number;
+  creatorUserId?: string;
 }
 /**
  * @description: 邮件

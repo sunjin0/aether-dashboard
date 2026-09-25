@@ -19,13 +19,14 @@ export interface AgentWorkflowCapability {
   inputSchema?: string
   outputSchema?: string
   updatedAt?: number | string
+  creatorUserId?: string
 }
 
 export type AgentWorkflowCapabilityRequest = Omit<AgentWorkflowCapability, 'id' | 'updatedAt'> & {
   id?: string
 }
 
-export const getAgentWorkflowCapabilities = (params: { applicationId?: string; workflowId?: string } = {}) =>
+export const getAgentWorkflowCapabilities = (params: { applicationId?: string; workflowId?: string; creatorUserId?: string } = {}) =>
   request<ResponseStructure<AgentWorkflowCapability[]>>('/api/agent/workflow-capability', {
     method: 'GET',
     params,

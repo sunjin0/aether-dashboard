@@ -8,6 +8,7 @@ import { PlusOutlined } from '@ant-design/icons'
 import { FormattedMessage, history, useAccess } from '@@/exports'
 import AuthorizationForm from '@/pages/sys/role/AuthorizationForm'
 import { deleteRoleInfo, getRoleList } from '@/services/sys/RoleController'
+import { getOptionList } from '@/services/sys/DictController'
 import { RoleSearchParams } from '@/services/entity/Sys'
 import TableActionMenu from '@/components/TableActionMenu'
 
@@ -25,6 +26,12 @@ const Role: React.FC = () => {
       title: intl.formatMessage({ id: 'pages.common.name' }),
       dataIndex: 'name',
       valueType: 'text',
+    },
+    {
+      title: intl.formatMessage({ id: 'pages.sys.role.type' }),
+      dataIndex: 'roleType',
+      valueType: 'select',
+      request: async () => getOptionList('System_Role_Type'),
     },
     {
       title: intl.formatMessage({ id: 'pages.common.description' }),

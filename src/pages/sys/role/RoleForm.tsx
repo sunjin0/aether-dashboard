@@ -2,7 +2,8 @@ import React from 'react'
 import DrawerForm from '@/components/DrawerForm'
 import { request, useIntl } from '@umijs/max'
 import { Form } from 'antd'
-import { ProFormText, ProFormTextArea } from '@ant-design/pro-components'
+import { ProFormSelect, ProFormText, ProFormTextArea } from '@ant-design/pro-components'
+import { getOptionList } from '@/services/sys/DictController'
 import { addRoleInfo, getRoleInfo, updateRoleInfo } from '@/services/sys/RoleController'
 import { RoleSearchParams } from '@/services/entity/Sys'
 
@@ -36,6 +37,12 @@ const RoleForm = (props: {
       <ProFormText
         name="name"
         label={intl.formatMessage({ id: 'pages.common.name' })}
+        rules={[{ required: true }]}
+      />
+      <ProFormSelect
+        name="roleType"
+        label={intl.formatMessage({ id: 'pages.sys.role.type' })}
+        request={async () => getOptionList('System_Role_Type')}
         rules={[{ required: true }]}
       />
       <ProFormText

@@ -35,6 +35,7 @@ import {
 import { getAgentDefinitionList } from '@/services/agent/AgentDefinitionController';
 import { getWorkflowList } from '@/services/workflow/workflow/WorkflowController';
 import { evaluationStatusMessageId } from '../status';
+import { useCreatorSearchColumn } from '@/components/CreatorSearchColumn';
 
 type TargetOption = { value: string; label: string; source: Record<string, unknown> };
 type ExperimentForm = {
@@ -55,6 +56,7 @@ const targetLabel = (target: TargetOption) => target.label;
 export default function EvaluationExperimentsPage() {
   const actionRef = useRef<ActionType>();
   const intl = useIntl();
+  const creatorColumn = useCreatorSearchColumn<EvaluationExperiment>();
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
@@ -215,6 +217,7 @@ export default function EvaluationExperimentsPage() {
   };
   const columns = useMemo<ProColumns<EvaluationExperiment>[]>(
     () => [
+      ...(creatorColumn ? [creatorColumn] : []),
       {
         title: intl.formatMessage({ id: 'pages.agentEvaluation.experiments.name' }),
         dataIndex: 'name',
@@ -270,7 +273,7 @@ export default function EvaluationExperimentsPage() {
         ),
       },
     ],
-    [intl],
+    [creatorColumn, intl],
   );
   const createButton = (
     <Button

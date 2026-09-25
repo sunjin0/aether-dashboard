@@ -5,7 +5,7 @@ export interface ApplicationRecord { id?: string; code: string; name: string; st
 
 export const getApplicationList = (): Promise<ResponseStructure<ApplicationRecord[]>> =>
   request('/api/agent/application/list', { method: 'POST', data: { current: 1, pageSize: 100 } })
-export interface AgentApplication { id: string; code: string; name: string; description?: string; status: number; maxAgentCallsPerHour?: number; maxWorkflowStartsPerHour?: number }
+export interface AgentApplication { id: string; code: string; name: string; description?: string; status: number; maxAgentCallsPerHour?: number; maxWorkflowStartsPerHour?: number; creatorUserId?: string }
 export const getAgentApplicationList = (data: Record<string, unknown> = {}) => request<ResponseStructure<AgentApplication[]>>('/api/agent/application/list', { method: 'POST', data })
 export const createAgentApplication = (data: Omit<AgentApplication, 'id'>) => request<ResponseStructure<void>>('/api/agent/application', { method: 'POST', data })
 export const updateAgentApplication = (id: string, data: Omit<AgentApplication, 'id'>) => request<ResponseStructure<void>>(`/api/agent/application/${id}`, { method: 'PUT', data })

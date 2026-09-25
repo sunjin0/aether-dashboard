@@ -116,6 +116,7 @@ export default {
   'pages.common.status': '状态',
   'pages.common.createTime': '创建时间',
   'pages.common.updateTime': '修改时间',
+  'pages.common.creator': '创建人',
   'pages.common.remark': '备注',
   'pages.common.type': '类型',
   'pages.common.sort.number': '排序号',
@@ -270,6 +271,7 @@ export default {
   'app.pwa.serviceworker.updated.hint': '刷新页面以获取最新版本。',
   //角色名
   'pages.sys.role.name': '角色名',
+  'pages.sys.role.type': '角色类型',
   //资源
   'pages.sys.resource.menu.icon': '图标',
   'pages.sys.resource.menu.path': '路径',
@@ -2319,6 +2321,7 @@ export default {
     '删除后该服务账号将无法使用，已签发令牌立即失效，确认删除？',
   'pages.serviceAccount.deleted': '服务账号已删除',
   'pages.serviceAccount.monitor': '使用监控',
+  'pages.serviceAccount.monitor.serviceAccount': '服务账号',
   'pages.serviceAccount.monitor.name': '名称',
   'pages.serviceAccount.monitor.calls': '调用次数',
   'pages.serviceAccount.monitor.tokens': 'Token 用量',

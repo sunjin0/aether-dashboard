@@ -46,6 +46,7 @@ import WorkflowInputs, {
   inputValue,
   submittedValue,
 } from '../WorkflowInputs';
+import { useCreatorSearchColumn } from '@/components/CreatorSearchColumn';
 
 const scheduleTypes = [
   'EVERY_5_MINUTES',
@@ -94,6 +95,7 @@ const WorkflowSchedulePage: React.FC = () => {
   const [busySchedules, setBusySchedules] = useState<string[]>([]);
   const [selectedWorkflow, setSelectedWorkflow] = useState<AgentWorkflow>();
   const t = (id: string, values?: Record<string, any>) => intl.formatMessage({ id }, values);
+  const creatorColumn = useCreatorSearchColumn<WorkflowSchedule>();
   const ref = useRef<ActionType>();
   const [open, setOpen] = useState(false);
   const [businessOpen, setBusinessOpen] = useState<string[]>([]);
@@ -319,10 +321,12 @@ const WorkflowSchedulePage: React.FC = () => {
                 : String(params.enabled) === 'true',
             current: params.current,
             pageSize: params.pageSize,
+            creatorUserId: params.creatorUserId,
           });
           return { data: result.data || [], success: result.code === 200, total: result.total };
         }}
         columns={[
+          ...(creatorColumn ? [creatorColumn] : []),
           { title: t('pages.agent.workflow.schedule.name'), dataIndex: 'name', width: 180 },
           {
             title: t('pages.agent.workflow.schedule.workflow'),

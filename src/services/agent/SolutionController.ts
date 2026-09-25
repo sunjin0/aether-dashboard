@@ -7,7 +7,7 @@ export interface SolutionRecord {
   version: string
   status?: number
   manifestJson?: string
-  tenantId?: string
+  creatorUserId?: string
 }
 
 export interface SolutionInstallation {
@@ -18,7 +18,7 @@ export interface SolutionInstallation {
   status?: number
 }
 
-export const getSolutionList = (params: { current?: number; pageSize?: number; name?: string }) =>
+export const getSolutionList = (params: { current?: number; pageSize?: number; name?: string; creatorUserId?: string }) =>
   request<{ data: SolutionRecord[]; total?: number }>('/api/agent/solution', { method: 'GET', params })
 
 export const saveSolution = (data: Partial<SolutionRecord>) =>

@@ -25,6 +25,7 @@ import { CopyOutlined, PlusOutlined } from '@ant-design/icons'
 import { useAccess } from '@@/exports'
 import TableActionMenu from '@/components/TableActionMenu'
 import DrawerForm from '@/components/DrawerForm'
+import { useCreatorSearchColumn } from '@/components/CreatorSearchColumn'
 import { getAgentApplicationList } from '@/services/agent/AgentApplicationController'
 import { getAgentProductProfiles } from '@/services/agent/AgentProductProfileController'
 import {
@@ -54,6 +55,7 @@ const ServiceAccountPage: React.FC = () => {
   const [products, setProducts] = useState<any[]>([])
   const write = Boolean(access[history.location.pathname])
   const t = (id: string, values?: Record<string, any>) => intl.formatMessage({ id }, values)
+  const creatorColumn = useCreatorSearchColumn<ServiceAccount>()
   const applicationName = (id?: string) =>
     applicationOptions.find((item) => item.value === id)?.label || id || '-'
   useEffect(() => {
@@ -282,7 +284,7 @@ const ServiceAccountPage: React.FC = () => {
         actionRef={actionRef}
         rowKey="id"
         search={{ labelWidth: 120 }}
-        columns={columns}
+        columns={[...(creatorColumn ? [creatorColumn] : []), ...columns]}
         request={getServiceAccountList}
         toolBarRender={() => [
           ...(write

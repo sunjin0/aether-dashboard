@@ -22,6 +22,7 @@ import React, { useMemo, useRef, useState } from 'react'
 import FileUploadModal from '@/components/FileUploadModal'
 import TemporaryUrlPreviewModal from '@/components/TemporaryUrlPreviewModal'
 import TableActionMenu from '@/components/TableActionMenu'
+import { useCreatorSearchColumn } from '@/components/CreatorSearchColumn'
 import { getKnowledgeBaseContext } from './query'
 
 const KnowledgeDocumentPage: React.FC = () => {
@@ -38,6 +39,7 @@ const KnowledgeDocumentPage: React.FC = () => {
   const access = useAccess()
   const canWrite = access['/knowledge/document']
   const [reviewStatusTab, setReviewStatusTab] = useState<string>('all')
+  const creatorColumn = useCreatorSearchColumn<Document>()
 
   const reviewStatusTabItems = useMemo(() => [
     {
@@ -303,7 +305,7 @@ const KnowledgeDocumentPage: React.FC = () => {
         actionRef={actionRef}
         formRef={formRef}
         rowKey="id"
-        columns={columns}
+        columns={[...(creatorColumn ? [creatorColumn] : []), ...columns]}
         scroll={{ x: 1300 }}
         form={{ initialValues: { knowledgeBaseId: knowledgeBase.id || undefined } }}
         params={{ reviewStatus: reviewStatusTab === 'all' ? undefined : reviewStatusTab }}

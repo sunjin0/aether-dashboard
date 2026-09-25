@@ -16,6 +16,7 @@ export type WorkflowSchedule = {
   lastErrorMessage?: string
   current?: number
   pageSize?: number
+  creatorUserId?: string
 }
 export const createWorkflowSchedule = (data: WorkflowSchedule) => request<ResponseStructure<WorkflowSchedule>>('/api/agent/workflow/schedules', { method: 'POST', data })
 export const getWorkflowSchedules = (data: Partial<WorkflowSchedule> = {}) => request<ResponseStructure<WorkflowSchedule[]>>('/api/agent/workflow/schedules/list', { method: 'POST', data })

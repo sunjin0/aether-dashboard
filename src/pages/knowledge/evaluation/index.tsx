@@ -21,6 +21,7 @@ import {
   updateEvaluationSet,
 } from '@/services/knowledge/EvaluationController';
 import './evaluation.less';
+import { useCreatorSearchColumn } from '@/components/CreatorSearchColumn';
 
 const { Paragraph, Text } = Typography;
 
@@ -32,6 +33,7 @@ export default function EvaluationSetListPage() {
   const format = (id: string, values?: Record<string, string | number>) =>
     intl.formatMessage({ id }, values);
   const canWrite = Boolean(access['/knowledge/evaluation']);
+  const creatorColumn = useCreatorSearchColumn<EvaluationSet>();
   const actionRef = useRef<ActionType>();
   const [agentOptions, setAgentOptions] = useState<Option[]>([]);
 
@@ -106,6 +108,7 @@ export default function EvaluationSetListPage() {
             pageSize: params.pageSize,
             name: params.name,
             agentDefinitionId: params.agentDefinitionId,
+            creatorUserId: params.creatorUserId,
           });
           return { data: response.data || [], total: response.total || 0, success: response.code === 200 };
         }}
@@ -129,6 +132,7 @@ export default function EvaluationSetListPage() {
           ) : null,
         ]}
         columns={[
+          ...(creatorColumn ? [creatorColumn] : []),
           {
             title: format('pages.knowledge.evaluation.setIdentity'),
             dataIndex: 'name',

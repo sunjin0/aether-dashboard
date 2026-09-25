@@ -29,6 +29,7 @@ import {
   WorkflowVersion,
 } from '@/services/workflow/workflow/WorkflowController'
 import { StructuredArrayField, StructuredObjectField, StructuredSchemaField, arrayToRows, objectToRows, schemaToRows, rowsToObject, rowsToSchema } from './StructuredJsonFields'
+import { useCreatorSearchColumn } from '@/components/CreatorSearchColumn'
 
 const actions = ['START', 'OBSERVE', 'STOP', 'PROVIDE_AGENT_INPUT', 'RESOLVE_MCP_APPROVAL', 'SIGNAL_EVENT', 'RETRY_NODE']
 const risks = ['LOW', 'MEDIUM', 'HIGH']
@@ -72,6 +73,7 @@ const serializeArray = (value: unknown, fallback: string[] = []) => {
 export default function AgentWorkflowCapabilityPage() {
   const intl = useIntl()
   const t = (id: string, values?: Record<string, string | number>) => intl.formatMessage({ id }, values)
+  const creatorColumn = useCreatorSearchColumn<AgentWorkflowCapability>()
   const tableRef = useRef<any>()
   const formRef = useRef<any>()
   const [open, setOpen] = useState(false)
@@ -176,6 +178,7 @@ export default function AgentWorkflowCapabilityPage() {
           const result = await getAgentWorkflowCapabilities({
             applicationId: params.applicationId,
             workflowId: params.workflowId,
+            creatorUserId: params.creatorUserId,
           })
           return {
             data: result.data || [],
@@ -189,6 +192,7 @@ export default function AgentWorkflowCapabilityPage() {
           </Button>,
         ]}
         columns={[
+          ...(creatorColumn ? [creatorColumn] : []),
           { title: t('pages.agent.workflowCapability.name'), dataIndex: 'displayName' },
           { title: t('pages.common.code'), dataIndex: 'capabilityCode' },
           {

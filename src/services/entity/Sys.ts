@@ -53,6 +53,7 @@ export interface RoleSearchParams extends Role {
 export interface Role {
   id?: number;
   name?: string;
+  roleType?: 'ADMIN' | 'USER' | string;
   description?: string;
   scope?: string;
   status?: number;

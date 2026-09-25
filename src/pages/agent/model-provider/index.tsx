@@ -25,7 +25,7 @@ import {
   Tag,
   Typography,
 } from 'antd'
-import { useAccess, useIntl } from '@@/exports'
+import { useAccess, useIntl, useModel } from '@@/exports'
 import dayjs from 'dayjs'
 import ModelProviderForm from './ModelProviderForm'
 import ModelCatalogForm from './ModelCatalogForm'
@@ -43,12 +43,15 @@ import {
 } from '@/services/agent/ModelProviderController'
 import { ModelCatalog, ModelProvider } from '@/services/entity/Agent'
 import './workbench.less'
+import { getAdminOptions } from '@/services/sys/AdminController'
 
 const capabilities = ['CHAT', 'VIDEO', 'AUDIO', 'MULTIMODAL', 'EMBEDDING', 'RERANK']
 
 const ModelProviderPage: React.FC = () => {
   const intl = useIntl()
   const text = (id: string, values?: Record<string, string>) => intl.formatMessage({ id }, values)
+  const { initialState } = useModel('@@initialState')
+  const isAdmin = initialState?.currentUser?.roleType === 'ADMIN'
   const dateTime = (value?: string | number) =>
     value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : '-'
   const write = Boolean(useAccess()['/agent/model-provider'])
@@ -68,6 +71,8 @@ const ModelProviderPage: React.FC = () => {
   const [discoverOpen, setDiscoverOpen] = useState(false)
   const [discoverLoading, setDiscoverLoading] = useState(false)
   const [savingDiscovered, setSavingDiscovered] = useState(false)
+  const [creatorUserId, setCreatorUserId] = useState<string>()
+  const [creatorOptions, setCreatorOptions] = useState<{ label: string; value: string }[]>([])
   const [discoveredModels, setDiscoveredModels] = useState<
     { label: string; value: string | number }[]
   >([])
@@ -84,7 +89,7 @@ const ModelProviderPage: React.FC = () => {
   const loadProviders = async () => {
     setLoading(true)
     try {
-      const result = await getModelProviderList({ current: 1, pageSize: 200 })
+      const result = await getModelProviderList({ current: 1, pageSize: 200, creatorUserId })
       const rows = result.data || []
       setProviders(rows)
       setSelectedId((current) =>
@@ -108,8 +113,12 @@ const ModelProviderPage: React.FC = () => {
     }
   }
   useEffect(() => {
+    if (!isAdmin) return
+    getAdminOptions().then((options) => setCreatorOptions(options.map((item) => ({ label: item.label, value: String(item.value) }))))
+  }, [isAdmin])
+  useEffect(() => {
     loadProviders()
-  }, [])
+  }, [creatorUserId])
   useEffect(() => {
     loadCatalogs(selectedId)
   }, [selectedId])
@@ -181,6 +190,18 @@ const ModelProviderPage: React.FC = () => {
           <Typography.Paragraph type="secondary">
             {text('pages.agent.modelWorkbench.connectionsHint')}
           </Typography.Paragraph>
+          {isAdmin && (
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              value={creatorUserId}
+              options={creatorOptions}
+              placeholder={text('pages.common.creator')}
+              style={{ width: 220 }}
+              onChange={setCreatorUserId}
+            />
+          )}
         </div>
         {write && (
           <Button

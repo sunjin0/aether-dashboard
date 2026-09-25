@@ -40,6 +40,7 @@ import MarkdownText from '@/components/MarkdownText'
 import AgentRunInputModules from './AgentRunInputModules'
 import AgentRunStepsTimeline from './AgentRunStepsTimeline'
 import './index.less'
+import { useCreatorSearchColumn } from '@/components/CreatorSearchColumn'
 import {
   ApiOutlined,
   CheckCircleFilled,
@@ -109,6 +110,7 @@ const AgentRunPage: React.FC = () => {
   const agentDefinitionIdRef = useRef<string>()
   const detailRequestTokenRef = useRef(0)
   const statisticsRequestTokenRef = useRef(0)
+  const creatorColumn = useCreatorSearchColumn<AgentRun>()
 
   const loadStatistics = useCallback(
     async (
@@ -490,7 +492,7 @@ const AgentRunPage: React.FC = () => {
           void loadStatistics(dateRange, queryParams.agentDefinitionId)
           return getAgentRunList(queryParams)
         }}
-        columns={columns}
+        columns={[...(creatorColumn ? [creatorColumn] : []), ...columns]}
         toolBarRender={() => [
           <Button key="export-audit" icon={<DownloadOutlined />} onClick={async () => {
             const blob = await downloadToolAuditCsv(dateRange ? { startTime: dateRange[0].valueOf(), endTime: dateRange[1].valueOf() } : undefined)

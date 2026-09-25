@@ -116,6 +116,7 @@ export default {
   'pages.common.status': 'Status',
   'pages.common.createTime': 'Create Time',
   'pages.common.updateTime': 'Update Time',
+  'pages.common.creator': 'Created by',
   'pages.common.remark': 'Remark',
   'pages.common.type': 'Type',
   'pages.common.sort.number': 'Sort Number',
@@ -277,6 +278,7 @@ export default {
   'pages.common.password': 'Password',
   //角色名
   'pages.sys.role.name': 'Role Name',
+  'pages.sys.role.type': 'Role Type',
   //资源
   'pages.sys.resource.menu.icon': 'Icon',
   'pages.sys.resource.menu.path': 'Path',
@@ -2415,6 +2417,7 @@ export default {
     'Deleting disables this service account and immediately invalidates issued tokens. Delete?',
   'pages.serviceAccount.deleted': 'Service account deleted',
   'pages.serviceAccount.monitor': 'Usage Monitor',
+  'pages.serviceAccount.monitor.serviceAccount': 'Service account',
   'pages.serviceAccount.monitor.name': 'Name',
   'pages.serviceAccount.monitor.calls': 'Calls',
   'pages.serviceAccount.monitor.tokens': 'Tokens',

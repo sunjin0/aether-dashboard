@@ -2,10 +2,10 @@ import { request } from '@umijs/max';
 import type { ResponseStructure } from '@/services/entity/Common';
 
 export type EvaluationTargetType = 'AGENT' | 'WORKFLOW';
-export interface EvaluationDataset { id?: string; name: string; description?: string; targetType: EvaluationTargetType; revision?: number; archived?: boolean; }
+export interface EvaluationDataset { id?: string; name: string; description?: string; targetType: EvaluationTargetType; revision?: number; archived?: boolean; creatorUserId?: string; }
 export interface EvaluationDatasetVersion { id: string; datasetId: string; versionNo: number; caseCount?: number; contentHash?: string; publishedAt?: number; }
 export interface EvaluationCase { id?: string; datasetId?: string; caseKey: string; name?: string; inputJson: string; referenceJson?: string; assertionsJson?: string; evaluatorBindingsJson?: string; enabled?: boolean; required?: boolean; passThreshold?: number; }
-export interface EvaluationExperiment { id?: string; name: string; targetType: EvaluationTargetType; targetId: string; snapshotId: string; datasetVersionId: string; selectionJson?: string; configJson?: string; countsJson?: string; metricsJson?: string; status?: string; qualityStatus?: string; revision?: number; reportRevision?: number; }
+export interface EvaluationExperiment { id?: string; name: string; targetType: EvaluationTargetType; targetId: string; snapshotId: string; datasetVersionId: string; selectionJson?: string; configJson?: string; countsJson?: string; metricsJson?: string; status?: string; qualityStatus?: string; revision?: number; reportRevision?: number; creatorUserId?: string; }
 export interface EvaluationTargetSnapshot { id?: string; targetType: EvaluationTargetType; targetId: string; sourceKind?: string; sourceVersionId?: string; snapshotJson?: string; }
 export interface EvaluationResult { id: string; experimentId: string; executionStatus?: string; gradingStatus?: string; reviewStatus?: string; reviewComment?: string; score?: number; errorCode?: string; outputJson?: string; evidenceJson?: string; }
 export interface EvaluationScore { id: string; evaluatorVersionId?: string; bindingKey?: string; status?: string; score?: number; weight?: number; reason?: string; }
@@ -56,7 +56,7 @@ export const rerunFailedEvaluation = (id: string, data: { expectedReportRevision
 export const setEvaluationBaseline = (experimentId: string) => request<ResponseStructure<EvaluationBaseline>>('/api/evaluation/experiments/baselines', { method: 'PUT', data: { experimentId } });
 export const listEvaluationBaselines = (params?: Partial<Pick<EvaluationBaseline, 'targetType' | 'targetId' | 'datasetVersionId' | 'configHash'>>) => request<ResponseStructure<EvaluationBaseline[]>>('/api/evaluation/experiments/baselines', { params });
 export const getEvaluationComparison = (baselineId: string, candidateId: string) => request<ResponseStructure<EvaluationComparison>>('/api/evaluation/experiments/comparisons', { params: { baselineId, candidateId } });
-export const listEvaluationEvaluators = () => request<ResponseStructure<EvaluationEvaluator[]>>('/api/evaluation/evaluators');
+export const listEvaluationEvaluators = (params?: { creatorUserId?: string }) => request<ResponseStructure<EvaluationEvaluator[]>>('/api/evaluation/evaluators', { params });
 export const listEvaluationEvaluatorVersions = (id: string) => request<ResponseStructure<EvaluationEvaluatorVersion[]>>(`/api/evaluation/evaluators/${id}/versions`);
 export const createEvaluationEvaluator = (data: EvaluationEvaluator) => request<ResponseStructure<string>>('/api/evaluation/evaluators', { method: 'POST', data });
 export const updateEvaluationEvaluator = (id: string, data: Partial<EvaluationEvaluator>) => request<ResponseStructure<void>>(`/api/evaluation/evaluators/${id}`, { method: 'PUT', data });

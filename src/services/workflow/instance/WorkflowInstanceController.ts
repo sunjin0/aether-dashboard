@@ -19,8 +19,8 @@ export type WorkflowPendingSubflowInteraction = {
   answerable?: boolean
   deadlineAt?: number
 }
-export type WorkflowInstance = { id: string; workflowId: string; workflowName?: string; status: string; startedAt?: number; completedAt?: number; variables?: string; currentNodeId?: string; errorMessage?: string; versionNodes?: string; versionEdges?: string; nodes?: WorkflowNodeInstance[]; businessType?: string; businessId?: string; idempotencyKey?: string; deadlineAt?: number; current?: number; pageSize?: number; pendingSubflowInteraction?: WorkflowPendingSubflowInteraction }
-export type WorkflowInstanceQuery = Partial<Pick<WorkflowInstance, 'workflowId' | 'status' | 'businessType' | 'businessId' | 'current' | 'pageSize'>>
+export type WorkflowInstance = { id: string; workflowId: string; workflowName?: string; status: string; startedAt?: number; completedAt?: number; variables?: string; currentNodeId?: string; errorMessage?: string; versionNodes?: string; versionEdges?: string; nodes?: WorkflowNodeInstance[]; businessType?: string; businessId?: string; idempotencyKey?: string; deadlineAt?: number; current?: number; pageSize?: number; creatorUserId?: string; pendingSubflowInteraction?: WorkflowPendingSubflowInteraction }
+export type WorkflowInstanceQuery = Partial<Pick<WorkflowInstance, 'workflowId' | 'status' | 'businessType' | 'businessId' | 'current' | 'pageSize' | 'creatorUserId'>>
 export type WorkflowBusinessStart = { variables: Record<string, unknown>; businessType: string; businessId: string; idempotencyKey: string; callbackUrl?: string; deadlineAt?: number }
 export type WorkflowCallbackDelivery = { id: string; instanceId: string; eventType: string; status: string; attemptCount?: number; responseStatus?: number; errorMessage?: string; deliveredAt?: number }
 export type WorkflowExternalInvocation = { id: string; nodeId: string; invocationType: string; status: string; idempotencyKey: string; url?: string; errorMessage?: string; requestData?: string; responseData?: string; createdAt?: number }

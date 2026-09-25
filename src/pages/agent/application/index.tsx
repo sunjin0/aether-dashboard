@@ -12,6 +12,7 @@ import {
 import DrawerForm from '@/components/DrawerForm'
 import { Button, Descriptions, Modal, Popconfirm, Space, message } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
+import { useCreatorSearchColumn } from '@/components/CreatorSearchColumn'
 import {
   AgentApplication,
   AgentApplicationUsage,
@@ -31,6 +32,7 @@ export default function AgentApplicationPage() {
   const [current, setCurrent] = useState<AgentApplication | undefined>()
   const [usage, setUsage] = useState<AgentApplicationUsage>()
   const [usageOpen, setUsageOpen] = useState(false)
+  const creatorColumn = useCreatorSearchColumn<AgentApplication>()
   const submit = async (value: any) => {
     const result = current
       ? await updateAgentApplication(current.id, value)
@@ -70,6 +72,7 @@ export default function AgentApplicationPage() {
           </Button>,
         ]}
         columns={[
+          ...(creatorColumn ? [creatorColumn] : []),
           { title: t('pages.common.code'), dataIndex: 'code' },
           { title: t('pages.common.name'), dataIndex: 'name' },
           { title: t('pages.common.description'), dataIndex: 'description', hideInTable: true },

@@ -110,7 +110,7 @@ export const issueServiceAccountToken = (clientId: string, clientSecret: string)
     method: 'POST',
     data: { clientId, clientSecret },
   });
-export const getServiceAccountUsage = (days: number = 7) =>
+export const getServiceAccountUsage = (days: number = 7, serviceAccountId?: string) =>
   request<ResponseStructure<ServiceAccountUsage>>('/api/sys/service-account/usage', {
-    params: { days },
+    params: { days, serviceAccountId },
   });

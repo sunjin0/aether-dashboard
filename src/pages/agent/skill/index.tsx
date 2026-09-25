@@ -24,6 +24,7 @@ import { getOptionList } from '@/services/sys/DictController'
 import TableActionMenu from '@/components/TableActionMenu'
 import './index.less'
 import { SystemIcon } from '@/components/SystemIconPicker'
+import { useCreatorSearchColumn, useCreatorSearchOptions } from '@/components/CreatorSearchColumn'
 
 const SkillPage: React.FC = () => {
   const ref = useRef<ActionType>()
@@ -33,6 +34,8 @@ const SkillPage: React.FC = () => {
   const intl = useIntl()
   const format = (id: string, values?: Record<string, string>) =>
     intl.formatMessage({ id }, values)
+  const creatorColumn = useCreatorSearchColumn<AgentSkill>()
+  const { isAdmin: isCreatorAdmin, options: creatorOptions } = useCreatorSearchOptions()
 
   const [formOpen, setFormOpen] = useState(false)
   const [formId, setFormId] = useState<string | undefined>(undefined)
@@ -50,6 +53,7 @@ const SkillPage: React.FC = () => {
   const [keyword, setKeyword] = useState('')
   const [filterCategory, setFilterCategory] = useState<string>()
   const [filterStatus, setFilterStatus] = useState<0 | 1 | 2>()
+  const [creatorUserId, setCreatorUserId] = useState<string>()
   const [routingConfigOpen, setRoutingConfigOpen] = useState(false)
   const [routingProviders, setRoutingProviders] = useState<{ label: string; value: string }[]>([])
   const [routingConfigLoading, setRoutingConfigLoading] = useState(false)
@@ -341,7 +345,7 @@ const SkillPage: React.FC = () => {
         </section>
       </Spin>
       <main className="skill-table-panel">
-        <div className="skill-filter-bar"><Input allowClear prefix={<SearchOutlined />} placeholder={format('pages.agent.skill.searchPlaceholder')} value={keyword} onChange={(event) => setKeyword(event.target.value)} onPressEnter={reload} /><Select value={filterStatus} placeholder={format('pages.agent.skill.allDeliveryStatuses')} allowClear options={[{ label: format('pages.agent.skill.draftPending'), value: 0 }, { label: format('pages.common.enabled'), value: 1 }, { label: format('pages.common.disabled'), value: 2 }]} onChange={(value) => changeFilter(() => setFilterStatus(value as 0 | 1 | 2 | undefined))} /><Select value={filterCategory} placeholder={format('pages.agent.skill.allCategories')} allowClear options={categoryOptions} onChange={(value) => changeFilter(() => setFilterCategory(value))} /><Button icon={<ReloadOutlined />} onClick={refreshPage}>{format('pages.common.refresh')}</Button></div>
+        <div className="skill-filter-bar"><Input allowClear prefix={<SearchOutlined />} placeholder={format('pages.agent.skill.searchPlaceholder')} value={keyword} onChange={(event) => setKeyword(event.target.value)} onPressEnter={reload} /><Select value={filterStatus} placeholder={format('pages.agent.skill.allDeliveryStatuses')} allowClear options={[{ label: format('pages.agent.skill.draftPending'), value: 0 }, { label: format('pages.common.enabled'), value: 1 }, { label: format('pages.common.disabled'), value: 2 }]} onChange={(value) => changeFilter(() => setFilterStatus(value as 0 | 1 | 2 | undefined))} /><Select value={filterCategory} placeholder={format('pages.agent.skill.allCategories')} allowClear options={categoryOptions} onChange={(value) => changeFilter(() => setFilterCategory(value))} />{isCreatorAdmin && <Select value={creatorUserId} placeholder={format('pages.common.creator')} allowClear showSearch optionFilterProp="label" options={creatorOptions} onChange={(value) => changeFilter(() => setCreatorUserId(value))} />}<Button icon={<ReloadOutlined />} onClick={refreshPage}>{format('pages.common.refresh')}</Button></div>
         <ProTable<AgentSkill>
           className="skill-center-table"
           actionRef={ref}
@@ -350,8 +354,8 @@ const SkillPage: React.FC = () => {
           search={false}
           options={false}
           headerTitle={false}
-          request={async (params: AgentSkillSearchParams) => getSkillList({ ...params, name: keyword || undefined, category: filterCategory, status: filterStatus })}
-          columns={columns}
+          request={async (params: AgentSkillSearchParams) => getSkillList({ ...params, name: keyword || undefined, category: filterCategory, status: filterStatus, creatorUserId: isCreatorAdmin ? creatorUserId : undefined })}
+          columns={[...(creatorColumn ? [creatorColumn] : []), ...columns]}
         />
       </main>
       <SkillForm

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { useIntl } from '@umijs/max'
+import { useIntl, useModel } from '@umijs/max'
 import { Badge, Button, Card, Col, DatePicker, Empty, Input, Modal, Pagination, Row, Segmented, Select, Skeleton, Tooltip, Typography } from 'antd'
 import { DeleteOutlined, DownloadOutlined, EyeOutlined, FileExcelOutlined, FileOutlined, FilePdfOutlined, FileTextOutlined, InboxOutlined, RedoOutlined, SearchOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
@@ -7,6 +7,7 @@ import TemporaryUrlPreviewModal from '@/components/TemporaryUrlPreviewModal'
 import { getAgentDefinitionOptions } from '@/services/agent/AgentDefinitionController'
 import { createArtifactPreviewUrl, downloadAgentArtifact, getAgentArtifactList, recycleAgentArtifact, restoreAgentArtifact } from '@/services/agent/ArtifactController'
 import type { AgentArtifact, AgentArtifactSearchParams } from '@/services/entity/Agent'
+import { getAdminOptions } from '@/services/sys/AdminController'
 import './index.less'
 
 const { RangePicker } = DatePicker
@@ -30,11 +31,15 @@ const fileIcon = (fileName?: string) => {
 
 const AgentArtifactPage: React.FC = () => {
   const intl = useIntl()
+  const { initialState } = useModel('@@initialState')
+  const isAdmin = initialState?.currentUser?.roleType === 'ADMIN'
   const t = (id: string, values?: Record<string, string | number>) => intl.formatMessage({ id }, values)
   const [recycled, setRecycled] = useState(false)
   const [keyword, setKeyword] = useState<string>()
   const [extension, setExtension] = useState<string>()
   const [agentDefinitionId, setAgentDefinitionId] = useState<string>()
+  const [creatorUserId, setCreatorUserId] = useState<string>()
+  const [creatorOptions, setCreatorOptions] = useState<{ label: string; value: string }[]>([])
   const [range, setRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>()
   const [agentOptions, setAgentOptions] = useState<{ label: string; value: string }[]>([])
   const [records, setRecords] = useState<AgentArtifact[]>([])
@@ -47,10 +52,11 @@ const AgentArtifactPage: React.FC = () => {
     fileName: keyword?.trim() || undefined,
     extension,
     agentDefinitionId,
+    creatorUserId: isAdmin ? creatorUserId : undefined,
     startTime: range?.[0]?.startOf('day').valueOf(),
     endTime: range?.[1]?.endOf('day').valueOf(),
     recycled,
-  }), [agentDefinitionId, extension, keyword, range, recycled])
+  }), [agentDefinitionId, creatorUserId, extension, isAdmin, keyword, range, recycled])
 
   const load = async () => {
     setLoading(true)
@@ -68,10 +74,20 @@ const AgentArtifactPage: React.FC = () => {
   useEffect(() => {
     getAgentDefinitionOptions().then(options => setAgentOptions(options.map(item => ({ label: item.label, value: String(item.value) })))).catch(() => setAgentOptions([]))
   }, [])
+  useEffect(() => {
+    if (!isAdmin) {
+      setCreatorOptions([])
+      setCreatorUserId(undefined)
+      return
+    }
+    getAdminOptions()
+      .then(options => setCreatorOptions(options.map(item => ({ label: item.label, value: String(item.value) }))))
+      .catch(() => setCreatorOptions([]))
+  }, [isAdmin])
   useEffect(() => { load() }, [current, pageSize, query])
 
   const updateFilters = (callback: () => void) => { setCurrent(1); callback() }
-  const reset = () => updateFilters(() => { setKeyword(undefined); setExtension(undefined); setAgentDefinitionId(undefined); setRange(null) })
+  const reset = () => updateFilters(() => { setKeyword(undefined); setExtension(undefined); setAgentDefinitionId(undefined); setCreatorUserId(undefined); setRange(null) })
   const switchView = (value: string | number) => updateFilters(() => setRecycled(value === 'recycled'))
   const recycle = (record: AgentArtifact) => {
     if (!record.id) return
@@ -93,6 +109,7 @@ const AgentArtifactPage: React.FC = () => {
         <div className="agent-artifact-filter-fields">
           <Select allowClear placeholder={t('pages.agent.artifact.format')} value={extension} onChange={value => updateFilters(() => setExtension(value))} options={['PDF', 'DOCX', 'XLSX', 'TXT'].map(value => ({ label: value, value }))} />
           <Select allowClear showSearch optionFilterProp="label" placeholder={t('pages.agent.artifact.sourceAgent')} value={agentDefinitionId} onChange={value => updateFilters(() => setAgentDefinitionId(value))} options={agentOptions} />
+          {isAdmin && <Select allowClear showSearch optionFilterProp="label" placeholder={t('pages.common.creator')} value={creatorUserId} onChange={value => updateFilters(() => setCreatorUserId(value))} options={creatorOptions} />}
           <RangePicker value={range} onChange={value => updateFilters(() => setRange(value as [dayjs.Dayjs, dayjs.Dayjs] | null))} />
           <Button type="link" onClick={reset}>{t('pages.agent.artifact.reset')}</Button>
         </div>

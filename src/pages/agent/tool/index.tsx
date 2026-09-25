@@ -40,6 +40,7 @@ import './index.less';
 import { getOptionList } from '@/services/sys/DictController';
 import TableActionMenu from '@/components/TableActionMenu';
 import { SystemIcon } from '@/components/SystemIconPicker';
+import { useCreatorSearchColumn, useCreatorSearchOptions } from '@/components/CreatorSearchColumn';
 const toolTypesMap = [
   { value: 'knowledge', icon: <DatabaseOutlined /> },
   { value: 'ops', icon: <ToolOutlined /> },
@@ -87,6 +88,9 @@ const AgentToolPage: React.FC = () => {
   const write = permissionMap[history.location.pathname];
   const format = (id: string, values?: Record<string, string | number>) =>
     intl.formatMessage({ id }, values);
+  const creatorColumn = useCreatorSearchColumn<AgentTool>();
+  const { isAdmin: isCreatorAdmin, options: creatorOptions } = useCreatorSearchOptions();
+  const [creatorUserId, setCreatorUserId] = useState<string>();
   const refresh = () => ref.current?.reloadAndRest?.();
   const [toolTypes, setToolTypes] = useState<any>([]);
   useEffect(() => {
@@ -504,6 +508,17 @@ const AgentToolPage: React.FC = () => {
               }))}
               onChange={(value) => changeFilter(() => setMcpServerId(value))}
             />
+            {isCreatorAdmin && (
+              <Select
+                value={creatorUserId}
+                placeholder={format('pages.common.creator')}
+                allowClear
+                showSearch
+                optionFilterProp="label"
+                options={creatorOptions}
+                onChange={(value) => changeFilter(() => setCreatorUserId(value))}
+              />
+            )}
             <Space className="tool-filter-actions">
               <Button icon={<ReloadOutlined />} onClick={refreshPage}>
                 {format('pages.common.refresh')}
@@ -553,7 +568,7 @@ const AgentToolPage: React.FC = () => {
               }),
             }}
             scroll={{ x: 1100 }}
-            columns={columns}
+            columns={[...(creatorColumn ? [creatorColumn] : []), ...columns]}
             request={(params: AgentToolSearchParams) =>
               getAgentToolList({
                 ...params,
@@ -561,6 +576,7 @@ const AgentToolPage: React.FC = () => {
                 toolType,
                 status,
                 mcpServerId,
+                creatorUserId: isCreatorAdmin ? creatorUserId : undefined,
               })
             }
             pagination={{

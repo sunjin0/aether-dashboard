@@ -5,6 +5,7 @@ import { Button, Modal, Select, Tag, message } from 'antd'
 import { PlayCircleOutlined, PlusOutlined } from '@ant-design/icons'
 import { AgentWorkflow, getWorkflowList } from '@/services/workflow/workflow/WorkflowController'
 import { getWorkflowInstances, WorkflowInstance } from '@/services/workflow/instance/WorkflowInstanceController'
+import { useCreatorSearchColumn } from '@/components/CreatorSearchColumn'
 
 const statusColor: Record<string, string> = {
   RUNNING: 'processing', WAITING_USER: 'warning', WAITING_SUBFLOW: 'warning', WAITING_EVENT: 'warning', WAITING_DELAY: 'warning', FAILED: 'error', COMPLETED: 'success', TERMINATED: 'default', TIMED_OUT: 'error', PENDING: 'default',
@@ -17,6 +18,7 @@ const WorkflowInstancesPage: React.FC = () => {
   const t = (id: string) => intl.formatMessage({ id })
   const { initialState } = useModel('@@initialState')
   const canStart = Boolean(initialState?.currentUser?.permissionMap?.['/workflow/run'])
+  const creatorColumn = useCreatorSearchColumn<WorkflowInstance>()
   const [startOpen, setStartOpen] = useState(false)
   const [workflows, setWorkflows] = useState<AgentWorkflow[]>([])
   const [workflowId, setWorkflowId] = useState<string>()
@@ -121,7 +123,7 @@ const WorkflowInstancesPage: React.FC = () => {
             </Button>
           ) : undefined,
         ]}
-        columns={columns}
+        columns={[...(creatorColumn ? [creatorColumn] : []), ...columns]}
         request={(params) =>
           getWorkflowInstances({ ...params, current: params.current, pageSize: params.pageSize })
         }

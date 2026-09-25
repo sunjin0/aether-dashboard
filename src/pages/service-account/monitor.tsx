@@ -77,18 +77,21 @@ const ServiceAccountMonitorPage: React.FC = () => {
   const intl = useIntl();
   const [loading, setLoading] = useState(false);
   const [rangeDays, setRangeDays] = useState(7);
+  const [serviceAccountId, setServiceAccountId] = useState<string>();
+  const [serviceAccounts, setServiceAccounts] = useState<ServiceAccountUsageItem[]>([]);
   const [accountMetric, setAccountMetric] = useState<MetricKey>('tokens');
   const [rankingType, setRankingType] = useState<RankingType>();
   const [selectedItem, setSelectedItem] = useState<ServiceAccountUsageItem>();
   const [usage, setUsage] = useState<ServiceAccountUsage>();
   const t = (id: string, values?: Record<string, any>) => intl.formatMessage({ id }, values);
 
-  const load = async (days = rangeDays) => {
+  const load = async (days = rangeDays, selectedServiceAccountId = serviceAccountId) => {
     setLoading(true);
     try {
-      const result = await getServiceAccountUsage(days);
+      const result = await getServiceAccountUsage(days, selectedServiceAccountId);
       if (result.code === 200) {
         setUsage(result.data);
+        if (!selectedServiceAccountId) setServiceAccounts(result.data?.accounts || []);
       }
     } finally {
       setLoading(false);
@@ -96,8 +99,8 @@ const ServiceAccountMonitorPage: React.FC = () => {
   };
 
   useEffect(() => {
-    load(rangeDays);
-  }, [rangeDays]);
+    load(rangeDays, serviceAccountId);
+  }, [rangeDays, serviceAccountId]);
 
   const sortedAccounts = useMemo(() => {
     return [...(usage?.accounts || [])].sort((left, right) => {
@@ -122,7 +125,6 @@ const ServiceAccountMonitorPage: React.FC = () => {
 
   const changeRange = (days: number) => {
     setRangeDays(days);
-    load(days);
   };
 
   const openRanking = (type: RankingType) => {
@@ -331,6 +333,17 @@ const ServiceAccountMonitorPage: React.FC = () => {
       className="service-account-monitor"
       title={t('pages.serviceAccount.monitor') || '使用监控'}
       extra={[
+        <Select
+          key="service-account"
+          className="usage-service-account-select"
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          placeholder={t('pages.serviceAccount.monitor.serviceAccount')}
+          value={serviceAccountId}
+          options={serviceAccounts.map((account) => ({ label: account.name || account.id, value: account.id }))}
+          onChange={setServiceAccountId}
+        />,
         <Select
           key="range"
           className="usage-range-select"

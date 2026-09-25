@@ -11,6 +11,7 @@ import { Alert, Button, Tag } from 'antd'
 import React, { useRef, useState } from 'react'
 import { getIndexStatus, getSwitchStatus } from '@/pages/agent/knowledge-base/status'
 import TableActionMenu from '@/components/TableActionMenu'
+import { useCreatorSearchColumn } from '@/components/CreatorSearchColumn'
 
 const KnowledgeBasePage: React.FC = () => {
   const ref = useRef<ActionType>()
@@ -19,8 +20,10 @@ const KnowledgeBasePage: React.FC = () => {
   const permissions = useAccess()
   const write = permissions[history.location.pathname]
   const intl = useIntl()
+  const creatorColumn = useCreatorSearchColumn<KnowledgeBase>()
 
   const columns: any[] = [
+    ...(creatorColumn ? [creatorColumn] : []),
     {
       title: 'ID',
       dataIndex: 'id',

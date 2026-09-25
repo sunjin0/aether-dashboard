@@ -25,6 +25,7 @@ export interface ModelProvider {
 export interface ModelProviderSearchParams extends ModelProvider {
   current?: number;
   pageSize?: number;
+  creatorUserId?: string;
 }
 
 /**
@@ -73,6 +74,7 @@ export interface AgentDefinition {
 export interface AgentDefinitionSearchParams extends AgentDefinition {
   current?: number;
   pageSize?: number;
+  creatorUserId?: string;
 }
 
 /**
@@ -102,6 +104,7 @@ export interface AgentArtifact {
 export interface AgentArtifactSearchParams {
   current?: number;
   pageSize?: number;
+  creatorUserId?: string;
   fileName?: string;
   extension?: string;
   agentDefinitionId?: string;
@@ -197,6 +200,7 @@ export interface ReviewConfig {
 export interface KnowledgeBaseSearchParams extends KnowledgeBase {
   current?: number;
   pageSize?: number;
+  creatorUserId?: string;
 }
 
 /** 知识库纯文本或 Markdown 文档 */
@@ -229,6 +233,7 @@ export interface Document {
 export interface DocumentSearchParams extends Document {
   current?: number;
   pageSize?: number;
+  creatorUserId?: string;
 }
 export interface KnowledgeDocumentVersion {
   id?: string;
@@ -357,6 +362,7 @@ export interface KnowledgeReviewTaskDetail extends KnowledgeReviewTask {
 export interface KnowledgeReviewTaskSearchParams extends KnowledgeReviewTask {
   current?: number;
   pageSize?: number;
+  creatorUserId?: string;
   view?: 'available' | 'submittedByMe' | 'reviewedByMe' | 'all';
 }
 /** 文档版本索引后生成的最小检索文本单元。 */
@@ -390,6 +396,7 @@ export interface KnowledgeIndexJob {
 export interface KnowledgeIndexJobSearchParams extends KnowledgeIndexJob {
   current?: number;
   pageSize?: number;
+  creatorUserId?: string;
 }
 
 /** Agent 与知识库的 RAG 使用关系 */
@@ -711,6 +718,7 @@ export interface AgentConversation {
 export interface AgentConversationSearchParams extends AgentConversation {
   current?: number;
   pageSize?: number;
+  creatorUserId?: string;
   /** 会话管理页需要工作流节点会话；对话调试保持默认排除。 */
   includeWorkflow?: boolean;
 }
@@ -841,6 +849,7 @@ export interface AgentRunTask {
 export interface AgentRunSearchParams extends AgentRun {
   current?: number;
   pageSize?: number;
+  creatorUserId?: string;
   startTime?: number;
   endTime?: number;
 }
@@ -875,6 +884,7 @@ export interface AgentToolCallLog {
 export interface AgentToolCallLogSearchParams extends AgentToolCallLog {
   current?: number;
   pageSize?: number;
+  creatorUserId?: string;
 }
 
 /**
@@ -908,6 +918,7 @@ export interface AgentTool {
 export interface AgentToolSearchParams extends AgentTool {
   current?: number;
   pageSize?: number;
+  creatorUserId?: string;
 }
 
 /**
@@ -965,6 +976,7 @@ export interface McpServer {
 export interface McpServerSearchParams extends McpServer {
   current?: number;
   pageSize?: number;
+  creatorUserId?: string;
 }
 
 /** MCP 服务暴露的工具 */
@@ -1169,6 +1181,7 @@ export interface AgentSkill {
 export interface AgentSkillSearchParams extends AgentSkill {
   current?: number;
   pageSize?: number;
+  creatorUserId?: string;
 }
 
 /**

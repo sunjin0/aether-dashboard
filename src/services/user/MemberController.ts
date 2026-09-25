@@ -7,6 +7,7 @@ import { ResponseStructure } from '@/services/entity/Common'
 export interface MemberSearchParams extends Partial<Member> {
   current?: number;
   pageSize?: number;
+  creatorUserId?: string;
 }
 /**
  * 实体

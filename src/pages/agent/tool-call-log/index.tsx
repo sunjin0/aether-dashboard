@@ -12,6 +12,7 @@ import JsonDisplay from '@/components/JsonDisplay'
 import MarkdownText from '@/components/MarkdownText'
 import './index.less'
 import { useIntl } from '@umijs/max'
+import { useCreatorSearchColumn } from '@/components/CreatorSearchColumn'
 
 const { Text } = Typography
 
@@ -34,6 +35,7 @@ const renderStatusTag = (status: number | undefined, format: (id: string) => str
 const AgentToolCallLogPage: React.FC = () => {
   const intl = useIntl()
   const format = (id: string) => intl.formatMessage({ id })
+  const creatorColumn = useCreatorSearchColumn<AgentToolCallLog>()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [toolCallLog, setToolCallLog] = useState<AgentToolCallLog>()
   const [detailLoading, setDetailLoading] = useState(false)
@@ -177,7 +179,7 @@ const AgentToolCallLogPage: React.FC = () => {
           labelWidth: 120,
           span: 6,
         }}
-        columns={columns}
+        columns={[...(creatorColumn ? [creatorColumn] : []), ...columns]}
         scroll={{ x: 1200 }}
       />
       <Drawer

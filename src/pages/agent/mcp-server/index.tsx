@@ -29,6 +29,7 @@ import {
 import React, { useRef, useState } from 'react'
 import JsonDisplay from '@/components/JsonDisplay'
 import TableActionMenu from '@/components/TableActionMenu'
+import { useCreatorSearchColumn } from '@/components/CreatorSearchColumn'
 
 const McpServerPage: React.FC = () => {
   const intl = useIntl()
@@ -48,6 +49,7 @@ const McpServerPage: React.FC = () => {
   const permissions = useAccess()
   const write = permissions[history.location.pathname]
   const format = (key: string) => intl.formatMessage({ id: key })
+  const creatorColumn = useCreatorSearchColumn<McpServer>()
   const marketServers: Array<Partial<McpServer> & { description: string }> = [
     { name: 'GitHub MCP', code: 'github', transport: 'streamable_http', baseUrl: 'https://api.github.com/mcp', authType: 'bearer', description: '代码仓库、Issue 和 Pull Request 管理' },
     { name: 'Sentry MCP', code: 'sentry', transport: 'streamable_http', baseUrl: 'https://mcp.sentry.dev/mcp', authType: 'bearer', description: '错误和性能问题查询' },
@@ -218,7 +220,7 @@ const McpServerPage: React.FC = () => {
         actionRef={ref}
         rowKey="id"
         request={(params: McpServerSearchParams) => getMcpServerList(params)}
-        columns={columns}
+        columns={[...(creatorColumn ? [creatorColumn] : []), ...columns]}
         toolBarRender={() =>
           write && [
             <Button key="market" icon={<AppstoreOutlined />} onClick={() => setMarketOpen(true)}>MCP 市场</Button>,

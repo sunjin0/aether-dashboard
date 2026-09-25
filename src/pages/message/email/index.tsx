@@ -9,6 +9,7 @@ import Model from '@/components/Model'
 import { getOptionList } from '@/services/sys/DictController'
 import { deleteEmailInfo, getEmailList } from '@/services/msg/EmailController'
 import { EmailSearchParams } from '@/services/entity/Msg'
+import { useCreatorSearchColumn } from '@/components/CreatorSearchColumn'
 
 /**
  *
@@ -21,7 +22,9 @@ const Email: React.FC = () => {
   const permissionMap = useAccess()
   const path = history.location.pathname
   const write = permissionMap[path]
+  const creatorColumn = useCreatorSearchColumn<EmailSearchParams>()
   const columns: any[] = [
+    ...(creatorColumn ? [creatorColumn] : []),
     {
       title: intl.formatMessage({ id: 'pages.common.id' }),
       dataIndex: 'id',

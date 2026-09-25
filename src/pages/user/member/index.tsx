@@ -13,6 +13,7 @@ import {
   deleteMemberInfo,
   MemberSearchParams,
 } from '@/services/user/MemberController'
+import { useCreatorSearchColumn } from '@/components/CreatorSearchColumn'
 /**
  *
  *@description 页面
@@ -26,7 +27,9 @@ const Member: React.FC = () => {
   const permissionMap = useAccess()
   const path = history.location.pathname
   const write = permissionMap[path]
+  const creatorColumn = useCreatorSearchColumn<Record<string, unknown>>()
   const columns: any = [
+    ...(creatorColumn ? [creatorColumn] : []),
     {
       title: intl.formatMessage({ id: 'pages.user.member.username' }),
       dataIndex: 'username',

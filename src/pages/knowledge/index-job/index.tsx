@@ -4,6 +4,7 @@ import { ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
 import { useAccess, useIntl } from '@@/exports'
 import { Descriptions, message, Tag, Tabs, Tooltip } from 'antd'
 import TableActionMenu from '@/components/TableActionMenu'
+import { useCreatorSearchColumn } from '@/components/CreatorSearchColumn'
 import React, { useMemo, useRef, useState } from 'react'
 
 /** 将任务起止时间转换为可快速识别的耗时文本。 */
@@ -41,6 +42,7 @@ const KnowledgeIndexJobPage: React.FC = () => {
   const access = useAccess()
   const canRetry = access['/knowledge/document'] || access['/knowledge/index-job']
   const intl = useIntl()
+  const creatorColumn = useCreatorSearchColumn<KnowledgeIndexJob>()
 
   const statusLabels: Record<string, { text: string; color: string }> = {
     pending: {
@@ -175,6 +177,7 @@ const KnowledgeIndexJobPage: React.FC = () => {
           ),
         }}
         columns={[
+          ...(creatorColumn ? [creatorColumn] : []),
           {
             title: intl.formatMessage({ id: 'pages.knowledge.indexJob.jobTypeColumn' }),
             dataIndex: 'jobType',

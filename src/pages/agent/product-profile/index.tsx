@@ -9,6 +9,7 @@ import { getAgentDefinitionList } from '@/services/agent/AgentDefinitionControll
 import { AgentApplication, getAgentApplicationList } from '@/services/agent/AgentApplicationController'
 import { getWorkflowList } from '@/services/workflow/workflow/WorkflowController'
 import { AgentProductProfile, AgentProductProfileVersion, copyAgentProductProfile, createAgentProductProfile, deleteAgentProductProfile, getAgentProductProfileVersions, getAgentProductProfiles, publishAgentProductProfile, setAgentProductProfileEnabled, updateAgentProductProfile } from '@/services/agent/AgentProductProfileController'
+import { useCreatorSearchColumn } from '@/components/CreatorSearchColumn'
 
 const targetTypes = ['AGENT', 'WORKFLOW']
 
@@ -25,6 +26,7 @@ export default function AgentProductProfilePage() {
   const [versionOpen, setVersionOpen] = useState(false)
   const [showContext, setShowContext] = useState(false)
   const formRef = useRef<any>()
+  const creatorColumn = useCreatorSearchColumn<AgentProductProfile>()
 
   useEffect(() => {
     getAgentApplicationList({ current: 1, pageSize: 100 }).then(r => setApps((r.data || []).filter(a => a.status === 1)))
@@ -67,11 +69,12 @@ export default function AgentProductProfilePage() {
       actionRef={ref}
       rowKey="id"
       request={async params => {
-        const result = await getAgentProductProfiles({ current: params.current, pageSize: params.pageSize, applicationId: params.applicationId, name: params.name, productType: params.productType, status: params.status })
+        const result = await getAgentProductProfiles({ current: params.current, pageSize: params.pageSize, applicationId: params.applicationId, name: params.name, productType: params.productType, status: params.status, creatorUserId: params.creatorUserId })
         return { data: result.data || [], total: result.total, success: result.code === 200 }
       }}
       toolBarRender={() => [<Button key="new" type="primary" icon={<PlusOutlined />} onClick={openCreate}>{t('pages.agent.product.create')}</Button>]}
       columns={[
+        ...(creatorColumn ? [creatorColumn] : []),
         { title: t('pages.common.name'), dataIndex: 'name' },
         { title: t('pages.agent.product.application'), dataIndex: 'applicationId', valueType: 'select', fieldProps: { options: apps.map(a => ({ label: a.name, value: a.id })) }, render: value => apps.find(a => a.id === value)?.name || value },
         { title: t('pages.common.code'), dataIndex: 'code', search: false },

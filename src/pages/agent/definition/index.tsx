@@ -19,6 +19,7 @@ import { AgentApplication, getAgentApplicationList } from '@/services/agent/Agen
 import { getOptionList } from '@/services/sys/DictController'
 import { AgentDefinition, AgentDefinitionSearchParams } from '@/services/entity/Agent'
 import TableActionMenu from '@/components/TableActionMenu'
+import { useCreatorSearchColumn } from '@/components/CreatorSearchColumn'
 
 const AgentDefinitionPage: React.FC = () => {
   const [open, setOpen] = useState(false)
@@ -30,6 +31,7 @@ const AgentDefinitionPage: React.FC = () => {
   const intl = useIntl()
   const format = (id: string, values?: Record<string, string>) =>
     intl.formatMessage({ id }, values)
+  const creatorColumn = useCreatorSearchColumn<AgentDefinition>()
 
   // 工具绑定相关状态
   const [toolBindingVisible, setToolBindingVisible] = useState(false)
@@ -336,7 +338,7 @@ const AgentDefinitionPage: React.FC = () => {
             </Button>,
           ]
         }
-        columns={columns}
+        columns={[...(creatorColumn ? [creatorColumn] : []), ...columns]}
       />
       <AgentDefinitionForm
         id={id}

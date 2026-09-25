@@ -49,12 +49,14 @@ import {
   AgentApplication,
   getAgentApplicationList,
 } from '@/services/agent/AgentApplicationController';
+import { useCreatorSearchColumn } from '@/components/CreatorSearchColumn';
 
 const WorkflowPage: React.FC = () => {
   const intl = useIntl();
   const { initialState } = useModel('@@initialState');
   const canRun = Boolean(initialState?.currentUser?.permissionMap?.['/workflow/run']);
   const t = (id: string, values?: Record<string, any>) => intl.formatMessage({ id }, values);
+  const creatorColumn = useCreatorSearchColumn<AgentWorkflow>();
   const ref = useRef<ActionType>();
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -251,6 +253,7 @@ const WorkflowPage: React.FC = () => {
           </Button>,
         ]}
         columns={[
+          ...(creatorColumn ? [creatorColumn] : []),
           {
             title: t('pages.agent.product.application'),
             dataIndex: 'applicationId',

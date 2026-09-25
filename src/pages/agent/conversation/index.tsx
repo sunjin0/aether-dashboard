@@ -21,6 +21,7 @@ import {
   MessageStatistics,
 } from '@/services/entity/Agent'
 import AgentMessageBubble from '@/components/AgentMessageBubble'
+import { useCreatorSearchColumn } from '@/components/CreatorSearchColumn'
 
 const AgentConversationPage: React.FC = () => {
   const intl = useIntl()
@@ -35,6 +36,7 @@ const AgentConversationPage: React.FC = () => {
   const [lifecycle, setLifecycle] = useState<ConversationLifecycle>()
   const [statistics, setStatistics] = useState<MessageStatistics>()
   const [detailLoading, setDetailLoading] = useState(false)
+  const creatorColumn = useCreatorSearchColumn<AgentConversation>()
 
   const loadDetail = async (id: string) => {
     setDetailLoading(true)
@@ -271,7 +273,7 @@ const AgentConversationPage: React.FC = () => {
         request={async (params: AgentConversationSearchParams) =>
           getAgentConversationList({ ...params, includeWorkflow: true })
         }
-        columns={columns}
+        columns={[...(creatorColumn ? [creatorColumn] : []), ...columns]}
       />
       <Drawer
         title={intl.formatMessage({ id: 'pages.agent.conversation.detail' })}
